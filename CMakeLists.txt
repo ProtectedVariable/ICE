@@ -7,7 +7,7 @@ set(GLFW_BUILD_DOCS OFF CACHE INTERNAL "Build the GLFW documentation")
 set(GLFW_INSTALL OFF CACHE INTERNAL "Generate installation target")
 
 set(CMAKE_CXX_STANDARD 14)
-add_library(glfw3 STATIC IMPORTED)
+add_library(glfw3 STATIC IMPORTED includes/OBJLoader/OBJLoader.h)
 set_property(TARGET glfw3 PROPERTY IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/libs/glfw/libglfw3.a)
 find_library(COCOA_LIBRARY Cocoa REQUIRED)
 find_library(OPENGL_LIBRARY OpenGL REQUIRED)
@@ -26,12 +26,12 @@ add_executable(ICE
         includes/ImGUI/imgui_draw.cpp
         includes/ImGUI/imgui_demo.cpp
         ICE/src/Scene/Entity.cpp ICE/src/Scene/Entity.h ICE/src/Scene/Component.h ICE/src/Scene/TransformComponent.cpp ICE/src/Scene/TransformComponent.h ICE/src/Scene/RenderComponent.cpp ICE/src/Scene/RenderComponent.h ICE/src/Graphics/Material.cpp ICE/src/Graphics/Material.h ICE/src/Graphics/Mesh.cpp ICE/src/Graphics/Mesh.h
-        )
+        ICE/src/Scene/Scene.cpp ICE/src/Scene/Scene.h ICE/src/Util/OBJLoader.cpp ICE/src/Util/OBJLoader.h)
 
 add_executable(ICE_TEST
         ICE/src/Scene/Entity.cpp ICE/src/Scene/Entity.h ICE/src/Scene/Component.h ICE/src/Scene/TransformComponent.cpp ICE/src/Scene/TransformComponent.h ICE/src/Scene/RenderComponent.cpp ICE/src/Scene/RenderComponent.h ICE/src/Graphics/Material.cpp ICE/src/Graphics/Material.h ICE/src/Graphics/Mesh.cpp ICE/src/Graphics/Mesh.h
         ICE/test/Tests.cpp
-        )
+        ICE/src/Scene/Scene.cpp ICE/src/Scene/Scene.h ICE/src/Util/OBJLoader.cpp ICE/src/Util/OBJLoader.h)
 
 
 target_link_libraries(ICE glfw3 ${COCOA_LIBRARY} ${OPENGL_LIBRARY} ${IOKIT_LIBRARY})
