@@ -11,6 +11,8 @@
 
 namespace ICE {
     class RenderComponent : public Component {
+    public:
+        RenderComponent(const Mesh &mesh, const Material &material);
     private:
         Mesh mesh;
         Material material;

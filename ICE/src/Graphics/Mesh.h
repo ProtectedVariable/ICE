@@ -13,7 +13,7 @@ namespace ICE {
     private:
         std::vector<Eigen::Vector3d> vertices, normals;
         std::vector<Eigen::Vector2d> uvCoords;
-        std::vector<Eigen::Vector3d> indices;
+        std::vector<Eigen::Vector3i> indices;
     public:
         Mesh(const std::vector<Eigen::Vector3d> &vertices, const std::vector<Eigen::Vector3d> &normals,
              const std::vector<Eigen::Vector2d> &uvCoords, const std::vector<Eigen::Vector3i> &indices);

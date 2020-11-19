@@ -8,6 +8,7 @@
 #include <vector>
 #include "Entity.h"
 #include <string>
+#include <Graphics/Renderer.h>
 
 namespace ICE {
     class Scene {
@@ -27,10 +28,14 @@ namespace ICE {
         void setParent(std::string entity, std::string newParent);
         SceneNode* getByID(std::string uid);
 
+        const Renderer &getRenderer() const;
+
+        void setRenderer(const Renderer &renderer);
 
     private:
         SceneNode root;
         std::unordered_map<std::string, SceneNode*> nodeByID;
+        Renderer renderer;
     };
 }
 

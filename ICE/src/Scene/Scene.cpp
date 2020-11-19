@@ -54,4 +54,12 @@ namespace ICE {
         }
         return nullptr;
     }
+
+    const Renderer &Scene::getRenderer() const {
+        return renderer;
+    }
+
+    void Scene::setRenderer(const Renderer &renderer) {
+        Scene::renderer = renderer;
+    }
 }

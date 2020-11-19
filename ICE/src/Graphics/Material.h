@@ -5,10 +5,13 @@
 #ifndef ICE_MATERIAL_H
 #define ICE_MATERIAL_H
 
+namespace ICE {
+    class Material {
 
-class Material {
+    };
+}
 
-};
+
 
 
 #endif //ICE_MATERIAL_H

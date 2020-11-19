@@ -5,4 +5,5 @@
 #include "RenderComponent.h"
 
 namespace ICE {
+    RenderComponent::RenderComponent(const Mesh &mesh, const Material &material) : mesh(mesh), material(material) {}
 }
