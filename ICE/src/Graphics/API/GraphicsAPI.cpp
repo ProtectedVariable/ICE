@@ -5,8 +5,24 @@
 
 #include <Graphics/API/OpenGL/OpenGLRendererAPI.h>
 #include <Graphics/API/OpenGL/OpenGLBuffers.h>
+#include <Graphics/Context.h>
+#include <Graphics/API/OpenGL/OpenGLContext.h>
+#include <Graphics/FrameBuffer.h>
+#include <Graphics/Shader.h>
+#include <Graphics/API/OpenGL/OpenGLShader.h>
 
 namespace ICE {
+
+    Context* Context::Create(void* windowHandle) {
+        switch(RendererAPI::GetAPI()) {
+            case OpenGL: return new OpenGLContext(static_cast<GLFWwindow*>(windowHandle));
+        }
+        return nullptr;
+    }
+
+    FrameBuffer* FrameBuffer::Create(FrameBufferFormat format) {
+        return nullptr;
+    }
 
     RendererAPI* RendererAPI::Create() {
         switch(RendererAPI::GetAPI()) {
@@ -25,6 +41,17 @@ namespace ICE {
     IndexBuffer* IndexBuffer::Create(uint32_t *indices, uint32_t size) {
         switch(RendererAPI::GetAPI()) {
             case OpenGL: return new OpenGLIndexBuffer();
+        }
+        return nullptr;
+    }
+
+    Shader* Shader::Create(const std::string &vertexFile, const std::string &fragmentFile) {
+        return Create(vertexFile, "", fragmentFile);
+    }
+
+    Shader * Shader::Create(const std::string &vertexFile, const std::string &geometryFile, const std::string &fragmentFile) {
+        switch(RendererAPI::GetAPI()) {
+            case OpenGL: return new OpenGLShader(vertexFile, geometryFile, fragmentFile);
         }
         return nullptr;
     }

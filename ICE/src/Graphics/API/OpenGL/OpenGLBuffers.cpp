@@ -5,7 +5,7 @@
 #include "OpenGLBuffers.h"
 #include <OpenGL/gl3.h>
 
-ICE::OpenGLVertexBuffer::OpenGLVertexBuffer(uint32_t size) : size(size) {}
+ICE::OpenGLVertexBuffer::OpenGLVertexBuffer(uint32_t size) : size(size), id(0) {}
 
 void ICE::OpenGLIndexBuffer::bind() const {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->id);

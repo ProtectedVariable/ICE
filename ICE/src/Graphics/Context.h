@@ -12,7 +12,7 @@ namespace ICE {
         virtual void wireframeMode() = 0;
         virtual void fillMode() = 0;
 
-        static Context* Create();
+        static Context* Create(void* windowHandle);
     };
 }
 #endif //ICE_CONTEXT_H
