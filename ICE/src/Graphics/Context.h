@@ -7,13 +7,12 @@
 namespace ICE {
     class Context {
     public:
-        static Context* Create() {
+        virtual void initialize() = 0;
+        virtual void swapBuffers() = 0;
+        virtual void wireframeMode() = 0;
+        virtual void fillMode() = 0;
 
-        }
-        virtual void Initialize() = 0;
-        virtual void SwapBuffers() = 0;
-        virtual void WireframeMode() = 0;
-        virtual void FillMode() = 0;
+        static Context* Create();
     };
 }
 #endif //ICE_CONTEXT_H

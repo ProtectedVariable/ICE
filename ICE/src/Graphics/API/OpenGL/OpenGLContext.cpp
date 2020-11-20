@@ -3,24 +3,23 @@
 //
 
 #include "OpenGLContext.h"
-#include <Graphics/Context.h>
 #include <GLFW/glfw3.h>
 #include <OpenGL/gl.h>
 
 ICE::OpenGLContext::OpenGLContext(GLFWwindow *glfwWindow) : glfwWindow(glfwWindow) {}
 
-void ICE::OpenGLContext::SwapBuffers() {
+void ICE::OpenGLContext::swapBuffers() {
     glfwSwapBuffers(glfwWindow);
 }
 
-void ICE::OpenGLContext::WireframeMode() {
+void ICE::OpenGLContext::wireframeMode() {
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }
 
-void ICE::OpenGLContext::FillMode() {
+void ICE::OpenGLContext::fillMode() {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
-void ICE::OpenGLContext::Initialize() {
+void ICE::OpenGLContext::initialize() {
     glfwMakeContextCurrent(glfwWindow);
 }

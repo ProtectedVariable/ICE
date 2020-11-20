@@ -15,15 +15,17 @@ namespace ICE {
 
     class RendererAPI {
     public:
-        virtual void SetViewport(int x, int y, int width, int height) = 0;
-        virtual void SetClearColor(int r, int g, int b, int a) = 0;
-        virtual void Clear() = 0;
+        virtual void initialize() = 0;
+        virtual void setViewport(int x, int y, int width, int height) = 0;
+        virtual void setClearColor(int r, int g, int b, int a) = 0;
+        virtual void clear() = 0;
+        virtual void renderVertexArray(VertexArray &va) = 0;
 
-        virtual void RenderVertexArray(VertexArray &va) = 0;
         static GraphicsAPI GetAPI() { return api; }
+        static RendererAPI* Create();
 
     private:
-        static GraphicsAPI api;
+        const static GraphicsAPI api = OpenGL; //TODO: Allow for switches
     };
 }
 

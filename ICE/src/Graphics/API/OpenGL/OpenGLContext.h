@@ -11,13 +11,13 @@
 namespace ICE {
     class OpenGLContext : public Context {
     public:
-        void SwapBuffers() override;
+        void swapBuffers() override;
 
-        void WireframeMode() override;
+        void wireframeMode() override;
 
-        void FillMode() override;
+        void fillMode() override;
 
-        void Initialize() override;
+        void initialize() override;
 
         OpenGLContext(GLFWwindow *glfwWindow);
 

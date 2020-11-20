@@ -11,9 +11,9 @@ namespace ICE {
 
     class FrameBuffer {
     public:
-        virtual void Bind() = 0;
-        virtual void Unbind() = 0;
-        virtual void Resize(int width, int height) = 0;
+        virtual void bind() = 0;
+        virtual void unbind() = 0;
+        virtual void resize(int width, int height) = 0;
 
         static FrameBuffer* Create(FrameBufferFormat format);
     private:

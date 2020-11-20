@@ -12,9 +12,7 @@
 namespace ICE {
     class Renderer {
     public:
-        static GraphicsAPI getAPI() {
 
-        }
     };
 }
 
