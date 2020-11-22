@@ -30,6 +30,7 @@ namespace ICE {
     private:
         GLuint vaoID;
         int cnt = 0;
+        GLuint indexCount;
     };
 }
 

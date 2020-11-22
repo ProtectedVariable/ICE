@@ -36,10 +36,11 @@ void ICE::OpenGLVertexArray::pushVertexBuffer(const ICE::VertexBuffer* buffer, i
 void ICE::OpenGLVertexArray::setIndexBuffer(const ICE::IndexBuffer* buffer) {
     this->bind();
     buffer->bind();
+    this->indexCount = buffer->getSize() / sizeof(int);
 }
 
 int ICE::OpenGLVertexArray::getIndexCount() const {
-    return 0;
+    return indexCount;
 }
 
 uint32_t ICE::OpenGLVertexArray::getID() const {
