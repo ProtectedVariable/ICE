@@ -17,9 +17,9 @@ namespace ICE {
 
         void unbind() const override;
 
-        void pushVertexBuffer(const VertexBuffer* buffer) override;
+        void pushVertexBuffer(const VertexBuffer* buffer, int size) override;
 
-        void pushVertexBuffer(const VertexBuffer* buffer, int position) override;
+        void pushVertexBuffer(const VertexBuffer* buffer, int position, int size) override;
 
         void setIndexBuffer(const IndexBuffer* buffer) override;
 

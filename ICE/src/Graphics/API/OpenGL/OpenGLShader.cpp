@@ -65,7 +65,7 @@ namespace ICE {
         return compileStatus == GL_TRUE;
     }
 
-    //TODO: Another ctor for tesselation control and evalution shaders
+    //TODO: Another ctor for tesselation control and evaluation shaders
     OpenGLShader::OpenGLShader(const std::string &vertexFile, const std::string &geoFile, const std::string &fragmentFile) {
         //TODO: Better tracing in case of errors, cleanup
         this->programID = glCreateProgram();

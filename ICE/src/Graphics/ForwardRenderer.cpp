@@ -4,6 +4,8 @@
 
 #include <Scene/TransformComponent.h>
 #include <Scene/LightComponent.h>
+#include <iostream>
+#include <GL/gl3w.h>
 #include "ForwardRenderer.h"
 
 namespace ICE {
@@ -35,11 +37,16 @@ namespace ICE {
 
     void ForwardRenderer::render() {
         for(auto e : renderableEntities) {
+            e->getComponent<RenderComponent>()->getMaterial().getShader()->bind();
             api->renderVertexArray(e->getComponent<RenderComponent>()->getMesh().getVertexArray());
         }
     }
 
     void ForwardRenderer::endFrame() {
+        unsigned int err = 0;
+        while((err = glGetError()) != GL_NO_ERROR){
+            std::cout << err << std::endl;
+        }
         //TODO: Cleanup and restore state
     }
 

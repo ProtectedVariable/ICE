@@ -12,21 +12,25 @@ ICE::OpenGLVertexArray::OpenGLVertexArray() {
 
 void ICE::OpenGLVertexArray::bind() const {
     glBindVertexArray(this->vaoID);
+    //TODO: Better buffer representation
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(2);
 }
 
 void ICE::OpenGLVertexArray::unbind() const {
     glBindVertexArray(0);
 }
 
-void ICE::OpenGLVertexArray::pushVertexBuffer(const ICE::VertexBuffer* buffer) {
-    this->pushVertexBuffer(buffer, cnt++);
+void ICE::OpenGLVertexArray::pushVertexBuffer(const ICE::VertexBuffer* buffer, int size) {
+    this->pushVertexBuffer(buffer, cnt++, size);
 }
 
-void ICE::OpenGLVertexArray::pushVertexBuffer(const ICE::VertexBuffer* buffer, int position) {
+void ICE::OpenGLVertexArray::pushVertexBuffer(const ICE::VertexBuffer* buffer, int position, int size) {
     this->bind();
     buffer->bind();
     glEnableVertexAttribArray(position);
-    glVertexAttribPointer(position, buffer->getSize(), GL_FLOAT, false, 0, 0);
+    glVertexAttribPointer(position, size, GL_FLOAT, false, 0, 0);
 }
 
 void ICE::OpenGLVertexArray::setIndexBuffer(const ICE::IndexBuffer* buffer) {

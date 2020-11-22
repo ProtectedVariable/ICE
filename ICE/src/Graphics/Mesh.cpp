@@ -18,11 +18,11 @@ namespace ICE {
         vertexBuffer->putData(BufferUtils::CreateFloatBuffer(vertices), 3*vertices.size()*sizeof(float));
         normalsBuffer->putData(BufferUtils::CreateFloatBuffer(normals), 3*normals.size()*sizeof(float));
         uvBuffer->putData(BufferUtils::CreateFloatBuffer(uvCoords), 2*uvCoords.size()*sizeof(float));
-        indexBuffer->putData(BufferUtils::CreateIntBuffer(indices), indices.size()*sizeof(int));
+        indexBuffer->putData(BufferUtils::CreateIntBuffer(indices), 3*indices.size()*sizeof(int));
 
-        vertexArray->pushVertexBuffer(vertexBuffer);
-        vertexArray->pushVertexBuffer(normalsBuffer);
-        vertexArray->pushVertexBuffer(uvBuffer);
+        vertexArray->pushVertexBuffer(vertexBuffer, 3);
+        vertexArray->pushVertexBuffer(normalsBuffer, 3);
+        vertexArray->pushVertexBuffer(uvBuffer, 2);
         vertexArray->setIndexBuffer(indexBuffer);
     }
 

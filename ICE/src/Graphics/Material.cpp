@@ -3,3 +3,9 @@
 //
 
 #include "Material.h"
+
+ICE::Material::Material(Shader *shader) : shader(shader) {}
+
+ICE::Shader *ICE::Material::getShader() const {
+    return shader;
+}
