@@ -10,6 +10,7 @@
 #include <Graphics/FrameBuffer.h>
 #include <Graphics/Shader.h>
 #include <Graphics/API/OpenGL/OpenGLShader.h>
+#include <Graphics/API/OpenGL/OpenGLVertexArray.h>
 
 namespace ICE {
 
@@ -31,14 +32,21 @@ namespace ICE {
         return nullptr;
     }
 
-    VertexBuffer* VertexBuffer::Create(uint32_t size) {
+    VertexArray* VertexArray::Create() {
+        switch(RendererAPI::GetAPI()) {
+            case OpenGL: return new OpenGLVertexArray();
+        }
+        return nullptr;
+    }
+
+    VertexBuffer* VertexBuffer::Create() {
         switch(RendererAPI::GetAPI()) {
             case OpenGL: return new OpenGLVertexBuffer();
         }
         return nullptr;
     }
 
-    IndexBuffer* IndexBuffer::Create(uint32_t *indices, uint32_t size) {
+    IndexBuffer* IndexBuffer::Create() {
         switch(RendererAPI::GetAPI()) {
             case OpenGL: return new OpenGLIndexBuffer();
         }

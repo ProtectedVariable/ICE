@@ -19,7 +19,7 @@ namespace ICE {
         virtual void setViewport(int x, int y, int width, int height) = 0;
         virtual void setClearColor(int r, int g, int b, int a) = 0;
         virtual void clear() = 0;
-        virtual void renderVertexArray(VertexArray &va) = 0;
+        virtual void renderVertexArray(const VertexArray* va) = 0;
 
         static GraphicsAPI GetAPI() { return api; }
         static RendererAPI* Create();

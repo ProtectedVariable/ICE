@@ -2,14 +2,14 @@
 // Created by Thomas Ibanez on 19.11.20.
 //
 
-#ifndef ICE_RENDERERPARAMS_H
-#define ICE_RENDERERPARAMS_H
+#ifndef ICE_RENDERERCONFIG_H
+#define ICE_RENDERERCONFIG_H
 
 namespace ICE {
-    struct RendererParams {
+    struct RendererConfig {
         int instancingThreshold; //Threshold after which entities sharing the same mesh & shader will be rendered using instancing, set to 0 for no instancing
 
     };
 }
 
-#endif //ICE_RENDERERPARAMS_H
+#endif //ICE_RENDERERCONFIG_H

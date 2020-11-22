@@ -17,9 +17,9 @@ void ICE::OpenGLRendererAPI::clear() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void ICE::OpenGLRendererAPI::renderVertexArray(ICE::VertexArray &va) {
-    va.bind();
-    glDrawElements(GL_TRIANGLES, va.getIndexCount(), GL_UNSIGNED_INT, nullptr);
+void ICE::OpenGLRendererAPI::renderVertexArray(const ICE::VertexArray* va) {
+    va->bind();
+    glDrawElements(GL_TRIANGLES, va->getIndexCount(), GL_UNSIGNED_INT, nullptr);
 }
 
 void ICE::OpenGLRendererAPI::initialize() {

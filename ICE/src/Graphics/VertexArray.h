@@ -14,17 +14,15 @@ namespace ICE {
 
     class VertexArray {
     public:
-        virtual void bind() = 0;
-        virtual void unbind() = 0;
-        virtual void pushVertexBuffer(const VertexBuffer &buffer) = 0;
-        virtual void pushVertexBuffer(const VertexBuffer &buffer, int position) = 0;
-        virtual void setIndexBuffer(const IndexBuffer &buffer) = 0;
-        virtual int getIndexCount() = 0;
-        virtual uint32_t getID() = 0;
+        virtual void bind() const = 0;
+        virtual void unbind() const = 0;
+        virtual void pushVertexBuffer(const VertexBuffer* buffer) = 0;
+        virtual void pushVertexBuffer(const VertexBuffer* buffer, int position) = 0;
+        virtual void setIndexBuffer(const IndexBuffer* buffer) = 0;
+        virtual int getIndexCount() const = 0;
+        virtual uint32_t getID() const = 0;
 
-        static VertexArray* Create() {
-            return nullptr;
-        }
+        static VertexArray* Create();
     };
 }
 

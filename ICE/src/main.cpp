@@ -37,6 +37,8 @@ using namespace gl;
 // Include glfw3.h after our OpenGL definitions
 #include <GLFW/glfw3.h>
 #include <Scene/TransformComponent.h>
+#include <Graphics/Renderer.h>
+#include <Graphics/ForwardRenderer.h>
 
 // [Win32] Our example includes a copy of glfw3.lib pre-compiled with VS2010 to maximize ease of testing and compatibility with old VS compilers.
 // To link with VS2010-era libraries, VS2015+ requires linking with legacy_stdio_definitions.lib, which we do using this pragma.
@@ -49,7 +51,9 @@ static void glfw_error_callback(int error, const char* description)
 {
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
-#define GL_SILENCE_DEPRECATION
+
+using namespace ICE;
+
 int main(void)
 {
     // Setup window
@@ -140,8 +144,28 @@ int main(void)
     bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
     // Main loop
+
+    Renderer* renderer = new ForwardRenderer();
+    RendererAPI* api = RendererAPI::Create();
+    Entity triangle = Entity();
+    api->initialize();
+    std::vector<Eigen::Vector3d> vert;
+    vert.emplace_back(0,0,0);
+    vert.emplace_back(1,0,0);
+    vert.emplace_back(0,1,0);
+    std::vector<Eigen::Vector3i> indices;
+    indices.emplace_back(0,1,2);
+    Mesh mesh(vert, std::vector<Eigen::Vector3d>(), std::vector<Eigen::Vector2d>(), indices);
+    RenderComponent rc = RenderComponent(mesh, Material());
+    //TODO: Shader :)
+    triangle.addComponent(rc);
+    auto tc = TransformComponent();
+    triangle.addComponent(tc);
+    renderer->initialize(api, RendererConfig());
+    renderer->submit(&triangle);
     while (!glfwWindowShouldClose(window))
     {
+        renderer->render();
         // Poll and handle events (inputs, window resize, etc.)
         // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
         // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application.

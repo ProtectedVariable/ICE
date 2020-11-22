@@ -11,6 +11,8 @@
 #include <Graphics/Renderer.h>
 
 namespace ICE {
+    class Renderer;
+
     class Scene {
     public:
         class SceneNode {
@@ -21,21 +23,23 @@ namespace ICE {
             SceneNode(Entity* entity1) : children(std::vector<SceneNode*>()), entity(entity1) {};
         };
 
-        Scene();
+        Scene(Renderer* renderer);
 
-        bool addEntity(std::string parent, std::string uid, Entity &entity);
-        bool renameEntity(std::string oldName,std::string newName);
-        void setParent(std::string entity, std::string newParent);
-        SceneNode* getByID(std::string uid);
+        bool addEntity(const std::string& parent, const std::string& uid, Entity &entity);
+        bool renameEntity(const std::string& oldName,const std::string& newName);
+        void setParent(const std::string& entity, const std::string& newParent);
 
-        const Renderer &getRenderer() const;
+        std::vector<Entity*> getEntities();
 
-        void setRenderer(const Renderer &renderer);
+        SceneNode* getByID(const std::string& uid);
+
+        const Renderer* getRenderer() const;
+        void setRenderer(const Renderer* renderer);
 
     private:
         SceneNode root;
         std::unordered_map<std::string, SceneNode*> nodeByID;
-        Renderer renderer;
+        const Renderer* renderer;
     };
 }
 

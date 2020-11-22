@@ -3,8 +3,46 @@
 //
 
 #include "Mesh.h"
+#include <Graphics/VertexArray.h>
+#include <Util/BufferUtils.h>
 
 namespace ICE {
     Mesh::Mesh(const std::vector<Eigen::Vector3d> &vertices, const std::vector<Eigen::Vector3d> &normals,
-               const std::vector<Eigen::Vector2d> &uvCoords, const std::vector<Eigen::Vector3i> &indices) : vertices(vertices), normals(normals), uvCoords(uvCoords), indices(indices) {}
+               const std::vector<Eigen::Vector2d> &uvCoords, const std::vector<Eigen::Vector3i> &indices) : vertices(vertices), normals(normals), uvCoords(uvCoords), indices(indices) {
+        vertexArray = VertexArray::Create();
+        auto vertexBuffer = VertexBuffer::Create();
+        auto normalsBuffer = VertexBuffer::Create();
+        auto uvBuffer = VertexBuffer::Create();
+        auto indexBuffer = IndexBuffer::Create();
+
+        vertexBuffer->putData(BufferUtils::CreateFloatBuffer(vertices), 3*vertices.size()*sizeof(float));
+        normalsBuffer->putData(BufferUtils::CreateFloatBuffer(normals), 3*normals.size()*sizeof(float));
+        uvBuffer->putData(BufferUtils::CreateFloatBuffer(uvCoords), 2*uvCoords.size()*sizeof(float));
+        indexBuffer->putData(BufferUtils::CreateIntBuffer(indices), indices.size()*sizeof(int));
+
+        vertexArray->pushVertexBuffer(vertexBuffer);
+        vertexArray->pushVertexBuffer(normalsBuffer);
+        vertexArray->pushVertexBuffer(uvBuffer);
+        vertexArray->setIndexBuffer(indexBuffer);
+    }
+
+    const std::vector<Eigen::Vector3d> &Mesh::getVertices() const {
+        return vertices;
+    }
+
+    const std::vector<Eigen::Vector3d> &Mesh::getNormals() const {
+        return normals;
+    }
+
+    const std::vector<Eigen::Vector2d> &Mesh::getUVCoords() const {
+        return uvCoords;
+    }
+
+    const std::vector<Eigen::Vector3i> &Mesh::getIndices() const {
+        return indices;
+    }
+
+    const VertexArray* Mesh::getVertexArray() const {
+        return vertexArray;
+    }
 }

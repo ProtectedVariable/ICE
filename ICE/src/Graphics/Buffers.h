@@ -15,7 +15,7 @@ namespace ICE {
         virtual void putData(const void* data, uint32_t size) = 0;
         virtual uint32_t getSize() const = 0;
 
-        static VertexBuffer* Create(uint32_t size);
+        static VertexBuffer* Create();
     };
 
     class IndexBuffer {
@@ -25,7 +25,7 @@ namespace ICE {
         virtual void putData(const void* data, uint32_t size) = 0;
         virtual uint32_t getSize() const = 0;
 
-        static IndexBuffer* Create(uint32_t* indices, uint32_t size);
+        static IndexBuffer* Create();
     };
 }
 #endif //ICE_BUFFERS_H

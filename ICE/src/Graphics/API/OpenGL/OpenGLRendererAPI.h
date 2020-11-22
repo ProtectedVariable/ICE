@@ -18,7 +18,7 @@ namespace ICE {
 
         void clear() override;
 
-        void renderVertexArray(VertexArray &va) override;
+        void renderVertexArray(const VertexArray* va) override;
     };
 }
 
