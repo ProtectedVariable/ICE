@@ -23,11 +23,11 @@ namespace ICE {
 
         void loadDouble(const std::string &name, double v) override;
 
-        void loadDouble3(const std::string &name, Eigen::Vector3d vec) override;
+        void loadDouble3(const std::string &name, Eigen::Vector3f vec) override;
 
-        void loadDouble4(const std::string &name, Eigen::Vector4d vec) override;
+        void loadDouble4(const std::string &name, Eigen::Vector4f vec) override;
 
-        void loadMat4(const std::string &name, Eigen::Matrix4d mat) override;
+        void loadMat4(const std::string &name, Eigen::Matrix4f mat) override;
 
         OpenGLShader(const std::string &vertexFile, const std::string &geoFile, const std::string &fragmentFile);
 

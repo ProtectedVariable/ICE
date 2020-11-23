@@ -18,10 +18,10 @@ namespace ICE {
         virtual void loadInts(const std::string &name, int* array, uint32_t size) = 0;
 
         virtual void loadDouble(const std::string &name, double v) = 0;
-        virtual void loadDouble3(const std::string &name, Eigen::Vector3d vec) = 0;
-        virtual void loadDouble4(const std::string &name, Eigen::Vector4d vec) = 0;
+        virtual void loadDouble3(const std::string &name, Eigen::Vector3f vec) = 0;
+        virtual void loadDouble4(const std::string &name, Eigen::Vector4f vec) = 0;
 
-        virtual void loadMat4(const std::string &name, Eigen::Matrix4d mat) = 0;
+        virtual void loadMat4(const std::string &name, Eigen::Matrix4f mat) = 0;
 
         static Shader* Create(const std::string &vertexFile, const std::string &fragmentFile);
         static Shader* Create(const std::string &vertexFile, const std::string &geometryFile, const std::string &fragmentFile);

@@ -154,9 +154,9 @@ int main(void)
     Entity triangle = Entity();
     api->initialize();
     std::vector<Eigen::Vector3d> vert;
-    vert.emplace_back(-0.5, -0.5, 0.0);
-    vert.emplace_back(0.5, -0.5, 0.0);
-    vert.emplace_back(0.0,  0.5, 0.0);
+    vert.emplace_back(-0.5, 0.5, 0.0);
+    vert.emplace_back(0.5, 0.5, 0.0);
+    vert.emplace_back(0.0,  -0.5, 0.0);
     std::vector<Eigen::Vector3i> indices;
     indices.emplace_back(0,1,2);
 
@@ -171,6 +171,8 @@ int main(void)
     renderer->submit(&triangle);
     api->setViewport(0, 0, 1280, 720);
 
+    Camera camera = Camera(CameraParameters{ {-10, 10, 0, 2, -10, 10}, Orthographic } );
+
     while (!glfwWindowShouldClose(window))
     {
         // Poll and handle events (inputs, window resize, etc.)
@@ -180,6 +182,8 @@ int main(void)
         // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
         glfwPollEvents();
         api->clear();
+        shader->bind();
+        shader->loadMat4("projection", camera.getProjection());
         renderer->render();
         renderer->endFrame();
 

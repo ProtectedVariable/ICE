@@ -5,6 +5,7 @@
 #include "OpenGLShader.h"
 #include <OpenGL/gl3.h>
 #include <fstream>
+#include <iostream>
 
 namespace ICE {
     void OpenGLShader::bind() const {
@@ -27,20 +28,20 @@ namespace ICE {
         glUniform1d(getLocation(name), v);
     }
 
-    void OpenGLShader::loadDouble3(const std::string &name, Eigen::Vector3d vec) {
+    void OpenGLShader::loadDouble3(const std::string &name, Eigen::Vector3f vec) {
         glUniform3d(getLocation(name), vec.x(), vec.y(), vec.z());
     }
 
-    void OpenGLShader::loadDouble4(const std::string &name, Eigen::Vector4d vec) {
+    void OpenGLShader::loadDouble4(const std::string &name, Eigen::Vector4f vec) {
         glUniform4d(getLocation(name), vec.x(), vec.y(), vec.z(), vec.w());
     }
 
-    void OpenGLShader::loadMat4(const std::string &name, Eigen::Matrix4d mat) {
-        glUniformMatrix4dv(getLocation(name), 1, GL_FALSE, mat.data());
+    void OpenGLShader::loadMat4(const std::string &name, Eigen::Matrix4f mat) {
+        glUniformMatrix4fv(getLocation(name), 1, GL_FALSE, mat.data());
     }
 
     GLint OpenGLShader::getLocation(const std::string &name) {
-        if(this->locations.find(name) != this->locations.end()) {
+        if(this->locations.find(name) == this->locations.end()) {
             GLint location = glGetUniformLocation(programID, name.c_str());
             locations[name] = location;
         }
