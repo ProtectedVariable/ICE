@@ -7,6 +7,8 @@
 
 #include <Graphics/VertexArray.h>
 #include <OpenGL/gl.h>
+#include <vector>
+#include <unordered_map>
 
 namespace ICE {
     class OpenGLVertexArray : public VertexArray {
@@ -17,11 +19,11 @@ namespace ICE {
 
         void unbind() const override;
 
-        void pushVertexBuffer(const VertexBuffer* buffer, int size) override;
+        void pushVertexBuffer(VertexBuffer* buffer, int size) override;
 
-        void pushVertexBuffer(const VertexBuffer* buffer, int position, int size) override;
+        void pushVertexBuffer(VertexBuffer* buffer, int position, int size) override;
 
-        void setIndexBuffer(const IndexBuffer* buffer) override;
+        void setIndexBuffer(IndexBuffer* buffer) override;
 
         int getIndexCount() const override;
 
@@ -31,6 +33,8 @@ namespace ICE {
         GLuint vaoID;
         int cnt = 0;
         GLuint indexCount;
+        std::unordered_map<GLuint, VertexBuffer*> buffers;
+        IndexBuffer* indexBuffer;
     };
 }
 

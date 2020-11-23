@@ -6,37 +6,36 @@
 #include <OpenGL/gl3.h>
 #include <OpenGL/gl.h>
 
-ICE::OpenGLVertexArray::OpenGLVertexArray() {
+ICE::OpenGLVertexArray::OpenGLVertexArray(): buffers(std::unordered_map<GLuint, VertexBuffer*>()) {
     glGenVertexArrays(1, &vaoID);
 }
 
 void ICE::OpenGLVertexArray::bind() const {
     glBindVertexArray(this->vaoID);
-    //TODO: Better buffer representation
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-    glEnableVertexAttribArray(2);
 }
 
 void ICE::OpenGLVertexArray::unbind() const {
     glBindVertexArray(0);
 }
 
-void ICE::OpenGLVertexArray::pushVertexBuffer(const ICE::VertexBuffer* buffer, int size) {
-    this->pushVertexBuffer(buffer, cnt++, size);
+void ICE::OpenGLVertexArray::pushVertexBuffer(ICE::VertexBuffer* buffer, int size) {
+    this->pushVertexBuffer(buffer, cnt, size);
 }
 
-void ICE::OpenGLVertexArray::pushVertexBuffer(const ICE::VertexBuffer* buffer, int position, int size) {
+void ICE::OpenGLVertexArray::pushVertexBuffer(ICE::VertexBuffer* buffer, int position, int size) {
     this->bind();
     buffer->bind();
     glEnableVertexAttribArray(position);
-    glVertexAttribPointer(position, size, GL_FLOAT, false, 0, 0);
+    glVertexAttribPointer(position, size, GL_FLOAT, false, 0, nullptr);
+    this->buffers[position] = buffer;
+    cnt = (position + 1) > cnt ? position + 1 : cnt;
 }
 
-void ICE::OpenGLVertexArray::setIndexBuffer(const ICE::IndexBuffer* buffer) {
+void ICE::OpenGLVertexArray::setIndexBuffer(ICE::IndexBuffer* buffer) {
     this->bind();
     buffer->bind();
     this->indexCount = buffer->getSize() / sizeof(int);
+    this->indexBuffer = buffer;
 }
 
 int ICE::OpenGLVertexArray::getIndexCount() const {
