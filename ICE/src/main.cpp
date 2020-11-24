@@ -40,6 +40,7 @@ using namespace gl;
 #include <Graphics/Shader.h>
 #include <Util/OBJLoader.h>
 #include <Scene/Entity.h>
+#include <Util/Logger.h>
 
 // [Win32] Our example includes a copy of glfw3.lib pre-compiled with VS2010 to maximize ease of testing and compatibility with old VS compilers.
 // To link with VS2010-era libraries, VS2015+ requires linking with legacy_stdio_definitions.lib, which we do using this pragma.
@@ -145,10 +146,22 @@ int main(void)
     bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
     // Main loop
+
+    Logger::Log(Logger::INFO, "Core", "Engine starting up...");
+    Logger::Log(Logger::DEBUG, "Core", "This is a debug message !");
+    Logger::Log(Logger::VERBOSE, "Core", "This is a verbose message !");
+    Logger::Log(Logger::INFO, "Core", "This is a info message !");
+    Logger::Log(Logger::WARNING, "Core", "This is a warning message !");
+    Logger::Log(Logger::ERROR, "Core", "This is a error message !");
+    Logger::Log(Logger::FATAL, "Core", "This is a fatal message !");
+    Logger::Log(Logger::VERBOSE, "Core", "Creating context...");
     Context* ctx = Context::Create(window);
     ctx->initialize();
+    Logger::Log(Logger::VERBOSE, "Core", "Done");
+    Logger::Log(Logger::VERBOSE, "Core", "Creating renderer...");
     Renderer* renderer = new ForwardRenderer();
     RendererAPI* api = RendererAPI::Create();
+    Logger::Log(Logger::VERBOSE, "Core", "Done");
 
 
     Entity triangle = Entity();
