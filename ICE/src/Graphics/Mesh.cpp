@@ -7,8 +7,8 @@
 #include <Util/BufferUtils.h>
 
 namespace ICE {
-    Mesh::Mesh(const std::vector<Eigen::Vector3d> &vertices, const std::vector<Eigen::Vector3d> &normals,
-               const std::vector<Eigen::Vector2d> &uvCoords, const std::vector<Eigen::Vector3i> &indices) : vertices(vertices), normals(normals), uvCoords(uvCoords), indices(indices) {
+    Mesh::Mesh(const std::vector<Eigen::Vector3f> &vertices, const std::vector<Eigen::Vector3f> &normals,
+               const std::vector<Eigen::Vector2f> &uvCoords, const std::vector<Eigen::Vector3i> &indices) : vertices(vertices), normals(normals), uvCoords(uvCoords), indices(indices) {
         vertexArray = VertexArray::Create();
         auto vertexBuffer = VertexBuffer::Create();
         auto normalsBuffer = VertexBuffer::Create();
@@ -26,15 +26,15 @@ namespace ICE {
         vertexArray->setIndexBuffer(indexBuffer);
     }
 
-    const std::vector<Eigen::Vector3d> &Mesh::getVertices() const {
+    const std::vector<Eigen::Vector3f> &Mesh::getVertices() const {
         return vertices;
     }
 
-    const std::vector<Eigen::Vector3d> &Mesh::getNormals() const {
+    const std::vector<Eigen::Vector3f> &Mesh::getNormals() const {
         return normals;
     }
 
-    const std::vector<Eigen::Vector2d> &Mesh::getUVCoords() const {
+    const std::vector<Eigen::Vector2f> &Mesh::getUVCoords() const {
         return uvCoords;
     }
 

@@ -12,20 +12,20 @@
 namespace ICE {
     class Mesh {
     private:
-        std::vector<Eigen::Vector3d> vertices, normals;
-        std::vector<Eigen::Vector2d> uvCoords;
+        std::vector<Eigen::Vector3f> vertices, normals;
+        std::vector<Eigen::Vector2f> uvCoords;
         std::vector<Eigen::Vector3i> indices;
 
         VertexArray* vertexArray;
     public:
-        Mesh(const std::vector<Eigen::Vector3d> &vertices, const std::vector<Eigen::Vector3d> &normals,
-             const std::vector<Eigen::Vector2d> &uvCoords, const std::vector<Eigen::Vector3i> &indices);
+        Mesh(const std::vector<Eigen::Vector3f> &vertices, const std::vector<Eigen::Vector3f> &normals,
+             const std::vector<Eigen::Vector2f> &uvCoords, const std::vector<Eigen::Vector3i> &indices);
 
-        const std::vector<Eigen::Vector3d> &getVertices() const;
+        const std::vector<Eigen::Vector3f> &getVertices() const;
 
-        const std::vector<Eigen::Vector3d> &getNormals() const;
+        const std::vector<Eigen::Vector3f> &getNormals() const;
 
-        const std::vector<Eigen::Vector2d> &getUVCoords() const;
+        const std::vector<Eigen::Vector2f> &getUVCoords() const;
 
         const std::vector<Eigen::Vector3i> &getIndices() const;
 

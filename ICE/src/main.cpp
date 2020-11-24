@@ -1,9 +1,7 @@
 // dear imgui: standalone example application for GLFW + OpenGL 3, using programmable pipeline
 // If you are new to dear imgui, see examples/README.txt and documentation at the top of imgui.cpp.
 // (GLFW is a cross-platform general purpose library for handling windows, inputs, OpenGL/Vulkan/Metal graphics context creation, etc.)
-
-#include <Scene/Entity.h>
-
+#define TINYOBJLOADER_IMPLEMENTATION
 #include <ImGUI/imgui.h>
 #include <ImGUI/imgui_impl_glfw.h>
 #include <ImGUI/imgui_impl_opengl3.h>
@@ -40,6 +38,8 @@ using namespace gl;
 #include <Graphics/Renderer.h>
 #include <Graphics/ForwardRenderer.h>
 #include <Graphics/Shader.h>
+#include <Util/OBJLoader.h>
+#include <Scene/Entity.h>
 
 // [Win32] Our example includes a copy of glfw3.lib pre-compiled with VS2010 to maximize ease of testing and compatibility with old VS compilers.
 // To link with VS2010-era libraries, VS2015+ requires linking with legacy_stdio_definitions.lib, which we do using this pragma.
@@ -154,16 +154,17 @@ int main(void)
     Entity triangle = Entity();
     api->initialize();
     std::vector<Eigen::Vector3d> vert;
-    vert.emplace_back(-0.5, 0.5, 0.0);
-    vert.emplace_back(0.5, 0.5, 0.0);
-    vert.emplace_back(0.0,  -0.5, 0.0);
+    vert.emplace_back(-0.5, -0.5, -10.0);
+    vert.emplace_back(0.5, -0.5, -10.0);
+    vert.emplace_back(0.0,  0.5, -10.0);
     std::vector<Eigen::Vector3i> indices;
     indices.emplace_back(0,1,2);
 
-    Mesh mesh(vert, std::vector<Eigen::Vector3d>(), std::vector<Eigen::Vector2d>(), indices);
+    Mesh* mesh = OBJLoader::loadFromOBJ("Assets/bunny.obj");
+    //Mesh mesh(vert, std::vector<Eigen::Vector3d>(), std::vector<Eigen::Vector2d>(), indices);
     Shader* shader = Shader::Create("Assets/test.vs","Assets/test.fs");
-
-    RenderComponent rc = RenderComponent(mesh, Material(shader));
+    Material mat = Material(shader);
+    RenderComponent rc = RenderComponent(mesh, &mat);
     triangle.addComponent(rc);
     auto tc = TransformComponent();
     triangle.addComponent(tc);
@@ -171,7 +172,8 @@ int main(void)
     renderer->submit(&triangle);
     api->setViewport(0, 0, 1280, 720);
 
-    Camera camera = Camera(CameraParameters{ {-10, 10, 0, 2, -10, 10}, Orthographic } );
+    Camera camera = Camera(CameraParameters{ {0.5, -0.5, -1, 1, -0.5, 0.5}, Orthographic } );
+    //Camera camera = Camera(CameraParameters{ {60, 16.f / 9.f, 0.01f, 10000}, Perspective } );
 
     while (!glfwWindowShouldClose(window))
     {

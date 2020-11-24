@@ -19,7 +19,7 @@ void ICE::OpenGLRendererAPI::clear() {
 
 void ICE::OpenGLRendererAPI::renderVertexArray(const ICE::VertexArray* va) {
     va->bind();
-    //glDrawArrays(GL_TRIANGLES, 0, 3);
+    //glDrawArrays(GL_TRIANGLES, 0, va->getIndexCount()*3);
     glDrawElements(GL_TRIANGLES, va->getIndexCount(), GL_UNSIGNED_INT, nullptr);
 }
 

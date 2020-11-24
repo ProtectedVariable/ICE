@@ -37,8 +37,8 @@ namespace ICE {
 
     void ForwardRenderer::render() {
         for(auto e : renderableEntities) {
-            e->getComponent<RenderComponent>()->getMaterial().getShader()->bind();
-            api->renderVertexArray(e->getComponent<RenderComponent>()->getMesh().getVertexArray());
+            e->getComponent<RenderComponent>()->getMaterial()->getShader()->bind();
+            api->renderVertexArray(e->getComponent<RenderComponent>()->getMesh()->getVertexArray());
         }
     }
 

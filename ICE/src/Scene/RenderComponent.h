@@ -12,15 +12,15 @@
 namespace ICE {
     class RenderComponent : public Component {
     public:
-        RenderComponent(const Mesh &mesh, const Material &material);
+        RenderComponent(Mesh* mesh, Material* material);
 
-        const Mesh &getMesh() const;
+        Mesh* getMesh() const;
 
-        const Material &getMaterial() const;
+        Material* getMaterial() const;
 
     private:
-        Mesh mesh;
-        Material material;
+        Mesh* mesh;
+        Material* material;
     };
 }
 

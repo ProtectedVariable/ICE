@@ -12,7 +12,7 @@ namespace ICE {
     class BufferUtils {
     public:
         //TODO: Might be able to make it all in one with VectorXd and the data() function
-        static float* CreateFloatBuffer(const std::vector<Eigen::Vector3d>& vectors) {
+        static float* CreateFloatBuffer(const std::vector<Eigen::Vector3f>& vectors) {
             float* buffer = static_cast<float *>(malloc(sizeof(float) * 3 * vectors.size()));
             uint32_t i = 0;
             for(const auto &v : vectors) {
@@ -24,7 +24,7 @@ namespace ICE {
             return buffer;
         }
 
-        static float* CreateFloatBuffer(const std::vector<Eigen::Vector2d>& vectors) {
+        static float* CreateFloatBuffer(const std::vector<Eigen::Vector2f>& vectors) {
             auto* buffer = static_cast<float *>(malloc(sizeof(float) * 2 * vectors.size()));
             uint32_t i = 0;
             for(const auto &v : vectors) {
