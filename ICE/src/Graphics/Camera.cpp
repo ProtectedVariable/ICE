@@ -28,7 +28,6 @@ namespace ICE {
             projection(2, 2) = -(parameters.intrinsic[ICE_CAMERA_FAR] + parameters.intrinsic[ICE_CAMERA_NEAR]) / (parameters.intrinsic[ICE_CAMERA_FAR] - parameters.intrinsic[ICE_CAMERA_NEAR]);
             projection(3, 2) = -1;
             projection(2, 3) = -(2*parameters.intrinsic[ICE_CAMERA_FAR]*parameters.intrinsic[ICE_CAMERA_NEAR]) / (parameters.intrinsic[ICE_CAMERA_FAR] - parameters.intrinsic[ICE_CAMERA_NEAR]);
-            std::cout << projection << std::endl;
         }
     }
 

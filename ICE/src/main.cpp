@@ -180,13 +180,13 @@ int main(void)
     api->setViewport(0, 0, 1280, 720);
 
     //Camera camera = Camera(CameraParameters{ {1, -1, -1, 1, -1, 1}, Orthographic } );
-    Camera camera = Camera(CameraParameters{ {60, 16.f / 9.f, 0.01f, 1000 }, Perspective } );
+    Camera camera = Camera(CameraParameters{ {30, 16.f / 9.f, 0.01f, 1000 }, Perspective } );
     auto position = Eigen::Vector3f();
     auto rotation = Eigen::Vector3f();
     position.setZero();
     rotation.setZero();
 
-    position.z() = 2;
+    position.z() = 1.f;
 
     while (!glfwWindowShouldClose(window))
     {
@@ -198,12 +198,12 @@ int main(void)
         glfwPollEvents();
         api->clear();
 
-        rotation.y() += 0.01f;
+        triangle.getComponent<TransformComponent>()->getRotation()->y() += 0.01f;
         auto viewMatrix = camera.lookThrough(position, rotation);
         shader->bind();
-        //viewMatrix.setIdentity();
+        shader->loadMat4("model", triangle.getComponent<TransformComponent>()->getTransformation());
         shader->loadMat4("view", viewMatrix);
-        std::cout << viewMatrix << std::endl;
+        std::cout << triangle.getComponent<TransformComponent>()->getTransformation() << std::endl;
         std::cout << "-----------------------" << std::endl;
         shader->loadMat4("projection", camera.getProjection());
         renderer->render();
