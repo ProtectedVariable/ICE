@@ -4,6 +4,7 @@
 
 #include "Camera.h"
 #include <Util/ICEMath.h>
+#include <iostream>
 
 namespace ICE {
 
@@ -27,10 +28,17 @@ namespace ICE {
             projection(2, 2) = -(parameters.intrinsic[ICE_CAMERA_FAR] + parameters.intrinsic[ICE_CAMERA_NEAR]) / (parameters.intrinsic[ICE_CAMERA_FAR] - parameters.intrinsic[ICE_CAMERA_NEAR]);
             projection(3, 2) = -1;
             projection(2, 3) = -(2*parameters.intrinsic[ICE_CAMERA_FAR]*parameters.intrinsic[ICE_CAMERA_NEAR]) / (parameters.intrinsic[ICE_CAMERA_FAR] - parameters.intrinsic[ICE_CAMERA_NEAR]);
+            std::cout << projection << std::endl;
         }
     }
 
     const Eigen::Matrix4f &Camera::getProjection() const {
         return projection;
+    }
+
+    Eigen::Matrix4f Camera::lookThrough(Eigen::Vector3f position, Eigen::Vector3f rotation) {
+        auto viewMatrix = translationMatrix(-position);
+        viewMatrix = rotationMatrix(-rotation) * viewMatrix;
+        return viewMatrix;
     }
 }

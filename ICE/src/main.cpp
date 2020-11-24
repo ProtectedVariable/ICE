@@ -41,6 +41,7 @@ using namespace gl;
 #include <Util/OBJLoader.h>
 #include <Scene/Entity.h>
 #include <Util/Logger.h>
+#include <iostream>
 
 // [Win32] Our example includes a copy of glfw3.lib pre-compiled with VS2010 to maximize ease of testing and compatibility with old VS compilers.
 // To link with VS2010-era libraries, VS2015+ requires linking with legacy_stdio_definitions.lib, which we do using this pragma.
@@ -148,13 +149,6 @@ int main(void)
     // Main loop
 
     Logger::Log(Logger::INFO, "Core", "Engine starting up...");
-    Logger::Log(Logger::DEBUG, "Core", "This is a debug message !");
-    Logger::Log(Logger::VERBOSE, "Core", "This is a verbose message !");
-    Logger::Log(Logger::INFO, "Core", "This is a info message !");
-    Logger::Log(Logger::WARNING, "Core", "This is a warning message !");
-    Logger::Log(Logger::ERROR, "Core", "This is a error message !");
-    Logger::Log(Logger::FATAL, "Core", "This is a fatal message !");
-    Logger::Log(Logger::VERBOSE, "Core", "Creating context...");
     Context* ctx = Context::Create(window);
     ctx->initialize();
     Logger::Log(Logger::VERBOSE, "Core", "Done");
@@ -185,8 +179,14 @@ int main(void)
     renderer->submit(&triangle);
     api->setViewport(0, 0, 1280, 720);
 
-    Camera camera = Camera(CameraParameters{ {0.5, -0.5, -1, 1, -0.5, 0.5}, Orthographic } );
-    //Camera camera = Camera(CameraParameters{ {60, 16.f / 9.f, 0.01f, 10000}, Perspective } );
+    //Camera camera = Camera(CameraParameters{ {1, -1, -1, 1, -1, 1}, Orthographic } );
+    Camera camera = Camera(CameraParameters{ {60, 16.f / 9.f, 0.01f, 1000 }, Perspective } );
+    auto position = Eigen::Vector3f();
+    auto rotation = Eigen::Vector3f();
+    position.setZero();
+    rotation.setZero();
+
+    position.z() = 2;
 
     while (!glfwWindowShouldClose(window))
     {
@@ -197,7 +197,14 @@ int main(void)
         // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
         glfwPollEvents();
         api->clear();
+
+        rotation.y() += 0.01f;
+        auto viewMatrix = camera.lookThrough(position, rotation);
         shader->bind();
+        //viewMatrix.setIdentity();
+        shader->loadMat4("view", viewMatrix);
+        std::cout << viewMatrix << std::endl;
+        std::cout << "-----------------------" << std::endl;
         shader->loadMat4("projection", camera.getProjection());
         renderer->render();
         renderer->endFrame();

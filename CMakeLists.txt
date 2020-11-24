@@ -33,7 +33,6 @@ add_executable(ICE_TEST
         ICE/test/Tests.cpp
         ICE/src/Scene/Scene.cpp ICE/src/Scene/Scene.h ICE/src/Util/OBJLoader.cpp ICE/src/Util/OBJLoader.h ICE/src/Graphics/Renderer.h ICE/src/Graphics/RenderSystem.cpp ICE/src/Graphics/RenderSystem.h ICE/src/Core/System.h ICE/src/Graphics/RendererConfig.h ICE/src/Graphics/Buffers.h ICE/src/Graphics/FrameBuffer.h ICE/src/Graphics/Context.h ICE/src/Graphics/VertexArray.h ICE/src/Graphics/API/GraphicsAPI.h ICE/src/Graphics/API/OpenGL/OpenGLVertexArray.cpp ICE/src/Graphics/API/OpenGL/OpenGLVertexArray.h ICE/src/Graphics/API/OpenGL/OpenGLContext.cpp ICE/src/Graphics/API/OpenGL/OpenGLContext.h ICE/src/Graphics/API/OpenGL/OpenGLRendererAPI.cpp ICE/src/Graphics/API/OpenGL/OpenGLRendererAPI.h ICE/src/Graphics/API/OpenGL/OpenGLBuffers.cpp ICE/src/Graphics/API/OpenGL/OpenGLBuffers.h ICE/src/Graphics/API/GraphicsAPI.cpp ICE/src/Graphics/Shader.h ICE/src/Graphics/API/OpenGL/OpenGLShader.cpp ICE/src/Graphics/API/OpenGL/OpenGLShader.h ICE/src/Graphics/ForwardRenderer.cpp ICE/src/Graphics/ForwardRenderer.h ICE/src/Graphics/Camera.cpp ICE/src/Graphics/Camera.h ICE/src/Scene/LightComponent.cpp ICE/src/Scene/LightComponent.h ICE/src/Util/BufferUtils.cpp ICE/src/Util/BufferUtils.h ICE/src/Util/ICEMath.h ICE/src/Util/Logger.cpp ICE/src/Util/Logger.h)
 
+file(COPY ICE/Assets DESTINATION ${CMAKE_BINARY_DIR})
 
 target_link_libraries(ICE glfw3 ${COCOA_LIBRARY} ${OPENGL_LIBRARY} ${IOKIT_LIBRARY})
-
-file(COPY ICE/Assets DESTINATION ${CMAKE_BINARY_DIR})

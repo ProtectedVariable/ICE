@@ -13,14 +13,14 @@ namespace ICE {
     public:
         TransformComponent();
 
-        const Eigen::Vector3d &getPosition() const { return position; };
+        const Eigen::Vector3f* getPosition() const { return &position; };
 
-        const Eigen::Vector3d &getRotation() const { return rotation; };
+        const Eigen::Vector3f* getRotation() const { return &rotation; };
 
-        const Eigen::Vector3d &getScale() const { return scale; };
+        const Eigen::Vector3f* getScale() const { return &scale; };
 
     private:
-        Eigen::Vector3d position, rotation, scale;
+        Eigen::Vector3f position, rotation, scale;
     };
 }
 

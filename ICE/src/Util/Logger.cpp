@@ -38,7 +38,7 @@ namespace ICE {
                     color = "[0;31m";
                     break;
                 case FATAL:
-                    color = "[0;41m";
+                    color = "[1;41m";
                     break;
             }
             printf("\033%s[%s]{%s}\t\t", color, severityString[s], module);

@@ -6,6 +6,12 @@
 #define ICE_LIGHTCOMPONENT_H
 
 namespace ICE {
+    enum LightType {
+        PointLight,
+        DirectionalLight,
+        SpotLight
+    };
+
     class LightComponent {
 
     };

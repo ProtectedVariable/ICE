@@ -31,6 +31,7 @@ namespace ICE {
     public:
         Camera(const CameraParameters &parameters);
 
+        Eigen::Matrix4f lookThrough(Eigen::Vector3f position, Eigen::Vector3f rotation);
         const Eigen::Matrix4f &getProjection() const;
 
     private:

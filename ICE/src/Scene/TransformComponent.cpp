@@ -8,7 +8,7 @@
 namespace ICE {
 
     TransformComponent::TransformComponent():
-            position(Eigen::Vector3d(0, 0, 0)),
-            rotation(Eigen::Vector3d(0, 0, 0)),
-            scale(Eigen::Vector3d(1,1,1)) {}
+            position(Eigen::Vector3f(0, 0, 0)),
+            rotation(Eigen::Vector3f(0, 0, 0)),
+            scale(Eigen::Vector3f(1,1,1)) {}
 }
