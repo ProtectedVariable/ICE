@@ -5,15 +5,21 @@
 #include "Mesh.h"
 #include <Graphics/VertexArray.h>
 #include <Util/BufferUtils.h>
+#include <iostream>
 
 namespace ICE {
     Mesh::Mesh(const std::vector<Eigen::Vector3f> &vertices, const std::vector<Eigen::Vector3f> &normals,
                const std::vector<Eigen::Vector2f> &uvCoords, const std::vector<Eigen::Vector3i> &indices) : vertices(vertices), normals(normals), uvCoords(uvCoords), indices(indices) {
+
         vertexArray = VertexArray::Create();
+
         auto vertexBuffer = VertexBuffer::Create();
         auto normalsBuffer = VertexBuffer::Create();
         auto uvBuffer = VertexBuffer::Create();
         auto indexBuffer = IndexBuffer::Create();
+
+        std::cout << vertices.size() << " " << normals.size() << std::endl;
+        std::cout << normals[0] << std::endl;
 
         vertexBuffer->putData(BufferUtils::CreateFloatBuffer(vertices), 3*vertices.size()*sizeof(float));
         normalsBuffer->putData(BufferUtils::CreateFloatBuffer(normals), 3*normals.size()*sizeof(float));

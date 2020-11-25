@@ -37,6 +37,12 @@ namespace ICE {
         for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++) {
             int fv = shapes[s].mesh.num_face_vertices[f];
             assert(fv == 3); //We only want triangle faces for now
+            Eigen::Vector3f trianglesVertices[3] = {
+                    Eigen::Vector3f(),
+                    Eigen::Vector3f(),
+                    Eigen::Vector3f()
+            };
+            bool computedNormals = false;
             for (size_t v = 0; v < fv; v++) {
                 tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + v];
                 tinyobj::real_t vx = attrib.vertices[3*idx.vertex_index+0];
@@ -47,6 +53,11 @@ namespace ICE {
                     nx = attrib.normals[3*idx.normal_index+0];
                     ny = attrib.normals[3*idx.normal_index+1];
                     nz = attrib.normals[3*idx.normal_index+2];
+                } else {
+                    computedNormals = true;
+                    trianglesVertices[v].x() = vx;
+                    trianglesVertices[v].y() = vy;
+                    trianglesVertices[v].z() = vz;
                 }
                 tinyobj::real_t tx,ty;
                 if(!attrib.texcoords.empty()) {
@@ -54,8 +65,20 @@ namespace ICE {
                     ty = attrib.texcoords[2*idx.texcoord_index+1];
                 }
                 vertices.emplace_back(vx,vy,vz);
-                normals.emplace_back(nx,ny,nz);
+                if(!computedNormals) {
+                    auto normal = Eigen::Vector3f(nx,ny,nz).normalized();
+                    normals.emplace_back(normal);
+                }
                 uvs.emplace_back(tx,ty);
+            }
+            if(computedNormals) {
+                for (size_t v = 0; v < fv; v++) {
+                    auto n = (trianglesVertices[0] - trianglesVertices[1]).cross(trianglesVertices[1]-trianglesVertices[2]);
+                    n.normalize();
+                    normals.push_back(n);
+                    normals.push_back(n);
+                    normals.push_back(n);
+                }
             }
             index_offset += fv;
         }

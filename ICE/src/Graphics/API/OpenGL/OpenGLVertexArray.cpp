@@ -5,6 +5,7 @@
 #include "OpenGLVertexArray.h"
 #include <OpenGL/gl3.h>
 #include <OpenGL/gl.h>
+#include <iostream>
 
 ICE::OpenGLVertexArray::OpenGLVertexArray(): buffers(std::unordered_map<GLuint, VertexBuffer*>()) {
     glGenVertexArrays(1, &vaoID);
@@ -26,7 +27,7 @@ void ICE::OpenGLVertexArray::pushVertexBuffer(ICE::VertexBuffer* buffer, int pos
     this->bind();
     buffer->bind();
     glEnableVertexAttribArray(position);
-    glVertexAttribPointer(position, size, GL_FLOAT, false, 0, nullptr);
+    glVertexAttribPointer(position, size, GL_FLOAT, false, 0, 0);
     this->buffers[position] = buffer;
     cnt = (position + 1) > cnt ? position + 1 : cnt;
 }

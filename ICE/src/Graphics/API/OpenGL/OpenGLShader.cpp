@@ -6,6 +6,7 @@
 #include <OpenGL/gl3.h>
 #include <fstream>
 #include <iostream>
+#include <Util/Logger.h>
 
 namespace ICE {
     void OpenGLShader::bind() const {
@@ -50,14 +51,12 @@ namespace ICE {
 
 
     bool compileShader(GLenum type, const std::string &source, GLint* shader) {
-        std::ifstream vs(source);
-        std::stringstream shaderBuffer;
-        shaderBuffer << vs.rdbuf();
-        vs.close();
-        const char* shaderSource = shaderBuffer.str().c_str();
-
+        std::ifstream ifs(source);
+        std::string content( (std::istreambuf_iterator<char>(ifs) ),
+                             (std::istreambuf_iterator<char>()    ) );
         *shader = glCreateShader(type);
-        glShaderSource(*shader, 1, &shaderSource, 0);
+        const char* src = (content.c_str());
+        glShaderSource(*shader, 1, &src, 0);
 
         glCompileShader(*shader);
 
@@ -72,15 +71,22 @@ namespace ICE {
         this->programID = glCreateProgram();
 
         GLint vertexShader;
-        compileShader(GL_VERTEX_SHADER, vertexFile, &vertexShader) ?: printf("Error while compiling vertex shader");
+        Logger::Log(Logger::VERBOSE, "Graphics", "Compiling vertex shader...");
+        if(!compileShader(GL_VERTEX_SHADER, vertexFile, &vertexShader)) {
+            Logger::Log(Logger::FATAL, "Graphics", "Error while compiling vertex shader");
+        }
         glAttachShader(programID, vertexShader);
 
         GLint fragmentShader;
-        compileShader(GL_FRAGMENT_SHADER, fragmentFile, &fragmentShader) ?: printf("Error while compiling fragment shader");
+        Logger::Log(Logger::VERBOSE, "Graphics", "Compiling fragment shader...");
+        if(!compileShader(GL_FRAGMENT_SHADER, fragmentFile, &fragmentShader)) {
+            Logger::Log(Logger::FATAL, "Graphics", "Error while compiling fragment shader");
+        }
         glAttachShader(programID, fragmentShader);
 
         if(!geoFile.empty()){
             GLint geoShader;
+            Logger::Log(Logger::VERBOSE, "Graphics", "Compiling geometric shader...");
             compileShader(GL_GEOMETRY_SHADER, geoFile, &geoShader) ?: printf("Error while compiling geometric shader");
             glAttachShader(programID, geoShader);
         }
@@ -89,7 +95,7 @@ namespace ICE {
         GLint linkStatus = 0;
         glGetProgramiv(programID, GL_LINK_STATUS, &linkStatus);
         if(linkStatus == GL_FALSE) {
-            printf("Error while linking shader");
+            Logger::Log(Logger::FATAL, "Graphics", "Error while linking shader");
         }
     }
 
