@@ -203,8 +203,6 @@ int main(void)
         shader->bind();
         shader->loadMat4("model", triangle.getComponent<TransformComponent>()->getTransformation());
         shader->loadMat4("view", viewMatrix);
-        std::cout << triangle.getComponent<TransformComponent>()->getTransformation() << std::endl;
-        std::cout << "-----------------------" << std::endl;
         shader->loadMat4("projection", camera.getProjection());
         renderer->render();
         renderer->endFrame();
