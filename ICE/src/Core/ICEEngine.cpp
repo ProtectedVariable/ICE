@@ -50,12 +50,12 @@ using namespace gl;
 #pragma comment(lib, "legacy_stdio_definitions")
 #endif
 
+using namespace ICE;
+
 static void glfw_error_callback(int error, const char* description)
 {
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
-
-using namespace ICE;
 
 int main(void)
 {
@@ -82,7 +82,7 @@ int main(void)
 #endif
 
     // Create window with graphics context
-    GLFWwindow* window = glfwCreateWindow(1280, 720, "Dear ImGui GLFW+OpenGL3 example", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(1280, 720, "ICE Engine", NULL, NULL);
     if (window == NULL)
         return 1;
     glfwMakeContextCurrent(window);
