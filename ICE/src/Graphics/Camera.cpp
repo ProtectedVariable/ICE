@@ -9,6 +9,10 @@
 namespace ICE {
 
     Camera::Camera(const CameraParameters &parameters) : parameters(parameters), projection(Eigen::Matrix4f()) {
+        this->position = Eigen::Vector3f();
+        this->rotation = Eigen::Vector3f();
+        this->position.setZero();
+        this->rotation.setZero();
         if(parameters.type == Orthographic) {
             projection.setZero();
             projection(0, 0) = 2.0f/(parameters.intrinsic[ICE_CAMERA_RIGHT] - parameters.intrinsic[ICE_CAMERA_LEFT]);
@@ -35,9 +39,17 @@ namespace ICE {
         return projection;
     }
 
-    Eigen::Matrix4f Camera::lookThrough(Eigen::Vector3f position, Eigen::Vector3f rotation) {
+    Eigen::Matrix4f Camera::lookThrough() {
         auto viewMatrix = translationMatrix(-position);
         viewMatrix = rotationMatrix(-rotation) * viewMatrix;
         return viewMatrix;
+    }
+
+    Eigen::Vector3f &Camera::getPosition() {
+        return position;
+    }
+
+    Eigen::Vector3f &Camera::getRotation() {
+        return rotation;
     }
 }

@@ -22,10 +22,9 @@ namespace ICE {
         virtual void initialize(RendererAPI* api, RendererConfig config) = 0;
         virtual void submitScene(Scene* scene) = 0;
         virtual void submit(Entity* e) = 0;
-        virtual void prepareFrame() = 0;
+        virtual void prepareFrame(Camera* camera) = 0;
         virtual void render() = 0;
         virtual void endFrame() = 0;
-        virtual void setCamera(const Camera* camera) = 0;
         virtual void setTarget(FrameBuffer* target) = 0;
         virtual void resize(uint32_t width, uint32_t height) = 0;
 

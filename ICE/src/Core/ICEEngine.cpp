@@ -1,15 +1,11 @@
-// dear imgui: standalone example application for GLFW + OpenGL 3, using programmable pipeline
-// If you are new to dear imgui, see examples/README.txt and documentation at the top of imgui.cpp.
-// (GLFW is a cross-platform general purpose library for handling windows, inputs, OpenGL/Vulkan/Metal graphics context creation, etc.)
+//
+// Created by Thomas Ibanez on 25.11.20.
+//
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <ImGUI/imgui.h>
 #include <ImGUI/imgui_impl_glfw.h>
 #include <ImGUI/imgui_impl_opengl3.h>
-#include <stdio.h>
-// About Desktop OpenGL function loaders:
-//  Modern desktop OpenGL doesn't have a standard portable header file to load OpenGL function pointers.
-//  Helper libraries are often used for this purpose! Here we are supporting a few common ones (gl3w, glew, glad).
-//  You may use another loader/header of your choice (glext, glLoadGen, etc.), or chose to manually implement your own.
+
 #if defined(IMGUI_IMPL_OPENGL_LOADER_GL3W)
 #include <GL/gl3w.h>            // Initialize with gl3wInit()
 #elif defined(IMGUI_IMPL_OPENGL_LOADER_GLEW)
@@ -32,7 +28,6 @@ using namespace gl;
 #include IMGUI_IMPL_OPENGL_LOADER_CUSTOM
 #endif
 
-// Include glfw3.h after our OpenGL definitions
 #include <GLFW/glfw3.h>
 #include <Scene/TransformComponent.h>
 #include <Graphics/Renderer.h>
@@ -41,7 +36,8 @@ using namespace gl;
 #include <Util/OBJLoader.h>
 #include <Scene/Entity.h>
 #include <Util/Logger.h>
-#include <iostream>
+#include <Graphics/RenderSystem.h>
+#include "ICEEngine.h"
 
 // [Win32] Our example includes a copy of glfw3.lib pre-compiled with VS2010 to maximize ease of testing and compatibility with old VS compilers.
 // To link with VS2010-era libraries, VS2015+ requires linking with legacy_stdio_definitions.lib, which we do using this pragma.
@@ -54,10 +50,60 @@ using namespace ICE;
 
 static void glfw_error_callback(int error, const char* description)
 {
-    fprintf(stderr, "Glfw Error %d: %s\n", error, description);
+    Logger::Log(Logger::FATAL, "Core", "GLFW Error %d %s", error, description);
 }
 
-int main(void)
+namespace ICE {
+    ICEEngine::ICEEngine(void* window): systems(std::vector<System*>()), window(window) {
+        api = RendererAPI::Create();
+    }
+
+    void ICEEngine::initialize() {
+        Logger::Log(Logger::INFO, "Core", "Engine starting up...");
+        Logger::Log(Logger::VERBOSE, "Core", "Creating context...");
+        ctx = Context::Create(window);
+        ctx->initialize();
+        Logger::Log(Logger::VERBOSE, "Core", "Done");
+
+        api->initialize();
+        Renderer* renderer = new ForwardRenderer();
+        renderer->initialize(api, RendererConfig());
+        api->setViewport(0, 0, 1280, 720);
+
+        this->currentScene = new Scene();
+        Camera* camera = new Camera(CameraParameters{ {60, 16.f / 9.f, 0.01f, 1000 }, Perspective } );
+        camera->getPosition().z() = 1;
+
+        Entity* bunny = new Entity();
+        Mesh* mesh = OBJLoader::loadFromOBJ("Assets/bunny.obj");
+        Shader* shader = Shader::Create("Assets/test.vs","Assets/test.fs");
+        Material* mat = new Material(shader);
+        RenderComponent* rc = new RenderComponent(mesh, mat);
+        bunny->addComponent(rc);
+        auto tc = new TransformComponent();
+        bunny->addComponent(tc);
+
+        currentScene->addEntity("root", "bunny", bunny);
+
+        systems.push_back(new RenderSystem(renderer, camera));
+    }
+
+    void ICEEngine::loop() {
+        while (!glfwWindowShouldClose(static_cast<GLFWwindow*>(window)))
+        {
+            glfwPollEvents();
+            api->clear();
+
+            for(auto s : systems) {
+                s->update(currentScene,0.f);
+            }
+
+            glfwSwapBuffers(static_cast<GLFWwindow*>(window));
+        }
+    }
+}
+
+int main()
 {
     // Setup window
     glfwSetErrorCallback(glfw_error_callback);
@@ -108,7 +154,7 @@ int main(void)
 #endif
     if (err)
     {
-        fprintf(stderr, "Failed to initialize OpenGL loader!\n");
+        Logger::Log(Logger::FATAL, "Core", "Failed to initialize OpenGL loader!");
         return 1;
     }
 
@@ -127,6 +173,9 @@ int main(void)
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
+    ICEEngine engine = ICEEngine(window);
+    engine.initialize();
+    engine.loop();
     // Load Fonts
     // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
     // - AddFontFromFileTTF() will return the ImFont* so you can store it if you need to select the font among multiple.
@@ -141,74 +190,6 @@ int main(void)
     //io.Fonts->AddFontFromFileTTF("../../misc/fonts/ProggyTiny.ttf", 10.0f);
     //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
     //IM_ASSERT(font != NULL);
-
-    // Our state
-    bool show_demo_window = true;
-    bool show_another_window = false;
-    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-    // Main loop
-
-    Logger::Log(Logger::INFO, "Core", "Engine starting up...");
-    Context* ctx = Context::Create(window);
-    ctx->initialize();
-    Logger::Log(Logger::VERBOSE, "Core", "Done");
-    Logger::Log(Logger::VERBOSE, "Core", "Creating renderer...");
-    Renderer* renderer = new ForwardRenderer();
-    RendererAPI* api = RendererAPI::Create();
-    Logger::Log(Logger::VERBOSE, "Core", "Done");
-
-
-    Entity triangle = Entity();
-    api->initialize();
-    std::vector<Eigen::Vector3d> vert;
-    vert.emplace_back(-0.5, -0.5, -10.0);
-    vert.emplace_back(0.5, -0.5, -10.0);
-    vert.emplace_back(0.0,  0.5, -10.0);
-    std::vector<Eigen::Vector3i> indices;
-    indices.emplace_back(0,1,2);
-
-    Mesh* mesh = OBJLoader::loadFromOBJ("Assets/bunny.obj");
-    //Mesh mesh(vert, std::vector<Eigen::Vector3d>(), std::vector<Eigen::Vector2d>(), indices);
-    Shader* shader = Shader::Create("Assets/test.vs","Assets/test.fs");
-    Material mat = Material(shader);
-    RenderComponent rc = RenderComponent(mesh, &mat);
-    triangle.addComponent(rc);
-    auto tc = TransformComponent();
-    triangle.addComponent(tc);
-    renderer->initialize(api, RendererConfig());
-    renderer->submit(&triangle);
-    api->setViewport(0, 0, 1280, 720);
-
-    //Camera camera = Camera(CameraParameters{ {1, -1, -1, 1, -1, 1}, Orthographic } );
-    Camera camera = Camera(CameraParameters{ {30, 16.f / 9.f, 0.01f, 1000 }, Perspective } );
-    auto position = Eigen::Vector3f();
-    auto rotation = Eigen::Vector3f();
-    position.setZero();
-    rotation.setZero();
-
-    position.z() = 1.f;
-
-    while (!glfwWindowShouldClose(window))
-    {
-        // Poll and handle events (inputs, window resize, etc.)
-        // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
-        // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application.
-        // - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application.
-        // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
-        glfwPollEvents();
-        api->clear();
-
-        triangle.getComponent<TransformComponent>()->getRotation()->y() += 0.01f;
-        auto viewMatrix = camera.lookThrough(position, rotation);
-        shader->bind();
-        shader->loadMat4("model", triangle.getComponent<TransformComponent>()->getTransformation());
-        shader->loadMat4("view", viewMatrix);
-        shader->loadMat4("projection", camera.getProjection());
-        renderer->render();
-        renderer->endFrame();
-
-        glfwSwapBuffers(window);
-    }
 
     // Cleanup
     ImGui_ImplOpenGL3_Shutdown();

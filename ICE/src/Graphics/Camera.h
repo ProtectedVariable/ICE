@@ -31,13 +31,18 @@ namespace ICE {
     public:
         Camera(const CameraParameters &parameters);
 
-        Eigen::Matrix4f lookThrough(Eigen::Vector3f position, Eigen::Vector3f rotation);
+        Eigen::Matrix4f lookThrough();
+
         const Eigen::Matrix4f &getProjection() const;
+        Eigen::Vector3f &getPosition();
+        Eigen::Vector3f &getRotation();
 
     private:
         CameraParameters parameters;
         float zoom;
         Eigen::Matrix4f projection;
+        Eigen::Vector3f position;
+        Eigen::Vector3f rotation;
     };
 }
 

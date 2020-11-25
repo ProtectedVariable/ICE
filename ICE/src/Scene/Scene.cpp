@@ -7,17 +7,17 @@
 #include <utility>
 
 namespace ICE {
-    Scene::Scene(Renderer* renderer_) : root(SceneNode(nullptr)), nodeByID(std::unordered_map<std::string, SceneNode*>()) , renderer(renderer_) {
+    Scene::Scene() : root(SceneNode(nullptr)), nodeByID(std::unordered_map<std::string, SceneNode*>()) {
         nodeByID["root"] = &root;
     }
 
-    bool Scene::addEntity(const std::string& parent, const std::string& uid, Entity &entity) {
+    bool Scene::addEntity(const std::string& parent, const std::string& uid, Entity* entity) {
         if(this->nodeByID.find(uid) != this->nodeByID.end()) {
             return false; //IDs must be unique
         }
         SceneNode* parentNode = this->getByID(parent);
         if(parentNode != nullptr) {
-            auto* childNode = new SceneNode(&entity);
+            auto* childNode = new SceneNode(entity);
             parentNode->children.push_back(childNode);
             nodeByID[uid] = childNode;
             return true;
@@ -57,21 +57,15 @@ namespace ICE {
         return nullptr;
     }
 
-    const Renderer* Scene::getRenderer() const {
-        return renderer;
-    }
-
-    void Scene::setRenderer(const Renderer* renderer) {
-        this->renderer = renderer;
-    }
-
     std::vector<Entity *> Scene::getEntities() {
         auto nodes = std::vector<SceneNode*>();
         nodes.reserve(this->nodeByID.size());
         auto entities = std::vector<Entity*>();
         entities.reserve(this->nodeByID.size());
         for(const auto& kv : this->nodeByID) {
-            nodes.push_back(kv.second);
+            if(kv.first != "root") {
+                nodes.push_back(kv.second);
+            }
         }
         for(auto n : nodes) {
             entities.push_back(n->entity);

@@ -5,7 +5,28 @@
 #include "RenderSystem.h"
 
 namespace ICE {
-    void RenderSystem::update(Scene scene, double delta) {
-        //scene.getRenderer().dostuff()
+    void RenderSystem::update(Scene* scene, double delta) {
+        renderer->submitScene(scene);
+        renderer->prepareFrame(camera);
+        renderer->render();
+        renderer->endFrame();
+    }
+
+    RenderSystem::RenderSystem(Renderer *renderer, Camera* camera) : renderer(renderer), camera(camera) {}
+
+    Renderer *RenderSystem::getRenderer() const {
+        return renderer;
+    }
+
+    void RenderSystem::setRenderer(Renderer *renderer) {
+        RenderSystem::renderer = renderer;
+    }
+
+    Camera *RenderSystem::getCamera() const {
+        return camera;
+    }
+
+    void RenderSystem::setCamera(Camera *camera) {
+        RenderSystem::camera = camera;
     }
 }

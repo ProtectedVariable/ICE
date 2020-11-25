@@ -9,7 +9,8 @@
 
 namespace ICE {
     class System {
-        virtual void update(Scene scene, double delta) = 0;
+    public:
+        virtual void update(Scene* scene, double delta) = 0;
     };
 }
 

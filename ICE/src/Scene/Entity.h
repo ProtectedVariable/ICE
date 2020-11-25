@@ -20,12 +20,13 @@ namespace ICE {
 
         template<typename T>
         bool hasComponent() {
-            return this->components.find(typeid(T)) != this->components.end();
+            auto f = this->components.find(typeid(T));
+            return f != this->components.end();
         }
 
         template<typename T>
-        bool addComponent(T &component) {
-            this->components[typeid(component)] = &component;
+        bool addComponent(T* component) {
+            this->components[typeid(T)] = component;
             return true;
         }
 

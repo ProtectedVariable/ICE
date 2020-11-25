@@ -19,13 +19,11 @@ namespace ICE {
 
         void submit(Entity *e) override;
 
-        void prepareFrame() override;
+        void prepareFrame(Camera* camera) override;
 
         void render() override;
 
         void endFrame() override;
-
-        void setCamera(const Camera *camera) override;
 
         void setTarget(FrameBuffer *target) override;
 
@@ -36,7 +34,6 @@ namespace ICE {
         std::vector<Entity*> lightEntities;
         RendererAPI* api;
         RendererConfig config;
-        const Camera* currentCamera;
     };
 }
 

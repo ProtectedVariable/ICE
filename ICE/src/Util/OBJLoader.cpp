@@ -73,7 +73,7 @@ namespace ICE {
             }
             if(computedNormals) {
                 for (size_t v = 0; v < fv; v++) {
-                    auto n = (trianglesVertices[0] - trianglesVertices[1]).cross(trianglesVertices[1]-trianglesVertices[2]);
+                    auto n = (trianglesVertices[1] - trianglesVertices[0]).cross(trianglesVertices[2]-trianglesVertices[0]);
                     n.normalize();
                     normals.push_back(n);
                     normals.push_back(n);

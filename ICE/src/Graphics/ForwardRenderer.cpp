@@ -13,7 +13,6 @@ namespace ICE {
     void ForwardRenderer::initialize(RendererAPI *api, RendererConfig config) {
         this->api = api;
         this->config = config;
-        api->initialize();
     }
 
     void ForwardRenderer::submitScene(Scene *scene) {
@@ -31,13 +30,19 @@ namespace ICE {
         }
     }
 
-    void ForwardRenderer::prepareFrame() {
+    void ForwardRenderer::prepareFrame(Camera* camera) {
         //TODO: Sort entities, make shader list, batch, make instances, set uniforms, etc..
+        for(auto e : renderableEntities) {
+            e->getComponent<RenderComponent>()->getMaterial()->getShader()->bind();
+            e->getComponent<RenderComponent>()->getMaterial()->getShader()->loadMat4("projection", camera->getProjection());
+            e->getComponent<RenderComponent>()->getMaterial()->getShader()->loadMat4("view", camera->lookThrough());
+        }
     }
 
     void ForwardRenderer::render() {
         for(auto e : renderableEntities) {
             e->getComponent<RenderComponent>()->getMaterial()->getShader()->bind();
+            e->getComponent<RenderComponent>()->getMaterial()->getShader()->loadMat4("model", e->getComponent<TransformComponent>()->getTransformation());
             api->renderVertexArray(e->getComponent<RenderComponent>()->getMesh()->getVertexArray());
         }
     }
@@ -47,11 +52,9 @@ namespace ICE {
         while((err = glGetError()) != GL_NO_ERROR){
             std::cout << err << std::endl;
         }
+        renderableEntities.clear();
+        lightEntities.clear();
         //TODO: Cleanup and restore state
-    }
-
-    void ForwardRenderer::setCamera(const Camera *camera) {
-        this->currentCamera = camera;
     }
 
     void ForwardRenderer::setTarget(FrameBuffer *target) {

@@ -9,8 +9,19 @@
 
 namespace ICE {
     class RenderSystem : public System {
-        void update(Scene scene, double delta) override;
+    public:
+        RenderSystem(Renderer *renderer, Camera* camera);
 
+        void update(Scene* scene, double delta) override;
+
+        Renderer *getRenderer() const;
+        void setRenderer(Renderer *renderer);
+        Camera *getCamera() const;
+        void setCamera(Camera *camera);
+
+    private:
+        Renderer* renderer;
+        Camera* camera;
     };
 }
 
