@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include "OBJLoader.h"
+#include "Logger.h"
 
 namespace ICE {
     Mesh* OBJLoader::loadFromOBJ(const std::string &path) {
@@ -17,14 +18,14 @@ namespace ICE {
         bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, path.c_str());
 
         if (!warn.empty()) {
-            std::cout << warn << std::endl;
+            Logger::Log(Logger::WARNING, "Util", warn.c_str());
         }
 
         if (!err.empty()) {
-            std::cerr << err << std::endl;
+            Logger::Log(Logger::ERROR, "Util", err.c_str());
         }
         if(!ret) {
-            std::cout << "Couldn't load model" << std::endl;
+            Logger::Log(Logger::ERROR, "Util", "Couldn't load model");
             return nullptr;
         }
         auto vertices = std::vector<Eigen::Vector3f>();
