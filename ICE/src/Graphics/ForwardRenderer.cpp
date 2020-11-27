@@ -6,6 +6,7 @@
 #include <Scene/LightComponent.h>
 #include <iostream>
 #include <GL/gl3w.h>
+#include <Util/Logger.h>
 #include "ForwardRenderer.h"
 
 namespace ICE {
@@ -50,7 +51,7 @@ namespace ICE {
     void ForwardRenderer::endFrame() {
         unsigned int err = 0;
         while((err = glGetError()) != GL_NO_ERROR){
-            std::cout << err << std::endl;
+            Logger::Log(Logger::ERROR, "Graphics", "OpenGL Error %d", err);
         }
         renderableEntities.clear();
         lightEntities.clear();

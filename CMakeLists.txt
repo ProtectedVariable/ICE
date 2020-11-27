@@ -7,7 +7,7 @@ set(GLFW_BUILD_DOCS OFF CACHE INTERNAL "Build the GLFW documentation")
 set(GLFW_INSTALL OFF CACHE INTERNAL "Generate installation target")
 
 set(CMAKE_CXX_STANDARD 14)
-add_library(glfw3 STATIC IMPORTED includes/OBJLoader/OBJLoader.h)
+add_library(glfw3 STATIC IMPORTED)
 set_property(TARGET glfw3 PROPERTY IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/libs/glfw/libglfw3.a)
 find_library(COCOA_LIBRARY Cocoa REQUIRED)
 find_library(OPENGL_LIBRARY OpenGL REQUIRED)
@@ -15,6 +15,7 @@ find_library(IOKIT_LIBRARY IOKit REQUIRED)
 include_directories(includes)
 include_directories(ICE/src)
 add_executable(ICE
+        includes/OBJLoader/tiny_obj_loader.h
         includes/ImGUI/imgui_impl_glfw.cpp
         includes/ImGUI/imgui_impl_opengl3.cpp
         includes/ImGUI/imgui_impl_glfw.h

@@ -1,11 +1,18 @@
-//
-// Created by Thomas Ibanez on 25.11.20.
-//
+// Dear ImGui: standalone example application for GLFW + OpenGL 3, using programmable pipeline
+// (GLFW is a cross-platform general purpose library for handling windows, inputs, OpenGL/Vulkan/Metal graphics context creation, etc.)
+// If you are new to Dear ImGui, read documentation from the docs/ folder + read the top of imgui.cpp.
+// Read online: https://github.com/ocornut/imgui/tree/master/docs
+
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <ImGUI/imgui.h>
 #include <ImGUI/imgui_impl_glfw.h>
 #include <ImGUI/imgui_impl_opengl3.h>
+#include "ICEEngine.h"
 
+// About Desktop OpenGL function loaders:
+//  Modern desktop OpenGL doesn't have a standard portable header file to load OpenGL function pointers.
+//  Helper libraries are often used for this purpose! Here we are supporting a few common ones (gl3w, glew, glad).
+//  You may use another loader/header of your choice (glext, glLoadGen, etc.), or chose to manually implement your own.
 #if defined(IMGUI_IMPL_OPENGL_LOADER_GL3W)
 #include <GL/gl3w.h>            // Initialize with gl3wInit()
 #elif defined(IMGUI_IMPL_OPENGL_LOADER_GLEW)
@@ -28,16 +35,14 @@ using namespace gl;
 #include IMGUI_IMPL_OPENGL_LOADER_CUSTOM
 #endif
 
+// Include glfw3.h after our OpenGL definitions
 #include <GLFW/glfw3.h>
-#include <Scene/TransformComponent.h>
-#include <Graphics/Renderer.h>
-#include <Graphics/ForwardRenderer.h>
-#include <Graphics/Shader.h>
-#include <Util/OBJLoader.h>
-#include <Scene/Entity.h>
 #include <Util/Logger.h>
+#include <Graphics/ForwardRenderer.h>
+#include <Util/OBJLoader.h>
+#include <Scene/TransformComponent.h>
 #include <Graphics/RenderSystem.h>
-#include "ICEEngine.h"
+#include <ImGUI/imgui_internal.h>
 
 // [Win32] Our example includes a copy of glfw3.lib pre-compiled with VS2010 to maximize ease of testing and compatibility with old VS compilers.
 // To link with VS2010-era libraries, VS2015+ requires linking with legacy_stdio_definitions.lib, which we do using this pragma.
@@ -46,16 +51,12 @@ using namespace gl;
 #pragma comment(lib, "legacy_stdio_definitions")
 #endif
 
-using namespace ICE;
 
-static void glfw_error_callback(int error, const char* description)
-{
-    Logger::Log(Logger::FATAL, "Core", "GLFW Error %d %s", error, description);
-}
 
 namespace ICE {
     ICEEngine::ICEEngine(void* window): systems(std::vector<System*>()), window(window) {
         api = RendererAPI::Create();
+        gui = ICEGUI();
     }
 
     void ICEEngine::initialize() {
@@ -89,21 +90,56 @@ namespace ICE {
     }
 
     void ICEEngine::loop() {
+        ImGuiIO& io = ImGui::GetIO(); (void)io;
+
         while (!glfwWindowShouldClose(static_cast<GLFWwindow*>(window)))
         {
             glfwPollEvents();
             api->clear();
 
+            glfwPollEvents();
+
+            ImGui_ImplOpenGL3_NewFrame();
+            ImGui_ImplGlfw_NewFrame();
+            ImGui::NewFrame();
+
+            gui.renderImGui();
+
+            // Rendering
+            ImGui::Render();
+            int display_w, display_h;
+            glfwGetFramebufferSize(static_cast<GLFWwindow *>(window), &display_w, &display_h);
+            glViewport(0, 0, display_w, display_h);
+            api->clear();
             for(auto s : systems) {
                 s->update(currentScene,0.f);
             }
 
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+            // Update and Render additional Platform Windows
+            // (Platform functions may change the current OpenGL context, so we save/restore it to make it easier to paste this code elsewhere.
+            //  For this specific demo app we could also call glfwMakeContextCurrent(window) directly)
+            if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+            {
+                GLFWwindow* backup_current_context = glfwGetCurrentContext();
+                ImGui::UpdatePlatformWindows();
+                ImGui::RenderPlatformWindowsDefault();
+                glfwMakeContextCurrent(backup_current_context);
+            }
             glfwSwapBuffers(static_cast<GLFWwindow*>(window));
         }
     }
 }
 
-int main()
+using namespace ICE;
+
+static void glfw_error_callback(int error, const char* description)
+{
+    Logger::Log(Logger::FATAL, "Core", "GLFW Error %d: %s\n", error, description);
+}
+
+int main(int, char**)
 {
     // Setup window
     glfwSetErrorCallback(glfw_error_callback);
@@ -154,27 +190,39 @@ int main()
 #endif
     if (err)
     {
-        Logger::Log(Logger::FATAL, "Core", "Failed to initialize OpenGL loader!");
+        Logger::Log(Logger::FATAL, "Core", "Failed to initialize OpenGL loader!\n");
         return 1;
     }
 
+    ICEEngine engine = ICEEngine(window);
+    engine.initialize();
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
     //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
+    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
+    //io.ConfigViewportsNoAutoMerge = true;
+    //io.ConfigViewportsNoTaskBarIcon = true;
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
     //ImGui::StyleColorsClassic();
 
-    // Setup Platform/Renderer bindings
+    // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
+    ImGuiStyle& style = ImGui::GetStyle();
+    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+    {
+        style.WindowRounding = 0.0f;
+        style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+    }
+
+    // Setup Platform/Renderer backends
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
-    ICEEngine engine = ICEEngine(window);
-    engine.initialize();
     engine.loop();
     // Load Fonts
     // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
@@ -190,6 +238,7 @@ int main()
     //io.Fonts->AddFontFromFileTTF("../../misc/fonts/ProggyTiny.ttf", 10.0f);
     //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
     //IM_ASSERT(font != NULL);
+
 
     // Cleanup
     ImGui_ImplOpenGL3_Shutdown();

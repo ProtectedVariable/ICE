@@ -6,6 +6,7 @@
 #define ICE_ICEENGINE_H
 
 #include <vector>
+#include <GUI/ICEGUI.h>
 #include "System.h"
 
 namespace ICE {
@@ -21,6 +22,7 @@ namespace ICE {
         Scene* currentScene;
         RendererAPI* api;
         Context* ctx;
+        ICEGUI gui;
     };
 }
 

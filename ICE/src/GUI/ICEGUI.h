@@ -7,7 +7,8 @@
 
 namespace ICE {
     class ICEGUI {
-
+    public:
+        void renderImGui();
     };
 }
 
