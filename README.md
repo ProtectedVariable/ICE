@@ -1,3 +1,5 @@
+![ICE logo](media/logo.png)
+
 # ICE
 
 ICE is a 3D general purpose game engine written in C++. The aim of the project is to have an engine good enough to create all kind of games in an easy manner, but not to compete with the big names (unity/unreal).
