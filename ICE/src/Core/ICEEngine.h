@@ -22,7 +22,8 @@ namespace ICE {
         Scene* currentScene;
         RendererAPI* api;
         Context* ctx;
-        ICEGUI gui;
+        ICEGUI* gui;
+        Framebuffer* internalFB;
     };
 }
 

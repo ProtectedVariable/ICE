@@ -58,7 +58,7 @@ namespace ICE {
         //TODO: Cleanup and restore state
     }
 
-    void ForwardRenderer::setTarget(FrameBuffer *target) {
+    void ForwardRenderer::setTarget(Framebuffer *target) {
 
     }
 

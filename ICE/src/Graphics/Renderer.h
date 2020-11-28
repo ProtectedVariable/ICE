@@ -12,7 +12,7 @@
 #include "Context.h"
 #include "RendererConfig.h"
 #include "Camera.h"
-#include "FrameBuffer.h"
+#include "Framebuffer.h"
 
 namespace ICE {
     class Scene;
@@ -25,7 +25,7 @@ namespace ICE {
         virtual void prepareFrame(Camera* camera) = 0;
         virtual void render() = 0;
         virtual void endFrame() = 0;
-        virtual void setTarget(FrameBuffer* target) = 0;
+        virtual void setTarget(Framebuffer* target) = 0;
         virtual void resize(uint32_t width, uint32_t height) = 0;
 
     };

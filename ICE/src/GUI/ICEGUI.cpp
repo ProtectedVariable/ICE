@@ -61,9 +61,11 @@ namespace ICE {
 
         ImGui::Begin("Viewport");
 
-        ImVec2 pos = ImGui::GetCursorScreenPos();
-
-        //ImGui::GetWindowDrawList()->AddImage((void *)window.getRenderTexture(), ImVec2(ImGui::GetCursorScreenPos()), ImVec2(ImGui::GetCursorScreenPos().x + window.getWidth()/2, ImGui::GetCursorScreenPos().y + window.getHeight()/2), ImVec2(0, 1), ImVec2(1, 0));
+        ImGui::GetWindowDrawList()->AddImage((void *)framebuffer->getTexture(),
+                                             ImVec2(ImVec2(200,100)),
+                                             ImVec2(1280,
+                                                    720),
+                                                    ImVec2(0, 1), ImVec2(1, 0));
 
         ImGui::End();
 
@@ -73,4 +75,6 @@ namespace ICE {
         ImGui::End();
         ImGui::PopStyleVar();
     }
+
+    ICEGUI::ICEGUI(Framebuffer *framebuffer) : framebuffer(framebuffer) {}
 }

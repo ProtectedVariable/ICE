@@ -7,10 +7,11 @@
 #include <Graphics/API/OpenGL/OpenGLBuffers.h>
 #include <Graphics/Context.h>
 #include <Graphics/API/OpenGL/OpenGLContext.h>
-#include <Graphics/FrameBuffer.h>
+#include <Graphics/Framebuffer.h>
 #include <Graphics/Shader.h>
 #include <Graphics/API/OpenGL/OpenGLShader.h>
 #include <Graphics/API/OpenGL/OpenGLVertexArray.h>
+#include <Graphics/API/OpenGL/OpenGLFramebuffer.h>
 
 namespace ICE {
 
@@ -21,7 +22,10 @@ namespace ICE {
         return nullptr;
     }
 
-    FrameBuffer* FrameBuffer::Create(FrameBufferFormat format) {
+    Framebuffer* Framebuffer::Create(FrameBufferFormat format) {
+        switch(RendererAPI::GetAPI()) {
+            case OpenGL: return new OpenGLFramebuffer(format);
+        }
         return nullptr;
     }
 

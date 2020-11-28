@@ -56,7 +56,6 @@ using namespace gl;
 namespace ICE {
     ICEEngine::ICEEngine(void* window): systems(std::vector<System*>()), window(window) {
         api = RendererAPI::Create();
-        gui = ICEGUI();
     }
 
     void ICEEngine::initialize() {
@@ -87,6 +86,9 @@ namespace ICE {
         currentScene->addEntity("root", "bunny", bunny);
 
         systems.push_back(new RenderSystem(renderer, camera));
+
+        internalFB = Framebuffer::Create({1280, 720, 1}); //TODO: Read window, resize etc..
+        gui = new ICEGUI(internalFB);
     }
 
     void ICEEngine::loop() {
@@ -103,7 +105,7 @@ namespace ICE {
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
 
-            gui.renderImGui();
+            gui->renderImGui();
 
             // Rendering
             ImGui::Render();
@@ -111,9 +113,13 @@ namespace ICE {
             glfwGetFramebufferSize(static_cast<GLFWwindow *>(window), &display_w, &display_h);
             glViewport(0, 0, display_w, display_h);
             api->clear();
+            internalFB->bind();
+            glViewport(0, 0, display_w, display_h);
+            api->clear();
             for(auto s : systems) {
                 s->update(currentScene,0.f);
             }
+            internalFB->unbind();
 
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
