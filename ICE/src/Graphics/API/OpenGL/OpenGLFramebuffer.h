@@ -23,6 +23,7 @@ namespace ICE {
     private:
         GLuint uid;
         GLuint texture;
+        GLuint depth;
     };
 }
 

@@ -24,6 +24,7 @@ namespace ICE {
         Context* ctx;
         ICEGUI* gui;
         Framebuffer* internalFB;
+        Camera *camera;
     };
 }
 

@@ -36,9 +36,10 @@ namespace ICE {
         const Eigen::Matrix4f &getProjection() const;
         Eigen::Vector3f &getPosition();
         Eigen::Vector3f &getRotation();
+        void setParameters(CameraParameters parameters, ProjectionType type);
 
     private:
-        CameraParameters parameters;
+        CameraParameters cparameters;
         float zoom;
         Eigen::Matrix4f projection;
         Eigen::Vector3f position;

@@ -13,8 +13,15 @@ namespace ICE {
         ICEGUI(Framebuffer *framebuffer);
 
         void renderImGui();
+
+        int getSceneViewportWidth() const;
+
+        int getSceneViewportHeight() const;
+
     private:
         Framebuffer* framebuffer;
+        int init = 0;
+        int sceneViewportWidth, sceneViewportHeight;
     };
 }
 

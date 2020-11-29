@@ -71,7 +71,7 @@ namespace ICE {
         api->setViewport(0, 0, 1280, 720);
 
         this->currentScene = new Scene();
-        Camera* camera = new Camera(CameraParameters{ {60, 16.f / 9.f, 0.01f, 1000 }, Perspective } );
+        camera = new Camera(CameraParameters{ {60, 16.f / 9.f, 0.01f, 1000 }, Perspective } );
         camera->getPosition().z() = 1;
 
         Entity* bunny = new Entity();
@@ -111,16 +111,17 @@ namespace ICE {
             ImGui::Render();
             int display_w, display_h;
             glfwGetFramebufferSize(static_cast<GLFWwindow *>(window), &display_w, &display_h);
-            glViewport(0, 0, display_w, display_h);
             api->clear();
             internalFB->bind();
-            glViewport(0, 0, display_w, display_h);
+            internalFB->resize(gui->getSceneViewportWidth(), gui->getSceneViewportHeight());
+            glViewport(0, 0, gui->getSceneViewportWidth(), gui->getSceneViewportHeight());
+            camera->setParameters({60, (float) gui->getSceneViewportWidth() / (float) gui->getSceneViewportHeight(), 0.01f, 1000},Perspective);
             api->clear();
             for(auto s : systems) {
                 s->update(currentScene,0.f);
             }
             internalFB->unbind();
-
+            glViewport(0, 0, display_w, display_h);
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
             // Update and Render additional Platform Windows
