@@ -1,0 +1,26 @@
+//
+// Created by Thomas Ibanez on 29.11.20.
+//
+
+#ifndef ICE_HIERARCHYPANE_H
+#define ICE_HIERARCHYPANE_H
+
+#include <Scene/Scene.h>
+#include <Core/ICEEngine.h>
+#include "ICEPane.h"
+
+namespace ICE {
+    class HierarchyPane : public ICEPane {
+    public:
+        HierarchyPane(ICEEngine* engine);
+        void render() override;
+    private:
+        void mkPopup(const std::string& parent);
+        void subtree(Scene::SceneNode* node);
+        ICEEngine* engine;
+        std::string selected;
+    };
+}
+
+
+#endif //ICE_HIERARCHYPANE_H

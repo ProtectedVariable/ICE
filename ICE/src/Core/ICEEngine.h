@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <GUI/ICEGUI.h>
+#include <Assets/AssetBank.h>
 #include "System.h"
 
 namespace ICE {
@@ -16,6 +17,15 @@ namespace ICE {
 
         void initialize();
         void loop();
+
+        Framebuffer *getInternalFb() const;
+
+        Camera *getCamera() const;
+
+        AssetBank *getAssetBank() const;
+
+        Scene *getScene() const;
+
     private:
         std::vector<System*> systems;
         void* window;
@@ -25,6 +35,7 @@ namespace ICE {
         ICEGUI* gui;
         Framebuffer* internalFB;
         Camera *camera;
+        AssetBank* assetBank;
     };
 }
 

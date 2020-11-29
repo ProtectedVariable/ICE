@@ -57,7 +57,7 @@ namespace ICE {
         return nullptr;
     }
 
-    std::vector<Entity *> Scene::getEntities() {
+    std::vector<Entity *> Scene::getEntities() const {
         auto nodes = std::vector<SceneNode*>();
         nodes.reserve(this->nodeByID.size());
         auto entities = std::vector<Entity*>();
@@ -71,5 +71,18 @@ namespace ICE {
             entities.push_back(n->entity);
         }
         return entities;
+    }
+
+    Scene::SceneNode* Scene::getRoot() {
+        return nodeByID["root"];
+    }
+
+    const std::string &Scene::idByNode(const Scene::SceneNode *node) {
+        for(const auto& kv : this->nodeByID) {
+            if(kv.second == node) {
+                return kv.first;
+            }
+        }
+        return "";
     }
 }

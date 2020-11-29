@@ -70,10 +70,12 @@ namespace ICE {
         renderer->initialize(api, RendererConfig());
         api->setViewport(0, 0, 1280, 720);
 
+        this->assetBank = new AssetBank();
+
         this->currentScene = new Scene();
         camera = new Camera(CameraParameters{ {60, 16.f / 9.f, 0.01f, 1000 }, Perspective } );
         camera->getPosition().z() = 1;
-
+    /*
         Entity* bunny = new Entity();
         Mesh* mesh = OBJLoader::loadFromOBJ("Assets/bunny.obj");
         Shader* shader = Shader::Create("Assets/test.vs","Assets/test.fs");
@@ -84,11 +86,11 @@ namespace ICE {
         bunny->addComponent(tc);
 
         currentScene->addEntity("root", "bunny", bunny);
-
+*/
         systems.push_back(new RenderSystem(renderer, camera));
 
-        internalFB = Framebuffer::Create({1280, 720, 1}); //TODO: Read window, resize etc..
-        gui = new ICEGUI(internalFB);
+        internalFB = Framebuffer::Create({1280, 720, 1});
+        gui = new ICEGUI(this);
     }
 
     void ICEEngine::loop() {
@@ -136,6 +138,22 @@ namespace ICE {
             }
             glfwSwapBuffers(static_cast<GLFWwindow*>(window));
         }
+    }
+
+    Framebuffer *ICEEngine::getInternalFb() const {
+        return internalFB;
+    }
+
+    Camera *ICEEngine::getCamera() const {
+        return camera;
+    }
+
+    AssetBank *ICEEngine::getAssetBank() const {
+        return assetBank;
+    }
+
+    Scene *ICEEngine::getScene() const {
+        return currentScene;
     }
 }
 

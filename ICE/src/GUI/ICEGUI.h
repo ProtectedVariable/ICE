@@ -6,11 +6,16 @@
 #define ICE_ICEGUI_H
 
 #include <Graphics/Framebuffer.h>
+#include <Scene/Scene.h>
+#include <Core/ICEEngine.h>
+#include "ICEPane.h"
 
 namespace ICE {
+    class ICEEngine;
+
     class ICEGUI {
     public:
-        ICEGUI(Framebuffer *framebuffer);
+        ICEGUI(ICEEngine* engine);
 
         void renderImGui();
 
@@ -19,9 +24,10 @@ namespace ICE {
         int getSceneViewportHeight() const;
 
     private:
-        Framebuffer* framebuffer;
         int init = 0;
         int sceneViewportWidth, sceneViewportHeight;
+        ICEPane* hierarchyPane;
+        ICEEngine* engine;
     };
 }
 

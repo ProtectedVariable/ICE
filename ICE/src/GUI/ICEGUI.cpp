@@ -5,7 +5,9 @@
 #include <ImGUI/imgui.h>
 #include <ImGUI/imgui_internal.h>
 #include <Util/Logger.h>
+#include <Core/ICEEngine.h>
 #include "ICEGUI.h"
+#include "HierarchyPane.h"
 
 namespace ICE {
     void ICEGUI::renderImGui() {
@@ -58,13 +60,12 @@ namespace ICE {
         ImGui::Begin("Assets");
         ImGui::End();
 
-        ImGui::Begin("Hierarchy");
-        ImGui::End();
+        hierarchyPane->render();
 
         ImGui::Begin("Viewport");
         ImVec2 wsize = ImGui::GetWindowSize();
         ImVec2 wpos = ImGui::GetWindowPos();
-        ImGui::GetWindowDrawList()->AddImage((void *)framebuffer->getTexture(), wpos, ImVec2(wpos.x+wsize.x, wpos.y+wsize.y), ImVec2(0, 1), ImVec2(1, 0));
+        ImGui::GetWindowDrawList()->AddImage((void *)engine->getInternalFb()->getTexture(), wpos, ImVec2(wpos.x+wsize.x, wpos.y+wsize.y), ImVec2(0, 1), ImVec2(1, 0));
         sceneViewportWidth = wsize.x;
         sceneViewportHeight = wsize.y;
         ImGui::End();
@@ -76,16 +77,15 @@ namespace ICE {
         ImGui::PopStyleVar();
     }
 
-    ICEGUI::ICEGUI(Framebuffer *framebuffer) : framebuffer(framebuffer) {
-
-
-    }
-
     int ICEGUI::getSceneViewportWidth() const {
         return sceneViewportWidth;
     }
 
     int ICEGUI::getSceneViewportHeight() const {
         return sceneViewportHeight;
+    }
+
+    ICEGUI::ICEGUI(ICEEngine *engine): engine(engine), hierarchyPane(new HierarchyPane(engine)) {
+
     }
 }

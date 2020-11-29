@@ -29,10 +29,11 @@ namespace ICE {
         bool renameEntity(const std::string& oldName,const std::string& newName);
         void setParent(const std::string& entity, const std::string& newParent);
 
-        std::vector<Entity*> getEntities();
+        std::vector<Entity*> getEntities() const;
 
         SceneNode* getByID(const std::string& uid);
-
+        SceneNode* getRoot();
+        const std::string& idByNode(const SceneNode* node);
     private:
         SceneNode root;
         std::unordered_map<std::string, SceneNode*> nodeByID;
