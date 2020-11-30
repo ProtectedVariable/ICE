@@ -5,6 +5,7 @@
 #ifndef ICE_ICEENGINE_H
 #define ICE_ICEENGINE_H
 
+#include <GL/gl3w.h>
 #include <vector>
 #include <GUI/ICEGUI.h>
 #include <Assets/AssetBank.h>

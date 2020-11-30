@@ -5,6 +5,8 @@
 #ifndef ICE_RENDERER_H
 #define ICE_RENDERER_H
 
+#include <GL/gl3w.h>
+#include <GLFW/glfw3.h>
 #include <Scene/RenderComponent.h>
 #include <Scene/Entity.h>
 #include <Graphics/API/GraphicsAPI.h>

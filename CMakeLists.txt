@@ -1,26 +1,34 @@
 cmake_minimum_required(VERSION 3.17)
 project(ICE)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
 set(GLFW_BUILD_EXAMPLES OFF CACHE INTERNAL "Build the GLFW example programs")
 set(GLFW_BUILD_TESTS OFF CACHE INTERNAL "Build the GLFW test programs")
 set(GLFW_BUILD_DOCS OFF CACHE INTERNAL "Build the GLFW documentation")
 set(GLFW_INSTALL OFF CACHE INTERNAL "Generate installation target")
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 add_library(glfw3 STATIC IMPORTED)
-set_property(TARGET glfw3 PROPERTY IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/libs/glfw/libglfw3.a)
-find_library(COCOA_LIBRARY Cocoa REQUIRED)
-find_library(OPENGL_LIBRARY OpenGL REQUIRED)
-find_library(IOKIT_LIBRARY IOKit REQUIRED)
+
+if(APPLE)
+	set_property(TARGET glfw3 PROPERTY IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/libs/glfw/libglfw3.a)
+	find_library(COCOA_LIBRARY Cocoa REQUIRED)
+	find_library(OPENGL_LIBRARY OpenGL REQUIRED)
+	find_library(IOKIT_LIBRARY IOKit REQUIRED)
+endif()
+
+if(WIN32)
+	set_property(TARGET glfw3 PROPERTY IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/libs/glfw/glfw3.lib)
+endif()
 include_directories(includes)
 include_directories(ICE/src)
 add_executable(ICE
+		includes/GL/gl3w.h
+        includes/ImGUI/gl3w.c
         includes/OBJLoader/tiny_obj_loader.h
         includes/ImGUI/imgui_impl_glfw.cpp
         includes/ImGUI/imgui_impl_opengl3.cpp
         includes/ImGUI/imgui_impl_glfw.h
         includes/ImGUI/imgui_impl_opengl3.h
-        includes/ImGUI/gl3w.c
         includes/ImGUI/imgui.cpp
         includes/ImGUI/imgui_widgets.cpp
         includes/ImGUI/imgui_draw.cpp
@@ -35,4 +43,9 @@ add_executable(ICE_TEST
 
 file(COPY ICE/Assets DESTINATION ${CMAKE_BINARY_DIR})
 
-target_link_libraries(ICE glfw3 ${COCOA_LIBRARY} ${OPENGL_LIBRARY} ${IOKIT_LIBRARY})
+if(APPLE)
+	target_link_libraries(ICE glfw3 ${COCOA_LIBRARY} ${OPENGL_LIBRARY} ${IOKIT_LIBRARY})
+endif()
+if(WIN32)
+	target_link_libraries(ICE glfw3)
+endif()

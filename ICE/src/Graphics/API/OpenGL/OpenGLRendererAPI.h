@@ -5,6 +5,7 @@
 #ifndef ICE_OPENGLRENDERERAPI_H
 #define ICE_OPENGLRENDERERAPI_H
 
+#include <GL/gl3w.h>
 #include <Graphics/API/GraphicsAPI.h>
 
 namespace ICE {

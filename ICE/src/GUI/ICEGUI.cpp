@@ -1,7 +1,8 @@
 //
 // Created by Thomas Ibanez on 27.11.20.
 //
-
+#include <GL/gl3w.h>
+#include <GLFW/glfw3.h>
 #include <ImGUI/imgui.h>
 #include <ImGUI/imgui_internal.h>
 #include <Util/Logger.h>

@@ -3,7 +3,7 @@
 //
 
 #include "OpenGLShader.h"
-#include <OpenGL/gl3.h>
+#include <GL/gl3w.h>
 #include <fstream>
 #include <iostream>
 #include <Util/Logger.h>
@@ -87,7 +87,9 @@ namespace ICE {
         if(!geoFile.empty()){
             GLint geoShader;
             Logger::Log(Logger::VERBOSE, "Graphics", "Compiling geometric shader...");
-            compileShader(GL_GEOMETRY_SHADER, geoFile, &geoShader) ?: printf("Error while compiling geometric shader");
+			if (!compileShader(GL_GEOMETRY_SHADER, geoFile, &geoShader)) {
+				Logger::Log(Logger::FATAL, "Graphics", "Error while compiling geometric shader");
+			}
             glAttachShader(programID, geoShader);
         }
 

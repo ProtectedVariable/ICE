@@ -5,8 +5,8 @@
 #ifndef ICE_OPENGLBUFFERS_H
 #define ICE_OPENGLBUFFERS_H
 
+#include <GL/gl3w.h>
 #include <Graphics/Buffers.h>
-#include <OpenGL/gl.h>
 
 namespace ICE {
 

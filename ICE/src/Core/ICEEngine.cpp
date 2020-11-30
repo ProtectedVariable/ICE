@@ -4,10 +4,11 @@
 // Read online: https://github.com/ocornut/imgui/tree/master/docs
 
 #define TINYOBJLOADER_IMPLEMENTATION
+#include "ICEEngine.h"
+#include <GLFW/glfw3.h>
 #include <ImGUI/imgui.h>
 #include <ImGUI/imgui_impl_glfw.h>
 #include <ImGUI/imgui_impl_opengl3.h>
-#include "ICEEngine.h"
 
 // About Desktop OpenGL function loaders:
 //  Modern desktop OpenGL doesn't have a standard portable header file to load OpenGL function pointers.
