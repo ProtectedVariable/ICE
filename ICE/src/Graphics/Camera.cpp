@@ -26,6 +26,24 @@ namespace ICE {
         return viewMatrix;
     }
 
+    void Camera::forward(float delta) {
+        position.x() -= delta * sinf(DEG_TO_RAD(rotation.y()));
+        position.z() -= delta * cosf(DEG_TO_RAD(rotation.y()));
+    }
+
+    void Camera::backward(float delta) {
+        forward(-delta);
+    }
+
+    void Camera::left(float delta) {
+        position.x() += delta * sinf(DEG_TO_RAD(rotation.y() - 90));
+        position.z() += delta * cosf(DEG_TO_RAD(rotation.y() - 90));
+    }
+
+    void Camera::right(float delta) {
+        left(-delta);
+    }
+
     Eigen::Vector3f &Camera::getPosition() {
         return position;
     }

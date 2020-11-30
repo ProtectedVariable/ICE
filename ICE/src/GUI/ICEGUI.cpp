@@ -11,6 +11,8 @@
 #include "HierarchyPane.h"
 #include "InspectorPane.h"
 
+#define CAMERA_DELTA 0.02f
+
 namespace ICE {
     void ICEGUI::renderImGui() {
         ImGuiWindowFlags flags = ImGuiWindowFlags_MenuBar;
@@ -70,6 +72,24 @@ namespace ICE {
         ImGui::GetWindowDrawList()->AddImage((void *)engine->getInternalFb()->getTexture(), wpos, ImVec2(wpos.x+wsize.x, wpos.y+wsize.y), ImVec2(0, 1), ImVec2(1, 0));
         sceneViewportWidth = wsize.x;
         sceneViewportHeight = wsize.y;
+        auto drag = ImGui::GetMouseDragDelta();
+        engine->getCamera()->getRotation().x() += drag.y / 500.f;
+        engine->getCamera()->getRotation().y() += drag.x / 500.f;
+        if(ImGui::IsKeyDown('W')) {
+            engine->getCamera()->forward(CAMERA_DELTA);
+        } else if(ImGui::IsKeyDown('S')) {
+            engine->getCamera()->backward(CAMERA_DELTA);
+        }
+        if(ImGui::IsKeyDown('A')) {
+            engine->getCamera()->left(CAMERA_DELTA);
+        } else if(ImGui::IsKeyDown('D')) {
+            engine->getCamera()->right(CAMERA_DELTA);
+        }
+        if(ImGui::IsKeyDown('Q')) {
+            engine->getCamera()->getPosition().y() += CAMERA_DELTA;
+        } else if(ImGui::IsKeyDown('E')) {
+            engine->getCamera()->getPosition().y() -= CAMERA_DELTA;
+        }
         ImGui::End();
 
         inspectorPane->render();

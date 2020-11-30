@@ -40,4 +40,13 @@ namespace ICE {
         t(2, 3) = translation.z();
         return t;
     }
+
+    Eigen::Matrix4f scaleMatrix(Eigen::Vector3f scale) {
+        auto t = Eigen::Matrix4f();
+        t.setIdentity();
+        t(0, 0) = scale.x();
+        t(1, 1) = scale.y();
+        t(2, 2) = scale.z();
+        return t;
+    }
 }
