@@ -4,7 +4,43 @@ ICE is a 3D general purpose game engine written in C++. The aim of the project i
 
 ## Getting started
 
-After cloning the repo with `git clone <url>` you can use CMake to build the engine. At the moment I've only tested the OSX building process.
+Clone the repo with `git clone https://github.com/ProtectedVariable/ICE`
+
+Create a `build/` directory in `ICE`
+
+Download the glfw3 binaries you need for your OS from https://www.glfw.org/download.html and copy them in ICE/libs/glfw/
+
+### Windows
+
+In windows you should have:
+- `ICE/libs/glfw/glfw3.dll`
+- `ICE/libs/glfw/glfw3.lib`
+- `ICE/libs/glfw/glfw3dll.lib`
+
+
+You can now CMake GUI to configure a VS project (set Source dir: `ICE/`, set build sir: `ICE/build`)
+- Press `Configure`
+- Press `Generate`
+- Press `Open Project`
+
+In visual studio set `ICE` as the startup project and build :)
+
+### OSX
+
+In OSX you should have:
+- `ICE/libs/glfw/libglfw.3.dylib`
+- `ICE/libs/glfw/libglfw3.a`
+
+Open a terminal in `ICE`
+- `cd build`
+- `cmake ..`
+- `make`
+
+This will generate an executable `ICE` in `ICE/cmake-build-debug/` :)
+
+### Linux
+
+TODO :)
 
 ## ECS Architecture
 
