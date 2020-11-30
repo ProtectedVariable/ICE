@@ -26,7 +26,7 @@ namespace ICE {
     private:
         int init = 0;
         int sceneViewportWidth, sceneViewportHeight;
-        ICEPane* hierarchyPane;
+        ICEPane* hierarchyPane, *inspectorPane;
         ICEEngine* engine;
     };
 }

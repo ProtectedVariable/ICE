@@ -27,6 +27,10 @@ namespace ICE {
 
         Scene *getScene() const;
 
+        Entity *getSelected() const;
+
+        void setSelected(Entity *selected);
+
     private:
         std::vector<System*> systems;
         void* window;
@@ -37,6 +41,7 @@ namespace ICE {
         Framebuffer* internalFB;
         Camera *camera;
         AssetBank* assetBank;
+        Entity* selected;
     };
 }
 

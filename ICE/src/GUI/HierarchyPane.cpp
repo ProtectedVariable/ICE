@@ -38,15 +38,17 @@ namespace ICE {
             mkPopup(selected);
         }
         ImGui::End();
+        if(selected != "root") {
+            engine->setSelected(engine->getScene()->getByID(selected)->entity);
+        }
     }
 
-    HierarchyPane::HierarchyPane(ICEEngine* engine) : engine(engine) {}
+    HierarchyPane::HierarchyPane(ICEEngine* engine) : engine(engine), selected("root") {}
 
     void HierarchyPane::subtree(Scene::SceneNode *node) {
         for(auto c : node->children) {
             const std::string& name = engine->getScene()->idByNode(c);
             ImGuiTreeNodeFlags flags = c->children.size() == 0 ? ImGuiTreeNodeFlags_Leaf : 0;
-            Logger::Log(Logger::DEBUG, "GUI", "Selected: %s Name: %s", &selected, &name);
             if(name == selected) {
                 flags |= ImGuiTreeNodeFlags_Selected;
             }

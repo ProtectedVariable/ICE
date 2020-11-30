@@ -156,6 +156,14 @@ namespace ICE {
     Scene *ICEEngine::getScene() const {
         return currentScene;
     }
+
+    Entity *ICEEngine::getSelected() const {
+        return selected;
+    }
+
+    void ICEEngine::setSelected(Entity *selected) {
+        ICEEngine::selected = selected;
+    }
 }
 
 using namespace ICE;

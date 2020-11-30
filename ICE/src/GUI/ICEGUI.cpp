@@ -9,6 +9,7 @@
 #include <Core/ICEEngine.h>
 #include "ICEGUI.h"
 #include "HierarchyPane.h"
+#include "InspectorPane.h"
 
 namespace ICE {
     void ICEGUI::renderImGui() {
@@ -71,8 +72,7 @@ namespace ICE {
         sceneViewportHeight = wsize.y;
         ImGui::End();
 
-        ImGui::Begin("Inspector");
-        ImGui::End();
+        inspectorPane->render();
 
         ImGui::End();
         ImGui::PopStyleVar();
@@ -86,7 +86,7 @@ namespace ICE {
         return sceneViewportHeight;
     }
 
-    ICEGUI::ICEGUI(ICEEngine *engine): engine(engine), hierarchyPane(new HierarchyPane(engine)) {
+    ICEGUI::ICEGUI(ICEEngine *engine): engine(engine), hierarchyPane(new HierarchyPane(engine)), inspectorPane(new InspectorPane(engine)) {
 
     }
 }
