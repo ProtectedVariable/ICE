@@ -5,6 +5,8 @@
 #ifndef ICE_GRAPHICSAPI_H
 #define ICE_GRAPHICSAPI_H
 
+#include <GL/gl3w.h>
+#include <GLFW/glfw3.h>
 #include <Graphics/VertexArray.h>
 
 namespace ICE {

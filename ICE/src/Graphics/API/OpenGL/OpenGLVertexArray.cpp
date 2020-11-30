@@ -3,8 +3,7 @@
 //
 
 #include "OpenGLVertexArray.h"
-#include <OpenGL/gl3.h>
-#include <OpenGL/gl.h>
+#include <GL/gl3w.h>
 #include <iostream>
 
 ICE::OpenGLVertexArray::OpenGLVertexArray(): buffers(std::unordered_map<GLuint, VertexBuffer*>()) {

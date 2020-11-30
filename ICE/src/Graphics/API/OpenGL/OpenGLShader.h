@@ -5,10 +5,11 @@
 #ifndef ICE_OPENGLSHADER_H
 #define ICE_OPENGLSHADER_H
 
+#include <GL/gl3w.h>
+#include <GLFW/glfw3.h>
 #include <Graphics/Shader.h>
 #include <unordered_map>
 #include <string>
-#include <OpenGL/gl3.h>
 
 namespace ICE {
     class OpenGLShader : public Shader {

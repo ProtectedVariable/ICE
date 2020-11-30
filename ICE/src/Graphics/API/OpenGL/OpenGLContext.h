@@ -5,8 +5,9 @@
 #ifndef ICE_OPENGLCONTEXT_H
 #define ICE_OPENGLCONTEXT_H
 
-#include <Graphics/Context.h>
+#include <GL/gl3w.h>
 #include <GLFW/glfw3.h>
+#include <Graphics/Context.h>
 
 namespace ICE {
     class OpenGLContext : public Context {

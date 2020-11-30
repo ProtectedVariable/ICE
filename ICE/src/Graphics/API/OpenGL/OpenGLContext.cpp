@@ -4,7 +4,7 @@
 
 #include "OpenGLContext.h"
 #include <GLFW/glfw3.h>
-#include <OpenGL/gl.h>
+#include <GL/gl3w.h>
 
 ICE::OpenGLContext::OpenGLContext(GLFWwindow *glfwWindow) : glfwWindow(glfwWindow) {}
 

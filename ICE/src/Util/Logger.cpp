@@ -3,7 +3,7 @@
 //
 
 #include "Logger.h"
-
+#include <cstdarg>
 namespace ICE {
     const char* severityString[6] = {
         "Debug",

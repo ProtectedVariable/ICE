@@ -4,7 +4,7 @@
 
 #ifndef ICE_ICEMATH_H
 #define ICE_ICEMATH_H
-
+#define _USE_MATH_DEFINES
 #include <math.h>
 #include <Eigen/Dense>
 

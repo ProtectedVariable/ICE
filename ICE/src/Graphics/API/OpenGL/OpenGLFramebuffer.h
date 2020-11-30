@@ -5,8 +5,9 @@
 #ifndef ICE_OPENGLFRAMEBUFFER_H
 #define ICE_OPENGLFRAMEBUFFER_H
 
+#include <GL/gl3w.h>
+#include <GLFW/glfw3.h>
 #include <Graphics/Framebuffer.h>
-#include <OpenGL/gl3.h>
 
 namespace ICE {
     class OpenGLFramebuffer : public Framebuffer {

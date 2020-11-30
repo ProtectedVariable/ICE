@@ -2,7 +2,7 @@
 // Created by Thomas Ibanez on 20.11.20.
 //
 #include "GraphicsAPI.h"
-
+#include <GLFW/glfw3.h>
 #include <Graphics/API/OpenGL/OpenGLRendererAPI.h>
 #include <Graphics/API/OpenGL/OpenGLBuffers.h>
 #include <Graphics/Context.h>

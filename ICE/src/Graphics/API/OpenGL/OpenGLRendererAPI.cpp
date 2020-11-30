@@ -3,7 +3,7 @@
 //
 
 #include "OpenGLRendererAPI.h"
-#include <OpenGL/gl3.h>
+#include <GL/gl3w.h>
 
 void ICE::OpenGLRendererAPI::setViewport(int x, int y, int width, int height) {
     glViewport(x, y, width, height);

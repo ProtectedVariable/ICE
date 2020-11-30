@@ -4,7 +4,7 @@
 
 #ifndef ICE_LOGGER_H
 #define ICE_LOGGER_H
-
+#undef ERROR
 #include <string>
 
 namespace ICE {
