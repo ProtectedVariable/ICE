@@ -7,24 +7,27 @@ namespace ICE {
     Eigen::Matrix4f rotationMatrix(Eigen::Vector3f angles) {
         auto mx = Eigen::Matrix4f();
         mx.setIdentity();
-        mx(1,1) = cosf(angles.x());
-        mx(1,2) = -sinf(angles.x());
-        mx(2,1) = sinf(angles.x());
-        mx(2,2) = cosf(angles.x());
+        float rx = DEG_TO_RAD(angles.x());
+        mx(1,1) = cosf(rx);
+        mx(1,2) = -sinf(rx);
+        mx(2,1) = sinf(rx);
+        mx(2,2) = cosf(rx);
 
         auto my = Eigen::Matrix4f();
         my.setIdentity();
-        my(0, 0) = cosf(angles.y());
-        my(0, 2) = sinf(angles.y());
-        my(2, 0) = -sinf(angles.y());
-        my(2, 2) = cosf(angles.y());
+        float ry = DEG_TO_RAD(angles.y());
+        my(0, 0) = cosf(ry);
+        my(0, 2) = sinf(ry);
+        my(2, 0) = -sinf(ry);
+        my(2, 2) = cosf(ry);
 
         auto mz = Eigen::Matrix4f();
         mz.setIdentity();
-        mz(0, 0) = cosf(angles.z());
-        mz(0, 1) = -sinf(angles.z());
-        mz(1, 0) = sinf(angles.z());
-        mz(1, 1) = cosf(angles.z());
+        float rz = DEG_TO_RAD(angles.z());
+        mz(0, 0) = cosf(rz);
+        mz(0, 1) = -sinf(rz);
+        mz(1, 0) = sinf(rz);
+        mz(1, 1) = cosf(rz);
 
         return mx * my * mz;
     }
