@@ -10,6 +10,7 @@
 #include "ICEGUI.h"
 #include "HierarchyPane.h"
 #include "InspectorPane.h"
+#include <iostream>
 
 #define CAMERA_DELTA 0.02f
 
@@ -67,28 +68,70 @@ namespace ICE {
         hierarchyPane->render();
 
         ImGui::Begin("Viewport");
+        if(ImGui::Button("T")) {
+            guizmoOperationMode = ImGuizmo::TRANSLATE;
+        }
+        ImGui::SameLine();
+        if(ImGui::Button("R")) {
+            guizmoOperationMode = ImGuizmo::ROTATE;
+        }
+        ImGui::SameLine();
+        if(ImGui::Button("S")) {
+            guizmoOperationMode = ImGuizmo::SCALE;
+        }
+        ImVec2 wpos = ImGui::GetCursorScreenPos();
         ImVec2 wsize = ImGui::GetWindowSize();
-        ImVec2 wpos = ImGui::GetWindowPos();
         ImGui::GetWindowDrawList()->AddImage((void *)engine->getInternalFb()->getTexture(), wpos, ImVec2(wpos.x+wsize.x, wpos.y+wsize.y), ImVec2(0, 1), ImVec2(1, 0));
         sceneViewportWidth = wsize.x;
         sceneViewportHeight = wsize.y;
+
+        ImGuizmo::SetRect(wpos.x, wpos.y, wsize.x, wsize.y);
+
+        ImGuizmo::Enable(true);
+        if(engine->getSelected() != nullptr) {
+            auto e = Eigen::Matrix4f();
+            e.setZero();
+            ImGuizmo::Manipulate(engine->getCamera()->lookThrough().data(), engine->getCamera()->getProjection().data(), guizmoOperationMode,
+                                 ImGuizmo::LOCAL,
+                                 engine->getSelected()->getComponent<TransformComponent>()->getTransformation().data(), e.data());
+            auto deltaT = Eigen::Vector3f();
+            auto deltaR = Eigen::Vector3f();
+            auto deltaS = Eigen::Vector3f();
+            deltaT.setZero();
+            deltaR.setZero();
+            deltaS.setZero();
+
+            ImGuizmo::DecomposeMatrixToComponents(e.data(), deltaT.data(), deltaR.data(), deltaS.data());
+            if(guizmoOperationMode == ImGuizmo::TRANSLATE) {
+                *engine->getSelected()->getComponent<TransformComponent>()->getPosition() += deltaT;
+            } else if(guizmoOperationMode == ImGuizmo::ROTATE) {
+                *engine->getSelected()->getComponent<TransformComponent>()->getRotation() += deltaR;
+            } else {
+                *engine->getSelected()->getComponent<TransformComponent>()->getScale() += (deltaS-Eigen::Vector3f(1,1,1));
+            }
+        }
         auto drag = ImGui::GetMouseDragDelta();
-        engine->getCamera()->getRotation().x() += drag.y / 500.f;
-        engine->getCamera()->getRotation().y() += drag.x / 500.f;
-        if(ImGui::IsKeyDown('W')) {
-            engine->getCamera()->forward(CAMERA_DELTA);
-        } else if(ImGui::IsKeyDown('S')) {
-            engine->getCamera()->backward(CAMERA_DELTA);
-        }
-        if(ImGui::IsKeyDown('A')) {
-            engine->getCamera()->left(CAMERA_DELTA);
-        } else if(ImGui::IsKeyDown('D')) {
-            engine->getCamera()->right(CAMERA_DELTA);
-        }
-        if(ImGui::IsKeyDown('Q')) {
-            engine->getCamera()->getPosition().y() += CAMERA_DELTA;
-        } else if(ImGui::IsKeyDown('E')) {
-            engine->getCamera()->getPosition().y() -= CAMERA_DELTA;
+        if(ImGui::IsWindowFocused()) {
+            if(!ImGuizmo::IsUsing()) {
+                engine->getCamera()->getRotation().x() += drag.y / 300.f;
+                engine->getCamera()->getRotation().y() += drag.x / 300.f;
+            }
+
+            if(ImGui::IsKeyDown('W')) {
+                engine->getCamera()->forward(CAMERA_DELTA);
+            } else if(ImGui::IsKeyDown('S')) {
+                engine->getCamera()->backward(CAMERA_DELTA);
+            }
+            if(ImGui::IsKeyDown('A')) {
+                engine->getCamera()->left(CAMERA_DELTA);
+            } else if(ImGui::IsKeyDown('D')) {
+                engine->getCamera()->right(CAMERA_DELTA);
+            }
+            if(ImGui::IsKeyDown('Q')) {
+                engine->getCamera()->getPosition().y() += CAMERA_DELTA;
+            } else if(ImGui::IsKeyDown('E')) {
+                engine->getCamera()->getPosition().y() -= CAMERA_DELTA;
+            }
         }
         ImGui::End();
 

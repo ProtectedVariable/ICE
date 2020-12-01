@@ -9,6 +9,8 @@
 #include <Scene/Scene.h>
 #include <Core/ICEEngine.h>
 #include "ICEPane.h"
+#include <ImGUI/imgui.h>
+#include <ImGUI/ImGuizmo.h>
 
 namespace ICE {
     class ICEEngine;
@@ -28,6 +30,7 @@ namespace ICE {
         int sceneViewportWidth, sceneViewportHeight;
         ICEPane* hierarchyPane, *inspectorPane;
         ICEEngine* engine;
+        ImGuizmo::OPERATION guizmoOperationMode = ImGuizmo::OPERATION::TRANSLATE;
     };
 }
 

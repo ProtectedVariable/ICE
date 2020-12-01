@@ -9,6 +9,7 @@
 #include <ImGUI/imgui.h>
 #include <ImGUI/imgui_impl_glfw.h>
 #include <ImGUI/imgui_impl_opengl3.h>
+#include <ImGUI/ImGuizmo.h>
 
 // About Desktop OpenGL function loaders:
 //  Modern desktop OpenGL doesn't have a standard portable header file to load OpenGL function pointers.
@@ -107,9 +108,10 @@ namespace ICE {
             ImGui_ImplOpenGL3_NewFrame();
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
+            ImGuizmo::BeginFrame();
+            ImGuizmo::SetOrthographic(false);
 
             gui->renderImGui();
-
             // Rendering
             ImGui::Render();
             int display_w, display_h;
@@ -123,6 +125,7 @@ namespace ICE {
             for(auto s : systems) {
                 s->update(currentScene,0.f);
             }
+
             internalFB->unbind();
             glViewport(0, 0, display_w, display_h);
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
