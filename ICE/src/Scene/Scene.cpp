@@ -30,7 +30,7 @@ namespace ICE {
             return false;
         }
 
-        if(this->nodeByID.find(newName) == this->nodeByID.end()) {
+        if(this->nodeByID.find(oldName) == this->nodeByID.end()) {
             return false;
         }
         this->nodeByID[newName] = this->nodeByID[oldName];
