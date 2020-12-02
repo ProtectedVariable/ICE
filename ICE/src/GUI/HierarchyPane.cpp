@@ -28,6 +28,7 @@ namespace ICE {
     }
 
     void HierarchyPane::render() {
+        selected = engine->getScene()->idByEntity(engine->getSelected());
         ImGui::Begin("Hierarchy");
         if(ImGui::IsMouseClicked(1)) {
             selected = "root";

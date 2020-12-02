@@ -80,8 +80,10 @@ namespace ICE {
             guizmoOperationMode = ImGuizmo::SCALE;
         }
         ImVec2 wpos = ImGui::GetCursorScreenPos();
-        ImVec2 wsize = ImGui::GetWindowSize();
-        ImGui::GetWindowDrawList()->AddImage((void *)engine->getInternalFb()->getTexture(), wpos, ImVec2(wpos.x+wsize.x, wpos.y+wsize.y), ImVec2(0, 1), ImVec2(1, 0));
+        ImVec2 wsize = ImGui::GetWindowContentRegionMax();
+        wsize.x -= ImGui::GetCursorPosX();
+        wsize.y -= ImGui::GetCursorPosY();
+        ImGui::Image((void *) engine->getInternalFB()->getTexture(), wsize, ImVec2(0, 1), ImVec2(1, 0));
         sceneViewportWidth = wsize.x;
         sceneViewportHeight = wsize.y;
 
@@ -92,7 +94,7 @@ namespace ICE {
             auto e = Eigen::Matrix4f();
             e.setZero();
             ImGuizmo::Manipulate(engine->getCamera()->lookThrough().data(), engine->getCamera()->getProjection().data(), guizmoOperationMode,
-                                 ImGuizmo::LOCAL,
+                                 ImGuizmo::WORLD,
                                  engine->getSelected()->getComponent<TransformComponent>()->getTransformation().data(), e.data());
             auto deltaT = Eigen::Vector3f();
             auto deltaR = Eigen::Vector3f();
@@ -107,16 +109,29 @@ namespace ICE {
             } else if(guizmoOperationMode == ImGuizmo::ROTATE) {
                 *engine->getSelected()->getComponent<TransformComponent>()->getRotation() += deltaR;
             } else {
-                *engine->getSelected()->getComponent<TransformComponent>()->getScale() += (deltaS-Eigen::Vector3f(1,1,1));
+                *engine->getSelected()->getComponent<TransformComponent>()->getScale() += (deltaS - Eigen::Vector3f(1,1,1));
             }
         }
         auto drag = ImGui::GetMouseDragDelta();
-        if(ImGui::IsWindowFocused()) {
-            if(!ImGuizmo::IsUsing()) {
-                engine->getCamera()->getRotation().x() += drag.y / 300.f;
-                engine->getCamera()->getRotation().y() += drag.x / 300.f;
+        if(!ImGuizmo::IsUsing()) {
+            engine->getCamera()->getRotation().x() += drag.y / 300.f;
+            engine->getCamera()->getRotation().y() += drag.x / 300.f;
+            if(ImGui::IsMouseClicked(0)) {
+                int x = ImGui::GetMousePos().x - wpos.x;
+                int y = ImGui::GetMousePos().y - wpos.y;
+                if(x > 0 && y > 0 && x < wsize.x && y < wsize.y) {
+                    auto color = engine->getPickingTextureAt(x,y);
+                    int id = color.x() & 0xFF + ((color.y() & 0xFF) << 8) + ((color.z() & 0xFF) << 16);
+                    if(id != 0) {
+                        auto picked = engine->getScene()->getEntities()[id - 1];
+                        engine->setSelected(picked);
+                    } else {
+                        engine->setSelected(nullptr);
+                    }
+                }
             }
-
+        }
+        if(ImGui::IsWindowFocused()) {
             if(ImGui::IsKeyDown('W')) {
                 engine->getCamera()->forward(CAMERA_DELTA);
             } else if(ImGui::IsKeyDown('S')) {

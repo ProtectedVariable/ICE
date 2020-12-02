@@ -8,6 +8,7 @@
 #include <GL/gl3w.h>
 #include <GLFW/glfw3.h>
 #include <Graphics/Framebuffer.h>
+#include <Eigen/src/Core/Matrix.h>
 
 namespace ICE {
     class OpenGLFramebuffer : public Framebuffer {
@@ -21,10 +22,14 @@ namespace ICE {
         void resize(int width, int height) override;
 
         void *getTexture() override;
+
+        Eigen::Vector4i readPixel(int x, int y) override;
+
     private:
         GLuint uid;
         GLuint texture;
         GLuint depth;
+        FrameBufferFormat fmt;
     };
 }
 

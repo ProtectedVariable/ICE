@@ -83,6 +83,15 @@ namespace ICE {
                 return kv.first;
             }
         }
-        return "";
+        return nullptr;
+    }
+
+    const std::string &Scene::idByEntity(const Entity* e) {
+        for(const auto& kv : this->nodeByID) {
+            if(kv.second->entity == e) {
+                return kv.first;
+            }
+        }
+        return nullptr;
     }
 }

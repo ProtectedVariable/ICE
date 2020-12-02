@@ -20,6 +20,10 @@ namespace ICE {
         void clear() override;
 
         void renderVertexArray(const VertexArray* va) override;
+
+        void flush() override;
+
+        void finish() override;
     };
 }
 

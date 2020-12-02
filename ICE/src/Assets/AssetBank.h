@@ -16,6 +16,7 @@ namespace ICE {
 
         Mesh* getMesh(const std::string& name);
         Material* getMaterial(const std::string& name);
+        Shader* getShader(const std::string& name);
     private:
         std::unordered_map<std::string, Mesh*> meshes;
         std::unordered_map<std::string, Material*> materials;

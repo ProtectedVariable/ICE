@@ -18,8 +18,9 @@ namespace ICE {
 
         void initialize();
         void loop();
+        Eigen::Vector4i getPickingTextureAt(int x, int y);
 
-        Framebuffer *getInternalFb() const;
+        Framebuffer *getInternalFB() const;
 
         Camera *getCamera() const;
 
@@ -39,6 +40,7 @@ namespace ICE {
         Context* ctx;
         ICEGUI* gui;
         Framebuffer* internalFB;
+        Framebuffer* pickingFB;
         Camera *camera;
         AssetBank* assetBank;
         Entity* selected;

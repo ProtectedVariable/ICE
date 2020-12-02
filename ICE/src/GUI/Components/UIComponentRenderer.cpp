@@ -35,4 +35,16 @@ namespace ICE {
         ImGui::InputFloat("Z", &vec->z());
         ImGui::PopItemWidth();
     }
+
+    void UIComponentRenderer::render(RenderComponent *cmp) {
+        ImGui::Text("Render Component");
+        //ImGui::Image();
+        ImGui::Text("Mesh");
+        ImGui::SameLine();
+        //char** meshes = engine->
+        //ImGui::Combo("", 0)
+        ImGui::Text("Material");
+        ImGui::SameLine();
+        //ImGui::Combo()
+    }
 }

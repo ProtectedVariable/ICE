@@ -92,6 +92,8 @@ namespace ICE {
         systems.push_back(new RenderSystem(renderer, camera));
 
         internalFB = Framebuffer::Create({1280, 720, 1});
+        pickingFB = Framebuffer::Create({1280, 720, 1});
+
         gui = new ICEGUI(this);
     }
 
@@ -127,6 +129,7 @@ namespace ICE {
             }
 
             internalFB->unbind();
+
             glViewport(0, 0, display_w, display_h);
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
@@ -144,7 +147,7 @@ namespace ICE {
         }
     }
 
-    Framebuffer *ICEEngine::getInternalFb() const {
+    Framebuffer *ICEEngine::getInternalFB() const {
         return internalFB;
     }
 
@@ -166,6 +169,28 @@ namespace ICE {
 
     void ICEEngine::setSelected(Entity *selected) {
         ICEEngine::selected = selected;
+    }
+
+    Eigen::Vector4i ICEEngine::getPickingTextureAt(int x, int y) {
+        pickingFB->bind();
+        pickingFB->resize(gui->getSceneViewportWidth(), gui->getSceneViewportHeight());
+        glViewport(0, 0, gui->getSceneViewportWidth(), gui->getSceneViewportHeight());
+        camera->setParameters({60, (float) gui->getSceneViewportWidth() / (float) gui->getSceneViewportHeight(), 0.01f, 1000},Perspective);
+        api->clear();
+        assetBank->getShader("__ice__picking_shader__")->bind();
+        assetBank->getShader("__ice__picking_shader__")->loadMat4("projection", camera->getProjection());
+        assetBank->getShader("__ice__picking_shader__")->loadMat4("view", camera->lookThrough());
+        int id = 1;
+        for(auto e : currentScene->getEntities()) {
+            assetBank->getShader("__ice__picking_shader__")->loadMat4("model", e->getComponent<TransformComponent>()->getTransformation());
+            assetBank->getShader("__ice__picking_shader__")->loadInt("objectID", id++);
+            if(e->hasComponent<RenderComponent>()) {
+                api->renderVertexArray(e->getComponent<RenderComponent>()->getMesh()->getVertexArray());
+            }
+        }
+        auto color = internalFB->readPixel(x, y);
+        internalFB->unbind();
+        return color;
     }
 }
 

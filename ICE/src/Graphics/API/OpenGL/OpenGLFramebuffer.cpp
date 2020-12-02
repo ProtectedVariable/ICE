@@ -2,8 +2,10 @@
 // Created by Thomas Ibanez on 27.11.20.
 //
 
-#include <Util/Logger.h>
 #include "OpenGLFramebuffer.h"
+#include <Util/Logger.h>
+#include <Eigen/src/Core/Matrix.h>
+#include <Eigen/Dense>
 
 namespace ICE {
     void OpenGLFramebuffer::bind() {
@@ -15,6 +17,8 @@ namespace ICE {
     }
 
     void OpenGLFramebuffer::resize(int width, int height) {
+        fmt.width = width;
+        fmt.height = height;
         glBindTexture(GL_TEXTURE_2D, texture);
 
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
@@ -35,7 +39,7 @@ namespace ICE {
         return static_cast<char*>(0)+texture;
     }
 
-    OpenGLFramebuffer::OpenGLFramebuffer(FrameBufferFormat fmt) {
+    OpenGLFramebuffer::OpenGLFramebuffer(FrameBufferFormat fmt): fmt(fmt) {
         glGenFramebuffers(1, &uid);
         glBindFramebuffer(GL_FRAMEBUFFER, uid);
         glGenTextures(1, &texture);
@@ -61,5 +65,14 @@ namespace ICE {
             Logger::Log(Logger::FATAL, "Graphics", "Couldn't create framebuffer object ! (%d)", status);
         }
 
+    }
+
+    Eigen::Vector4i OpenGLFramebuffer::readPixel(int x, int y) {
+        glFlush();
+        glFinish();
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        auto pixels = Eigen::Vector4i();
+        glReadPixels(x, fmt.height-y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
+        return pixels;
     }
 }
