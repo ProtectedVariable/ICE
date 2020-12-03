@@ -10,6 +10,7 @@
 #include "ICEGUI.h"
 #include "HierarchyPane.h"
 #include "InspectorPane.h"
+#include "AssetPane.h"
 #include <iostream>
 
 #define CAMERA_DELTA 0.02f
@@ -48,10 +49,10 @@ namespace ICE {
             ImGui::DockBuilderAddNode(dockspace_id); // Add empty node
 
             ImGuiID dock_main_id = dockspace_id; // This variable will track the document node, however we are not using it here as we aren't docking anything into it.
-            ImGuiID dock_id_bottom = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Down, 0.20f, NULL, &dock_main_id);
+            ImGuiID dock_id_bottom = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Down, 0.30f, NULL, &dock_main_id);
             ImGuiID dock_id_left = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Left, 0.20f, NULL, &dock_main_id);
-            ImGuiID dock_id_right = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Right, 0.20f, NULL, &dock_main_id);
-            ImGuiID dock_id_up = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Up, 0.80f, NULL, &dock_main_id);
+            ImGuiID dock_id_right = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Right, 0.30f, NULL, &dock_main_id);
+            ImGuiID dock_id_up = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Up, 0.70f, NULL, &dock_main_id);
 
             ImGui::DockBuilderDockWindow("Assets", dock_id_bottom);
             ImGui::DockBuilderDockWindow("Hierarchy", dock_id_left);
@@ -62,90 +63,95 @@ namespace ICE {
         }
         ImGui::DockSpace(dockspace_id);
 
-        ImGui::Begin("Assets");
-        ImGui::End();
+        assetPane->render();
 
         hierarchyPane->render();
 
         ImGui::Begin("Viewport");
-        if(ImGui::Button("T")) {
-            guizmoOperationMode = ImGuizmo::TRANSLATE;
-        }
-        ImGui::SameLine();
-        if(ImGui::Button("R")) {
-            guizmoOperationMode = ImGuizmo::ROTATE;
-        }
-        ImGui::SameLine();
-        if(ImGui::Button("S")) {
-            guizmoOperationMode = ImGuizmo::SCALE;
-        }
-        ImVec2 wpos = ImGui::GetCursorScreenPos();
-        ImVec2 wsize = ImGui::GetWindowContentRegionMax();
-        wsize.x -= ImGui::GetCursorPosX();
-        wsize.y -= ImGui::GetCursorPosY();
-        ImGui::Image((void *) engine->getInternalFB()->getTexture(), wsize, ImVec2(0, 1), ImVec2(1, 0));
-        sceneViewportWidth = wsize.x;
-        sceneViewportHeight = wsize.y;
-
-        ImGuizmo::SetRect(wpos.x, wpos.y, wsize.x, wsize.y);
-
-        ImGuizmo::Enable(true);
-        if(engine->getSelected() != nullptr) {
-            auto e = Eigen::Matrix4f();
-            e.setZero();
-            ImGuizmo::Manipulate(engine->getCamera()->lookThrough().data(), engine->getCamera()->getProjection().data(), guizmoOperationMode,
-                                 ImGuizmo::WORLD,
-                                 engine->getSelected()->getComponent<TransformComponent>()->getTransformation().data(), e.data());
-            auto deltaT = Eigen::Vector3f();
-            auto deltaR = Eigen::Vector3f();
-            auto deltaS = Eigen::Vector3f();
-            deltaT.setZero();
-            deltaR.setZero();
-            deltaS.setZero();
-
-            ImGuizmo::DecomposeMatrixToComponents(e.data(), deltaT.data(), deltaR.data(), deltaS.data());
-            if(guizmoOperationMode == ImGuizmo::TRANSLATE) {
-                *engine->getSelected()->getComponent<TransformComponent>()->getPosition() += deltaT;
-            } else if(guizmoOperationMode == ImGuizmo::ROTATE) {
-                *engine->getSelected()->getComponent<TransformComponent>()->getRotation() += deltaR;
-            } else {
-                *engine->getSelected()->getComponent<TransformComponent>()->getScale() += (deltaS - Eigen::Vector3f(1,1,1));
+        {
+            if (ImGui::Button("T")) {
+                guizmoOperationMode = ImGuizmo::TRANSLATE;
             }
-        }
-        auto drag = ImGui::GetMouseDragDelta();
-        if(!ImGuizmo::IsUsing()) {
-            engine->getCamera()->getRotation().x() += drag.y / 300.f;
-            engine->getCamera()->getRotation().y() += drag.x / 300.f;
-            if(ImGui::IsMouseClicked(0)) {
-                int x = ImGui::GetMousePos().x - wpos.x;
-                int y = ImGui::GetMousePos().y - wpos.y;
-                if(x > 0 && y > 0 && x < wsize.x && y < wsize.y) {
-                    auto color = engine->getPickingTextureAt(x,y);
-                    int id = color.x() & 0xFF + ((color.y() & 0xFF) << 8) + ((color.z() & 0xFF) << 16);
-                    if(id != 0) {
-                        auto picked = engine->getScene()->getEntities()[id - 1];
-                        engine->setSelected(picked);
-                    } else {
-                        engine->setSelected(nullptr);
+            ImGui::SameLine();
+            if (ImGui::Button("R")) {
+                guizmoOperationMode = ImGuizmo::ROTATE;
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("S")) {
+                guizmoOperationMode = ImGuizmo::SCALE;
+            }
+            ImVec2 wpos = ImGui::GetCursorScreenPos();
+            ImVec2 wsize = ImGui::GetWindowContentRegionMax();
+            wsize.x -= ImGui::GetCursorPosX();
+            wsize.y -= ImGui::GetCursorPosY();
+            ImGui::Image((void *) engine->getInternalFB()->getTexture(), wsize, ImVec2(0, 1), ImVec2(1, 0));
+            sceneViewportWidth = wsize.x;
+            sceneViewportHeight = wsize.y;
+
+            ImGuizmo::SetRect(wpos.x, wpos.y, wsize.x, wsize.y);
+
+            ImGuizmo::Enable(true);
+            if (engine->getSelected() != nullptr) {
+                auto e = Eigen::Matrix4f();
+                e.setZero();
+                ImGuizmo::Manipulate(engine->getCamera()->lookThrough().data(),
+                                     engine->getCamera()->getProjection().data(), guizmoOperationMode,
+                                     ImGuizmo::WORLD,
+                                     engine->getSelected()->getComponent<TransformComponent>()->getTransformation().data(),
+                                     e.data());
+                auto deltaT = Eigen::Vector3f();
+                auto deltaR = Eigen::Vector3f();
+                auto deltaS = Eigen::Vector3f();
+                deltaT.setZero();
+                deltaR.setZero();
+                deltaS.setZero();
+
+                ImGuizmo::DecomposeMatrixToComponents(e.data(), deltaT.data(), deltaR.data(), deltaS.data());
+                if (guizmoOperationMode == ImGuizmo::TRANSLATE) {
+                    *engine->getSelected()->getComponent<TransformComponent>()->getPosition() += deltaT;
+                } else if (guizmoOperationMode == ImGuizmo::ROTATE) {
+                    *engine->getSelected()->getComponent<TransformComponent>()->getRotation() += deltaR;
+                } else {
+                    *engine->getSelected()->getComponent<TransformComponent>()->getScale() += (deltaS -
+                                                                                               Eigen::Vector3f(1, 1,
+                                                                                                               1));
+                }
+            }
+            auto drag = ImGui::GetMouseDragDelta();
+            if (!ImGuizmo::IsUsing()) {
+                engine->getCamera()->getRotation().x() += drag.y / 300.f;
+                engine->getCamera()->getRotation().y() += drag.x / 300.f;
+                if (ImGui::IsMouseClicked(0)) {
+                    int x = ImGui::GetMousePos().x - wpos.x;
+                    int y = ImGui::GetMousePos().y - wpos.y;
+                    if (x > 0 && y > 0 && x < wsize.x && y < wsize.y) {
+                        auto color = engine->getPickingTextureAt(x, y);
+                        int id = color.x() & 0xFF + ((color.y() & 0xFF) << 8) + ((color.z() & 0xFF) << 16);
+                        if (id != 0) {
+                            auto picked = engine->getScene()->getEntities()[id - 1];
+                            engine->setSelected(picked);
+                        } else {
+                            engine->setSelected(nullptr);
+                        }
                     }
                 }
             }
-        }
-        if(ImGui::IsWindowFocused()) {
-            if(ImGui::IsKeyDown('W')) {
-                engine->getCamera()->forward(CAMERA_DELTA);
-            } else if(ImGui::IsKeyDown('S')) {
-                engine->getCamera()->backward(CAMERA_DELTA);
-            }
-            if(ImGui::IsKeyDown('A')) {
-                engine->getCamera()->left(CAMERA_DELTA);
-            } else if(ImGui::IsKeyDown('D')) {
-                engine->getCamera()->right(CAMERA_DELTA);
-            }
-            if(ImGui::IsKeyDown('Q')) {
-                engine->getCamera()->getPosition().y() += CAMERA_DELTA;
-            } else if(ImGui::IsKeyDown('E')) {
-                engine->getCamera()->getPosition().y() -= CAMERA_DELTA;
+            if (ImGui::IsWindowFocused()) {
+                if (ImGui::IsKeyDown('W')) {
+                    engine->getCamera()->forward(CAMERA_DELTA);
+                } else if (ImGui::IsKeyDown('S')) {
+                    engine->getCamera()->backward(CAMERA_DELTA);
+                }
+                if (ImGui::IsKeyDown('A')) {
+                    engine->getCamera()->left(CAMERA_DELTA);
+                } else if (ImGui::IsKeyDown('D')) {
+                    engine->getCamera()->right(CAMERA_DELTA);
+                }
+                if (ImGui::IsKeyDown('Q')) {
+                    engine->getCamera()->getPosition().y() += CAMERA_DELTA;
+                } else if (ImGui::IsKeyDown('E')) {
+                    engine->getCamera()->getPosition().y() -= CAMERA_DELTA;
+                }
             }
         }
         ImGui::End();
@@ -164,7 +170,7 @@ namespace ICE {
         return sceneViewportHeight;
     }
 
-    ICEGUI::ICEGUI(ICEEngine *engine): engine(engine), hierarchyPane(new HierarchyPane(engine)), inspectorPane(new InspectorPane(engine)) {
+    ICEGUI::ICEGUI(ICEEngine *engine): engine(engine), hierarchyPane(new HierarchyPane(engine)), inspectorPane(new InspectorPane(engine)), assetPane(new AssetPane(engine)) {
 
     }
 }

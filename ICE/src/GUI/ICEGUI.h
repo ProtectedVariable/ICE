@@ -28,7 +28,7 @@ namespace ICE {
     private:
         int init = 0;
         int sceneViewportWidth, sceneViewportHeight;
-        ICEPane* hierarchyPane, *inspectorPane;
+        ICEPane* hierarchyPane, *inspectorPane, *assetPane;
         ICEEngine* engine;
         ImGuizmo::OPERATION guizmoOperationMode = ImGuizmo::OPERATION::TRANSLATE;
     };

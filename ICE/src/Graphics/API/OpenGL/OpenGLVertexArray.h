@@ -30,6 +30,8 @@ namespace ICE {
 
         uint32_t getID() const override;
 
+        IndexBuffer *getIndexBuffer() const override;
+
     private:
         GLuint vaoID;
         int cnt = 0;

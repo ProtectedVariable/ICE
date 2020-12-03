@@ -19,6 +19,7 @@ namespace ICE {
         virtual void pushVertexBuffer(VertexBuffer* buffer, int size) = 0;
         virtual void pushVertexBuffer(VertexBuffer* buffer, int position, int size) = 0;
         virtual void setIndexBuffer(IndexBuffer* buffer) = 0;
+        virtual IndexBuffer* getIndexBuffer() const = 0;
         virtual int getIndexCount() const = 0;
         virtual uint32_t getID() const = 0;
 

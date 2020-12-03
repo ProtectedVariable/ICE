@@ -20,8 +20,11 @@ namespace ICE {
             if(ImGui::InputText("", buffer, ICE_UID_MAX_SIZE)) {
                 engine->getScene()->renameEntity(name, buffer);
             }
+            ImGui::Separator();
             ImGui::PopID();
             componentRenderer.render(engine->getSelected()->getComponent<TransformComponent>());
+            ImGui::Separator();
+            componentRenderer.render(engine->getSelected()->getComponent<RenderComponent>());
         }
         ImGui::End();
     }

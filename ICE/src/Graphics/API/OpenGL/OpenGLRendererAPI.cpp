@@ -19,8 +19,9 @@ void ICE::OpenGLRendererAPI::clear() {
 
 void ICE::OpenGLRendererAPI::renderVertexArray(const ICE::VertexArray* va) {
     va->bind();
+    va->getIndexBuffer()->bind();
     //glDrawArrays(GL_TRIANGLES, 0, va->getIndexCount()*3);
-    glDrawElements(GL_TRIANGLES, va->getIndexCount(), GL_UNSIGNED_INT, nullptr);
+    glDrawElements(GL_TRIANGLES, va->getIndexCount(), GL_UNSIGNED_INT, 0);
 }
 
 void ICE::OpenGLRendererAPI::initialize() {

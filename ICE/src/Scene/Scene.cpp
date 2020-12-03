@@ -87,6 +87,7 @@ namespace ICE {
     }
 
     const std::string &Scene::idByEntity(const Entity* e) {
+        if(e == nullptr) return "root";
         for(const auto& kv : this->nodeByID) {
             if(kv.second->entity == e) {
                 return kv.first;

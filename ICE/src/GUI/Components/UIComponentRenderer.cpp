@@ -39,7 +39,7 @@ namespace ICE {
     void UIComponentRenderer::render(RenderComponent *cmp) {
         ImGui::Text("Render Component");
         //ImGui::Image();
-        ImGui::Text("Mesh");
+        ImGui::Text("Meshes");
         ImGui::SameLine();
         //char** meshes = engine->
         //ImGui::Combo("", 0)

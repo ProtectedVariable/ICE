@@ -79,7 +79,7 @@ namespace ICE {
         camera->getPosition().z() = 1;
     /*
         Entity* bunny = new Entity();
-        Mesh* mesh = OBJLoader::loadFromOBJ("Assets/bunny.obj");
+        Meshes* mesh = OBJLoader::loadFromOBJ("Assets/bunny.obj");
         Shader* shader = Shader::Create("Assets/test.vs","Assets/test.fs");
         Material* mat = new Material(shader);
         RenderComponent* rc = new RenderComponent(mesh, mat);
@@ -177,13 +177,13 @@ namespace ICE {
         glViewport(0, 0, gui->getSceneViewportWidth(), gui->getSceneViewportHeight());
         camera->setParameters({60, (float) gui->getSceneViewportWidth() / (float) gui->getSceneViewportHeight(), 0.01f, 1000},Perspective);
         api->clear();
-        assetBank->getShader("__ice__picking_shader__")->bind();
-        assetBank->getShader("__ice__picking_shader__")->loadMat4("projection", camera->getProjection());
-        assetBank->getShader("__ice__picking_shader__")->loadMat4("view", camera->lookThrough());
+        assetBank->getShader("__ice__picking_shader")->bind();
+        assetBank->getShader("__ice__picking_shader")->loadMat4("projection", camera->getProjection());
+        assetBank->getShader("__ice__picking_shader")->loadMat4("view", camera->lookThrough());
         int id = 1;
         for(auto e : currentScene->getEntities()) {
-            assetBank->getShader("__ice__picking_shader__")->loadMat4("model", e->getComponent<TransformComponent>()->getTransformation());
-            assetBank->getShader("__ice__picking_shader__")->loadInt("objectID", id++);
+            assetBank->getShader("__ice__picking_shader")->loadMat4("model", e->getComponent<TransformComponent>()->getTransformation());
+            assetBank->getShader("__ice__picking_shader")->loadInt("objectID", id++);
             if(e->hasComponent<RenderComponent>()) {
                 api->renderVertexArray(e->getComponent<RenderComponent>()->getMesh()->getVertexArray());
             }
@@ -284,7 +284,7 @@ int main(int, char**)
     // Setup Platform/Renderer backends
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
-    io.Fonts->AddFontFromFileTTF("Assets/helvetica.ttf", 13.0f);
+    io.Fonts->AddFontFromFileTTF("Assets/Fonts/helvetica.ttf", 14.0f);
 
     engine.loop();
     // Load Fonts

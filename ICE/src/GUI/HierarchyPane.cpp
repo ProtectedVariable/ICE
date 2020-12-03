@@ -13,11 +13,10 @@ namespace ICE {
     int ctr = 0;
 
     void HierarchyPane::mkPopup(const std::string& parent) {
-        //Logger::Log(Logger::DEBUG, "GUI", "%s", &parent);
         ImGui::Text("Create...");
         if(ImGui::Button("3D Object")) {
             auto entity = new Entity();
-            auto rc = new RenderComponent(engine->getAssetBank()->getMesh("__ice__cube__"), engine->getAssetBank()->getMaterial("__ice__base_material__"));
+            auto rc = new RenderComponent(engine->getAssetBank()->getMesh("__ice__cube"), engine->getAssetBank()->getMaterial("__ice__base_material"));
             auto tc = new TransformComponent();
             entity->addComponent(rc);
             entity->addComponent(tc);
