@@ -10,7 +10,7 @@ set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
 if(NOT EXISTS "${GLFW_LIB_PATH}")
-	execute_process(COMMAND git clone git@github.com:glfw/glfw.git "${GLFW_LIB_PATH}")
+	execute_process(COMMAND git clone https://github.com/glfw/glfw.git "${GLFW_LIB_PATH}")
 endif()
 add_subdirectory(libs/glfw/)
 
