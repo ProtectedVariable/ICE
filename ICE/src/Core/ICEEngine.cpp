@@ -200,7 +200,7 @@ static void glfw_error_callback(int error, const char* description)
 {
     Logger::Log(Logger::FATAL, "Core", "GLFW Error %d: %s\n", error, description);
 }
-
+#ifndef ICE_TEST
 int main(int, char**)
 {
     // Setup window
@@ -312,3 +312,4 @@ int main(int, char**)
 
     return 0;
 }
+#endif
