@@ -1,6 +1,7 @@
 //
 // Created by Thomas Ibanez on 16.11.20.
 //
+#define ICE_TEST
 #include <Scene/Entity.h>
 #include <Scene/TransformComponent.h>
 #include <Scene/Scene.h>
@@ -13,12 +14,12 @@ int main(void) {
     Entity e;
     assert(!e.hasComponent<TransformComponent>());
     TransformComponent tr;
-    e.addComponent(tr);
+    e.addComponent(&tr);
     assert(e.hasComponent<TransformComponent>());
     assert(e.getComponent<TransformComponent>() == &tr);
-    Scene s(nullptr);
+    auto s = Scene();
     assert(s.getByID("my") == nullptr);
-    s.addEntity("root", "my", e);
+    s.addEntity("root", "my", &e);
     assert(s.getByID("my") != nullptr);
     assert(s.getByID("my")->entity == &e);
     Logger::Log(Logger::DEBUG, "Core", "This is a debug message !");
