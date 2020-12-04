@@ -14,12 +14,13 @@ namespace ICE {
     public:
         void render() override;
 
-        AssetViewPane(ICEEngine *engine);
+        AssetViewPane(ICEEngine *engine, std::string* selectedAsset);
 
     private:
         ICEEngine* engine;
         Framebuffer* viewFB;
         Camera* camera;
+        std::string* selectedAsset;
     };
 }
 

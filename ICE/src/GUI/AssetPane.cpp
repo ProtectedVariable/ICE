@@ -58,11 +58,10 @@ namespace ICE {
         ImGui::Text("Hello world !");
         ImGui::End();
 
-
-
+        contentPane->render();
         viewPane->render();
 
     }
 
-    AssetPane::AssetPane(ICEEngine *engine) : engine(engine), viewPane(new AssetViewPane(engine)) {}
+    AssetPane::AssetPane(ICEEngine *engine) : engine(engine), viewPane(new AssetViewPane(engine, &selectedAsset)), contentPane(new AssetContentPane(&selectedDirectory, engine, &selectedAsset)), selectedAsset(engine->getAssetBank()->getMeshes().begin()->first) {}
 }

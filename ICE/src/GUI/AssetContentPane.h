@@ -14,11 +14,14 @@ namespace ICE {
     public:
         void render() override;
 
-        AssetContentPane(const int *selectedDir, ICEEngine *engine);
+        AssetContentPane(const int *selectedDir, ICEEngine *engine, std::string* selectedAsset);
 
     private:
         const int* selectedDir;
         ICEEngine* engine;
+        Framebuffer** thumbnailFBO;
+        std::string* selectedAsset;
+        Camera* camera;
     };
 }
 

@@ -8,6 +8,7 @@
 #include <Core/ICEEngine.h>
 #include "ICEPane.h"
 #include "AssetViewPane.h"
+#include "AssetContentPane.h"
 
 namespace ICE {
     class AssetPane : public ICEPane {
@@ -18,7 +19,9 @@ namespace ICE {
     private:
         ICEEngine* engine;
         AssetViewPane* viewPane;
+        AssetContentPane* contentPane;
         int selectedDirectory = 0;
+        std::string selectedAsset = "";
     };
 }
 
