@@ -7,6 +7,7 @@
 
 #include <Core/ICEEngine.h>
 #include "ICEPane.h"
+#include "AssetViewPane.h"
 
 namespace ICE {
     class AssetPane : public ICEPane {
@@ -16,6 +17,7 @@ namespace ICE {
         void render() override;
     private:
         ICEEngine* engine;
+        AssetViewPane* viewPane;
         int selectedDirectory = 0;
     };
 }

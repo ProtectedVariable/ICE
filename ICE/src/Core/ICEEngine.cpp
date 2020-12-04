@@ -80,7 +80,7 @@ namespace ICE {
     /*
         Entity* bunny = new Entity();
         Meshes* mesh = OBJLoader::loadFromOBJ("Assets/bunny.obj");
-        Shader* shader = Shader::Create("Assets/test.vs","Assets/test.fs");
+        Shader* shader = Shader::Create("Assets/normal.vs","Assets/normal.fs");
         Material* mat = new Material(shader);
         RenderComponent* rc = new RenderComponent(mesh, mat);
         bunny->addComponent(rc);
@@ -191,6 +191,10 @@ namespace ICE {
         auto color = internalFB->readPixel(x, y);
         internalFB->unbind();
         return color;
+    }
+
+    RendererAPI *ICEEngine::getApi() const {
+        return api;
     }
 }
 

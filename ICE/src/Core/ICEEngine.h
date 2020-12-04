@@ -30,6 +30,8 @@ namespace ICE {
 
         Entity *getSelected() const;
 
+        RendererAPI *getApi() const;
+
         void setSelected(Entity *selected);
 
     private:

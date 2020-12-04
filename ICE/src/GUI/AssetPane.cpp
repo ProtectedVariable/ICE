@@ -10,7 +10,7 @@ namespace ICE {
 
     int init = 0;
     void AssetPane::render() {
-        ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration;
+        ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar;
         ImGui::Begin("Assets", nullptr, flags);
         ImGuiID dockspace_id = ImGui::GetID("assetspace");
         if(init == 0) {
@@ -34,13 +34,22 @@ namespace ICE {
 
         ImGui::Begin("Asset Directories");
         ImGuiTreeNodeFlags treeflag = ImGuiTreeNodeFlags_Selected;
-        if(ImGui::TreeNodeEx("Meshes", selectedDirectory == 0 ? treeflag : 0)) {
+        if(ImGui::TreeNodeEx("Meshes", ImGuiTreeNodeFlags_Leaf | (selectedDirectory == 0 ? treeflag : 0))) {
+            if(ImGui::IsItemClicked(0)) {
+                selectedDirectory = 0;
+            }
             ImGui::TreePop();
         }
-        if(ImGui::TreeNodeEx("Materials", selectedDirectory == 1 ? treeflag : 0)) {
+        if(ImGui::TreeNodeEx("Materials", ImGuiTreeNodeFlags_Leaf | (selectedDirectory == 1 ? treeflag : 0))) {
+            if(ImGui::IsItemClicked(0)) {
+                selectedDirectory = 1;
+            }
             ImGui::TreePop();
         }
-        if(ImGui::TreeNodeEx("Shaders", selectedDirectory == 2 ? treeflag : 0)) {
+        if(ImGui::TreeNodeEx("Shaders", ImGuiTreeNodeFlags_Leaf | (selectedDirectory == 2 ? treeflag : 0))) {
+            if(ImGui::IsItemClicked(0)) {
+                selectedDirectory = 2;
+            }
             ImGui::TreePop();
         }
         ImGui::End();
@@ -49,13 +58,11 @@ namespace ICE {
         ImGui::Text("Hello world !");
         ImGui::End();
 
-        ImGui::Begin("Asset Content");
 
-        ImGui::End();
 
-        ImGui::Begin("Asset View");
-        ImGui::End();
+        viewPane->render();
+
     }
 
-    AssetPane::AssetPane(ICEEngine *engine) : engine(engine) {}
+    AssetPane::AssetPane(ICEEngine *engine) : engine(engine), viewPane(new AssetViewPane(engine)) {}
 }
