@@ -20,7 +20,7 @@ namespace ICE {
         if(s >= filter) {
             va_list args;
             va_start(args, fmt);
-            const char *color;
+            const char *color = "\033[0m";
             switch (s) {
                 case DEBUG:
                     color = "[0;36m";

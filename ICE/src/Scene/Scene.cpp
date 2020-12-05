@@ -7,8 +7,8 @@
 #include <utility>
 
 namespace ICE {
-    Scene::Scene() : root(SceneNode(nullptr)), nodeByID(std::unordered_map<std::string, SceneNode*>()) {
-        nodeByID["root"] = &root;
+    Scene::Scene() : root(new SceneNode(nullptr)), nodeByID(std::unordered_map<std::string, SceneNode*>()) {
+        nodeByID["root"] = root;
     }
 
     bool Scene::addEntity(const std::string& parent, const std::string& uid, Entity* entity) {

@@ -13,7 +13,7 @@ namespace ICE {
         this->rotation = Eigen::Vector3f();
         this->position.setZero();
         this->rotation.setZero();
-        this->setParameters(parameters, Perspective);
+        this->setParameters(parameters);
     }
 
     const Eigen::Matrix4f &Camera::getProjection() const {
@@ -52,7 +52,7 @@ namespace ICE {
         return rotation;
     }
 
-    void Camera::setParameters(CameraParameters parameters, ProjectionType type) {
+    void Camera::setParameters(CameraParameters parameters) {
         cparameters = parameters;
         if(parameters.type == Orthographic) {
             projection.setZero();

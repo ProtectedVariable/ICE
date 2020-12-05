@@ -5,6 +5,9 @@
 #include <ImGUI/imgui.h>
 #include <ImGUI/imgui_internal.h>
 #include "AssetPane.h"
+#include "AssetViewPane.h"
+#include "AssetContentPane.h"
+#include <Core/ICEEngine.h>
 
 namespace ICE {
 
@@ -58,10 +61,10 @@ namespace ICE {
         ImGui::Text("Hello world !");
         ImGui::End();
 
-        contentPane->render();
-        viewPane->render();
+        contentPane.render();
+        viewPane.render();
 
     }
 
-    AssetPane::AssetPane(ICEEngine *engine) : engine(engine), viewPane(new AssetViewPane(engine, &selectedAsset)), contentPane(new AssetContentPane(&selectedDirectory, engine, &selectedAsset)), selectedAsset(engine->getAssetBank()->getMeshes().begin()->first) {}
+    AssetPane::AssetPane(ICEEngine *engine) : engine(engine), viewPane(AssetViewPane(engine, &selectedAsset)), contentPane(AssetContentPane(&selectedDirectory, engine, &selectedAsset)), selectedAsset(engine->getAssetBank()->getMeshes().begin()->first) {}
 }

@@ -5,11 +5,12 @@
 #ifndef ICE_INSPECTORPANE_H
 #define ICE_INSPECTORPANE_H
 
-#include <Core/ICEEngine.h>
 #include <GUI/Components/UIComponentRenderer.h>
 #include "ICEPane.h"
 
 namespace ICE {
+    class ICEEngine;
+
     class InspectorPane : public ICEPane {
     public:
         void render() override;

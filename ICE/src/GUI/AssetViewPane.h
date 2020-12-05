@@ -6,10 +6,11 @@
 #define ICE_ASSETVIEWPANE_H
 
 #include <Graphics/Framebuffer.h>
-#include <Core/ICEEngine.h>
+#include <Graphics/Camera.h>
 #include "ICEPane.h"
 
 namespace ICE {
+    class ICEEngine;
     class AssetViewPane : public ICEPane {
     public:
         void render() override;
@@ -19,7 +20,7 @@ namespace ICE {
     private:
         ICEEngine* engine;
         Framebuffer* viewFB;
-        Camera* camera;
+        Camera camera;
         std::string* selectedAsset;
     };
 }

@@ -49,7 +49,7 @@ namespace ICE {
     }
 
     void ForwardRenderer::endFrame() {
-        unsigned int err = 0;
+        unsigned int err;
         while((err = glGetError()) != GL_NO_ERROR){
             Logger::Log(Logger::ERROR, "Graphics", "OpenGL Error %d", err);
         }

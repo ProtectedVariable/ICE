@@ -8,7 +8,7 @@
 
 namespace ICE {
 
-    void UIComponentRenderer::render(ICE::TransformComponent *cmp) {
+    void UIComponentRenderer::render(ICE::TransformComponent* cmp) {
         ImGui::Text("Transform Component");
         ImGui::Text("Position:");
         ImGui::PushID("ice_pos");
@@ -36,9 +36,8 @@ namespace ICE {
         ImGui::PopItemWidth();
     }
 
-    void UIComponentRenderer::render(RenderComponent *cmp, std::unordered_map<std::string, Mesh*> meshes, std::unordered_map<std::string, Material*> materials) {
+    void UIComponentRenderer::render(RenderComponent* cmp, std::unordered_map<std::string, Mesh*> meshes, std::unordered_map<std::string, Material*> materials) {
         ImGui::Text("Render Component");
-        //ImGui::Image();
         ImGui::Text("Meshes");
         ImGui::SameLine();
         auto meshNames = std::vector<const char*>(meshes.size());

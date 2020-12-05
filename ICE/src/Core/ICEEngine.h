@@ -22,11 +22,11 @@ namespace ICE {
 
         Framebuffer *getInternalFB() const;
 
-        Camera *getCamera() const;
+        Camera *getCamera();
 
-        AssetBank *getAssetBank() const;
+        AssetBank* getAssetBank();
 
-        Scene *getScene() const;
+        Scene* getScene();
 
         Entity *getSelected() const;
 
@@ -37,14 +37,14 @@ namespace ICE {
     private:
         std::vector<System*> systems;
         void* window;
-        Scene* currentScene;
+        Scene currentScene;
         RendererAPI* api;
         Context* ctx;
         ICEGUI* gui;
         Framebuffer* internalFB;
         Framebuffer* pickingFB;
-        Camera *camera;
-        AssetBank* assetBank;
+        Camera camera;
+        AssetBank assetBank;
         Entity* selected;
     };
 }

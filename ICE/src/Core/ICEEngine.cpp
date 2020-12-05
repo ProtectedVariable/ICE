@@ -56,7 +56,8 @@ using namespace gl;
 
 
 namespace ICE {
-    ICEEngine::ICEEngine(void* window): systems(std::vector<System*>()), window(window) {
+    ICEEngine::ICEEngine(void* window): systems(std::vector<System*>()), window(window),
+                                        camera(Camera(CameraParameters{ {60, 16.f / 9.f, 0.01f, 1000 }, Perspective })) {
         api = RendererAPI::Create();
     }
 
@@ -70,26 +71,13 @@ namespace ICE {
         api->initialize();
         Renderer* renderer = new ForwardRenderer();
         renderer->initialize(api, RendererConfig());
-        api->setViewport(0, 0, 1280, 720);
 
-        this->assetBank = new AssetBank();
+        this->assetBank = AssetBank();
 
-        this->currentScene = new Scene();
-        camera = new Camera(CameraParameters{ {60, 16.f / 9.f, 0.01f, 1000 }, Perspective } );
-        camera->getPosition().z() = 1;
-    /*
-        Entity* bunny = new Entity();
-        Meshes* mesh = OBJLoader::loadFromOBJ("Assets/bunny.obj");
-        Shader* shader = Shader::Create("Assets/normal.vs","Assets/normal.fs");
-        Material* mat = new Material(shader);
-        RenderComponent* rc = new RenderComponent(mesh, mat);
-        bunny->addComponent(rc);
-        auto tc = new TransformComponent();
-        bunny->addComponent(tc);
+        this->currentScene = Scene();
+        camera.getPosition().z() = 1;
 
-        currentScene->addEntity("root", "bunny", bunny);
-*/
-        systems.push_back(new RenderSystem(renderer, camera));
+        systems.push_back(new RenderSystem(renderer, &camera));
 
         internalFB = Framebuffer::Create({1280, 720, 1});
         pickingFB = Framebuffer::Create({1280, 720, 1});
@@ -122,10 +110,11 @@ namespace ICE {
             internalFB->bind();
             internalFB->resize(gui->getSceneViewportWidth(), gui->getSceneViewportHeight());
             glViewport(0, 0, gui->getSceneViewportWidth(), gui->getSceneViewportHeight());
-            camera->setParameters({60, (float) gui->getSceneViewportWidth() / (float) gui->getSceneViewportHeight(), 0.01f, 1000},Perspective);
+            camera.setParameters(
+                    {60, (float) gui->getSceneViewportWidth() / (float) gui->getSceneViewportHeight(), 0.01f, 1000});
             api->clear();
             for(auto s : systems) {
-                s->update(currentScene,0.f);
+                s->update(&currentScene,0.f);
             }
 
             internalFB->unbind();
@@ -151,16 +140,16 @@ namespace ICE {
         return internalFB;
     }
 
-    Camera *ICEEngine::getCamera() const {
-        return camera;
+    Camera *ICEEngine::getCamera() {
+        return &camera;
     }
 
-    AssetBank *ICEEngine::getAssetBank() const {
-        return assetBank;
+    AssetBank *ICEEngine::getAssetBank() {
+        return &assetBank;
     }
 
-    Scene *ICEEngine::getScene() const {
-        return currentScene;
+    Scene *ICEEngine::getScene() {
+        return &currentScene;
     }
 
     Entity *ICEEngine::getSelected() const {
@@ -175,15 +164,16 @@ namespace ICE {
         pickingFB->bind();
         pickingFB->resize(gui->getSceneViewportWidth(), gui->getSceneViewportHeight());
         glViewport(0, 0, gui->getSceneViewportWidth(), gui->getSceneViewportHeight());
-        camera->setParameters({60, (float) gui->getSceneViewportWidth() / (float) gui->getSceneViewportHeight(), 0.01f, 1000},Perspective);
+        camera.setParameters(
+                {60, (float) gui->getSceneViewportWidth() / (float) gui->getSceneViewportHeight(), 0.01f, 1000});
         api->clear();
-        assetBank->getShader("__ice__picking_shader")->bind();
-        assetBank->getShader("__ice__picking_shader")->loadMat4("projection", camera->getProjection());
-        assetBank->getShader("__ice__picking_shader")->loadMat4("view", camera->lookThrough());
+        assetBank.getShader("__ice__picking_shader")->bind();
+        assetBank.getShader("__ice__picking_shader")->loadMat4("projection", camera.getProjection());
+        assetBank.getShader("__ice__picking_shader")->loadMat4("view", camera.lookThrough());
         int id = 1;
-        for(auto e : currentScene->getEntities()) {
-            assetBank->getShader("__ice__picking_shader")->loadMat4("model", e->getComponent<TransformComponent>()->getTransformation());
-            assetBank->getShader("__ice__picking_shader")->loadInt("objectID", id++);
+        for(auto e : currentScene.getEntities()) {
+            assetBank.getShader("__ice__picking_shader")->loadMat4("model", e->getComponent<TransformComponent>()->getTransformation());
+            assetBank.getShader("__ice__picking_shader")->loadInt("objectID", id++);
             if(e->hasComponent<RenderComponent>()) {
                 api->renderVertexArray(e->getComponent<RenderComponent>()->getMesh()->getVertexArray());
             }

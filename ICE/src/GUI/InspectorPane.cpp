@@ -4,6 +4,7 @@
 
 #include <ImGUI/imgui.h>
 #include "InspectorPane.h"
+#include <Core/ICEEngine.h>
 
 #define ICE_UID_MAX_SIZE 256
 namespace ICE {
@@ -22,9 +23,11 @@ namespace ICE {
             }
             ImGui::Separator();
             ImGui::PopID();
-            componentRenderer.render(engine->getSelected()->getComponent<TransformComponent>());
+            auto tc = engine->getSelected()->getComponent<TransformComponent>();
+            componentRenderer.render(tc);
             ImGui::Separator();
-            componentRenderer.render(engine->getSelected()->getComponent<RenderComponent>(), engine->getAssetBank()->getMeshes(), engine->getAssetBank()->getMaterials());
+            auto rc = engine->getSelected()->getComponent<RenderComponent>();
+            componentRenderer.render(rc, engine->getAssetBank()->getMeshes(), engine->getAssetBank()->getMaterials());
         }
         ImGui::End();
     }

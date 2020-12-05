@@ -3,10 +3,10 @@
 //
 
 #include <ImGUI/imgui.h>
-#include <ImGUI/imgui_internal.h>
 #include <Scene/TransformComponent.h>
 #include <Util/Logger.h>
 #include "HierarchyPane.h"
+#include <Core/ICEEngine.h>
 
 namespace ICE {
 
@@ -46,7 +46,7 @@ namespace ICE {
     HierarchyPane::HierarchyPane(ICEEngine* engine) : engine(engine), selected("root") {}
 
     void HierarchyPane::subtree(Scene::SceneNode *node) {
-        for(auto c : node->children) {
+        for(const auto& c : node->children) {
             const std::string& name = engine->getScene()->idByNode(c);
             ImGuiTreeNodeFlags flags = c->children.size() == 0 ? ImGuiTreeNodeFlags_Leaf : 0;
             if(name == selected) {

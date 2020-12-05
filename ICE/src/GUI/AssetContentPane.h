@@ -6,10 +6,16 @@
 #define ICE_ASSETCONTENTPANE_H
 
 
-#include <Core/ICEEngine.h>
+#include <Graphics/Framebuffer.h>
+#include <Graphics/Camera.h>
 #include "ICEPane.h"
 
+#define ICE_THUMBNAIL_SIZE (64)
+#define ICE_MAX_THUMBNAILS (128)
+
 namespace ICE {
+    class ICEEngine;
+
     class AssetContentPane : public ICEPane {
     public:
         void render() override;
@@ -19,9 +25,9 @@ namespace ICE {
     private:
         const int* selectedDir;
         ICEEngine* engine;
-        Framebuffer** thumbnailFBO;
+        Framebuffer* thumbnailFBO[ICE_MAX_THUMBNAILS];
         std::string* selectedAsset;
-        Camera* camera;
+        Camera camera;
     };
 }
 

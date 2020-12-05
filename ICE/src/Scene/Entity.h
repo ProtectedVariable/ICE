@@ -5,7 +5,7 @@
 #ifndef ICE_ENTITY_H
 #define ICE_ENTITY_H
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <unordered_map>
 #include <Scene/Component.h>
 #include <typeindex>

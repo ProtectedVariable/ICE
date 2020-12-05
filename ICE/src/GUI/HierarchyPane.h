@@ -6,10 +6,10 @@
 #define ICE_HIERARCHYPANE_H
 
 #include <Scene/Scene.h>
-#include <Core/ICEEngine.h>
 #include "ICEPane.h"
 
 namespace ICE {
+    class ICEEngine;
     class HierarchyPane : public ICEPane {
     public:
         HierarchyPane(ICEEngine* engine);

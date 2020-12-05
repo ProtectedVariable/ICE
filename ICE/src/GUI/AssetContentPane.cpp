@@ -5,9 +5,7 @@
 #include "AssetContentPane.h"
 #include <ImGUI/imgui.h>
 #include <Util/ICEMath.h>
-
-#define ICE_THUMBNAIL_SIZE (64)
-#define ICE_MAX_THUMBNAILS (128)
+#include <Core/ICEEngine.h>
 
 namespace ICE {
 
@@ -23,8 +21,8 @@ namespace ICE {
                 engine->getApi()->clear();
                 Shader* shader = engine->getAssetBank()->getShader("__ice__normal_shader");
                 shader->bind();
-                shader->loadMat4("projection", camera->getProjection());
-                shader->loadMat4("view", camera->lookThrough());
+                shader->loadMat4("projection", camera.getProjection());
+                shader->loadMat4("view", camera.lookThrough());
                 shader->loadMat4("model", rotationMatrix(Eigen::Vector3f(0, 45, 0)));
                 engine->getApi()->renderVertexArray(m.second->getVertexArray());
                 engine->getApi()->flush();
@@ -49,8 +47,8 @@ namespace ICE {
                 engine->getApi()->clear();
                 Shader* shader = engine->getAssetBank()->getShader("__ice__phong_shader");
                 shader->bind();
-                shader->loadMat4("projection", camera->getProjection());
-                shader->loadMat4("view", camera->lookThrough());
+                shader->loadMat4("projection", camera.getProjection());
+                shader->loadMat4("view", camera.lookThrough());
                 shader->loadMat4("model", rotationMatrix(Eigen::Vector3f(0, 45, 0)));
                 //TODO: When the shader is done, upload the material data
                 engine->getApi()->renderVertexArray(engine->getAssetBank()->getMesh("__ice__sphere")->getVertexArray());
@@ -73,11 +71,10 @@ namespace ICE {
 
     AssetContentPane::AssetContentPane(const int *selectedDir, ICEEngine *engine, std::string* selectedAsset) : selectedDir(selectedDir),
                                                                                     engine(engine), selectedAsset(selectedAsset),
-                                                                                    camera(new Camera({{60, 1.f, 0.01f, 1000 }, Perspective})) {
-        camera->getPosition().z() = 3;
-        camera->getPosition().y() = 2;
-        camera->getRotation().x() = -30;
-        this->thumbnailFBO = new Framebuffer*[ICE_MAX_THUMBNAILS];
+                                                                                    camera(Camera({{60, 1.f, 0.01f, 1000 }, Perspective})) {
+        camera.getPosition().z() = 3;
+        camera.getPosition().y() = 2;
+        camera.getRotation().x() = -30;
         for(int i = 0; i < ICE_MAX_THUMBNAILS; i++) {
             this->thumbnailFBO[i] = Framebuffer::Create({ICE_THUMBNAIL_SIZE, ICE_THUMBNAIL_SIZE, 1});
         }

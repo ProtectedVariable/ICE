@@ -5,7 +5,6 @@
 #include "OpenGLShader.h"
 #include <GL/gl3w.h>
 #include <fstream>
-#include <iostream>
 #include <Util/Logger.h>
 
 namespace ICE {
@@ -44,7 +43,7 @@ namespace ICE {
     GLint OpenGLShader::getLocation(const std::string &name) {
         if(this->locations.find(name) == this->locations.end()) {
             GLint location = glGetUniformLocation(programID, name.c_str());
-            locations[name] = location;
+            locations[name] = static_cast<unsigned int>(location);
         }
         return locations[name];
     }

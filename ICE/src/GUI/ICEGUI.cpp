@@ -11,7 +11,6 @@
 #include "HierarchyPane.h"
 #include "InspectorPane.h"
 #include "AssetPane.h"
-#include <iostream>
 
 #define CAMERA_DELTA 0.02f
 
@@ -63,9 +62,9 @@ namespace ICE {
         }
         ImGui::DockSpace(dockspace_id);
 
-        assetPane->render();
+        assetPane.render();
 
-        hierarchyPane->render();
+        hierarchyPane.render();
 
         ImGui::Begin("Viewport");
         {
@@ -84,7 +83,7 @@ namespace ICE {
             ImVec2 wsize = ImGui::GetWindowContentRegionMax();
             wsize.x -= ImGui::GetCursorPosX();
             wsize.y -= ImGui::GetCursorPosY();
-            ImGui::Image((void *) engine->getInternalFB()->getTexture(), wsize, ImVec2(0, 1), ImVec2(1, 0));
+            ImGui::Image(engine->getInternalFB()->getTexture(), wsize, ImVec2(0, 1), ImVec2(1, 0));
             sceneViewportWidth = wsize.x;
             sceneViewportHeight = wsize.y;
 
@@ -112,9 +111,7 @@ namespace ICE {
                 } else if (guizmoOperationMode == ImGuizmo::ROTATE) {
                     *engine->getSelected()->getComponent<TransformComponent>()->getRotation() += deltaR;
                 } else {
-                    *engine->getSelected()->getComponent<TransformComponent>()->getScale() += (deltaS -
-                                                                                               Eigen::Vector3f(1, 1,
-                                                                                                               1));
+                    *engine->getSelected()->getComponent<TransformComponent>()->getScale() += (deltaS - Eigen::Vector3f(1, 1,1));
                 }
             }
             auto drag = ImGui::GetMouseDragDelta();
@@ -156,7 +153,7 @@ namespace ICE {
         }
         ImGui::End();
 
-        inspectorPane->render();
+        inspectorPane.render();
 
         ImGui::End();
         ImGui::PopStyleVar();
@@ -170,7 +167,7 @@ namespace ICE {
         return sceneViewportHeight;
     }
 
-    ICEGUI::ICEGUI(ICEEngine *engine): engine(engine), hierarchyPane(new HierarchyPane(engine)), inspectorPane(new InspectorPane(engine)), assetPane(new AssetPane(engine)) {
+    ICEGUI::ICEGUI(ICEEngine *engine): engine(engine), hierarchyPane(HierarchyPane(engine)), inspectorPane(InspectorPane(engine)), assetPane(AssetPane(engine)) {
 
     }
 }

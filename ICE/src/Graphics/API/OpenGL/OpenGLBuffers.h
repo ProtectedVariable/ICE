@@ -20,8 +20,6 @@ namespace ICE {
 
         uint32_t getSize() const override;
 
-        uint32_t getComponents() const;
-
         OpenGLVertexBuffer(): OpenGLVertexBuffer(0) {}
 
         OpenGLVertexBuffer(uint32_t size);
