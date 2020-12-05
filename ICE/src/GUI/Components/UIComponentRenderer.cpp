@@ -41,32 +41,32 @@ namespace ICE {
         //ImGui::Image();
         ImGui::Text("Meshes");
         ImGui::SameLine();
-        const char* meshNames[meshes.size()];
+        auto meshNames = std::vector<const char*>(meshes.size());
         int i = 0;
         int selected = 0;
         for(const auto& e : meshes) {
-            meshNames[i++] = e.first.c_str();
+            meshNames[i++] = (e.first.c_str());
             if(e.second == cmp->getMesh()) {
                 selected = i-1;
             }
         }
         ImGui::PushID("ice_mesh");
-        ImGui::Combo("", &selected, meshNames, meshes.size(), 10);
+        ImGui::Combo("", &selected, meshNames.data(), meshes.size(), 10);
         cmp->setMesh(meshes[std::string(meshNames[selected])]);
         ImGui::PopID();
         ImGui::Text("Material");
         ImGui::SameLine();
-        const char* materialNames[meshes.size()];
+        auto materialNames = std::vector<const char*>(materials.size());
         i = 0;
         selected = 0;
         for(const auto& e : materials) {
-            materialNames[i++] = e.first.c_str();
+            materialNames[i++] = (e.first.c_str());
             if(e.second == cmp->getMaterial()) {
                 selected = i-1;
             }
         }
         ImGui::PushID("ice_material");
-        ImGui::Combo("", &selected, materialNames, materials.size(), 10);
+        ImGui::Combo("", &selected, materialNames.data(), materials.size(), 10);
         ImGui::PopID();
     }
 }
