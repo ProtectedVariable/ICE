@@ -14,4 +14,12 @@ namespace ICE {
     Material* RenderComponent::getMaterial() const {
         return material;
     }
+
+    void RenderComponent::setMesh(Mesh *mesh) {
+        RenderComponent::mesh = mesh;
+    }
+
+    void RenderComponent::setMaterial(Material *material) {
+        RenderComponent::material = material;
+    }
 }

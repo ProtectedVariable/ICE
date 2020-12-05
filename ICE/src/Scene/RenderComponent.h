@@ -18,6 +18,10 @@ namespace ICE {
 
         Material* getMaterial() const;
 
+        void setMesh(Mesh *mesh);
+
+        void setMaterial(Material *material);
+
     private:
         Mesh* mesh;
         Material* material;

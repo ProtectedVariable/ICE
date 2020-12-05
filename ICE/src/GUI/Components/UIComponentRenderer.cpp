@@ -36,15 +36,37 @@ namespace ICE {
         ImGui::PopItemWidth();
     }
 
-    void UIComponentRenderer::render(RenderComponent *cmp) {
+    void UIComponentRenderer::render(RenderComponent *cmp, std::unordered_map<std::string, Mesh*> meshes, std::unordered_map<std::string, Material*> materials) {
         ImGui::Text("Render Component");
         //ImGui::Image();
         ImGui::Text("Meshes");
         ImGui::SameLine();
-        //char** meshes = engine->
-        //ImGui::Combo("", 0)
+        const char* meshNames[meshes.size()];
+        int i = 0;
+        int selected = 0;
+        for(const auto& e : meshes) {
+            meshNames[i++] = e.first.c_str();
+            if(e.second == cmp->getMesh()) {
+                selected = i-1;
+            }
+        }
+        ImGui::PushID("ice_mesh");
+        ImGui::Combo("", &selected, meshNames, meshes.size(), 10);
+        cmp->setMesh(meshes[std::string(meshNames[selected])]);
+        ImGui::PopID();
         ImGui::Text("Material");
         ImGui::SameLine();
-        //ImGui::Combo()
+        const char* materialNames[meshes.size()];
+        i = 0;
+        selected = 0;
+        for(const auto& e : materials) {
+            materialNames[i++] = e.first.c_str();
+            if(e.second == cmp->getMaterial()) {
+                selected = i-1;
+            }
+        }
+        ImGui::PushID("ice_material");
+        ImGui::Combo("", &selected, materialNames, materials.size(), 10);
+        ImGui::PopID();
     }
 }

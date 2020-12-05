@@ -7,12 +7,13 @@
 #define FLOAT_MAX_DIGITS 128
 #include <Scene/TransformComponent.h>
 #include <Scene/RenderComponent.h>
+#include <unordered_map>
 
 namespace ICE {
     class UIComponentRenderer {
     public:
         void render(TransformComponent* cmp);
-        void render(RenderComponent* cmp);
+        void render(RenderComponent* cmp, std::unordered_map<std::string, Mesh*> meshes, std::unordered_map<std::string, Material*> materials);
 
     private:
         void renderVector3f(Eigen::Vector3f* vec);

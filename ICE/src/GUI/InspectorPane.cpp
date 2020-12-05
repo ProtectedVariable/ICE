@@ -24,7 +24,7 @@ namespace ICE {
             ImGui::PopID();
             componentRenderer.render(engine->getSelected()->getComponent<TransformComponent>());
             ImGui::Separator();
-            componentRenderer.render(engine->getSelected()->getComponent<RenderComponent>());
+            componentRenderer.render(engine->getSelected()->getComponent<RenderComponent>(), engine->getAssetBank()->getMeshes(), engine->getAssetBank()->getMaterials());
         }
         ImGui::End();
     }

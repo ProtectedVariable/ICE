@@ -35,7 +35,7 @@ namespace ICE {
                     *selectedAsset = m.first;
                 }
                 if(*selectedAsset == m.first) {
-                    ImGui::TextColored(ImVec4(0,0,1,1), "%s", m.first.c_str());
+                    ImGui::TextColored(ImVec4(0,0.8f,1,1), "%s", m.first.c_str());
                 } else {
                     ImGui::Text("%s", m.first.c_str());
                 }
