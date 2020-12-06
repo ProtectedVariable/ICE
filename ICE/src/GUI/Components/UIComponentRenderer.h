@@ -8,15 +8,22 @@
 #include <Scene/TransformComponent.h>
 #include <Scene/RenderComponent.h>
 #include <unordered_map>
+#include <Scene/LightComponent.h>
 
 namespace ICE {
+    class ICEEngine;
+
     class UIComponentRenderer {
     public:
         void render(TransformComponent* cmp);
-        void render(RenderComponent* cmp, std::unordered_map<std::string, Mesh*> meshes, std::unordered_map<std::string, Material*> materials);
+        void render(RenderComponent* cmp);
+        void render(LightComponent* lc);
+
+        UIComponentRenderer(ICEEngine *engine);
 
     private:
         void renderVector3f(Eigen::Vector3f* vec);
+        ICEEngine* engine;
     };
 }
 

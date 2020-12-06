@@ -7,12 +7,13 @@
 #include <Util/Logger.h>
 #include "HierarchyPane.h"
 #include <Core/ICEEngine.h>
+#include <Scene/LightComponent.h>
 
 namespace ICE {
 
     int ctr = 0;
 
-    void HierarchyPane::mkPopup(const std::string& parent) {
+    void HierarchyPane::mkPopup(const std::string parent) {
         ImGui::Text("Create...");
         if(ImGui::Button("3D Object")) {
             auto entity = new Entity();
@@ -23,20 +24,31 @@ namespace ICE {
             engine->getScene()->addEntity(parent, "newobject" + std::to_string(ctr++), entity);
             ImGui::CloseCurrentPopup();
         }
+        if(ImGui::Button("Light Source")) {
+            auto entity = new Entity();
+            auto rc = new LightComponent(PointLight);
+            auto tc = new TransformComponent();
+            entity->addComponent(rc);
+            entity->addComponent(tc);
+            engine->getScene()->addEntity(parent, "newlight" + std::to_string(ctr++), entity);
+            ImGui::CloseCurrentPopup();
+        }
         ImGui::EndPopup();
     }
 
     void HierarchyPane::render() {
         selected = engine->getScene()->idByEntity(engine->getSelected());
         ImGui::Begin("Hierarchy");
-        if(ImGui::IsMouseClicked(1)) {
-            selected = "root";
-        }
-        subtree(engine->getScene()->getRoot());
         if (ImGui::BeginPopupContextWindow())
         {
             mkPopup(selected);
+        } else {
+            if((ImGui::IsMouseClicked(1) || ImGui::IsMouseClicked(0)) && ImGui::IsWindowHovered()) {
+                selected = "root";
+                engine->setSelected(nullptr);
+            }
         }
+        subtree(engine->getScene()->getRoot());
         ImGui::End();
         if(selected != "root") {
             engine->setSelected(engine->getScene()->getByID(selected)->entity);

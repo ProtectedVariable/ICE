@@ -5,6 +5,7 @@
 #include <ImGUI/imgui.h>
 #include <Util/Logger.h>
 #include "UIComponentRenderer.h"
+#include <Core/ICEEngine.h>
 
 namespace ICE {
 
@@ -28,44 +29,96 @@ namespace ICE {
 
     void UIComponentRenderer::renderVector3f(Eigen::Vector3f* vec) {
         ImGui::PushItemWidth(60);
-        ImGui::InputFloat("X", &vec->x());
+        ImGui::Text("X");
         ImGui::SameLine();
-        ImGui::InputFloat("Y", &vec->y());
+        ImGui::InputFloat("##X", &vec->x());
         ImGui::SameLine();
-        ImGui::InputFloat("Z", &vec->z());
+        ImGui::Text("Y");
+        ImGui::SameLine();
+        ImGui::InputFloat("##Y", &vec->y());
+        ImGui::SameLine();
+        ImGui::Text("Z");
+        ImGui::SameLine();
+        ImGui::InputFloat("##Z", &vec->z());
         ImGui::PopItemWidth();
     }
 
-    void UIComponentRenderer::render(RenderComponent* cmp, std::unordered_map<std::string, Mesh*> meshes, std::unordered_map<std::string, Material*> materials) {
+    void UIComponentRenderer::render(RenderComponent* cmp) {
         ImGui::Text("Render Component");
+        ImGui::SameLine();
+        ImGui::PushID("ice_rendercomponent");
+        if(ImGui::Button("x")) {
+            engine->getSelected()->removeComponent<RenderComponent>();
+        }
         ImGui::Text("Meshes");
         ImGui::SameLine();
-        auto meshNames = std::vector<const char*>(meshes.size());
+        auto meshNames = std::vector<const char*>(engine->getAssetBank()->getMeshes().size());
         int i = 0;
         int selected = 0;
-        for(const auto& e : meshes) {
+        for(const auto& e : engine->getAssetBank()->getMeshes()) {
             meshNames[i++] = (e.first.c_str());
             if(e.second == cmp->getMesh()) {
                 selected = i-1;
             }
         }
-        ImGui::PushID("ice_mesh");
-        ImGui::Combo("", &selected, meshNames.data(), meshes.size(), 10);
-        cmp->setMesh(meshes[std::string(meshNames[selected])]);
-        ImGui::PopID();
+        ImGui::Combo("##Mesh", &selected, meshNames.data(), engine->getAssetBank()->getMeshes().size(), 10);
+        cmp->setMesh(engine->getAssetBank()->getMesh(std::string(meshNames[selected])));
         ImGui::Text("Material");
         ImGui::SameLine();
-        auto materialNames = std::vector<const char*>(materials.size());
+        auto materialNames = std::vector<const char*>(engine->getAssetBank()->getMaterials().size());
         i = 0;
         selected = 0;
-        for(const auto& e : materials) {
+        for(const auto& e : engine->getAssetBank()->getMaterials()) {
             materialNames[i++] = (e.first.c_str());
             if(e.second == cmp->getMaterial()) {
                 selected = i-1;
             }
         }
-        ImGui::PushID("ice_material");
-        ImGui::Combo("", &selected, materialNames.data(), materials.size(), 10);
+        ImGui::Combo("##Material", &selected, materialNames.data(), engine->getAssetBank()->getMaterials().size(), 10);
+        cmp->setMaterial(engine->getAssetBank()->getMaterial(std::string(materialNames[selected])));
         ImGui::PopID();
     }
+
+    void UIComponentRenderer::render(LightComponent* lc) {
+        ImGui::Text("Light Component");
+        ImGui::SameLine();
+        ImGui::PushID("ice_lightcomponent");
+        if(ImGui::Button("x")) {
+            engine->getSelected()->removeComponent<LightComponent>();
+        }
+        const char *types[3] = {
+                "Point Light",
+                "Spot Light",
+                "Directional Light"
+        };
+        int selected = 0;
+        switch (lc->getType()) {
+            case PointLight:
+                selected = 0;
+                break;
+            case SpotLight:
+                selected = 1;
+                break;
+            case DirectionalLight:
+                selected = 2;
+                break;
+        }
+        ImGui::Text("Light Type");
+        ImGui::SameLine();
+        ImGui::Combo("##Light Type", &selected, types, 3, 3);
+        switch(selected) {
+            case 0:
+                lc->setType(PointLight);
+                break;
+            case 1:
+                lc->setType(SpotLight);
+                break;
+            case 2:
+                lc->setType(DirectionalLight);
+                break;
+        }
+        ImGui::PopID();
+    }
+
+    UIComponentRenderer::UIComponentRenderer(ICEEngine *engine) : engine(engine) {}
 }

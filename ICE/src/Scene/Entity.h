@@ -29,6 +29,10 @@ namespace ICE {
             this->components[typeid(T)] = component;
             return true;
         }
+        template<typename T>
+        bool removeComponent() {
+            return this->components.erase(typeid(T));
+        }
 
     private:
         std::unordered_map<std::type_index, Component*> components;

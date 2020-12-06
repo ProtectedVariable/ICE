@@ -18,6 +18,7 @@ namespace ICE {
     private:
         ICEEngine* engine;
         UIComponentRenderer componentRenderer;
+
     };
 }
 
