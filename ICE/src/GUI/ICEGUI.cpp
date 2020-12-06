@@ -116,8 +116,10 @@ namespace ICE {
             }
             auto drag = ImGui::GetMouseDragDelta();
             if (!ImGuizmo::IsUsing()) {
-                engine->getCamera()->getRotation().x() += drag.y / 300.f;
-                engine->getCamera()->getRotation().y() += drag.x / 300.f;
+                if(ImGui::IsWindowHovered()) {
+                    engine->getCamera()->getRotation().x() += drag.y / 300.f;
+                    engine->getCamera()->getRotation().y() += drag.x / 300.f;
+                }
                 if (ImGui::IsMouseClicked(0)) {
                     int x = ImGui::GetMousePos().x - wpos.x;
                     int y = ImGui::GetMousePos().y - wpos.y;

@@ -50,7 +50,7 @@ namespace ICE {
                 }
                 if(!engine->getSelected()->hasComponent<LightComponent>()) {
                     if(ImGui::Button("Light Component")) {
-                        engine->getSelected()->addComponent(new LightComponent(PointLight));
+                        engine->getSelected()->addComponent(new LightComponent(PointLight, Eigen::Vector3f(1,1,1)));
                         ImGui::CloseCurrentPopup();
                     }
                 }

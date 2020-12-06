@@ -20,7 +20,7 @@ namespace ICE {
         shaders["__ice__phong_shader"] = Shader::Create("Assets/Shaders/phong.vs", "Assets/Shaders/phong.fs");
         shaders["__ice__normal_shader"] = Shader::Create("Assets/Shaders/normal.vs", "Assets/Shaders/normal.fs");
         shaders["__ice__picking_shader"] = Shader::Create("Assets/Shaders/picking.vs", "Assets/Shaders/picking.fs");
-        materials["__ice__base_material"] = new Material(shaders["__ice__phong_shader"]);
+        materials["__ice__base_material"] = new Material(shaders["__ice__phong_shader"], Eigen::Vector3f(0.8f,0.8f,0.8f), Eigen::Vector3f(1,1,1), Eigen::Vector3f(1,1,1), 16.0f);
     }
 
     Shader *AssetBank::getShader(const std::string &name) {

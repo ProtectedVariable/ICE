@@ -117,6 +117,10 @@ namespace ICE {
                 lc->setType(DirectionalLight);
                 break;
         }
+        ImGui::Text("Color");
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(128);
+        ImGui::ColorPicker3("##color", lc->getColor().data());
         ImGui::PopID();
     }
 

@@ -34,16 +34,33 @@ namespace ICE {
     void ForwardRenderer::prepareFrame(Camera* camera) {
         //TODO: Sort entities, make shader list, batch, make instances, set uniforms, etc..
         for(auto e : renderableEntities) {
-            e->getComponent<RenderComponent>()->getMaterial()->getShader()->bind();
-            e->getComponent<RenderComponent>()->getMaterial()->getShader()->loadMat4("projection", camera->getProjection());
-            e->getComponent<RenderComponent>()->getMaterial()->getShader()->loadMat4("view", camera->lookThrough());
+            Material* material = e->getComponent<RenderComponent>()->getMaterial();
+            material->getShader()->bind();
+            material->getShader()->loadMat4("projection", camera->getProjection());
+            material->getShader()->loadMat4("view", camera->lookThrough());
+            material->getShader()->loadFloat3("ambient_light", Eigen::Vector3f(0.3f,0.3f,0.3f));
+            int i = 0;
+            for(auto light : lightEntities) {
+                std::string light_name = (std::string("lights[")+std::to_string(i)+std::string("]."));
+                auto lc = light->getComponent<LightComponent>();
+                material->getShader()->loadFloat3((light_name+std::string("position")).c_str(), *light->getComponent<TransformComponent>()->getPosition());
+                material->getShader()->loadFloat3((light_name+std::string("rotation")).c_str(), *light->getComponent<TransformComponent>()->getRotation());
+                material->getShader()->loadFloat3((light_name+std::string("color")).c_str(), lc->getColor());
+                i++;
+            }
+            material->getShader()->loadInt("light_count", i);
         }
     }
 
     void ForwardRenderer::render() {
         for(auto e : renderableEntities) {
-            e->getComponent<RenderComponent>()->getMaterial()->getShader()->bind();
-            e->getComponent<RenderComponent>()->getMaterial()->getShader()->loadMat4("model", e->getComponent<TransformComponent>()->getTransformation());
+            Material* mat = e->getComponent<RenderComponent>()->getMaterial();
+            mat->getShader()->bind();
+            mat->getShader()->loadMat4("model", e->getComponent<TransformComponent>()->getTransformation());
+            mat->getShader()->loadFloat3("material.albedo", mat->getAlbedo());
+            mat->getShader()->loadFloat3("material.specular", mat->getSpecular());
+            mat->getShader()->loadFloat3("material.ambient", mat->getAmbient());
+            mat->getShader()->loadFloat("material.alpha", mat->getAlpha());
             api->renderVertexArray(e->getComponent<RenderComponent>()->getMesh()->getVertexArray());
         }
     }

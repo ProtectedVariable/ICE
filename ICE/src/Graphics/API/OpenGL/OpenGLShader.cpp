@@ -24,16 +24,16 @@ namespace ICE {
         glUniform1iv(getLocation(name), size, array);
     }
 
-    void OpenGLShader::loadDouble(const std::string &name, double v) {
-        glUniform1d(getLocation(name), v);
+    void OpenGLShader::loadFloat(const std::string &name, float v) {
+        glUniform1f(getLocation(name), v);
     }
 
-    void OpenGLShader::loadDouble3(const std::string &name, Eigen::Vector3f vec) {
-        glUniform3d(getLocation(name), vec.x(), vec.y(), vec.z());
+    void OpenGLShader::loadFloat3(const std::string &name, Eigen::Vector3f vec) {
+        glUniform3f(getLocation(name), vec.x(), vec.y(), vec.z());
     }
 
-    void OpenGLShader::loadDouble4(const std::string &name, Eigen::Vector4f vec) {
-        glUniform4d(getLocation(name), vec.x(), vec.y(), vec.z(), vec.w());
+    void OpenGLShader::loadFloat4(const std::string &name, Eigen::Vector4f vec) {
+        glUniform4f(getLocation(name), vec.x(), vec.y(), vec.z(), vec.w());
     }
 
     void OpenGLShader::loadMat4(const std::string &name, Eigen::Matrix4f mat) {

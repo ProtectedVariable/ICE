@@ -26,7 +26,7 @@ namespace ICE {
         }
         if(ImGui::Button("Light Source")) {
             auto entity = new Entity();
-            auto rc = new LightComponent(PointLight);
+            auto rc = new LightComponent(PointLight, Eigen::Vector3f(1,1,1));
             auto tc = new TransformComponent();
             entity->addComponent(rc);
             entity->addComponent(tc);
