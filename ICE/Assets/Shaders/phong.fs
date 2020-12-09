@@ -28,8 +28,6 @@ in vec3 fview;
 
 vec3 pointLight(Light light) {
     vec3 rcolor = vec3(0.0);
-    //ambient
-    rcolor += material.ambient*ambient_light;
 
     //diffuse
     vec3 n = normalize(fnormal);
@@ -47,7 +45,8 @@ vec3 pointLight(Light light) {
 }
 
 void main() {
-    vec3 color_accumulator = vec3(0.0);
+    //ambient
+    vec3 color_accumulator = vec3(material.ambient*ambient_light);
     for(int i = 0; i < light_count; i++) {
         color_accumulator += pointLight(lights[i]);
     }
