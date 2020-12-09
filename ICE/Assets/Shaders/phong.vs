@@ -13,7 +13,7 @@ out vec3 fview;
 
 void main() {
     fview = -view[3].xyz;
-    fnormal = normal;
+    fnormal = (vec4(normal, 0.0) * model).xyz;
     fposition = (model * vec4(vertex, 1.0)).xyz;
     gl_Position = projection * view * model * vec4(vertex, 1.0);
 }
