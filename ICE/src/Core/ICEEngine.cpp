@@ -10,7 +10,6 @@
 #include <ImGUI/imgui_impl_glfw.h>
 #include <ImGUI/imgui_impl_opengl3.h>
 #include <ImGUI/ImGuizmo.h>
-
 // About Desktop OpenGL function loaders:
 //  Modern desktop OpenGL doesn't have a standard portable header file to load OpenGL function pointers.
 //  Helper libraries are often used for this purpose! Here we are supporting a few common ones (gl3w, glew, glad).

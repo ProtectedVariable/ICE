@@ -15,6 +15,11 @@ namespace ICE {
     public:
         AssetBank();
 
+        bool addMesh(const std::string& name, Mesh* mesh);
+        bool addMaterial(const std::string& name, Material* mtl);
+        bool addShader(const std::string& name, Shader* shader);
+
+
         Mesh* getMesh(const std::string& name);
         Material* getMaterial(const std::string& name);
         Shader* getShader(const std::string& name);

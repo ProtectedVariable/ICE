@@ -38,4 +38,28 @@ namespace ICE {
     const std::unordered_map<std::string, Shader *> &AssetBank::getShaders() const {
         return shaders;
     }
+
+    bool AssetBank::addMesh(const std::string &name, Mesh *mesh) {
+        if(meshes.find(name) == meshes.end()) {
+            meshes[name] = mesh;
+            return true;
+        }
+        return false;
+    }
+
+    bool AssetBank::addMaterial(const std::string &name, Material *mtl) {
+        if(materials.find(name) == materials.end()) {
+            materials[name] = mtl;
+            return true;
+        }
+        return false;
+    }
+
+    bool AssetBank::addShader(const std::string &name, Shader *shader) {
+        if(shaders.find(name) == shaders.end()) {
+            shaders[name] = shader;
+            return true;
+        }
+        return false;
+    }
 }
