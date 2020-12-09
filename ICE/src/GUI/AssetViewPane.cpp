@@ -19,7 +19,7 @@ namespace ICE {
         viewFB->resize(wsize.x, wsize.y);
         engine->getApi()->setViewport(0, 0, wsize.x, wsize.y);
         engine->getApi()->clear();
-        Shader* shader = engine->getAssetBank()->getShader("__ice__phong_shader");
+        Shader* shader = engine->getAssetBank()->getShader("__ice__normal_shader");
         shader->bind();
         camera.setParameters({60, wsize.x / wsize.y, 0.01f, 1000});
         shader->loadMat4("projection", camera.getProjection());
