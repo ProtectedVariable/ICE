@@ -89,10 +89,9 @@ namespace ICE {
 
         while (!glfwWindowShouldClose(static_cast<GLFWwindow*>(window)))
         {
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
             glfwPollEvents();
             api->clear();
-
-            glfwPollEvents();
 
             ImGui_ImplOpenGL3_NewFrame();
             ImGui_ImplGlfw_NewFrame();
@@ -103,21 +102,24 @@ namespace ICE {
             gui->renderImGui();
             // Rendering
             ImGui::Render();
+
+
+            if(project != nullptr) {
+                internalFB->bind();
+                internalFB->resize(gui->getSceneViewportWidth(), gui->getSceneViewportHeight());
+                glViewport(0, 0, gui->getSceneViewportWidth(), gui->getSceneViewportHeight());
+                camera.setParameters(
+                        {60, (float) gui->getSceneViewportWidth() / (float) gui->getSceneViewportHeight(), 0.01f,
+                         1000});
+                api->clear();
+                for (auto s : systems) {
+                    s->update(&currentScene, 0.f);
+                }
+
+                internalFB->unbind();
+            }
             int display_w, display_h;
             glfwGetFramebufferSize(static_cast<GLFWwindow *>(window), &display_w, &display_h);
-            api->clear();
-            internalFB->bind();
-            internalFB->resize(gui->getSceneViewportWidth(), gui->getSceneViewportHeight());
-            glViewport(0, 0, gui->getSceneViewportWidth(), gui->getSceneViewportHeight());
-            camera.setParameters(
-                    {60, (float) gui->getSceneViewportWidth() / (float) gui->getSceneViewportHeight(), 0.01f, 1000});
-            api->clear();
-            for(auto s : systems) {
-                s->update(&currentScene,0.f);
-            }
-
-            internalFB->unbind();
-
             glViewport(0, 0, display_w, display_h);
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
@@ -184,6 +186,14 @@ namespace ICE {
 
     RendererAPI *ICEEngine::getApi() const {
         return api;
+    }
+
+    Project *ICEEngine::getProject() const {
+        return project;
+    }
+
+    void ICEEngine::setProject(Project *project) {
+        ICEEngine::project = project;
     }
 }
 

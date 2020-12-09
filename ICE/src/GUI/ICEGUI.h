@@ -12,6 +12,7 @@
 #include "HierarchyPane.h"
 #include "InspectorPane.h"
 #include "AssetPane.h"
+#include "ProjectSelectorWindow.h"
 #include <ImGUI/imgui.h>
 #include <ImGUI/ImGuizmo.h>
 
@@ -29,11 +30,11 @@ namespace ICE {
         int getSceneViewportHeight() const;
 
     private:
-        int init = 0;
         int sceneViewportWidth, sceneViewportHeight;
         HierarchyPane hierarchyPane;
         InspectorPane inspectorPane;
         AssetPane assetPane;
+        ProjectSelectorWindow projectSelectorWindow;
         ICEEngine* engine;
         ImGuizmo::OPERATION guizmoOperationMode = ImGuizmo::OPERATION::TRANSLATE;
     };

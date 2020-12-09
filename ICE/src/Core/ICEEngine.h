@@ -9,6 +9,7 @@
 #include <vector>
 #include <GUI/ICEGUI.h>
 #include <Assets/AssetBank.h>
+#include <IO/Project.h>
 #include "System.h"
 
 namespace ICE {
@@ -32,6 +33,10 @@ namespace ICE {
 
         RendererAPI *getApi() const;
 
+        Project *getProject() const;
+
+        void setProject(Project *project);
+
         void setSelected(Entity *selected);
 
     private:
@@ -46,6 +51,7 @@ namespace ICE {
         Camera camera;
         AssetBank assetBank;
         Entity* selected;
+        Project* project = nullptr;
     };
 }
 
