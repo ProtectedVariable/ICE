@@ -26,7 +26,7 @@ In visual studio set `ICE` as the startup project and build :)
 
 ## Linux
 
-Make sure you have `libxrandr-dev` package installed.
+Make sure you have `libxrandr-dev libgtk-3-dev` package installed.
 - `cd build`
 - `cmake ..`
 - `make`
