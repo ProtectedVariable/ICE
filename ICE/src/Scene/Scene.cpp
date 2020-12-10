@@ -77,22 +77,22 @@ namespace ICE {
         return nodeByID["root"];
     }
 
-    const std::string &Scene::idByNode(const Scene::SceneNode *node) {
+    const std::string Scene::idByNode(const Scene::SceneNode *node) {
         for(const auto& kv : this->nodeByID) {
             if(kv.second == node) {
                 return kv.first;
             }
         }
-        return nullptr;
+        return std::string("");
     }
 
-    const std::string &Scene::idByEntity(const Entity* e) {
-        if(e == nullptr) return "root";
+    const std::string Scene::idByEntity(const Entity* e) {
+        if(e == nullptr) return std::string("root");
         for(const auto& kv : this->nodeByID) {
             if(kv.second->entity == e) {
                 return kv.first;
             }
         }
-        return nullptr;
+        return std::string("");
     }
 }

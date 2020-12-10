@@ -4,9 +4,8 @@
 
 #include <Util/Logger.h>
 #include "FileUtils.h"
-#ifdef __APPLE__
 #include "dialog.h"
-#endif
+
 
 namespace ICE {
     const std::string FileUtils::openFileDialog(const std::string& filter) {

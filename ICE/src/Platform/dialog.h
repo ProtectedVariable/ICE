@@ -5,8 +5,8 @@
 #ifndef ICE_PLATEFORM_DIALOG_H
 #define ICE_PLATEFORM_DIALOG_H
 
-#import <string>
+#include <string>
 
-const std::string open_native_dialog(std::string const& filter);
+const std::string open_native_dialog(const std::string& filter);
 
 #endif

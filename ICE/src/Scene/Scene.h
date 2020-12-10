@@ -33,8 +33,8 @@ namespace ICE {
 
         SceneNode* getByID(const std::string& uid);
         SceneNode* getRoot();
-        const std::string& idByNode(const SceneNode* node);
-        const std::string& idByEntity(const Entity* e);
+        const std::string idByNode(const SceneNode* node);
+        const std::string idByEntity(const Entity* e);
     private:
         SceneNode* root;
         std::unordered_map<std::string, SceneNode*> nodeByID;
