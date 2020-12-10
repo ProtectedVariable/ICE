@@ -2,6 +2,9 @@
 // Created by Thomas Ibanez on 10.12.20.
 //
 
+#include <string>
+#include <gtk/gtk.h>
+
 const std::string open_native_dialog(std::string const& filter) {
 
     GtkWidget *dialog;

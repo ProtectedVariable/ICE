@@ -72,10 +72,21 @@ add_executable(ICE_TEST
 target_compile_definitions(ICE_TEST PUBLIC ICE_TEST)
 file(COPY ICE/Assets DESTINATION ${CMAKE_BINARY_DIR})
 
+
 if(APPLE)
 	target_link_libraries(ICE glfw ${COCOA_LIBRARY} ${OPENGL_LIBRARY} ${IOKIT_LIBRARY})
 	target_link_libraries(ICE_TEST glfw ${COCOA_LIBRARY} ${OPENGL_LIBRARY} ${IOKIT_LIBRARY})
-else()
+elseif(WIN32)
 	target_link_libraries(ICE glfw)
+	target_link_libraries(ICE_TEST glfw)
+else()
+	find_package(PkgConfig REQUIRED)
+	pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
+
+	include_directories(${GTK3_INCLUDE_DIRS})
+	link_directories(${GTK3_LIBRARY_DIRS})
+
+	add_definitions(${GTK3_CFLAGS_OTHER})
+	target_link_libraries(ICE ${GTK3_LIBRARIES})
 	target_link_libraries(ICE_TEST glfw)
 endif()
