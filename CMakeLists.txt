@@ -87,6 +87,6 @@ else()
 	link_directories(${GTK3_LIBRARY_DIRS})
 
 	add_definitions(${GTK3_CFLAGS_OTHER})
-	target_link_libraries(ICE ${GTK3_LIBRARIES})
-	target_link_libraries(ICE_TEST glfw)
+	target_link_libraries(ICE glfw ${GTK3_LIBRARIES})
+	target_link_libraries(ICE_TEST glfw ${GTK3_LIBRARIES})
 endif()
