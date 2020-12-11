@@ -10,6 +10,7 @@
 #include <ImGUI/imgui_impl_glfw.h>
 #include <ImGUI/imgui_impl_opengl3.h>
 #include <ImGUI/ImGuizmo.h>
+#include <IO/EngineConfig.h>
 // About Desktop OpenGL function loaders:
 //  Modern desktop OpenGL doesn't have a standard portable header file to load OpenGL function pointers.
 //  Helper libraries are often used for this purpose! Here we are supporting a few common ones (gl3w, glew, glad).
@@ -56,7 +57,8 @@ using namespace gl;
 
 namespace ICE {
     ICEEngine::ICEEngine(void* window): systems(std::vector<System*>()), window(window),
-                                        camera(Camera(CameraParameters{ {60, 16.f / 9.f, 0.01f, 1000 }, Perspective })) {
+                                        camera(Camera(CameraParameters{ {60, 16.f / 9.f, 0.01f, 1000 }, Perspective })),
+                                        config(EngineConfig::LoadFromFile()){
         api = RendererAPI::Create();
 		selected = nullptr;
     }
@@ -196,6 +198,10 @@ namespace ICE {
     void ICEEngine::setProject(Project *project) {
         ICEEngine::project = project;
     }
+
+    EngineConfig &ICEEngine::getConfig() {
+        return config;
+    }
 }
 
 using namespace ICE;
@@ -207,6 +213,14 @@ static void glfw_error_callback(int error, const char* description)
 #ifndef ICE_TEST
 int main(int, char**)
 {
+
+    std::ifstream f(ICE_CONFIG_FILE);
+    if(!f.good()) {
+        std::ofstream outfile(ICE_CONFIG_FILE);
+        outfile.close();
+    }
+    f.close();
+
     // Setup window
     glfwSetErrorCallback(glfw_error_callback);
     if (!glfwInit())
@@ -313,7 +327,8 @@ int main(int, char**)
 
     glfwDestroyWindow(window);
     glfwTerminate();
-
+    engine.getConfig().save();
+    Logger::Log(Logger::VERBOSE, "Core", "Engine shutting off...");
     return 0;
 }
 #endif

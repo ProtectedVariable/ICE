@@ -26,4 +26,12 @@ namespace ICE {
         fs::create_directories(baseDirectory + "/" + name + "/Scenes");
         return true;
     }
+
+    const std::string &Project::getBaseDirectory() const {
+        return baseDirectory;
+    }
+
+    const std::string &Project::getName() const {
+        return name;
+    }
 }

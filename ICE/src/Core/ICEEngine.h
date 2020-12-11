@@ -11,6 +11,7 @@
 #include <Assets/AssetBank.h>
 #include <IO/Project.h>
 #include "System.h"
+#include <IO/EngineConfig.h>
 
 namespace ICE {
     class ICEEngine {
@@ -39,6 +40,8 @@ namespace ICE {
 
         void setSelected(Entity *selected);
 
+        EngineConfig &getConfig();
+
     private:
         std::vector<System*> systems;
         void* window;
@@ -52,6 +55,7 @@ namespace ICE {
         AssetBank assetBank;
         Entity* selected;
         Project* project = nullptr;
+        EngineConfig config;
     };
 }
 

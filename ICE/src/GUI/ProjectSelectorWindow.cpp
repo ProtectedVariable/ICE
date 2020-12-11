@@ -35,12 +35,27 @@ namespace ICE {
         if(ImGui::Button("Create New Project...") && strcmp(project_name_buffer, "") != 0) {
             std::string baseFolder = FileUtils::openFolderDialog();
             if(baseFolder != "") {
-                engine->setProject(new Project(baseFolder, project_name_buffer));
+                Project p = Project(baseFolder, project_name_buffer);
+                engine->getConfig().getLocalProjects()->push_back(p);
+                engine->setProject(&engine->getConfig().getLocalProjects()->back());
                 engine->getProject()->CreateDirectories();
             }
         }
         ImGui::SetCursorPosY(viewport->Size.y);
         ImGui::NextColumn();
+        ImGui::BeginChild("##Projects");
+        int i = 0;
+        for(auto p : *engine->getConfig().getLocalProjects()) {
+            ImGui::BeginChild(("##Projects"+std::to_string(i)).c_str());
+            ImGui::Text("%s", p.getName().c_str());
+            ImGui::Separator();
+            ImGui::EndChild();
+            if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(0)) {
+                engine->setProject(&(engine->getConfig().getLocalProjects()->at(i)));
+            }
+        }
+        ImGui::EndChild();
+
         ImGui::End();
         ImGui::PopStyleVar();
     }

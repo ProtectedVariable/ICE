@@ -14,6 +14,10 @@ namespace ICE {
 
         Project(const std::string &baseDirectory, const std::string &name);
 
+        const std::string &getBaseDirectory() const;
+
+        const std::string &getName() const;
+
     private:
         std::string baseDirectory;
         std::string name;
