@@ -13,6 +13,7 @@ namespace ICE {
 
     public:
         static const std::string openFileDialog(const std::string& filter);
+        static const std::string openFolderDialog();
     };
 }
 

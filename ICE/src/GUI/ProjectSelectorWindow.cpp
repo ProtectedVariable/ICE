@@ -6,11 +6,13 @@
 #include <ImGUI/imgui_internal.h>
 #include "ProjectSelectorWindow.h"
 #include <Core/ICEEngine.h>
+#include <Platform/FileUtils.h>
 
 namespace ICE {
     ProjectSelectorWindow::ProjectSelectorWindow(ICE::ICEEngine *engine) : engine(engine) {}
 
     int pgui_init = 0;
+    char project_name_buffer[64] = {0};
     void ProjectSelectorWindow::render() {
         ImGuiWindowFlags flags = ImGuiWindowFlags_NoDocking;
         ImGuiViewport* viewport = ImGui::GetMainViewport();
@@ -24,10 +26,20 @@ namespace ICE {
         ImGui::Begin("Project Selection", 0, flags);
         ImGui::PopStyleVar();
         ImGui::Columns(2);
-        ImGui::SetCursorPos(ImVec2(viewport->Size.x / 4, viewport->Size.y / 2));
-        if(ImGui::Button("Create New Project...")) {
-            engine->setProject(new Project("", ""));
+        ImGui::SetCursorPosY(viewport->Size.y / 2);
+        ImGui::Text("Project Name");
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(300);
+        ImGui::InputText("##New Project Name", project_name_buffer, 64);
+        ImGui::SameLine();
+        if(ImGui::Button("Create New Project...") && strcmp(project_name_buffer, "") != 0) {
+            std::string baseFolder = FileUtils::openFolderDialog();
+            if(baseFolder != "") {
+                engine->setProject(new Project(baseFolder, project_name_buffer));
+                engine->getProject()->CreateDirectories();
+            }
         }
+        ImGui::SetCursorPosY(viewport->Size.y);
         ImGui::NextColumn();
         ImGui::End();
         ImGui::PopStyleVar();

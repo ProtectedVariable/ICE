@@ -25,3 +25,19 @@ const std::string open_native_dialog(std::string const& filter) {
     }
     return std::string(url.UTF8String);
 }
+
+const std::string open_native_folder_dialog() {
+    // Create the File Open Dialog class.
+    NSOpenPanel* openDlg = [NSOpenPanel openPanel];
+    [openDlg setCanChooseFiles:YES];
+    [openDlg setAllowsMultipleSelection:NO];
+    [openDlg setCanChooseDirectories:YES];
+    [openDlg setCanChooseFiles:NO];
+    [openDlg setCanCreateDirectories:YES];
+    NSString* url = @"";
+    if ([openDlg runModal] == NSModalResponseOK) {
+        NSArray* urls = [openDlg URLs];
+        url = [urls[0] path];
+    }
+    return std::string(url.UTF8String);
+}

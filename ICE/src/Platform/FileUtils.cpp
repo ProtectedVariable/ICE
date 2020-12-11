@@ -13,4 +13,10 @@ namespace ICE {
         Logger::Log(Logger::DEBUG, "Platform", "User selected file: %s", file.c_str());
         return file;
     }
+
+    const std::string FileUtils::openFolderDialog() {
+        const std::string folder = open_native_folder_dialog();
+        Logger::Log(Logger::DEBUG, "Platform", "User selected folder: %s", folder.c_str());
+        return folder;
+    }
 }

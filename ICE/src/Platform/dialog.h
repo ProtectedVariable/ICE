@@ -8,5 +8,6 @@
 #include <string>
 
 const std::string open_native_dialog(const std::string& filter);
+const std::string open_native_folder_dialog();
 
 #endif
