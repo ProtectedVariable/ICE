@@ -89,8 +89,6 @@ else()
 
 	add_definitions(${GTK3_CFLAGS_OTHER})
 
-	find_package(Filesystem REQUIRED)
-
-	target_link_libraries(ICE glfw ${GTK3_LIBRARIES} std::filesystem)
-	target_link_libraries(ICE_TEST glfw ${GTK3_LIBRARIES} std::filesystem)
+	target_link_libraries(ICE glfw ${GTK3_LIBRARIES} stdc++fs)
+	target_link_libraries(ICE_TEST glfw ${GTK3_LIBRARIES} stdc++fs)
 endif()
