@@ -12,6 +12,16 @@ namespace ICE {
     int y = 45;
     void AssetViewPane::render() {
         ImGui::Begin("Asset View");
+        char buffer[512];
+        strcpy(buffer, selectedAsset->c_str());
+        ImGui::Text("Asset Name");
+        ImGui::SameLine();
+        ImGuiInputTextFlags flags = (selectedAsset->find("__ice__") == std::string::npos) ? 0 : ImGuiInputTextFlags_ReadOnly;
+        if(ImGui::InputText("##Asset Name", buffer, 512, flags)) {
+            if(engine->getAssetBank()->renameAsset(*selectedAsset, buffer)) {
+                *selectedAsset = buffer;
+            }
+        }
         ImVec2 wsize = ImGui::GetWindowContentRegionMax();
         ImVec2 pos = ImGui::GetCursorPos();
         wsize = ImVec2(wsize.x - pos.x, wsize.y - pos.y);

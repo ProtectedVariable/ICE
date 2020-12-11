@@ -62,4 +62,21 @@ namespace ICE {
         }
         return false;
     }
+
+    bool AssetBank::renameAsset(const std::string &oldName, const std::string &newName) {
+        if(meshes.find(oldName) != meshes.end() && meshes.find(newName) == meshes.end()) {
+            meshes[newName] = meshes[oldName];
+            meshes.erase(oldName);
+            return true;
+        } else if(materials.find(oldName) != materials.end() && materials.find(newName) == materials.end()) {
+            materials[newName] = materials[oldName];
+            materials.erase(oldName);
+            return true;
+        } else if(shaders.find(oldName) != shaders.end() && shaders.find(newName) == shaders.end()) {
+            shaders[newName] = shaders[oldName];
+            shaders.erase(oldName);
+            return true;
+        }
+        return false;
+    }
 }

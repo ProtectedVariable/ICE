@@ -19,6 +19,7 @@ namespace ICE {
         bool addMaterial(const std::string& name, Material* mtl);
         bool addShader(const std::string& name, Shader* shader);
 
+        bool renameAsset(const std::string& oldName, const std::string& newName);
 
         Mesh* getMesh(const std::string& name);
         Material* getMaterial(const std::string& name);
