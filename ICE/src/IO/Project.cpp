@@ -3,19 +3,27 @@
 //
 
 #include "Project.h"
+#if __has_include(<filesystem>)
 #include <filesystem>
+namespace fs = std::filesystem;
+#elif __has_include(<experimental/filesystem>)
+#include <experimental/filesystem>
+  namespace fs = std::experimental::filesystem;
+#else
+  error "Missing the <filesystem> header."
+#endif
 
 namespace ICE {
     Project::Project(const std::string &baseDirectory, const std::string &name) : baseDirectory(baseDirectory),
                                                                                   name(name) {}
 
     bool Project::CreateDirectories() {
-        std::filesystem::create_directories(baseDirectory + "/" + name + "/Assets/Meshes");
-        std::filesystem::create_directories(baseDirectory + "/" + name + "/Assets/Materials");
-        std::filesystem::create_directories(baseDirectory + "/" + name + "/Assets/Shaders");
-        std::filesystem::create_directories(baseDirectory + "/" + name + "/Assets/Textures");
-        std::filesystem::create_directories(baseDirectory + "/" + name + "/Assets/Scripts");
-        std::filesystem::create_directories(baseDirectory + "/" + name + "/Scenes");
+        fs::create_directories(baseDirectory + "/" + name + "/Assets/Meshes");
+        fs::create_directories(baseDirectory + "/" + name + "/Assets/Materials");
+        fs::create_directories(baseDirectory + "/" + name + "/Assets/Shaders");
+        fs::create_directories(baseDirectory + "/" + name + "/Assets/Textures");
+        fs::create_directories(baseDirectory + "/" + name + "/Assets/Scripts");
+        fs::create_directories(baseDirectory + "/" + name + "/Scenes");
         return true;
     }
 }
