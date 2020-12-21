@@ -13,7 +13,7 @@ namespace ICE {
     class ICEEngine;
     class AssetViewPane : public ICEPane {
     public:
-        void render() override;
+        bool render() override;
 
         AssetViewPane(ICEEngine *engine, std::string* selectedAsset);
 

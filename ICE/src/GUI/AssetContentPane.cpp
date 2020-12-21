@@ -9,8 +9,28 @@
 
 namespace ICE {
 
-    void AssetContentPane::render() {
+    bool AssetContentPane::render() {
+        if(newMaterialPaneShow) {
+            if(!newMaterialPane.render()) {
+                newMaterialPaneShow = false;
+                newMaterialPane.build();
+            }
+        }
         ImGui::Begin("Asset Content");
+        ImGui::Button("New...");
+        if (ImGui::BeginPopupContextItem("add_asset", ImGuiPopupFlags_MouseButtonLeft)) {
+            if(ImGui::Button("Mesh")) {
+                engine->importMesh();
+                ImGui::CloseCurrentPopup();
+            }
+            if(ImGui::Button("Material")) {
+                newMaterialPaneShow = true;
+                newMaterialPane.reset();
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
+        }
+        ImGui::Separator();
         ImGui::Columns(6);
         int i = 0;
         if(*selectedDir == 0) {
@@ -43,6 +63,7 @@ namespace ICE {
         } else if(*selectedDir == 1) {
             for(const auto& m : engine->getAssetBank()->getMaterials()) {
                 thumbnailFBO[i]->bind();
+                Material mat = *m.second;
                 engine->getApi()->setViewport(0, 0, ICE_THUMBNAIL_SIZE, ICE_THUMBNAIL_SIZE);
                 engine->getApi()->clear();
                 Shader* shader = engine->getAssetBank()->getShader("__ice__phong_shader");
@@ -50,13 +71,27 @@ namespace ICE {
                 shader->loadMat4("projection", camera.getProjection());
                 shader->loadMat4("view", camera.lookThrough());
                 shader->loadMat4("model", rotationMatrix(Eigen::Vector3f(0, 45, 0)));
-                //TODO: When the shader is done, upload the material data
+                shader->loadFloat3("lights[0].position", Eigen::Vector3f(10,20,10));
+                shader->loadFloat3("lights[0].color", Eigen::Vector3f(1,1,1));
+                shader->loadInt("light_count", 1);
+                shader->loadFloat3("ambient_light", Eigen::Vector3f(0.3,0.3,0.3));
+                shader->loadFloat3("material.albedo", mat.getAlbedo());
+                shader->loadFloat3("material.specular", mat.getSpecular());
+                shader->loadFloat3("material.ambient", mat.getAmbient());
+                shader->loadFloat("material.alpha", mat.getAlpha());
                 engine->getApi()->renderVertexArray(engine->getAssetBank()->getMesh("__ice__sphere")->getVertexArray());
                 engine->getApi()->flush();
                 engine->getApi()->finish();
                 thumbnailFBO[i]->unbind();
                 ImGui::Image(thumbnailFBO[i]->getTexture(), ImVec2(ICE_THUMBNAIL_SIZE, ICE_THUMBNAIL_SIZE), ImVec2(0, 1), ImVec2(1, 0));
-                ImGui::Text("%s", m.first.c_str());
+                if(ImGui::IsItemClicked(0)) {
+                    *selectedAsset = m.first;
+                }
+                if(*selectedAsset == m.first) {
+                    ImGui::TextColored(ImVec4(0,0.8f,1,1), "%s", m.first.c_str());
+                } else {
+                    ImGui::Text("%s", m.first.c_str());
+                }
                 ImGui::NextColumn();
             }
         } else if(*selectedDir == 2) {
@@ -67,11 +102,13 @@ namespace ICE {
             }
         }
         ImGui::End();
+        return true;
     }
 
     AssetContentPane::AssetContentPane(const int *selectedDir, ICEEngine *engine, std::string* selectedAsset) : selectedDir(selectedDir),
                                                                                     engine(engine), selectedAsset(selectedAsset),
-                                                                                    camera(Camera({{60, 1.f, 0.01f, 1000 }, Perspective})) {
+                                                                                    camera(Camera({{60, 1.f, 0.01f, 1000 }, Perspective})),
+                                                                                    newMaterialPane(NewMaterialPane(engine)) {
         camera.getPosition().z() = 3;
         camera.getPosition().y() = 2;
         camera.getRotation().x() = -30;

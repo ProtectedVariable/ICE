@@ -10,7 +10,7 @@
 #define ICE_UID_MAX_SIZE 256
 namespace ICE {
 
-    void InspectorPane::render() {
+    bool InspectorPane::render() {
 
         ImGui::Begin("Inspector");
         if(engine->getSelected() != nullptr) {
@@ -58,6 +58,7 @@ namespace ICE {
             }
         }
         ImGui::End();
+        return true;
     }
 
     InspectorPane::InspectorPane(ICEEngine *engine): engine(engine), componentRenderer(UIComponentRenderer(engine)) {}

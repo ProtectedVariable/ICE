@@ -42,6 +42,8 @@ namespace ICE {
 
         EngineConfig &getConfig();
 
+        void importMesh();
+
     private:
         std::vector<System*> systems;
         void* window;

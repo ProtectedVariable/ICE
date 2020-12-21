@@ -9,6 +9,7 @@
 #include <Graphics/Framebuffer.h>
 #include <Graphics/Camera.h>
 #include "ICEPane.h"
+#include "NewMaterialPane.h"
 
 #define ICE_THUMBNAIL_SIZE (64)
 #define ICE_MAX_THUMBNAILS (128)
@@ -18,7 +19,7 @@ namespace ICE {
 
     class AssetContentPane : public ICEPane {
     public:
-        void render() override;
+        bool render() override;
 
         AssetContentPane(const int *selectedDir, ICEEngine *engine, std::string* selectedAsset);
 
@@ -28,6 +29,8 @@ namespace ICE {
         Framebuffer* thumbnailFBO[ICE_MAX_THUMBNAILS];
         std::string* selectedAsset;
         Camera camera;
+        NewMaterialPane newMaterialPane;
+        bool newMaterialPaneShow = false;
     };
 }
 

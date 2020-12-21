@@ -13,7 +13,7 @@ namespace ICE {
 
     class InspectorPane : public ICEPane {
     public:
-        void render() override;
+        bool render() override;
         InspectorPane(ICEEngine* engine);
     private:
         ICEEngine* engine;

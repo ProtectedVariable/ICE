@@ -36,7 +36,7 @@ namespace ICE {
         ImGui::EndPopup();
     }
 
-    void HierarchyPane::render() {
+    bool HierarchyPane::render() {
         selected = engine->getScene()->idByEntity(engine->getSelected());
         ImGui::Begin("Hierarchy");
         if (ImGui::BeginPopupContextWindow())
@@ -53,6 +53,7 @@ namespace ICE {
         if(selected != "root") {
             engine->setSelected(engine->getScene()->getByID(selected)->entity);
         }
+        return true;
     }
 
     HierarchyPane::HierarchyPane(ICEEngine* engine) : engine(engine), selected("root") {}

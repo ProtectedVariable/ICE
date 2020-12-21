@@ -45,6 +45,7 @@ using namespace gl;
 #include <Scene/TransformComponent.h>
 #include <Graphics/RenderSystem.h>
 #include <ImGUI/imgui_internal.h>
+#include <Platform/FileUtils.h>
 
 // [Win32] Our example includes a copy of glfw3.lib pre-compiled with VS2010 to maximize ease of testing and compatibility with old VS compilers.
 // To link with VS2010-era libraries, VS2015+ requires linking with legacy_stdio_definitions.lib, which we do using this pragma.
@@ -201,6 +202,15 @@ namespace ICE {
 
     EngineConfig &ICEEngine::getConfig() {
         return config;
+    }
+
+    int import_cnt = 0;
+    void ICEEngine::importMesh() {
+        //TODO: Copy the source file in the project directory, add a link from the asset to the copied source file
+        const std::string file = FileUtils::openFileDialog("obj");
+        if(file != "") {
+            getAssetBank()->addMesh("imported_mesh_"+std::to_string(import_cnt++), OBJLoader::loadFromOBJ(file));
+        }
     }
 }
 

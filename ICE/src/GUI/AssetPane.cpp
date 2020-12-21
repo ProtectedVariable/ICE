@@ -12,7 +12,7 @@
 namespace ICE {
 
     int init = 0;
-    void AssetPane::render() {
+    bool AssetPane::render() {
         ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar;
         ImGui::Begin("Assets", nullptr, flags);
         ImGuiID dockspace_id = ImGui::GetID("assetspace");
@@ -63,7 +63,7 @@ namespace ICE {
 
         contentPane.render();
         viewPane.render();
-
+        return true;
     }
 
     AssetPane::AssetPane(ICEEngine *engine) : engine(engine), viewPane(AssetViewPane(engine, &selectedAsset)), contentPane(AssetContentPane(&selectedDirectory, engine, &selectedAsset)), selectedAsset(engine->getAssetBank()->getMeshes().begin()->first) {}

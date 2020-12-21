@@ -17,7 +17,6 @@
 #define CAMERA_DELTA 0.1f
 
 namespace ICE {
-    int cnt = 0;
     int gui_init = 0;
 
     void ICEGUI::renderImGui() {
@@ -44,11 +43,7 @@ namespace ICE {
                     ImGui::MenuItem("Load");
                     if(ImGui::BeginMenu("Import...")) {
                         if(ImGui::MenuItem("Mesh (.obj)")) {
-                            //TODO: Copy the source file in the project directory, add a link from the asset to the copied source file
-                            const std::string file = FileUtils::openFileDialog("obj");
-                            if(file != "") {
-                                engine->getAssetBank()->addMesh("imported_mesh_"+std::to_string(cnt++), OBJLoader::loadFromOBJ(file));
-                            }
+                            engine->importMesh();
                         }
                         ImGui::EndMenu();
                     }

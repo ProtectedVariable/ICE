@@ -16,7 +16,7 @@ namespace ICE {
     public:
         explicit AssetPane(ICEEngine *engine);
 
-        void render() override;
+        bool render() override;
     private:
         ICEEngine* engine;
         AssetViewPane viewPane;
