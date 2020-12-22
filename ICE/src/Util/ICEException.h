@@ -9,8 +9,6 @@
 
 namespace ICE {
     class ICEException : public std::exception {
-    public:
-        const char *what() const _NOEXCEPT override;
     };
 }
 
