@@ -64,6 +64,9 @@ namespace ICE {
     }
 
     bool AssetBank::renameAsset(const std::string &oldName, const std::string &newName) {
+        if(oldName.find(ICE_ASSET_PREFIX) != std::string::npos || newName.find(ICE_ASSET_PREFIX) != std::string::npos) {
+            return false;
+        }
         if(meshes.find(oldName) != meshes.end() && meshes.find(newName) == meshes.end()) {
             meshes[newName] = meshes[oldName];
             meshes.erase(oldName);

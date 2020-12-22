@@ -87,11 +87,16 @@ namespace ICE {
                 if(ImGui::IsItemClicked(0)) {
                     *selectedAsset = m.first;
                 }
+                if(ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()) {
+                    newMaterialPaneShow = true;
+                    newMaterialPane.edit(*selectedAsset, mat);
+                }
                 if(*selectedAsset == m.first) {
                     ImGui::TextColored(ImVec4(0,0.8f,1,1), "%s", m.first.c_str());
                 } else {
                     ImGui::Text("%s", m.first.c_str());
                 }
+                i++;
                 ImGui::NextColumn();
             }
         } else if(*selectedDir == 2) {
@@ -107,11 +112,11 @@ namespace ICE {
 
     AssetContentPane::AssetContentPane(const int *selectedDir, ICEEngine *engine, std::string* selectedAsset) : selectedDir(selectedDir),
                                                                                     engine(engine), selectedAsset(selectedAsset),
-                                                                                    camera(Camera({{60, 1.f, 0.01f, 1000 }, Perspective})),
+                                                                                    camera(Camera({{30, 1.f, 0.01f, 1000 }, Perspective})),
                                                                                     newMaterialPane(NewMaterialPane(engine)) {
         camera.getPosition().z() = 3;
         camera.getPosition().y() = 2;
-        camera.getRotation().x() = -30;
+        camera.getRotation().x() = -35;
         for(int i = 0; i < ICE_MAX_THUMBNAILS; i++) {
             this->thumbnailFBO[i] = Framebuffer::Create({ICE_THUMBNAIL_SIZE, ICE_THUMBNAIL_SIZE, 1});
         }

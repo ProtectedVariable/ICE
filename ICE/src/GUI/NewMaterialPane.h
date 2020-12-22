@@ -19,6 +19,7 @@ namespace ICE {
         bool render() override;
         void build();
         void reset();
+        void edit(const std::string& name, Material& material);
         NewMaterialPane(ICEEngine* engine);
 
     private:
@@ -28,7 +29,8 @@ namespace ICE {
         Framebuffer* viewFB;
         Camera camera;
         float y = 0;
-        std::string name;
+        std::string name, oldname;
+        bool editMode = false;
     };
 }
 

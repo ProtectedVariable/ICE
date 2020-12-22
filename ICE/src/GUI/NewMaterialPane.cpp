@@ -12,7 +12,7 @@ namespace ICE {
     bool NewMaterialPane::render() {
         auto ret = true;
         ImGuiColorEditFlags flags = ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_InputRGB | ImGuiColorEditFlags_NoOptions;
-        ImGui::Begin("Create New Material");
+        ImGui::Begin(editMode ? "Edit Material" : "Create New Material", 0, ImGuiWindowFlags_NoCollapse);
         ImGui::Text("Name");
         ImGui::SameLine();
         char buffer[512];
@@ -45,7 +45,7 @@ namespace ICE {
         engine->getApi()->clear();
         Shader* shader = engine->getAssetBank()->getShader("__ice__phong_shader");
         shader->bind();
-        camera.setParameters({60, wsize.x / wsize.y, 0.01f, 1000});
+        camera.setParameters({50, wsize.x / wsize.y, 0.01f, 1000});
         shader->loadMat4("projection", camera.getProjection());
         shader->loadMat4("view", camera.lookThrough());
         shader->loadMat4("model", rotationMatrix(Eigen::Vector3f(0, y++, 0)));
@@ -60,7 +60,7 @@ namespace ICE {
         engine->getApi()->renderVertexArray(engine->getAssetBank()->getMesh("__ice__sphere")->getVertexArray());
         viewFB->unbind();
         ImGui::Image(viewFB->getTexture(), wsize, ImVec2(0, 1), ImVec2(1, 0));
-        if(ImGui::Button("Add")) {
+        if(ImGui::Button(editMode ? "Edit" : "Add")) {
             ret = false;
         }
         ImGui::End();
@@ -81,10 +81,30 @@ namespace ICE {
         specular = Eigen::Vector3f(1,1,1);
         ambient = Eigen::Vector3f(.1f,.1f,.1f);
         alpha = 1.f;
+        editMode = false;
+        name = "newmaterial";
     }
 
     void NewMaterialPane::build() {
-        auto mtl = new Material(engine->getAssetBank()->getShader("__ice__phong_shader"), albedo, specular, ambient, alpha);
-        engine->getAssetBank()->addMaterial(name, mtl);
+        if(!editMode) {
+            auto mtl = new Material(engine->getAssetBank()->getShader("__ice__phong_shader"), albedo, specular, ambient, alpha);
+            engine->getAssetBank()->addMaterial(name, mtl);
+        } else {
+            std::string newName = oldname;
+            if(engine->getAssetBank()->renameAsset(oldname, name)) {
+                newName = name;
+            }
+            *engine->getAssetBank()->getMaterial(newName) = Material(engine->getAssetBank()->getShader("__ice__phong_shader"), albedo, specular, ambient, alpha);
+        }
+    }
+
+    void NewMaterialPane::edit(const std::string& name, Material& m) {
+        albedo = m.getAlbedo();
+        specular = m.getSpecular();
+        ambient = m.getAmbient();
+        alpha = m.getAlpha();
+        editMode = true;
+        this->name = name;
+        this->oldname = name;
     }
 }
