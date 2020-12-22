@@ -87,7 +87,7 @@ namespace ICE {
 
     void NewMaterialPane::build() {
         if(!editMode) {
-            auto mtl = new Material(engine->getAssetBank()->getShader("__ice__phong_shader"), albedo, specular, ambient, alpha);
+            auto mtl = Material(engine->getAssetBank()->getShader("__ice__phong_shader"), albedo, specular, ambient, alpha);
             engine->getAssetBank()->addMaterial(name, mtl);
         } else {
             std::string newName = oldname;

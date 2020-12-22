@@ -5,9 +5,10 @@
 #include <iostream>
 #include "OBJLoader.h"
 #include "Logger.h"
+#include "ICEException.h"
 
 namespace ICE {
-    Mesh* OBJLoader::loadFromOBJ(const std::string &path) {
+    Mesh OBJLoader::loadFromOBJ(const std::string &path) {
         tinyobj::attrib_t attrib;
         std::vector<tinyobj::shape_t> shapes;
         std::vector<tinyobj::material_t> materials;
@@ -26,7 +27,7 @@ namespace ICE {
         }
         if(!ret) {
             Logger::Log(Logger::ERROR, "Util", "Couldn't load model");
-            return nullptr;
+            throw ICEException();
         }
         auto vertices = std::vector<Eigen::Vector3f>();
         auto normals = std::vector<Eigen::Vector3f>();
@@ -105,6 +106,6 @@ namespace ICE {
             }
         }
         */
-        return new Mesh(vertices, normals, uvs, indices);
+        return Mesh(vertices, normals, uvs, indices);
     }
 }

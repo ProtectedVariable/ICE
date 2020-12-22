@@ -44,7 +44,7 @@ namespace ICE {
                 shader->loadMat4("projection", camera.getProjection());
                 shader->loadMat4("view", camera.lookThrough());
                 shader->loadMat4("model", rotationMatrix(Eigen::Vector3f(0, 45, 0)));
-                engine->getApi()->renderVertexArray(m.second->getVertexArray());
+                engine->getApi()->renderVertexArray(m.second.getVertexArray());
                 engine->getApi()->flush();
                 engine->getApi()->finish();
                 thumbnailFBO[i]->unbind();
@@ -63,7 +63,7 @@ namespace ICE {
         } else if(*selectedDir == 1) {
             for(const auto& m : engine->getAssetBank()->getMaterials()) {
                 thumbnailFBO[i]->bind();
-                Material mat = *m.second;
+                Material mat = m.second;
                 engine->getApi()->setViewport(0, 0, ICE_THUMBNAIL_SIZE, ICE_THUMBNAIL_SIZE);
                 engine->getApi()->clear();
                 Shader* shader = engine->getAssetBank()->getShader("__ice__phong_shader");

@@ -57,7 +57,7 @@ namespace ICE {
         int selected = 0;
         for(const auto& e : engine->getAssetBank()->getMeshes()) {
             meshNames[i++] = (e.first.c_str());
-            if(e.second == cmp->getMesh()) {
+            if(&e.second == cmp->getMesh()) {
                 selected = i-1;
             }
         }
@@ -70,7 +70,7 @@ namespace ICE {
         selected = 0;
         for(const auto& e : engine->getAssetBank()->getMaterials()) {
             materialNames[i++] = (e.first.c_str());
-            if(e.second == cmp->getMaterial()) {
+            if(&e.second == cmp->getMaterial()) {
                 selected = i-1;
             }
         }

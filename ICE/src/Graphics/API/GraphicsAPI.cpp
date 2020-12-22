@@ -61,7 +61,7 @@ namespace ICE {
         return Create(vertexFile, "", fragmentFile);
     }
 
-    Shader * Shader::Create(const std::string &vertexFile, const std::string &geometryFile, const std::string &fragmentFile) {
+    Shader* Shader::Create(const std::string &vertexFile, const std::string &geometryFile, const std::string &fragmentFile) {
         switch(RendererAPI::GetAPI()) {
             case OpenGL: return new OpenGLShader(vertexFile, geometryFile, fragmentFile);
         }
