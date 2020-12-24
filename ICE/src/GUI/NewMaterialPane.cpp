@@ -19,6 +19,8 @@ namespace ICE {
         strcpy(buffer, name.c_str());
         ImGui::InputText("##Name", buffer, 512);
         name = std::string(buffer);
+
+        //Colors
         ImGui::Text("Albedo");
         ImGui::SameLine();
         ImGui::SetNextItemWidth(ICE_NEWMAT_PICKER_WIDTH);
@@ -35,7 +37,14 @@ namespace ICE {
         ImGui::ColorPicker3("##NewMaterialAmbient", ambient.data(), flags);
         ImGui::Text("Alpha");
         ImGui::SameLine();
+
+        //Maps
+        //ImGui::Combo("##NewMaterialDiffuseMap", )
+
+        //Alpha
         ImGui::SliderFloat("##NewMaterialAlpha", &alpha, 0, 100);
+
+        //Preview
         ImVec2 wsize = ImGui::GetWindowContentRegionMax();
         ImVec2 pos = ImGui::GetCursorPos();
         wsize = ImVec2(wsize.x - pos.x, wsize.y - pos.y - 30);
@@ -81,6 +90,7 @@ namespace ICE {
         specular = Eigen::Vector3f(1,1,1);
         ambient = Eigen::Vector3f(.1f,.1f,.1f);
         alpha = 1.f;
+        diffuseMap = normalMap = ambientMap = specularMap = nullptr;
         editMode = false;
         name = "newmaterial";
     }
@@ -103,6 +113,10 @@ namespace ICE {
         specular = m.getSpecular();
         ambient = m.getAmbient();
         alpha = m.getAlpha();
+        diffuseMap = m.getDiffuseMap();
+        specularMap = m.getSpecularMap();
+        ambientMap = m.getAmbientMap();
+        normalMap = m.getNormalMap();
         editMode = true;
         this->name = name;
         this->oldname = name;

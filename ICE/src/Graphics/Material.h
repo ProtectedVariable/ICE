@@ -36,6 +36,18 @@ namespace ICE {
         float getAlpha() const;
         void setAlpha(float alpha);
 
+        const Texture *getDiffuseMap() const;
+        void setDiffuseMap(const Texture *diffuseMap);
+
+        const Texture *getSpecularMap() const;
+        void setSpecularMap(const Texture *specularMap);
+
+        const Texture *getAmbientMap() const;
+        void setAmbientMap(const Texture *ambientMap);
+
+        const Texture *getNormalMap() const;
+        void setNormalMap(const Texture *normalMap);
+
     private:
         Shader* shader;
         Eigen::Vector3f albedo, specular, ambient;

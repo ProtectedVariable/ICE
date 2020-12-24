@@ -48,7 +48,8 @@ namespace ICE {
     }
 
     void OpenGLTexture2D::bind(uint32_t slot) const {
-        glBindTextureUnit(slot, id);
+        glActiveTexture(GL_TEXTURE0 + slot);
+        glBindTexture(GL_TEXTURE_2D, id);
     }
 
     TextureWrap OpenGLTexture2D::getWrap() const {
@@ -65,5 +66,9 @@ namespace ICE {
 
     uint32_t OpenGLTexture2D::getHeight() const {
         return height;
+    }
+
+    void *OpenGLTexture2D::getTexture() const {
+        return static_cast<char*>(0)+id;
     }
 }

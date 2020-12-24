@@ -64,4 +64,36 @@ namespace ICE {
                                                                                                           specular(specular), ambient(ambient),
                                                                                                           alpha(alpha), diffuseMap(diffuseMap), specularMap(specularMap),
                                                                                                           ambientMap(ambientMap), normalMap(normalMap) {}
+
+    const Texture *Material::getDiffuseMap() const {
+        return diffuseMap;
+    }
+
+    void Material::setDiffuseMap(const Texture *diffuseMap) {
+        this->diffuseMap = diffuseMap;
+    }
+
+    const Texture *Material::getSpecularMap() const {
+        return specularMap;
+    }
+
+    void Material::setSpecularMap(const Texture *specularMap) {
+        this->specularMap = specularMap;
+    }
+
+    const Texture *Material::getAmbientMap() const {
+        return ambientMap;
+    }
+
+    void Material::setAmbientMap(const Texture *ambientMap) {
+        this->ambientMap = ambientMap;
+    }
+
+    const Texture *Material::getNormalMap() const {
+        return normalMap;
+    }
+
+    void Material::setNormalMap(const Texture *normalMap) {
+        this->normalMap = normalMap;
+    }
 }

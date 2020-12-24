@@ -26,6 +26,10 @@ namespace ICE {
         ICEEngine* engine;
         Eigen::Vector3f albedo, specular, ambient;
         float alpha;
+        const Texture* diffuseMap;
+        const Texture* specularMap;
+        const Texture* ambientMap;
+        const Texture* normalMap;
         Framebuffer* viewFB;
         Camera camera;
         float y = 0;

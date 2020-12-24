@@ -26,6 +26,8 @@ namespace ICE {
 
         void setData(void *data, uint32_t size) override;
 
+        void *getTexture() const override;
+
     private:
         std::string file;
         uint32_t id;

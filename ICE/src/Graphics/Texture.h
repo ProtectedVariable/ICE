@@ -33,6 +33,8 @@ namespace ICE {
 
         virtual uint32_t getWidth() const = 0;
         virtual uint32_t getHeight() const = 0;
+
+        virtual void* getTexture() const = 0;
     };
 
     class Texture2D : public Texture {
