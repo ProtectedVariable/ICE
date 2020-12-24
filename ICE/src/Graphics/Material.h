@@ -6,6 +6,7 @@
 #define ICE_MATERIAL_H
 
 #include "Shader.h"
+#include "Texture.h"
 
 namespace ICE {
     class Material {
@@ -13,30 +14,36 @@ namespace ICE {
         Material(Shader *shader, const Eigen::Vector3f &albedo, const Eigen::Vector3f &specular,
                  const Eigen::Vector3f &ambient, float alpha);
 
-        Shader *getShader() const;
+        Material(Shader *shader, const Eigen::Vector3f &albedo, const Eigen::Vector3f &specular,
+                 const Eigen::Vector3f &ambient, float alpha, const Texture* diffuseMap, const Texture* specularMap, const Texture* ambientMap);
 
+        Material(Shader *shader, const Eigen::Vector3f &albedo, const Eigen::Vector3f &specular,
+                 const Eigen::Vector3f &ambient, float alpha, const Texture* diffuseMap, const Texture* specularMap, const Texture* ambientMap,
+                 const Texture* normalMap);
+
+        Shader *getShader() const;
         void setShader(Shader *shader);
 
         const Eigen::Vector3f &getAlbedo() const;
-
         void setAlbedo(const Eigen::Vector3f &albedo);
 
         const Eigen::Vector3f &getSpecular() const;
-
         void setSpecular(const Eigen::Vector3f &specular);
 
         const Eigen::Vector3f &getAmbient() const;
-
         void setAmbient(const Eigen::Vector3f &ambient);
 
         float getAlpha() const;
-
         void setAlpha(float alpha);
 
     private:
         Shader* shader;
         Eigen::Vector3f albedo, specular, ambient;
         float alpha;
+        const Texture* diffuseMap;
+        const Texture* specularMap;
+        const Texture* ambientMap;
+        const Texture* normalMap;
     };
 }
 

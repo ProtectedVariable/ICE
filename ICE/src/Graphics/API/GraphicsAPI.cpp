@@ -12,6 +12,8 @@
 #include <Graphics/API/OpenGL/OpenGLShader.h>
 #include <Graphics/API/OpenGL/OpenGLVertexArray.h>
 #include <Graphics/API/OpenGL/OpenGLFramebuffer.h>
+#include <Graphics/Texture.h>
+#include <Graphics/API/OpenGL/OpenGLTexture.h>
 
 namespace ICE {
 
@@ -64,6 +66,13 @@ namespace ICE {
     Shader* Shader::Create(const std::string &vertexFile, const std::string &geometryFile, const std::string &fragmentFile) {
         switch(RendererAPI::GetAPI()) {
             case OpenGL: return new OpenGLShader(vertexFile, geometryFile, fragmentFile);
+        }
+        return nullptr;
+    }
+
+    Texture2D* Texture2D::Create(const std::string& file) {
+        switch(RendererAPI::GetAPI()) {
+            case OpenGL: return new OpenGLTexture2D(file);
         }
         return nullptr;
     }

@@ -50,4 +50,18 @@ namespace ICE {
                        const Eigen::Vector3f &ambient, float alpha) : shader(shader), albedo(albedo),
                                                                       specular(specular), ambient(ambient),
                                                                       alpha(alpha) {}
+
+    Material::Material(Shader *shader, const Eigen::Vector3f &albedo, const Eigen::Vector3f &specular,
+                       const Eigen::Vector3f &ambient, float alpha, const Texture *diffuseMap, const Texture *specularMap,
+                       const Texture *ambientMap): shader(shader), albedo(albedo),
+                                             specular(specular), ambient(ambient),
+                                             alpha(alpha), diffuseMap(diffuseMap), specularMap(specularMap),
+                                             ambientMap(ambientMap) {}
+
+    Material::Material(Shader *shader, const Eigen::Vector3f &albedo, const Eigen::Vector3f &specular,
+                       const Eigen::Vector3f &ambient, float alpha, const Texture *diffuseMap,
+                       const Texture *specularMap, const Texture *ambientMap, const Texture *normalMap) : shader(shader), albedo(albedo),
+                                                                                                          specular(specular), ambient(ambient),
+                                                                                                          alpha(alpha), diffuseMap(diffuseMap), specularMap(specularMap),
+                                                                                                          ambientMap(ambientMap), normalMap(normalMap) {}
 }

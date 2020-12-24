@@ -14,7 +14,7 @@ const std::string open_native_dialog(std::string const& filter) {
     // Can't select a directory
     [openDlg setCanChooseDirectories:NO];
 
-    openDlg.allowedFileTypes = @[[NSString stringWithUTF8String:filter.c_str()]];
+    //openDlg.allowedFileTypes = @[[NSString stringWithUTF8String:filter.c_str()]];
 
     // Display the dialog. If the OK button was pressed,
     // Process the files.

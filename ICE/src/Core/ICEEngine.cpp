@@ -212,6 +212,14 @@ namespace ICE {
             getAssetBank()->addMesh("imported_mesh_"+std::to_string(import_cnt++), OBJLoader::loadFromOBJ(file));
         }
     }
+
+    void ICEEngine::importTexture() {
+        //TODO: Copy the source file in the project directory, add a link from the asset to the copied source file
+        const std::string file = FileUtils::openFileDialog("");
+        if(file != "") {
+            getAssetBank()->addTexture("imported_texture_"+std::to_string(import_cnt++), Texture2D::Create(file));
+        }
+    }
 }
 
 using namespace ICE;

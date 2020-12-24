@@ -55,6 +55,12 @@ namespace ICE {
             }
             ImGui::TreePop();
         }
+        if(ImGui::TreeNodeEx("Textures", ImGuiTreeNodeFlags_Leaf | (selectedDirectory == 3 ? treeflag : 0))) {
+            if(ImGui::IsItemClicked(0)) {
+                selectedDirectory = 3;
+            }
+            ImGui::TreePop();
+        }
         ImGui::End();
 
         ImGui::Begin("Console");

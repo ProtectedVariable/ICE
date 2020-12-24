@@ -44,6 +44,8 @@ namespace ICE {
 
         void importMesh();
 
+        void importTexture();
+
     private:
         std::vector<System*> systems;
         void* window;

@@ -45,6 +45,9 @@ namespace ICE {
                         if(ImGui::MenuItem("Mesh (.obj)")) {
                             engine->importMesh();
                         }
+                        if(ImGui::MenuItem("Texture")) {
+                            engine->importTexture();
+                        }
                         ImGui::EndMenu();
                     }
                     ImGui::EndMenu();

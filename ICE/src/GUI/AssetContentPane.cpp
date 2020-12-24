@@ -105,6 +105,39 @@ namespace ICE {
                 ImGui::Text("%s", m.first.c_str());
                 ImGui::NextColumn();
             }
+        } else if(*selectedDir == 3) {
+            i = 0;
+            for(const auto& m : engine->getAssetBank()->getTextures()) {
+                thumbnailFBO[i]->bind();
+                auto mat = Material(engine->getAssetBank()->getShader("__ice__phong_shader"), Eigen::Vector3f(1,1,1), Eigen::Vector3f(1,1,1), Eigen::Vector3f(1,1,1), 0);
+                engine->getApi()->setViewport(0, 0, ICE_THUMBNAIL_SIZE, ICE_THUMBNAIL_SIZE);
+                engine->getApi()->clear();
+                Shader* shader = engine->getAssetBank()->getShader("__ice__phong_shader");
+                shader->bind();
+                shader->loadMat4("projection", camera.getProjection());
+                shader->loadMat4("view", camera.lookThrough());
+                shader->loadMat4("model", rotationMatrix(Eigen::Vector3f(0, 45, 0)));
+                shader->loadInt("light_count", 0);
+                shader->loadFloat3("material.albedo", mat.getAlbedo());
+                shader->loadFloat3("material.specular", mat.getSpecular());
+                shader->loadFloat3("material.ambient", mat.getAmbient());
+                shader->loadFloat("material.alpha", mat.getAlpha());
+                engine->getApi()->renderVertexArray(engine->getAssetBank()->getMesh("__ice__sphere")->getVertexArray());
+                engine->getApi()->flush();
+                engine->getApi()->finish();
+                thumbnailFBO[i]->unbind();
+                ImGui::Image(thumbnailFBO[i]->getTexture(), ImVec2(ICE_THUMBNAIL_SIZE, ICE_THUMBNAIL_SIZE), ImVec2(0, 1), ImVec2(1, 0));
+                if(ImGui::IsItemClicked(0)) {
+                    *selectedAsset = m.first;
+                }
+                if(*selectedAsset == m.first) {
+                    ImGui::TextColored(ImVec4(0,0.8f,1,1), "%s", m.first.c_str());
+                } else {
+                    ImGui::Text("%s", m.first.c_str());
+                }
+                ImGui::NextColumn();
+                i++;
+            }
         }
         ImGui::End();
         return true;
