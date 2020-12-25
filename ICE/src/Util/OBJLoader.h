@@ -10,7 +10,7 @@
 namespace ICE {
     class OBJLoader {
     public:
-        static Mesh* loadFromOBJ(const std::string &path);
+        static Mesh loadFromOBJ(const std::string &path);
     };
 }
 

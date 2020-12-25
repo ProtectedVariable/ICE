@@ -3,8 +3,7 @@
 //
 
 #include "OpenGLVertexArray.h"
-#include <OpenGL/gl3.h>
-#include <OpenGL/gl.h>
+#include <GL/gl3w.h>
 #include <iostream>
 
 ICE::OpenGLVertexArray::OpenGLVertexArray(): buffers(std::unordered_map<GLuint, VertexBuffer*>()) {
@@ -35,7 +34,7 @@ void ICE::OpenGLVertexArray::pushVertexBuffer(ICE::VertexBuffer* buffer, int pos
 void ICE::OpenGLVertexArray::setIndexBuffer(ICE::IndexBuffer* buffer) {
     this->bind();
     buffer->bind();
-    this->indexCount = buffer->getSize() / sizeof(int);
+    this->indexCount = buffer->getSize() / (sizeof(int));
     this->indexBuffer = buffer;
 }
 
@@ -45,4 +44,8 @@ int ICE::OpenGLVertexArray::getIndexCount() const {
 
 uint32_t ICE::OpenGLVertexArray::getID() const {
     return vaoID;
+}
+
+ICE::IndexBuffer *ICE::OpenGLVertexArray::getIndexBuffer() const {
+    return this->indexBuffer;
 }

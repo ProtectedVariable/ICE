@@ -5,9 +5,10 @@
 #include <iostream>
 #include "OBJLoader.h"
 #include "Logger.h"
+#include "ICEException.h"
 
 namespace ICE {
-    Mesh* OBJLoader::loadFromOBJ(const std::string &path) {
+    Mesh OBJLoader::loadFromOBJ(const std::string &path) {
         tinyobj::attrib_t attrib;
         std::vector<tinyobj::shape_t> shapes;
         std::vector<tinyobj::material_t> materials;
@@ -26,7 +27,7 @@ namespace ICE {
         }
         if(!ret) {
             Logger::Log(Logger::ERROR, "Util", "Couldn't load model");
-            return nullptr;
+            throw ICEException();
         }
         auto vertices = std::vector<Eigen::Vector3f>();
         auto normals = std::vector<Eigen::Vector3f>();
@@ -83,11 +84,28 @@ namespace ICE {
             }
             index_offset += fv;
         }
-        for (long i = 0; i < shapes[s].mesh.indices.size(); i+=3)
-        {
-            indices.emplace_back(i, i+1, i+2);
+        for (long i = 0; i < shapes[s].mesh.indices.size(); i+=3) {
+            indices.emplace_back(i, i + 1, i +2);
+        }
+        /*
+        tinyobj::mesh_t mesh = shapes[s].mesh;
+        vertices.reserve(attrib.vertices.size());
+        normals.reserve(attrib.vertices.size());
+        uvs.reserve(attrib.vertices.size());
+        for (long i = 0; i < attrib.vertices.size(); i+=3) {
+            vertices.emplace_back(attrib.vertices[i],attrib.vertices[i+1],attrib.vertices[i+2]);
+        }
+        for(long i = 0; i <  mesh.indices.size(); i+=3) {
+            normals.emplace_back(0,0,0);
         }
 
-        return new Mesh(vertices, normals, uvs, indices);
+        for (long i = 0; i < mesh.indices.size(); i+=3) {
+            indices.emplace_back(mesh.indices[i].vertex_index, mesh.indices[i + 1].vertex_index, mesh.indices[i + 2].vertex_index);
+            for(int j = 0; j < 3; j++) {
+                normals[mesh.indices[i].vertex_index] = Eigen::Vector3f(attrib.normals[3*mesh.indices[i+j].normal_index], attrib.normals[3*mesh.indices[i + j].normal_index+1], attrib.normals[3*mesh.indices[i + j].normal_index+2]);
+            }
+        }
+        */
+        return Mesh(vertices, normals, uvs, indices);
     }
 }

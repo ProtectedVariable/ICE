@@ -2,15 +2,18 @@
 // Created by Thomas Ibanez on 20.11.20.
 //
 #include "GraphicsAPI.h"
-
+#include <GLFW/glfw3.h>
 #include <Graphics/API/OpenGL/OpenGLRendererAPI.h>
 #include <Graphics/API/OpenGL/OpenGLBuffers.h>
 #include <Graphics/Context.h>
 #include <Graphics/API/OpenGL/OpenGLContext.h>
-#include <Graphics/FrameBuffer.h>
+#include <Graphics/Framebuffer.h>
 #include <Graphics/Shader.h>
 #include <Graphics/API/OpenGL/OpenGLShader.h>
 #include <Graphics/API/OpenGL/OpenGLVertexArray.h>
+#include <Graphics/API/OpenGL/OpenGLFramebuffer.h>
+#include <Graphics/Texture.h>
+#include <Graphics/API/OpenGL/OpenGLTexture.h>
 
 namespace ICE {
 
@@ -21,7 +24,10 @@ namespace ICE {
         return nullptr;
     }
 
-    FrameBuffer* FrameBuffer::Create(FrameBufferFormat format) {
+    Framebuffer* Framebuffer::Create(FrameBufferFormat format) {
+        switch(RendererAPI::GetAPI()) {
+            case OpenGL: return new OpenGLFramebuffer(format);
+        }
         return nullptr;
     }
 
@@ -57,9 +63,16 @@ namespace ICE {
         return Create(vertexFile, "", fragmentFile);
     }
 
-    Shader * Shader::Create(const std::string &vertexFile, const std::string &geometryFile, const std::string &fragmentFile) {
+    Shader* Shader::Create(const std::string &vertexFile, const std::string &geometryFile, const std::string &fragmentFile) {
         switch(RendererAPI::GetAPI()) {
             case OpenGL: return new OpenGLShader(vertexFile, geometryFile, fragmentFile);
+        }
+        return nullptr;
+    }
+
+    Texture2D* Texture2D::Create(const std::string& file) {
+        switch(RendererAPI::GetAPI()) {
+            case OpenGL: return new OpenGLTexture2D(file);
         }
         return nullptr;
     }

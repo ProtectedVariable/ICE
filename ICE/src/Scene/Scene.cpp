@@ -7,8 +7,8 @@
 #include <utility>
 
 namespace ICE {
-    Scene::Scene() : root(SceneNode(nullptr)), nodeByID(std::unordered_map<std::string, SceneNode*>()) {
-        nodeByID["root"] = &root;
+    Scene::Scene() : root(new SceneNode(nullptr)), nodeByID(std::unordered_map<std::string, SceneNode*>()) {
+        nodeByID["root"] = root;
     }
 
     bool Scene::addEntity(const std::string& parent, const std::string& uid, Entity* entity) {
@@ -30,7 +30,7 @@ namespace ICE {
             return false;
         }
 
-        if(this->nodeByID.find(newName) == this->nodeByID.end()) {
+        if(this->nodeByID.find(oldName) == this->nodeByID.end()) {
             return false;
         }
         this->nodeByID[newName] = this->nodeByID[oldName];
@@ -57,7 +57,7 @@ namespace ICE {
         return nullptr;
     }
 
-    std::vector<Entity *> Scene::getEntities() {
+    std::vector<Entity *> Scene::getEntities() const {
         auto nodes = std::vector<SceneNode*>();
         nodes.reserve(this->nodeByID.size());
         auto entities = std::vector<Entity*>();
@@ -71,5 +71,32 @@ namespace ICE {
             entities.push_back(n->entity);
         }
         return entities;
+    }
+
+    Scene::SceneNode* Scene::getRoot() {
+        return nodeByID["root"];
+    }
+
+    const std::string Scene::idByNode(const Scene::SceneNode *node) {
+        for(const auto& kv : this->nodeByID) {
+            if(kv.second == node) {
+                return kv.first;
+            }
+        }
+        return std::string("");
+    }
+
+    const std::string Scene::idByEntity(const Entity* e) {
+        if(e == nullptr) return std::string("root");
+        for(const auto& kv : this->nodeByID) {
+            if(kv.second->entity == e) {
+                return kv.first;
+            }
+        }
+        return std::string("");
+    }
+
+    bool Scene::addEntity(const std::string &uid, Entity *entity) {
+        return addEntity("root", uid, entity);
     }
 }

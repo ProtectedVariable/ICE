@@ -5,7 +5,7 @@
 #ifndef ICE_ENTITY_H
 #define ICE_ENTITY_H
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <unordered_map>
 #include <Scene/Component.h>
 #include <typeindex>
@@ -28,6 +28,10 @@ namespace ICE {
         bool addComponent(T* component) {
             this->components[typeid(T)] = component;
             return true;
+        }
+        template<typename T>
+        bool removeComponent() {
+            return this->components.erase(typeid(T));
         }
 
     private:

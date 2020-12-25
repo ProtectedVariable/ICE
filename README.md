@@ -1,12 +1,37 @@
 ![ICE logo](media/logo.png)
 
 # ICE
+![CMake](https://github.com/ProtectedVariable/ICE/workflows/CMake/badge.svg)
 
 ICE is a 3D general purpose game engine written in C++. The aim of the project is to have an engine good enough to create all kind of games in an easy manner, but not to compete with the big names (unity/unreal).
 
 ## Getting started
 
-After cloning the repo with `git clone <url>` you can use CMake to build the engine. At the moment I've only tested the OSX building process.
+Clone the repo with `git clone https://github.com/ProtectedVariable/ICE`
+
+Create a `build/` directory in `ICE`
+
+## Windows
+
+You can now CMake to configure a VS project (set Source dir: `ICE/`, set build sir: `ICE/build`)
+- Press `Configure`
+- Press `Generate`
+- Press `Open Project`
+
+In visual studio set `ICE` as the startup project and build :)
+
+## OSX
+
+- `cd build`
+- `cmake ..`
+- `make`
+
+## Linux
+
+Make sure you have `libxrandr-dev libgtk-3-dev` package installed.
+- `cd build`
+- `cmake ..`
+- `make`
 
 ## ECS Architecture
 

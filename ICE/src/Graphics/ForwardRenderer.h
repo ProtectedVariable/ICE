@@ -8,24 +8,24 @@
 #include "Renderer.h"
 #include "RendererConfig.h"
 #include "Camera.h"
-#include "FrameBuffer.h"
+#include "Framebuffer.h"
 
 namespace ICE {
     class ForwardRenderer : public Renderer {
     public:
-        void initialize(RendererAPI *api, RendererConfig config) override;
+        void initialize(RendererConfig config) override;
 
         void submitScene(Scene *scene) override;
 
         void submit(Entity *e) override;
 
-        void prepareFrame(Camera* camera) override;
+        void prepareFrame(Camera& camera) override;
 
         void render() override;
 
         void endFrame() override;
 
-        void setTarget(FrameBuffer *target) override;
+        void setTarget(Framebuffer *target) override;
 
         void resize(uint32_t width, uint32_t height) override;
 
@@ -34,6 +34,7 @@ namespace ICE {
         std::vector<Entity*> lightEntities;
         RendererAPI* api;
         RendererConfig config;
+        Framebuffer* target;
     };
 }
 

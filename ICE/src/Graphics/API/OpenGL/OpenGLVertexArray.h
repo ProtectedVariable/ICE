@@ -5,8 +5,9 @@
 #ifndef ICE_OPENGLVERTEXARRAY_H
 #define ICE_OPENGLVERTEXARRAY_H
 
+#include <GL/gl3w.h>
+#include <GLFW/glfw3.h>
 #include <Graphics/VertexArray.h>
-#include <OpenGL/gl.h>
 #include <vector>
 #include <unordered_map>
 
@@ -28,6 +29,8 @@ namespace ICE {
         int getIndexCount() const override;
 
         uint32_t getID() const override;
+
+        IndexBuffer *getIndexBuffer() const override;
 
     private:
         GLuint vaoID;

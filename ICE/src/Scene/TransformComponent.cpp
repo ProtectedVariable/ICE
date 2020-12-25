@@ -16,6 +16,11 @@ namespace ICE {
     Eigen::Matrix4f TransformComponent::getTransformation() const {
         auto m = translationMatrix(this->position);
         m = m * rotationMatrix(this->rotation);
+        m = m * scaleMatrix(this->scale);
         return m;
     }
+
+    TransformComponent::TransformComponent(const Eigen::Vector3f &position, const Eigen::Vector3f &rotation,
+                                           const Eigen::Vector3f &scale) : position(position), rotation(rotation),
+                                                                           scale(scale) {}
 }

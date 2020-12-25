@@ -7,9 +7,6 @@ uniform mat4 projection;
 uniform mat4 view;
 uniform mat4 model;
 
-out vec3 f_normal;
-
 void main() {
-    f_normal = normal;
     gl_Position = projection * view * model * vec4(vertex, 1.0);
 }

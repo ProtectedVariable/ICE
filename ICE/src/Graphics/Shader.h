@@ -17,9 +17,9 @@ namespace ICE {
         virtual void loadInt(const std::string &name, int v) = 0;
         virtual void loadInts(const std::string &name, int* array, uint32_t size) = 0;
 
-        virtual void loadDouble(const std::string &name, double v) = 0;
-        virtual void loadDouble3(const std::string &name, Eigen::Vector3f vec) = 0;
-        virtual void loadDouble4(const std::string &name, Eigen::Vector4f vec) = 0;
+        virtual void loadFloat(const std::string &name, float v) = 0;
+        virtual void loadFloat3(const std::string &name, Eigen::Vector3f vec) = 0;
+        virtual void loadFloat4(const std::string &name, Eigen::Vector4f vec) = 0;
 
         virtual void loadMat4(const std::string &name, Eigen::Matrix4f mat) = 0;
 

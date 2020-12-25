@@ -3,9 +3,8 @@
 //
 
 #include "OpenGLShader.h"
-#include <OpenGL/gl3.h>
+#include <GL/gl3w.h>
 #include <fstream>
-#include <iostream>
 #include <Util/Logger.h>
 
 namespace ICE {
@@ -25,16 +24,16 @@ namespace ICE {
         glUniform1iv(getLocation(name), size, array);
     }
 
-    void OpenGLShader::loadDouble(const std::string &name, double v) {
-        glUniform1d(getLocation(name), v);
+    void OpenGLShader::loadFloat(const std::string &name, float v) {
+        glUniform1f(getLocation(name), v);
     }
 
-    void OpenGLShader::loadDouble3(const std::string &name, Eigen::Vector3f vec) {
-        glUniform3d(getLocation(name), vec.x(), vec.y(), vec.z());
+    void OpenGLShader::loadFloat3(const std::string &name, Eigen::Vector3f vec) {
+        glUniform3f(getLocation(name), vec.x(), vec.y(), vec.z());
     }
 
-    void OpenGLShader::loadDouble4(const std::string &name, Eigen::Vector4f vec) {
-        glUniform4d(getLocation(name), vec.x(), vec.y(), vec.z(), vec.w());
+    void OpenGLShader::loadFloat4(const std::string &name, Eigen::Vector4f vec) {
+        glUniform4f(getLocation(name), vec.x(), vec.y(), vec.z(), vec.w());
     }
 
     void OpenGLShader::loadMat4(const std::string &name, Eigen::Matrix4f mat) {
@@ -44,7 +43,7 @@ namespace ICE {
     GLint OpenGLShader::getLocation(const std::string &name) {
         if(this->locations.find(name) == this->locations.end()) {
             GLint location = glGetUniformLocation(programID, name.c_str());
-            locations[name] = location;
+            locations[name] = static_cast<unsigned int>(location);
         }
         return locations[name];
     }
@@ -87,7 +86,9 @@ namespace ICE {
         if(!geoFile.empty()){
             GLint geoShader;
             Logger::Log(Logger::VERBOSE, "Graphics", "Compiling geometric shader...");
-            compileShader(GL_GEOMETRY_SHADER, geoFile, &geoShader) ?: printf("Error while compiling geometric shader");
+			if (!compileShader(GL_GEOMETRY_SHADER, geoFile, &geoShader)) {
+				Logger::Log(Logger::FATAL, "Graphics", "Error while compiling geometric shader");
+			}
             glAttachShader(programID, geoShader);
         }
 

@@ -17,7 +17,7 @@ namespace ICE {
         auto normalsBuffer = VertexBuffer::Create();
         auto uvBuffer = VertexBuffer::Create();
         auto indexBuffer = IndexBuffer::Create();
-        
+
         vertexBuffer->putData(BufferUtils::CreateFloatBuffer(vertices), 3*vertices.size()*sizeof(float));
         normalsBuffer->putData(BufferUtils::CreateFloatBuffer(normals), 3*normals.size()*sizeof(float));
         uvBuffer->putData(BufferUtils::CreateFloatBuffer(uvCoords), 2*uvCoords.size()*sizeof(float));

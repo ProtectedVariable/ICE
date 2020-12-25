@@ -33,12 +33,17 @@ namespace ICE {
 
         Eigen::Matrix4f lookThrough();
 
+        void forward(float delta);
+        void backward(float delta);
+        void left(float delta);
+        void right(float delta);
         const Eigen::Matrix4f &getProjection() const;
         Eigen::Vector3f &getPosition();
         Eigen::Vector3f &getRotation();
+        void setParameters(CameraParameters parameters);
 
     private:
-        CameraParameters parameters;
+        CameraParameters cparameters;
         float zoom;
         Eigen::Matrix4f projection;
         Eigen::Vector3f position;

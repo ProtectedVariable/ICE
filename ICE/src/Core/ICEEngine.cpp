@@ -1,11 +1,20 @@
-//
-// Created by Thomas Ibanez on 25.11.20.
-//
+// Dear ImGui: standalone example application for GLFW + OpenGL 3, using programmable pipeline
+// (GLFW is a cross-platform general purpose library for handling windows, inputs, OpenGL/Vulkan/Metal graphics context creation, etc.)
+// If you are new to Dear ImGui, read documentation from the docs/ folder + read the top of imgui.cpp.
+// Read online: https://github.com/ocornut/imgui/tree/master/docs
+
 #define TINYOBJLOADER_IMPLEMENTATION
+#include "ICEEngine.h"
+#include <GLFW/glfw3.h>
 #include <ImGUI/imgui.h>
 #include <ImGUI/imgui_impl_glfw.h>
 #include <ImGUI/imgui_impl_opengl3.h>
-
+#include <ImGUI/ImGuizmo.h>
+#include <IO/EngineConfig.h>
+// About Desktop OpenGL function loaders:
+//  Modern desktop OpenGL doesn't have a standard portable header file to load OpenGL function pointers.
+//  Helper libraries are often used for this purpose! Here we are supporting a few common ones (gl3w, glew, glad).
+//  You may use another loader/header of your choice (glext, glLoadGen, etc.), or chose to manually implement your own.
 #if defined(IMGUI_IMPL_OPENGL_LOADER_GL3W)
 #include <GL/gl3w.h>            // Initialize with gl3wInit()
 #elif defined(IMGUI_IMPL_OPENGL_LOADER_GLEW)
@@ -28,16 +37,15 @@ using namespace gl;
 #include IMGUI_IMPL_OPENGL_LOADER_CUSTOM
 #endif
 
+// Include glfw3.h after our OpenGL definitions
 #include <GLFW/glfw3.h>
-#include <Scene/TransformComponent.h>
-#include <Graphics/Renderer.h>
-#include <Graphics/ForwardRenderer.h>
-#include <Graphics/Shader.h>
-#include <Util/OBJLoader.h>
-#include <Scene/Entity.h>
 #include <Util/Logger.h>
+#include <Graphics/ForwardRenderer.h>
+#include <Util/OBJLoader.h>
+#include <Scene/TransformComponent.h>
 #include <Graphics/RenderSystem.h>
-#include "ICEEngine.h"
+#include <ImGUI/imgui_internal.h>
+#include <Platform/FileUtils.h>
 
 // [Win32] Our example includes a copy of glfw3.lib pre-compiled with VS2010 to maximize ease of testing and compatibility with old VS compilers.
 // To link with VS2010-era libraries, VS2015+ requires linking with legacy_stdio_definitions.lib, which we do using this pragma.
@@ -46,16 +54,14 @@ using namespace gl;
 #pragma comment(lib, "legacy_stdio_definitions")
 #endif
 
-using namespace ICE;
 
-static void glfw_error_callback(int error, const char* description)
-{
-    Logger::Log(Logger::FATAL, "Core", "GLFW Error %d %s", error, description);
-}
 
 namespace ICE {
-    ICEEngine::ICEEngine(void* window): systems(std::vector<System*>()), window(window) {
+    ICEEngine::ICEEngine(void* window): systems(std::vector<System*>()), window(window),
+                                        camera(Camera(CameraParameters{ {60, 16.f / 9.f, 0.01f, 1000 }, Perspective })),
+                                        config(EngineConfig::LoadFromFile()){
         api = RendererAPI::Create();
+		selected = nullptr;
     }
 
     void ICEEngine::initialize() {
@@ -67,44 +73,166 @@ namespace ICE {
 
         api->initialize();
         Renderer* renderer = new ForwardRenderer();
-        renderer->initialize(api, RendererConfig());
-        api->setViewport(0, 0, 1280, 720);
+        renderer->initialize(RendererConfig());
 
-        this->currentScene = new Scene();
-        Camera* camera = new Camera(CameraParameters{ {60, 16.f / 9.f, 0.01f, 1000 }, Perspective } );
-        camera->getPosition().z() = 1;
+        this->assetBank = AssetBank();
 
-        Entity* bunny = new Entity();
-        Mesh* mesh = OBJLoader::loadFromOBJ("Assets/bunny.obj");
-        Shader* shader = Shader::Create("Assets/test.vs","Assets/test.fs");
-        Material* mat = new Material(shader);
-        RenderComponent* rc = new RenderComponent(mesh, mat);
-        bunny->addComponent(rc);
-        auto tc = new TransformComponent();
-        bunny->addComponent(tc);
+        this->currentScene = Scene();
+        camera.getPosition().z() = 1;
+        renderSystem = new RenderSystem(renderer, &camera);
+        systems.push_back(renderSystem);
 
-        currentScene->addEntity("root", "bunny", bunny);
+        internalFB = Framebuffer::Create({1280, 720, 1});
+        pickingFB = Framebuffer::Create({1280, 720, 1});
 
-        systems.push_back(new RenderSystem(renderer, camera));
+        gui = new ICEGUI(this);
     }
 
     void ICEEngine::loop() {
+        ImGuiIO& io = ImGui::GetIO(); (void)io;
+
         while (!glfwWindowShouldClose(static_cast<GLFWwindow*>(window)))
         {
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
             glfwPollEvents();
             api->clear();
 
-            for(auto s : systems) {
-                s->update(currentScene,0.f);
-            }
+            ImGui_ImplOpenGL3_NewFrame();
+            ImGui_ImplGlfw_NewFrame();
+            ImGui::NewFrame();
+            ImGuizmo::BeginFrame();
+            ImGuizmo::SetOrthographic(false);
 
+            gui->renderImGui();
+            // Rendering
+            ImGui::Render();
+
+
+            if(project != nullptr) {
+                renderSystem->setTarget(internalFB, gui->getSceneViewportWidth(), gui->getSceneViewportHeight());
+                camera.setParameters({60, (float) gui->getSceneViewportWidth() / (float) gui->getSceneViewportHeight(), 0.01f, 1000});
+                api->clear();
+                for (auto s : systems) {
+                    s->update(&currentScene, 0.f);
+                }
+            }
+            int display_w, display_h;
+            glfwGetFramebufferSize(static_cast<GLFWwindow *>(window), &display_w, &display_h);
+            glViewport(0, 0, display_w, display_h);
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+            // Update and Render additional Platform Windows
+            // (Platform functions may change the current OpenGL context, so we save/restore it to make it easier to paste this code elsewhere.
+            //  For this specific demo app we could also call glfwMakeContextCurrent(window) directly)
+            if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+            {
+                GLFWwindow* backup_current_context = glfwGetCurrentContext();
+                ImGui::UpdatePlatformWindows();
+                ImGui::RenderPlatformWindowsDefault();
+                glfwMakeContextCurrent(backup_current_context);
+            }
             glfwSwapBuffers(static_cast<GLFWwindow*>(window));
+        }
+    }
+
+    Framebuffer *ICEEngine::getInternalFB() const {
+        return internalFB;
+    }
+
+    Camera *ICEEngine::getCamera() {
+        return &camera;
+    }
+
+    AssetBank *ICEEngine::getAssetBank() {
+        return &assetBank;
+    }
+
+    Scene *ICEEngine::getScene() {
+        return &currentScene;
+    }
+
+    Entity *ICEEngine::getSelected() const {
+        return selected;
+    }
+
+    void ICEEngine::setSelected(Entity *selected) {
+        ICEEngine::selected = selected;
+    }
+
+    Eigen::Vector4i ICEEngine::getPickingTextureAt(int x, int y) {
+        pickingFB->bind();
+        pickingFB->resize(gui->getSceneViewportWidth(), gui->getSceneViewportHeight());
+        glViewport(0, 0, gui->getSceneViewportWidth(), gui->getSceneViewportHeight());
+        camera.setParameters(
+                {60, (float) gui->getSceneViewportWidth() / (float) gui->getSceneViewportHeight(), 0.01f, 1000});
+        api->clear();
+        assetBank.getShader("__ice__picking_shader")->bind();
+        assetBank.getShader("__ice__picking_shader")->loadMat4("projection", camera.getProjection());
+        assetBank.getShader("__ice__picking_shader")->loadMat4("view", camera.lookThrough());
+        int id = 1;
+        for(auto e : currentScene.getEntities()) {
+            assetBank.getShader("__ice__picking_shader")->loadMat4("model", e->getComponent<TransformComponent>()->getTransformation());
+            assetBank.getShader("__ice__picking_shader")->loadInt("objectID", id++);
+            if(e->hasComponent<RenderComponent>()) {
+                api->renderVertexArray(e->getComponent<RenderComponent>()->getMesh()->getVertexArray());
+            }
+        }
+        auto color = internalFB->readPixel(x, y);
+        internalFB->unbind();
+        return color;
+    }
+
+    RendererAPI *ICEEngine::getApi() const {
+        return api;
+    }
+
+    Project *ICEEngine::getProject() const {
+        return project;
+    }
+
+    void ICEEngine::setProject(Project *project) {
+        ICEEngine::project = project;
+    }
+
+    EngineConfig &ICEEngine::getConfig() {
+        return config;
+    }
+
+    int import_cnt = 0;
+    void ICEEngine::importMesh() {
+        //TODO: Copy the source file in the project directory, add a link from the asset to the copied source file
+        const std::string file = FileUtils::openFileDialog("obj");
+        if(file != "") {
+            getAssetBank()->addMesh("imported_mesh_"+std::to_string(import_cnt++), OBJLoader::loadFromOBJ(file));
+        }
+    }
+
+    void ICEEngine::importTexture() {
+        //TODO: Copy the source file in the project directory, add a link from the asset to the copied source file
+        const std::string file = FileUtils::openFileDialog("");
+        if(file != "") {
+            getAssetBank()->addTexture("imported_texture_"+std::to_string(import_cnt++), Texture2D::Create(file));
         }
     }
 }
 
-int main()
+using namespace ICE;
+
+static void glfw_error_callback(int error, const char* description)
 {
+    Logger::Log(Logger::FATAL, "Core", "GLFW Error %d: %s\n", error, description);
+}
+#ifndef ICE_TEST
+int main(int, char**)
+{
+
+    std::ifstream f(ICE_CONFIG_FILE);
+    if(!f.good()) {
+        std::ofstream outfile(ICE_CONFIG_FILE);
+        outfile.close();
+    }
+    f.close();
+
     // Setup window
     glfwSetErrorCallback(glfw_error_callback);
     if (!glfwInit())
@@ -154,27 +282,40 @@ int main()
 #endif
     if (err)
     {
-        Logger::Log(Logger::FATAL, "Core", "Failed to initialize OpenGL loader!");
+        Logger::Log(Logger::FATAL, "Core", "Failed to initialize OpenGL loader!\n");
         return 1;
     }
 
+    ICEEngine engine = ICEEngine(window);
+    engine.initialize();
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
     //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
+    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
+    //io.ConfigViewportsNoAutoMerge = true;
+    //io.ConfigViewportsNoTaskBarIcon = true;
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
     //ImGui::StyleColorsClassic();
 
-    // Setup Platform/Renderer bindings
+    // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
+    ImGuiStyle& style = ImGui::GetStyle();
+    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+    {
+        style.WindowRounding = 0.0f;
+        style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+    }
+
+    // Setup Platform/Renderer backends
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
+    io.Fonts->AddFontFromFileTTF("Assets/Fonts/helvetica.ttf", 14.0f);
 
-    ICEEngine engine = ICEEngine(window);
-    engine.initialize();
     engine.loop();
     // Load Fonts
     // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
@@ -184,12 +325,12 @@ int main()
     // - Read 'docs/FONTS.md' for more instructions and details.
     // - Remember that in C/C++ if you want to include a backslash \ in a string literal you need to write a double backslash \\ !
     //io.Fonts->AddFontDefault();
-    //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Roboto-Medium.ttf", 16.0f);
     //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0f);
     //io.Fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf", 16.0f);
     //io.Fonts->AddFontFromFileTTF("../../misc/fonts/ProggyTiny.ttf", 10.0f);
     //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
     //IM_ASSERT(font != NULL);
+
 
     // Cleanup
     ImGui_ImplOpenGL3_Shutdown();
@@ -198,6 +339,8 @@ int main()
 
     glfwDestroyWindow(window);
     glfwTerminate();
-
+    engine.getConfig().save();
+    Logger::Log(Logger::VERBOSE, "Core", "Engine shutting off...");
     return 0;
 }
+#endif

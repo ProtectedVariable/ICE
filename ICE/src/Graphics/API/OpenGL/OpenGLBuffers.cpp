@@ -3,7 +3,7 @@
 //
 
 #include "OpenGLBuffers.h"
-#include <OpenGL/gl3.h>
+#include <GL/gl3w.h>
 
 ICE::OpenGLVertexBuffer::OpenGLVertexBuffer(uint32_t size) : size(size) {
     glGenBuffers(1, &id);
