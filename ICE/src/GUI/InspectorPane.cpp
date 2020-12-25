@@ -44,7 +44,8 @@ namespace ICE {
                     if(ImGui::Button("Render Component")) {
                         engine->getSelected()->addComponent(
                                 new RenderComponent(engine->getAssetBank()->getMesh("__ice__cube"),
-                                                    engine->getAssetBank()->getMaterial("__ice__base_material")));
+                                                    engine->getAssetBank()->getMaterial("__ice__base_material"),
+                                                    engine->getAssetBank()->getShader("__ice_phong_shader")));
                         ImGui::CloseCurrentPopup();
                     }
                 }

@@ -33,7 +33,7 @@ namespace ICE {
             auto scene = Scene();
 
             auto sphere = Entity();
-            auto rcSphere = RenderComponent(previewMesh, mat);
+            auto rcSphere = RenderComponent(previewMesh, mat, engine->getAssetBank()->getShader("__ice__phong_shader"));
             auto tcSphere = TransformComponent();
             sphere.addComponent(&rcSphere);
             sphere.addComponent(&tcSphere);

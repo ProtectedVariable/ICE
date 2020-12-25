@@ -112,7 +112,7 @@ namespace ICE {
         auto scene = Scene();
 
         auto sphere = Entity();
-        auto rcSphere = RenderComponent(engine->getAssetBank()->getMesh("__ice__sphere"), &mat);
+        auto rcSphere = RenderComponent(engine->getAssetBank()->getMesh("__ice__sphere"), &mat, engine->getAssetBank()->getShader("__ice__phong_shader"));
         auto tcSphere = TransformComponent();
         sphere.addComponent(&rcSphere);
         sphere.addComponent(&tcSphere);
@@ -166,14 +166,14 @@ namespace ICE {
 
     void NewMaterialPane::build() {
         if(!editMode) {
-            auto mtl = Material(engine->getAssetBank()->getShader("__ice__phong_shader"), albedo, specular, ambient, alpha, diffuseMap, specularMap, ambientMap, normalMap);
+            auto mtl = Material(albedo, specular, ambient, alpha, diffuseMap, specularMap, ambientMap, normalMap);
             engine->getAssetBank()->addMaterial(name, mtl);
         } else {
             std::string newName = oldname;
             if(engine->getAssetBank()->renameAsset(oldname, name)) {
                 newName = name;
             }
-            *engine->getAssetBank()->getMaterial(newName) = Material(engine->getAssetBank()->getShader("__ice__phong_shader"), albedo, specular, ambient, alpha);
+            *engine->getAssetBank()->getMaterial(newName) = Material(albedo, specular, ambient, alpha);
         }
     }
 
@@ -192,6 +192,6 @@ namespace ICE {
     }
 
     Material NewMaterialPane::makeMaterial() {
-        return Material(engine->getAssetBank()->getShader("__ice__phong_shader"), albedo, specular, ambient, alpha, diffuseMap, specularMap, ambientMap, normalMap);
+        return Material(albedo, specular, ambient, alpha, diffuseMap, specularMap, ambientMap, normalMap);
     }
 }

@@ -40,27 +40,29 @@ namespace ICE {
         api->clear();
         for(auto e : renderableEntities) {
             const Material* material = e->getComponent<RenderComponent>()->getMaterial();
-            material->getShader()->bind();
-            material->getShader()->loadMat4("projection", camera.getProjection());
-            material->getShader()->loadMat4("view", camera.lookThrough());
-            material->getShader()->loadFloat3("ambient_light", Eigen::Vector3f(0.3f,0.3f,0.3f));
+            Shader* shader = e->getComponent<RenderComponent>()->getShader();
+            shader->bind();
+            shader->loadMat4("projection", camera.getProjection());
+            shader->loadMat4("view", camera.lookThrough());
+            shader->loadFloat3("ambient_light", Eigen::Vector3f(0.3f,0.3f,0.3f));
             int i = 0;
             for(auto light : lightEntities) {
                 std::string light_name = (std::string("lights[")+std::to_string(i)+std::string("]."));
                 auto lc = light->getComponent<LightComponent>();
-                material->getShader()->loadFloat3((light_name+std::string("position")).c_str(), *light->getComponent<TransformComponent>()->getPosition());
-                material->getShader()->loadFloat3((light_name+std::string("rotation")).c_str(), *light->getComponent<TransformComponent>()->getRotation());
-                material->getShader()->loadFloat3((light_name+std::string("color")).c_str(), lc->getColor());
+                shader->loadFloat3((light_name+std::string("position")).c_str(), *light->getComponent<TransformComponent>()->getPosition());
+                shader->loadFloat3((light_name+std::string("rotation")).c_str(), *light->getComponent<TransformComponent>()->getRotation());
+                shader->loadFloat3((light_name+std::string("color")).c_str(), lc->getColor());
                 i++;
             }
-            material->getShader()->loadInt("light_count", i);
+            shader->loadInt("light_count", i);
         }
     }
 
     void ForwardRenderer::render() {
         for(auto e : renderableEntities) {
             const Material* mat = e->getComponent<RenderComponent>()->getMaterial();
-            mat->getShader()->bind();
+            Shader* shader = e->getComponent<RenderComponent>()->getShader();
+            shader->bind();
             if(mat->getDiffuseMap() != nullptr) {
                 mat->getDiffuseMap()->bind(0);
             }
@@ -73,19 +75,19 @@ namespace ICE {
             if(mat->getNormalMap() != nullptr) {
                 mat->getNormalMap()->bind(3);
             }
-            mat->getShader()->loadMat4("model", e->getComponent<TransformComponent>()->getTransformation());
-            mat->getShader()->loadFloat3("material.albedo", mat->getAlbedo());
-            mat->getShader()->loadFloat3("material.specular", mat->getSpecular());
-            mat->getShader()->loadFloat3("material.ambient", mat->getAmbient());
-            mat->getShader()->loadFloat("material.alpha", mat->getAlpha());
-            mat->getShader()->loadInt("material.use_diffuse_map", mat->getDiffuseMap() != nullptr);
-            mat->getShader()->loadInt("material.diffuse_map", 0);
-            mat->getShader()->loadInt("material.use_specular_map", mat->getSpecularMap() != nullptr);
-            mat->getShader()->loadInt("material.specular_map", 1);
-            mat->getShader()->loadInt("material.use_ambient_map", mat->getAmbientMap() != nullptr);
-            mat->getShader()->loadInt("material.ambient_map", 2);
-            mat->getShader()->loadInt("material.use_normal_map", mat->getNormalMap() != nullptr);
-            mat->getShader()->loadInt("material.normal_map", 3);
+            shader->loadMat4("model", e->getComponent<TransformComponent>()->getTransformation());
+            shader->loadFloat3("material.albedo", mat->getAlbedo());
+            shader->loadFloat3("material.specular", mat->getSpecular());
+            shader->loadFloat3("material.ambient", mat->getAmbient());
+            shader->loadFloat("material.alpha", mat->getAlpha());
+            shader->loadInt("material.use_diffuse_map", mat->getDiffuseMap() != nullptr);
+            shader->loadInt("material.diffuse_map", 0);
+            shader->loadInt("material.use_specular_map", mat->getSpecularMap() != nullptr);
+            shader->loadInt("material.specular_map", 1);
+            shader->loadInt("material.use_ambient_map", mat->getAmbientMap() != nullptr);
+            shader->loadInt("material.ambient_map", 2);
+            shader->loadInt("material.use_normal_map", mat->getNormalMap() != nullptr);
+            shader->loadInt("material.normal_map", 3);
             api->renderVertexArray(e->getComponent<RenderComponent>()->getMesh()->getVertexArray());
         }
     }

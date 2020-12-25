@@ -6,13 +6,23 @@
 
 namespace ICE {
 
-    Shader *Material::getShader() const {
-        return shader;
-    }
+    Material::Material() : Material(Eigen::Vector3f(1,1,1),Eigen::Vector3f(1,1,1),Eigen::Vector3f(1,1,1), 1) {}
 
-    void Material::setShader(Shader *shader) {
-        Material::shader = shader;
-    }
+
+    Material::Material(const Eigen::Vector3f &albedo, const Eigen::Vector3f &specular,
+                       const Eigen::Vector3f &ambient, float alpha) : Material(albedo, specular, ambient, alpha,
+                                                                               nullptr, nullptr, nullptr) {}
+
+    Material::Material(const Eigen::Vector3f &albedo, const Eigen::Vector3f &specular,
+                       const Eigen::Vector3f &ambient, float alpha, const Texture *diffuseMap, const Texture *specularMap,
+                       const Texture *ambientMap) : Material(albedo, specular, ambient, alpha, diffuseMap, specularMap, ambientMap, nullptr){}
+
+    Material::Material(const Eigen::Vector3f &albedo, const Eigen::Vector3f &specular,
+                       const Eigen::Vector3f &ambient, float alpha, const Texture *diffuseMap,
+                       const Texture *specularMap, const Texture *ambientMap, const Texture *normalMap) : albedo(albedo),
+                                                                                                          specular(specular), ambient(ambient),
+                                                                                                          alpha(alpha), diffuseMap(diffuseMap), specularMap(specularMap),
+                                                                                                          ambientMap(ambientMap), normalMap(normalMap) {}
 
     const Eigen::Vector3f &Material::getAlbedo() const {
         return albedo;
@@ -45,24 +55,6 @@ namespace ICE {
     void Material::setAlpha(float alpha) {
         Material::alpha = alpha;
     }
-
-    Material::Material(Shader *shader) : Material(shader, Eigen::Vector3f(1,1,1),Eigen::Vector3f(1,1,1),Eigen::Vector3f(1,1,1), 1) {}
-
-
-    Material::Material(Shader *shader, const Eigen::Vector3f &albedo, const Eigen::Vector3f &specular,
-                       const Eigen::Vector3f &ambient, float alpha) : Material(shader, albedo, specular, ambient, alpha,
-                                                                               nullptr, nullptr, nullptr) {}
-
-    Material::Material(Shader *shader, const Eigen::Vector3f &albedo, const Eigen::Vector3f &specular,
-                       const Eigen::Vector3f &ambient, float alpha, const Texture *diffuseMap, const Texture *specularMap,
-                       const Texture *ambientMap) : Material(shader, albedo, specular, ambient, alpha, diffuseMap, specularMap, ambientMap, nullptr){}
-
-    Material::Material(Shader *shader, const Eigen::Vector3f &albedo, const Eigen::Vector3f &specular,
-                       const Eigen::Vector3f &ambient, float alpha, const Texture *diffuseMap,
-                       const Texture *specularMap, const Texture *ambientMap, const Texture *normalMap) : shader(shader), albedo(albedo),
-                                                                                                          specular(specular), ambient(ambient),
-                                                                                                          alpha(alpha), diffuseMap(diffuseMap), specularMap(specularMap),
-                                                                                                          ambientMap(ambientMap), normalMap(normalMap) {}
 
     const Texture *Material::getDiffuseMap() const {
         return diffuseMap;

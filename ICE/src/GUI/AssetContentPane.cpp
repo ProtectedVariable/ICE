@@ -38,10 +38,10 @@ namespace ICE {
             for(const auto& m : engine->getAssetBank()->getMeshes()) {
                 auto scene = Scene();
                 Shader* shader = engine->getAssetBank()->getShader("__ice__normal_shader");
-                Material mat = Material(shader);
+                Material mat = Material();
 
                 auto sphere = Entity();
-                auto rcSphere = RenderComponent(&m.second, &mat);
+                auto rcSphere = RenderComponent(&m.second, &mat, shader);
                 auto tcSphere = TransformComponent(Eigen::Vector3f(0,0,0), Eigen::Vector3f(0, 45, 0), Eigen::Vector3f(1,1,1));
                 sphere.addComponent(&rcSphere);
                 sphere.addComponent(&tcSphere);
@@ -80,7 +80,7 @@ namespace ICE {
                 auto scene = Scene();
 
                 auto sphere = Entity();
-                auto rcSphere = RenderComponent(engine->getAssetBank()->getMesh("__ice__sphere"), &mat);
+                auto rcSphere = RenderComponent(engine->getAssetBank()->getMesh("__ice__sphere"), &mat, engine->getAssetBank()->getShader("__ice__phong_shader"));
                 auto tcSphere = TransformComponent();
                 sphere.addComponent(&rcSphere);
                 sphere.addComponent(&tcSphere);
