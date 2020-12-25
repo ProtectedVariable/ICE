@@ -46,17 +46,16 @@ namespace ICE {
         Material::alpha = alpha;
     }
 
+    Material::Material(Shader *shader) : Material(shader, Eigen::Vector3f(1,1,1),Eigen::Vector3f(1,1,1),Eigen::Vector3f(1,1,1), 1) {}
+
+
     Material::Material(Shader *shader, const Eigen::Vector3f &albedo, const Eigen::Vector3f &specular,
-                       const Eigen::Vector3f &ambient, float alpha) : shader(shader), albedo(albedo),
-                                                                      specular(specular), ambient(ambient),
-                                                                      alpha(alpha) {}
+                       const Eigen::Vector3f &ambient, float alpha) : Material(shader, albedo, specular, ambient, alpha,
+                                                                               nullptr, nullptr, nullptr) {}
 
     Material::Material(Shader *shader, const Eigen::Vector3f &albedo, const Eigen::Vector3f &specular,
                        const Eigen::Vector3f &ambient, float alpha, const Texture *diffuseMap, const Texture *specularMap,
-                       const Texture *ambientMap): shader(shader), albedo(albedo),
-                                             specular(specular), ambient(ambient),
-                                             alpha(alpha), diffuseMap(diffuseMap), specularMap(specularMap),
-                                             ambientMap(ambientMap) {}
+                       const Texture *ambientMap) : Material(shader, albedo, specular, ambient, alpha, diffuseMap, specularMap, ambientMap, nullptr){}
 
     Material::Material(Shader *shader, const Eigen::Vector3f &albedo, const Eigen::Vector3f &specular,
                        const Eigen::Vector3f &ambient, float alpha, const Texture *diffuseMap,
@@ -96,4 +95,5 @@ namespace ICE {
     void Material::setNormalMap(const Texture *normalMap) {
         this->normalMap = normalMap;
     }
+
 }

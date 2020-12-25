@@ -7,6 +7,7 @@
 
 #include <Graphics/Framebuffer.h>
 #include <Graphics/Camera.h>
+#include <Graphics/ForwardRenderer.h>
 #include "ICEPane.h"
 
 namespace ICE {
@@ -22,6 +23,7 @@ namespace ICE {
         Framebuffer* viewFB;
         Camera camera;
         std::string* selectedAsset;
+        ForwardRenderer renderer;
     };
 }
 

@@ -12,6 +12,7 @@
 #include <IO/Project.h>
 #include "System.h"
 #include <IO/EngineConfig.h>
+#include <Graphics/RenderSystem.h>
 
 namespace ICE {
     class ICEEngine {
@@ -60,6 +61,7 @@ namespace ICE {
         Entity* selected;
         Project* project = nullptr;
         EngineConfig config;
+        RenderSystem* renderSystem;
     };
 }
 

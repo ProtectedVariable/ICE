@@ -73,14 +73,14 @@ namespace ICE {
 
         api->initialize();
         Renderer* renderer = new ForwardRenderer();
-        renderer->initialize(api, RendererConfig());
+        renderer->initialize(RendererConfig());
 
         this->assetBank = AssetBank();
 
         this->currentScene = Scene();
         camera.getPosition().z() = 1;
-
-        systems.push_back(new RenderSystem(renderer, &camera));
+        renderSystem = new RenderSystem(renderer, &camera);
+        systems.push_back(renderSystem);
 
         internalFB = Framebuffer::Create({1280, 720, 1});
         pickingFB = Framebuffer::Create({1280, 720, 1});
@@ -109,18 +109,12 @@ namespace ICE {
 
 
             if(project != nullptr) {
-                internalFB->bind();
-                internalFB->resize(gui->getSceneViewportWidth(), gui->getSceneViewportHeight());
-                glViewport(0, 0, gui->getSceneViewportWidth(), gui->getSceneViewportHeight());
-                camera.setParameters(
-                        {60, (float) gui->getSceneViewportWidth() / (float) gui->getSceneViewportHeight(), 0.01f,
-                         1000});
+                renderSystem->setTarget(internalFB, gui->getSceneViewportWidth(), gui->getSceneViewportHeight());
+                camera.setParameters({60, (float) gui->getSceneViewportWidth() / (float) gui->getSceneViewportHeight(), 0.01f, 1000});
                 api->clear();
                 for (auto s : systems) {
                     s->update(&currentScene, 0.f);
                 }
-
-                internalFB->unbind();
             }
             int display_w, display_h;
             glfwGetFramebufferSize(static_cast<GLFWwindow *>(window), &display_w, &display_h);

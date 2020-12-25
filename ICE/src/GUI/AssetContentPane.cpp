@@ -36,18 +36,31 @@ namespace ICE {
         if(*selectedDir == 0) {
 
             for(const auto& m : engine->getAssetBank()->getMeshes()) {
-                thumbnailFBO[i]->bind();
-                engine->getApi()->setViewport(0, 0, ICE_THUMBNAIL_SIZE, ICE_THUMBNAIL_SIZE);
-                engine->getApi()->clear();
+                auto scene = Scene();
                 Shader* shader = engine->getAssetBank()->getShader("__ice__normal_shader");
-                shader->bind();
-                shader->loadMat4("projection", camera.getProjection());
-                shader->loadMat4("view", camera.lookThrough());
-                shader->loadMat4("model", rotationMatrix(Eigen::Vector3f(0, 45, 0)));
-                engine->getApi()->renderVertexArray(m.second.getVertexArray());
-                engine->getApi()->flush();
-                engine->getApi()->finish();
-                thumbnailFBO[i]->unbind();
+                Material mat = Material(shader);
+
+                auto sphere = Entity();
+                auto rcSphere = RenderComponent(&m.second, &mat);
+                auto tcSphere = TransformComponent(Eigen::Vector3f(0,0,0), Eigen::Vector3f(0, 45, 0), Eigen::Vector3f(1,1,1));
+                sphere.addComponent(&rcSphere);
+                sphere.addComponent(&tcSphere);
+                scene.addEntity("sphere", &sphere);
+
+                auto light = Entity();
+                auto lcLight = LightComponent(PointLight, Eigen::Vector3f(1,1,1));
+                auto tcLight = TransformComponent(Eigen::Vector3f(10,20,10), Eigen::Vector3f(0,0,0), Eigen::Vector3f(1,1,1));
+                light.addComponent(&lcLight);
+                light.addComponent(&tcLight);
+                scene.addEntity("light", &light);
+
+                renderer.setTarget(thumbnailFBO[i]);
+                renderer.submitScene(&scene);
+                renderer.resize(ICE_THUMBNAIL_SIZE, ICE_THUMBNAIL_SIZE);
+                renderer.prepareFrame(camera);
+                renderer.render();
+                renderer.endFrame();
+
                 ImGui::Image(thumbnailFBO[i]->getTexture(), ImVec2(ICE_THUMBNAIL_SIZE, ICE_THUMBNAIL_SIZE), ImVec2(0, 1), ImVec2(1, 0));
                 if(ImGui::IsItemClicked(0)) {
                     *selectedAsset = m.first;
@@ -62,27 +75,31 @@ namespace ICE {
             }
         } else if(*selectedDir == 1) {
             for(const auto& m : engine->getAssetBank()->getMaterials()) {
-                thumbnailFBO[i]->bind();
                 Material mat = m.second;
-                engine->getApi()->setViewport(0, 0, ICE_THUMBNAIL_SIZE, ICE_THUMBNAIL_SIZE);
-                engine->getApi()->clear();
-                Shader* shader = engine->getAssetBank()->getShader("__ice__phong_shader");
-                shader->bind();
-                shader->loadMat4("projection", camera.getProjection());
-                shader->loadMat4("view", camera.lookThrough());
-                shader->loadMat4("model", rotationMatrix(Eigen::Vector3f(0, 45, 0)));
-                shader->loadFloat3("lights[0].position", Eigen::Vector3f(10,20,10));
-                shader->loadFloat3("lights[0].color", Eigen::Vector3f(1,1,1));
-                shader->loadInt("light_count", 1);
-                shader->loadFloat3("ambient_light", Eigen::Vector3f(0.3,0.3,0.3));
-                shader->loadFloat3("material.albedo", mat.getAlbedo());
-                shader->loadFloat3("material.specular", mat.getSpecular());
-                shader->loadFloat3("material.ambient", mat.getAmbient());
-                shader->loadFloat("material.alpha", mat.getAlpha());
-                engine->getApi()->renderVertexArray(engine->getAssetBank()->getMesh("__ice__sphere")->getVertexArray());
-                engine->getApi()->flush();
-                engine->getApi()->finish();
-                thumbnailFBO[i]->unbind();
+
+                auto scene = Scene();
+
+                auto sphere = Entity();
+                auto rcSphere = RenderComponent(engine->getAssetBank()->getMesh("__ice__sphere"), &mat);
+                auto tcSphere = TransformComponent();
+                sphere.addComponent(&rcSphere);
+                sphere.addComponent(&tcSphere);
+                scene.addEntity("sphere", &sphere);
+
+                auto light = Entity();
+                auto lcLight = LightComponent(PointLight, Eigen::Vector3f(1,1,1));
+                auto tcLight = TransformComponent(Eigen::Vector3f(10,20,10), Eigen::Vector3f(0,0,0), Eigen::Vector3f(1,1,1));
+                light.addComponent(&lcLight);
+                light.addComponent(&tcLight);
+                scene.addEntity("light", &light);
+
+                renderer.setTarget(thumbnailFBO[i]);
+                renderer.submitScene(&scene);
+                renderer.resize(ICE_THUMBNAIL_SIZE, ICE_THUMBNAIL_SIZE);
+                renderer.prepareFrame(camera);
+                renderer.render();
+                renderer.endFrame();
+
                 ImGui::Image(thumbnailFBO[i]->getTexture(), ImVec2(ICE_THUMBNAIL_SIZE, ICE_THUMBNAIL_SIZE), ImVec2(0, 1), ImVec2(1, 0));
                 if(ImGui::IsItemClicked(0)) {
                     *selectedAsset = m.first;
@@ -128,10 +145,12 @@ namespace ICE {
     AssetContentPane::AssetContentPane(const int *selectedDir, ICEEngine *engine, std::string* selectedAsset) : selectedDir(selectedDir),
                                                                                     engine(engine), selectedAsset(selectedAsset),
                                                                                     camera(Camera({{30, 1.f, 0.01f, 1000 }, Perspective})),
-                                                                                    newMaterialPane(NewMaterialPane(engine)) {
+                                                                                    newMaterialPane(NewMaterialPane(engine)),
+                                                                                    renderer(ForwardRenderer()) {
         camera.getPosition().z() = 3;
         camera.getPosition().y() = 2;
         camera.getRotation().x() = -35;
+        renderer.initialize(RendererConfig());
         for(int i = 0; i < ICE_MAX_THUMBNAILS; i++) {
             this->thumbnailFBO[i] = Framebuffer::Create({ICE_THUMBNAIL_SIZE, ICE_THUMBNAIL_SIZE, 1});
         }

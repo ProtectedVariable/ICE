@@ -11,6 +11,8 @@
 namespace ICE {
     class Material {
     public:
+        Material(Shader *shader);
+
         Material(Shader *shader, const Eigen::Vector3f &albedo, const Eigen::Vector3f &specular,
                  const Eigen::Vector3f &ambient, float alpha);
 

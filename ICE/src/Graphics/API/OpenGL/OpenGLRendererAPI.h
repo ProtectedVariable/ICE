@@ -11,19 +11,21 @@
 namespace ICE {
     class OpenGLRendererAPI : public RendererAPI {
     public:
-        void initialize() override;
+        void initialize() const override;
 
-        void setViewport(int x, int y, int width, int height) override;
+        void setViewport(int x, int y, int width, int height) const override;
 
-        void setClearColor(int r, int g, int b, int a) override;
+        void setClearColor(int r, int g, int b, int a) const override;
 
-        void clear() override;
+        void clear() const override;
 
-        void renderVertexArray(const VertexArray* va) override;
+        void renderVertexArray(const VertexArray* va) const override;
 
-        void flush() override;
+        void flush() const override;
 
-        void finish() override;
+        void finish() const override;
+
+        void bindDefaultFramebuffer() const override;
     };
 }
 

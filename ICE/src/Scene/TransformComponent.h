@@ -13,6 +13,9 @@ namespace ICE {
     public:
         TransformComponent();
 
+        TransformComponent(const Eigen::Vector3f &position, const Eigen::Vector3f &rotation,
+                           const Eigen::Vector3f &scale);
+
         Eigen::Vector3f* getPosition() { return &position; };
 
         Eigen::Vector3f* getRotation() { return &rotation; };

@@ -9,6 +9,7 @@
 #include <Graphics/Material.h>
 #include <Graphics/Framebuffer.h>
 #include <Graphics/Camera.h>
+#include <Graphics/ForwardRenderer.h>
 #include "ICEPane.h"
 
 namespace ICE {
@@ -23,6 +24,8 @@ namespace ICE {
         NewMaterialPane(ICEEngine* engine);
 
     private:
+        Material makeMaterial();
+
         ICEEngine* engine;
         Eigen::Vector3f albedo, specular, ambient;
         float alpha;
@@ -35,6 +38,7 @@ namespace ICE {
         float y = 0;
         std::string name, oldname;
         bool editMode = false;
+        ForwardRenderer renderer;
     };
 }
 

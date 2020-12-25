@@ -5,13 +5,13 @@
 #include "RenderComponent.h"
 
 namespace ICE {
-    RenderComponent::RenderComponent(Mesh* mesh, Material* material) : mesh(mesh), material(material) {}
+    RenderComponent::RenderComponent(const Mesh* mesh, const Material* material) : mesh(mesh), material(material) {}
 
-    Mesh* RenderComponent::getMesh() const {
+    const Mesh* RenderComponent::getMesh() const {
         return mesh;
     }
 
-    Material* RenderComponent::getMaterial() const {
+    const Material* RenderComponent::getMaterial() const {
         return material;
     }
 

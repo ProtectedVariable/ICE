@@ -31,6 +31,7 @@ namespace ICE {
         Camera camera;
         NewMaterialPane newMaterialPane;
         bool newMaterialPaneShow = false;
+        ForwardRenderer renderer;
     };
 }
 

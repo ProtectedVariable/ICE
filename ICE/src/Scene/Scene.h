@@ -25,6 +25,7 @@ namespace ICE {
 
         Scene();
 
+        bool addEntity(const std::string& uid, Entity* entity);
         bool addEntity(const std::string& parent, const std::string& uid, Entity* entity);
         bool renameEntity(const std::string& oldName,const std::string& newName);
         void setParent(const std::string& entity, const std::string& newParent);

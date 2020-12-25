@@ -28,26 +28,34 @@ namespace ICE {
         ImVec2 wsize = ImGui::GetWindowContentRegionMax();
         ImVec2 pos = ImGui::GetCursorPos();
         wsize = ImVec2(wsize.x - pos.x, wsize.y - pos.y);
-        viewFB->bind();
-        viewFB->resize(wsize.x, wsize.y);
-        engine->getApi()->setViewport(0, 0, wsize.x, wsize.y);
-        engine->getApi()->clear();
-        Shader* shader = engine->getAssetBank()->getShader("__ice__phong_shader");
-        shader->bind();
-        camera.setParameters({60, wsize.x / wsize.y, 0.01f, 1000});
-        shader->loadMat4("projection", camera.getProjection());
-        shader->loadMat4("view", camera.lookThrough());
-        shader->loadMat4("model", rotationMatrix(Eigen::Vector3f(0, y++, 0)));
-        shader->loadFloat3("lights[0].position", Eigen::Vector3f(10,20,10));
-        shader->loadFloat3("lights[0].color", Eigen::Vector3f(1,1,1));
-        shader->loadInt("light_count", 1);
-        shader->loadFloat3("ambient_light", Eigen::Vector3f(0.3,0.3,0.3));
-        shader->loadFloat3("material.albedo", mat->getAlbedo());
-        shader->loadFloat3("material.specular", mat->getSpecular());
-        shader->loadFloat3("material.ambient", mat->getAmbient());
-        shader->loadFloat("material.alpha", mat->getAlpha());
-        engine->getApi()->renderVertexArray(previewMesh->getVertexArray());
-        viewFB->unbind();
+
+        auto scene = Scene();
+
+        auto sphere = Entity();
+        auto rcSphere = RenderComponent(previewMesh, mat);
+        auto tcSphere = TransformComponent();
+        sphere.addComponent(&rcSphere);
+        sphere.addComponent(&tcSphere);
+        scene.addEntity("sphere", &sphere);
+
+        auto light = Entity();
+        auto lcLight = LightComponent(PointLight, Eigen::Vector3f(1,1,1));
+        auto tcLight = TransformComponent(Eigen::Vector3f(10,20,10), Eigen::Vector3f(0,0,0), Eigen::Vector3f(1,1,1));
+        light.addComponent(&lcLight);
+        light.addComponent(&tcLight);
+        scene.addEntity("light", &light);
+
+        camera.setParameters({60, wsize.x/wsize.y, 0.01f, 100});
+
+        renderer.setTarget(viewFB);
+        renderer.submitScene(&scene);
+        renderer.prepareFrame(camera);
+        renderer.resize(wsize.x, wsize.y);
+
+        tcSphere.getRotation()->y() += y++;
+        renderer.render();
+        renderer.endFrame();
+
         ImGui::Image(viewFB->getTexture(), wsize, ImVec2(0, 1), ImVec2(1, 0));
         ImGui::End();
         return true;
@@ -55,9 +63,11 @@ namespace ICE {
 
     AssetViewPane::AssetViewPane(ICEEngine *engine, std::string* selectedAsset) : engine(engine), selectedAsset(selectedAsset),
                                                                                     viewFB(Framebuffer::Create({400, 400, 1})),
-                                                                                    camera(Camera({{60, 16.f / 9.f, 0.01f, 1000 }, Perspective })) {
+                                                                                    camera(Camera({{60, 16.f / 9.f, 0.01f, 1000 }, Perspective })),
+                                                                                    renderer(ForwardRenderer()) {
         camera.getPosition().y() = 1;
         camera.getPosition().z() = 2;
         camera.getRotation().x() = -30;
+        renderer.initialize(RendererConfig());
     }
 }

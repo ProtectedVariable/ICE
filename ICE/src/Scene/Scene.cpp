@@ -95,4 +95,8 @@ namespace ICE {
         }
         return std::string("");
     }
+
+    bool Scene::addEntity(const std::string &uid, Entity *entity) {
+        return addEntity("root", uid, entity);
+    }
 }

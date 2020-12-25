@@ -13,13 +13,13 @@
 namespace ICE {
     class ForwardRenderer : public Renderer {
     public:
-        void initialize(RendererAPI *api, RendererConfig config) override;
+        void initialize(RendererConfig config) override;
 
         void submitScene(Scene *scene) override;
 
         void submit(Entity *e) override;
 
-        void prepareFrame(Camera* camera) override;
+        void prepareFrame(Camera& camera) override;
 
         void render() override;
 
@@ -34,6 +34,7 @@ namespace ICE {
         std::vector<Entity*> lightEntities;
         RendererAPI* api;
         RendererConfig config;
+        Framebuffer* target;
     };
 }
 

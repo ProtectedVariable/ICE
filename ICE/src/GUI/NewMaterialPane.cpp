@@ -107,46 +107,34 @@ namespace ICE {
         ImVec2 wsize = ImGui::GetWindowContentRegionMax();
         ImVec2 pos = ImGui::GetCursorPos();
         wsize = ImVec2(wsize.x - pos.x, wsize.y - pos.y - 30);
-        viewFB->bind();
-        viewFB->resize(wsize.x, wsize.y);
-        engine->getApi()->setViewport(0, 0, wsize.x, wsize.y);
-        engine->getApi()->clear();
-        Shader* shader = engine->getAssetBank()->getShader("__ice__phong_shader");
-        shader->bind();
-        if(diffuseMap != nullptr) {
-            diffuseMap->bind(0);
-        }
-        if(specularMap != nullptr) {
-            specularMap->bind(1);
-        }
-        if(ambientMap != nullptr) {
-            ambientMap->bind(2);
-        }
-        if(normalMap != nullptr) {
-            normalMap->bind(3);
-        }
+
+        Material mat = makeMaterial();
+        auto scene = Scene();
+
+        auto sphere = Entity();
+        auto rcSphere = RenderComponent(engine->getAssetBank()->getMesh("__ice__sphere"), &mat);
+        auto tcSphere = TransformComponent();
+        sphere.addComponent(&rcSphere);
+        sphere.addComponent(&tcSphere);
+        scene.addEntity("sphere", &sphere);
+
+        auto light = Entity();
+        auto lcLight = LightComponent(PointLight, Eigen::Vector3f(1,1,1));
+        auto tcLight = TransformComponent(Eigen::Vector3f(10,20,10), Eigen::Vector3f(0,0,0), Eigen::Vector3f(1,1,1));
+        light.addComponent(&lcLight);
+        light.addComponent(&tcLight);
+        scene.addEntity("light", &light);
+
         camera.setParameters({50, wsize.x / wsize.y, 0.01f, 1000});
-        shader->loadMat4("projection", camera.getProjection());
-        shader->loadMat4("view", camera.lookThrough());
-        shader->loadMat4("model", rotationMatrix(Eigen::Vector3f(0, y++, 0)));
-        shader->loadFloat3("lights[0].position", Eigen::Vector3f(10,20,10));
-        shader->loadFloat3("lights[0].color", Eigen::Vector3f(1,1,1));
-        shader->loadInt("light_count", 1);
-        shader->loadFloat3("ambient_light", Eigen::Vector3f(0.3,0.3,0.3));
-        shader->loadFloat3("material.albedo", albedo);
-        shader->loadFloat3("material.specular", specular);
-        shader->loadFloat3("material.ambient",ambient);
-        shader->loadFloat("material.alpha", alpha);
-        shader->loadInt("material.use_diffuse_map", diffuseMap != nullptr);
-        shader->loadInt("material.diffuse_map", 0);
-        shader->loadInt("material.use_specular_map", specularMap != nullptr);
-        shader->loadInt("material.specular_map", 1);
-        shader->loadInt("material.use_ambient_map", ambientMap != nullptr);
-        shader->loadInt("material.ambient_map", 2);
-        shader->loadInt("material.use_normal_map", normalMap != nullptr);
-        shader->loadInt("material.normal_map", 3);
-        engine->getApi()->renderVertexArray(engine->getAssetBank()->getMesh("__ice__sphere")->getVertexArray());
-        viewFB->unbind();
+        renderer.setTarget(viewFB);
+        renderer.submitScene(&scene);
+        renderer.prepareFrame(camera);
+        renderer.resize(wsize.x, wsize.y);
+
+        tcSphere.getRotation()->y() += y++;
+        renderer.render();
+        renderer.endFrame();
+
         ImGui::Image(viewFB->getTexture(), wsize, ImVec2(0, 1), ImVec2(1, 0));
         if(ImGui::Button(editMode ? "Edit" : "Add")) {
             ret = false;
@@ -157,11 +145,13 @@ namespace ICE {
 
     NewMaterialPane::NewMaterialPane(ICEEngine* engine): engine(engine), name("new_material"),
                                                          viewFB(Framebuffer::Create({200, 200, 1})),
-                                                         camera(Camera({{60, 16.f / 9.f, 0.01f, 1000 }, Perspective })) {
+                                                         camera(Camera({{60, 16.f / 9.f, 0.01f, 1000 }, Perspective })),
+                                                         renderer(ForwardRenderer()){
         reset();
         camera.getPosition().y() = 1;
         camera.getPosition().z() = 2;
         camera.getRotation().x() = -30;
+        renderer.initialize(RendererConfig());
     }
 
     void NewMaterialPane::reset() {
@@ -199,5 +189,9 @@ namespace ICE {
         editMode = true;
         this->name = name;
         this->oldname = name;
+    }
+
+    Material NewMaterialPane::makeMaterial() {
+        return Material(engine->getAssetBank()->getShader("__ice__phong_shader"), albedo, specular, ambient, alpha, diffuseMap, specularMap, ambientMap, normalMap);
     }
 }

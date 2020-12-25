@@ -19,6 +19,8 @@ namespace ICE {
         Camera *getCamera() const;
         void setCamera(Camera *camera);
 
+        void setTarget(Framebuffer* fb, int width, int height);
+
     private:
         Renderer* renderer;
         Camera* camera;
