@@ -34,11 +34,13 @@ in vec3 fposition;
 in vec3 fview;
 in vec2 ftex_coords;
 
+vec3 normal;
+
 vec3 pointLight(Light light) {
     vec3 rcolor = vec3(0.0);
 
     //diffuse
-    vec3 n = normalize(fnormal);
+    vec3 n = normalize(normal);
     vec3 light_direction = normalize(light.position - fposition);
     float diff = max(dot(n, light_direction), 0.0);
     vec3 diffuse_color = material.albedo;
@@ -61,6 +63,11 @@ vec3 pointLight(Light light) {
 }
 
 void main() {
+    if(material.use_normal_map) {
+        normal = texture(material.normal_map, ftex_coords).xyz;
+    } else {
+        normal = fnormal;
+    }
     //ambient
     vec3 color_accumulator = vec3(material.ambient*ambient_light);
     if(material.use_ambient_map) {
