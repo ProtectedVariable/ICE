@@ -36,7 +36,7 @@ namespace ICE {
         if(*selectedDir == 0) {
 
             for(const auto& m : engine->getAssetBank()->getMeshes()) {
-                auto scene = Scene();
+                auto scene = Scene("__ice__assetcontent_scene");
                 Shader* shader = engine->getAssetBank()->getShader("__ice__normal_shader");
                 Material mat = Material();
 
@@ -77,7 +77,7 @@ namespace ICE {
             for(const auto& m : engine->getAssetBank()->getMaterials()) {
                 Material mat = m.second;
 
-                auto scene = Scene();
+                auto scene = Scene("__ice__assetcontent_scene");
 
                 auto sphere = Entity();
                 auto rcSphere = RenderComponent(engine->getAssetBank()->getMesh("__ice__sphere"), &mat, engine->getAssetBank()->getShader("__ice__phong_shader"));

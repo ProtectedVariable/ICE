@@ -6,9 +6,9 @@
 #define ICE_ASSETCONTENTPANE_H
 
 
+#include "ICEPane.h"
 #include <Graphics/Framebuffer.h>
 #include <Graphics/Camera.h>
-#include "ICEPane.h"
 #include "NewMaterialPane.h"
 
 #define ICE_THUMBNAIL_SIZE (64)

@@ -30,7 +30,7 @@ namespace ICE {
             Mesh* previewMesh = engine->getAssetBank()->getMeshes().find(*selectedAsset) == engine->getAssetBank()->getMeshes().end() ? engine->getAssetBank()->getMesh("__ice__sphere") :  engine->getAssetBank()->getMesh(*selectedAsset);
             Material* mat = engine->getAssetBank()->getMaterials().find(*selectedAsset) == engine->getAssetBank()->getMaterials().end() ? engine->getAssetBank()->getMaterial("__ice__base_material") :  engine->getAssetBank()->getMaterial(*selectedAsset);
 
-            auto scene = Scene();
+            auto scene = Scene("__ice__assetview_scene");
 
             auto sphere = Entity();
             auto rcSphere = RenderComponent(previewMesh, mat, engine->getAssetBank()->getShader("__ice__phong_shader"));

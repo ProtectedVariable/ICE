@@ -50,14 +50,13 @@ namespace ICE {
     private:
         std::vector<System*> systems;
         void* window;
-        Scene currentScene;
+        Scene* currentScene;
         RendererAPI* api;
         Context* ctx;
-        ICEGUI* gui;
+        ICEGUI gui;
         Framebuffer* internalFB;
         Framebuffer* pickingFB;
         Camera camera;
-        AssetBank assetBank;
         Entity* selected;
         Project* project = nullptr;
         EngineConfig config;

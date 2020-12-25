@@ -6,9 +6,11 @@
 #define ICE_FORWARDRENDERER_H
 
 #include "Renderer.h"
+#include <Scene/Entity.h>
 #include "RendererConfig.h"
 #include "Camera.h"
 #include "Framebuffer.h"
+#include <vector>
 
 namespace ICE {
     class ForwardRenderer : public Renderer {

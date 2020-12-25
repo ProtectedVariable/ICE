@@ -23,7 +23,7 @@ namespace ICE {
             SceneNode(Entity* entity1) : children(std::vector<SceneNode*>()), entity(entity1) {};
         };
 
-        Scene();
+        Scene(const std::string& name);
 
         bool addEntity(const std::string& uid, Entity* entity);
         bool addEntity(const std::string& parent, const std::string& uid, Entity* entity);
@@ -31,12 +31,20 @@ namespace ICE {
         void setParent(const std::string& entity, const std::string& newParent);
 
         std::vector<Entity*> getEntities() const;
+        std::vector<SceneNode*> getNodes() const;
 
         SceneNode* getByID(const std::string& uid);
         SceneNode* getRoot();
         const std::string idByNode(const SceneNode* node);
         const std::string idByEntity(const Entity* e);
+
+        const std::string getParent(const std::string& child);
+        const std::string &getName() const;
+
+        void setName(const std::string &name);
+
     private:
+        std::string name;
         SceneNode* root;
         std::unordered_map<std::string, SceneNode*> nodeByID;
     };

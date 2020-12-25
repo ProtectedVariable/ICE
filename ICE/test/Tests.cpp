@@ -17,7 +17,7 @@ int main(void) {
     e.addComponent(&tr);
     assert(e.hasComponent<TransformComponent>());
     assert(e.getComponent<TransformComponent>() == &tr);
-    auto s = Scene();
+    auto s = Scene("");
     assert(s.getByID("my") == nullptr);
     s.addEntity("root", "my", &e);
     assert(s.getByID("my") != nullptr);

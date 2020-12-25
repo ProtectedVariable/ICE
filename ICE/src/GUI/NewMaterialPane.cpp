@@ -109,7 +109,7 @@ namespace ICE {
         wsize = ImVec2(wsize.x - pos.x, wsize.y - pos.y - 30);
 
         Material mat = makeMaterial();
-        auto scene = Scene();
+        auto scene = Scene("__ice__newmaterial_scene");
 
         auto sphere = Entity();
         auto rcSphere = RenderComponent(engine->getAssetBank()->getMesh("__ice__sphere"), &mat, engine->getAssetBank()->getShader("__ice__phong_shader"));
@@ -165,15 +165,15 @@ namespace ICE {
     }
 
     void NewMaterialPane::build() {
+        auto mtl = Material(albedo, specular, ambient, alpha, diffuseMap, specularMap, ambientMap, normalMap);
         if(!editMode) {
-            auto mtl = Material(albedo, specular, ambient, alpha, diffuseMap, specularMap, ambientMap, normalMap);
             engine->getAssetBank()->addMaterial(name, mtl);
         } else {
             std::string newName = oldname;
             if(engine->getAssetBank()->renameAsset(oldname, name)) {
                 newName = name;
             }
-            *engine->getAssetBank()->getMaterial(newName) = Material(albedo, specular, ambient, alpha);
+            *engine->getAssetBank()->getMaterial(newName) = mtl;
         }
     }
 

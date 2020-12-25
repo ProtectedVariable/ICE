@@ -4,6 +4,8 @@
 
 #include "AssetBank.h"
 #include <Util/OBJLoader.h>
+#include <Util/ICEException.h>
+
 namespace ICE {
 
     AssetBank::AssetBank(): meshes(std::unordered_map<std::string, Mesh>()), materials(std::unordered_map<std::string, Material>()), shaders(std::unordered_map<std::string, Shader*>()) {
@@ -103,5 +105,29 @@ namespace ICE {
             return true;
         }
         return false;
+    }
+
+    std::string AssetBank::getName(const void *ptr) {
+        for(const auto& e : meshes) {
+            if(&e.second == ptr) {
+                return e.first;
+            }
+        }
+        for(const auto& e : materials) {
+            if(&e.second == ptr) {
+                return e.first;
+            }
+        }
+        for(const auto& e : shaders) {
+            if(e.second == ptr) {
+                return e.first;
+            }
+        }
+        for(const auto& e : textures) {
+            if(e.second == ptr) {
+                return e.first;
+            }
+        }
+        throw ICEException();
     }
 }

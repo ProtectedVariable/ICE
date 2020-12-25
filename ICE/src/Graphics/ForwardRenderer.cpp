@@ -2,12 +2,13 @@
 // Created by Thomas Ibanez on 20.11.20.
 //
 
+#include <GL/gl3w.h>
+#include "ForwardRenderer.h"
 #include <Scene/TransformComponent.h>
 #include <Scene/LightComponent.h>
-#include <iostream>
-#include <GL/gl3w.h>
 #include <Util/Logger.h>
-#include "ForwardRenderer.h"
+#include <Scene/Scene.h>
+#include <Scene/RenderComponent.h>
 
 namespace ICE {
 

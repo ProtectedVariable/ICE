@@ -72,5 +72,5 @@ namespace ICE {
         return true;
     }
 
-    AssetPane::AssetPane(ICEEngine *engine) : engine(engine), viewPane(AssetViewPane(engine, &selectedAsset)), contentPane(AssetContentPane(&selectedDirectory, engine, &selectedAsset)), selectedAsset(engine->getAssetBank()->getMeshes().begin()->first) {}
+    AssetPane::AssetPane(ICEEngine *engine) : engine(engine), viewPane(AssetViewPane(engine, &selectedAsset)), contentPane(AssetContentPane(&selectedDirectory, engine, &selectedAsset)), selectedAsset("") {}
 }
