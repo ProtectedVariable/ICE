@@ -23,40 +23,44 @@ namespace ICE {
                 *selectedAsset = buffer;
             }
         }
-        Mesh* previewMesh = engine->getAssetBank()->getMeshes().find(*selectedAsset) == engine->getAssetBank()->getMeshes().end() ? engine->getAssetBank()->getMesh("__ice__sphere") :  engine->getAssetBank()->getMesh(*selectedAsset);
-        Material* mat = engine->getAssetBank()->getMaterials().find(*selectedAsset) == engine->getAssetBank()->getMaterials().end() ? engine->getAssetBank()->getMaterial("__ice__base_material") :  engine->getAssetBank()->getMaterial(*selectedAsset);
         ImVec2 wsize = ImGui::GetWindowContentRegionMax();
         ImVec2 pos = ImGui::GetCursorPos();
         wsize = ImVec2(wsize.x - pos.x, wsize.y - pos.y);
+        if(engine->getAssetBank()->getTextures().find(*selectedAsset) == engine->getAssetBank()->getTextures().end()) {
+            Mesh* previewMesh = engine->getAssetBank()->getMeshes().find(*selectedAsset) == engine->getAssetBank()->getMeshes().end() ? engine->getAssetBank()->getMesh("__ice__sphere") :  engine->getAssetBank()->getMesh(*selectedAsset);
+            Material* mat = engine->getAssetBank()->getMaterials().find(*selectedAsset) == engine->getAssetBank()->getMaterials().end() ? engine->getAssetBank()->getMaterial("__ice__base_material") :  engine->getAssetBank()->getMaterial(*selectedAsset);
 
-        auto scene = Scene();
+            auto scene = Scene();
 
-        auto sphere = Entity();
-        auto rcSphere = RenderComponent(previewMesh, mat);
-        auto tcSphere = TransformComponent();
-        sphere.addComponent(&rcSphere);
-        sphere.addComponent(&tcSphere);
-        scene.addEntity("sphere", &sphere);
+            auto sphere = Entity();
+            auto rcSphere = RenderComponent(previewMesh, mat);
+            auto tcSphere = TransformComponent();
+            sphere.addComponent(&rcSphere);
+            sphere.addComponent(&tcSphere);
+            scene.addEntity("sphere", &sphere);
 
-        auto light = Entity();
-        auto lcLight = LightComponent(PointLight, Eigen::Vector3f(1,1,1));
-        auto tcLight = TransformComponent(Eigen::Vector3f(10,20,10), Eigen::Vector3f(0,0,0), Eigen::Vector3f(1,1,1));
-        light.addComponent(&lcLight);
-        light.addComponent(&tcLight);
-        scene.addEntity("light", &light);
+            auto light = Entity();
+            auto lcLight = LightComponent(PointLight, Eigen::Vector3f(1,1,1));
+            auto tcLight = TransformComponent(Eigen::Vector3f(10,20,10), Eigen::Vector3f(0,0,0), Eigen::Vector3f(1,1,1));
+            light.addComponent(&lcLight);
+            light.addComponent(&tcLight);
+            scene.addEntity("light", &light);
 
-        camera.setParameters({60, wsize.x/wsize.y, 0.01f, 100});
+            camera.setParameters({60, wsize.x/wsize.y, 0.01f, 100});
 
-        renderer.setTarget(viewFB);
-        renderer.submitScene(&scene);
-        renderer.prepareFrame(camera);
-        renderer.resize(wsize.x, wsize.y);
+            renderer.setTarget(viewFB);
+            renderer.submitScene(&scene);
+            renderer.prepareFrame(camera);
+            renderer.resize(wsize.x, wsize.y);
 
-        tcSphere.getRotation()->y() += y++;
-        renderer.render();
-        renderer.endFrame();
+            tcSphere.getRotation()->y() += y++;
+            renderer.render();
+            renderer.endFrame();
 
-        ImGui::Image(viewFB->getTexture(), wsize, ImVec2(0, 1), ImVec2(1, 0));
+            ImGui::Image(viewFB->getTexture(), wsize, ImVec2(0, 1), ImVec2(1, 0));
+        } else {
+            ImGui::Image(engine->getAssetBank()->getTexture(*selectedAsset)->getTexture(), wsize, ImVec2(0, 1), ImVec2(1, 0));
+        }
         ImGui::End();
         return true;
     }
