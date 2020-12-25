@@ -167,7 +167,9 @@ namespace ICE {
     void NewMaterialPane::build() {
         auto mtl = Material(albedo, specular, ambient, alpha, diffuseMap, specularMap, ambientMap, normalMap);
         if(!editMode) {
-            engine->getAssetBank()->addMaterial(name, mtl);
+            auto nm = new Material();
+            *nm = mtl;
+            engine->getAssetBank()->addMaterial(name, nm);
         } else {
             std::string newName = oldname;
             if(engine->getAssetBank()->renameAsset(oldname, name)) {

@@ -41,7 +41,7 @@ namespace ICE {
                 Material mat = Material();
 
                 auto sphere = Entity();
-                auto rcSphere = RenderComponent(&m.second, &mat, shader);
+                auto rcSphere = RenderComponent(m.second, &mat, shader);
                 auto tcSphere = TransformComponent(Eigen::Vector3f(0,0,0), Eigen::Vector3f(0, 45, 0), Eigen::Vector3f(1,1,1));
                 sphere.addComponent(&rcSphere);
                 sphere.addComponent(&tcSphere);
@@ -75,7 +75,7 @@ namespace ICE {
             }
         } else if(*selectedDir == 1) {
             for(const auto& m : engine->getAssetBank()->getMaterials()) {
-                Material mat = m.second;
+                Material mat = *m.second;
 
                 auto scene = Scene("__ice__assetcontent_scene");
 

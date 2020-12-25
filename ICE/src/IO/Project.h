@@ -43,6 +43,22 @@ namespace ICE {
             return "["+std::to_string(v.x())+","+std::to_string(v.y())+","+std::to_string(v.z())+","+std::to_string(v.w())+"]";
         }
 
+        static Eigen::Vector3f FromString(const std::string& str) {
+            Eigen::Vector3f vec;
+            int b = str.find("[")+1;
+            int e = str.find(",");
+            std::string x = str.substr(b, e);
+            vec.x() = atof(x.c_str());
+            b = e+1;
+            e = str.find(",", b);
+            std::string y = str.substr(b, e);
+            vec.y() = atof(y.c_str());
+            b = e+1;
+            e = str.find(",", b);
+            std::string z = str.substr(b, e);
+            vec.z() = atof(z.c_str());
+            return vec;
+        }
     private:
 
         enum LoadStage {

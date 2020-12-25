@@ -8,7 +8,7 @@
 #include "ICEException.h"
 
 namespace ICE {
-    Mesh OBJLoader::loadFromOBJ(const std::string &path) {
+    Mesh* OBJLoader::loadFromOBJ(const std::string &path) {
         tinyobj::attrib_t attrib;
         std::vector<tinyobj::shape_t> shapes;
         std::vector<tinyobj::material_t> materials;
@@ -106,6 +106,6 @@ namespace ICE {
             }
         }
         */
-        return Mesh(vertices, normals, uvs, indices);
+        return new Mesh(vertices, normals, uvs, indices);
     }
 }

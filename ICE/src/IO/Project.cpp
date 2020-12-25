@@ -156,7 +156,7 @@ namespace ICE {
         auto els = EntityLoadStage::TransformComponentStage;
         infile = std::ifstream(baseDirectory + "/" + name + "/Scenes/" + scenes[0].getName() + ".ics");
         Entity e;
-        std::string uid;
+        std::string uid = "";
         std::string parent;
         while (std::getline(infile, line)) {
             std::istringstream iss(line);
@@ -173,23 +173,64 @@ namespace ICE {
             }
             if(sls == EntityStage) {
                 if(line.find("+") != std::string::npos) {
-                    std::string skipped = line.substr(0,3);
+                    if(uid != "") {
+                        Entity* ne = new Entity();
+                        *ne = e;
+                        scenes[0].addEntity(parent, uid, ne);
+                        e = Entity();
+                    }
+                    std::string skipped = line.substr(3);
                     uid = skipped.substr(0, skipped.find(" "));
                     parent = skipped.substr(skipped.find(" ") + 1);
+                    continue;
                 } else if(line == "RenderComponent") {
                     els = RenderComponentStage;
+                    e.addComponent(new RenderComponent(nullptr, nullptr, nullptr));
                     continue;
                 } else if(line == "TransformComponent") {
                     els = TransformComponentStage;
+                    e.addComponent(new TransformComponent());
                     continue;
                 } else if(line == "LightComponent") {
                     els = LightComponentStage;
+                    e.addComponent(new LightComponent(PointLight, Eigen::Vector3f()));
                     continue;
                 }
 
+                switch(els) {
+                    case RenderComponentStage:
+                        if(line.find("Mesh") != std::string::npos) {
+                            e.getComponent<RenderComponent>()->setMesh(assetBank.getMesh(line.substr(8)));
+                        } else if(line.find("Material") != std::string::npos) {
+                            e.getComponent<RenderComponent>()->setMaterial(assetBank.getMaterial(line.substr(12)));
+                        } else if(line.find("Shader") != std::string::npos) {
+                            e.getComponent<RenderComponent>()->setShader(assetBank.getShader(line.substr(10)));
+                        }
+                        break;
+                    case TransformComponentStage:
+                        if(line.find("Position") != std::string::npos) {
+                            *e.getComponent<TransformComponent>()->getPosition() = FromString(line);
+                        } else if(line.find("Rotation") != std::string::npos) {
+                            *e.getComponent<TransformComponent>()->getRotation() = FromString(line);
+                        } else if(line.find("Scale") != std::string::npos) {
+                            *e.getComponent<TransformComponent>()->getScale() = FromString(line);
+                        }
+                        break;
+                    case LightComponentStage:
+                        if(line.find("Color") != std::string::npos) {
+                            Eigen::Vector3f v = FromString(line);
+                            e.getComponent<LightComponent>()->getColor().x() = v.x();
+                            e.getComponent<LightComponent>()->getColor().y() = v.y();
+                            e.getComponent<LightComponent>()->getColor().z() = v.z();
+                        }
+                        break;
+                }
             }
 
         }
+        Entity* ne = new Entity();
+        *ne = e;
+        scenes[0].addEntity(parent, uid, ne);
         infile.close();
     }
 
