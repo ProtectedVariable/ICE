@@ -1,3 +1,5 @@
+![ICE logo](media/logo.png)
+
 # ICE
 ![CMake](https://github.com/ProtectedVariable/ICE/workflows/CMake/badge.svg)
 
