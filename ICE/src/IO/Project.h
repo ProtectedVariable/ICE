@@ -9,6 +9,9 @@
 #include <vector>
 #include <Scene/Scene.h>
 #include <Assets/AssetBank.h>
+#include <json/json.h>
+
+using json = nlohmann::json;
 
 namespace ICE {
     class Project {
@@ -23,42 +26,18 @@ namespace ICE {
         void writeToFile();
         void loadFromFile();
 
-        void setBaseDirectory(const std::string &baseDirectory);
-
-        void setName(const std::string &name);
-
         std::vector<Scene> &getScenes();
-
         void setScenes(const std::vector<Scene> &scenes);
 
         AssetBank* getAssetBank();
-
         void setAssetBank(const AssetBank &assetBank);
 
-        static std::string Vec3ToString(const Eigen::Vector3f& v) {
-           return "["+std::to_string(v.x())+","+std::to_string(v.y())+","+std::to_string(v.z())+"]";
-        }
+        static json dumpVec3(const Eigen::Vector3f& v);
+        static json dumpVec4(const Eigen::Vector4f& v);
 
-        static std::string Vec4ToString(const Eigen::Vector4f& v) {
-            return "["+std::to_string(v.x())+","+std::to_string(v.y())+","+std::to_string(v.z())+","+std::to_string(v.w())+"]";
-        }
+        static Eigen::Vector3f parseVec3(const json& src);
+        static Eigen::Vector4f parseVec4(const json& src);
 
-        static Eigen::Vector3f FromString(const std::string& str) {
-            Eigen::Vector3f vec;
-            int b = str.find("[")+1;
-            int e = str.find(",");
-            std::string x = str.substr(b, e);
-            vec.x() = atof(x.c_str());
-            b = e+1;
-            e = str.find(",", b);
-            std::string y = str.substr(b, e);
-            vec.y() = atof(y.c_str());
-            b = e+1;
-            e = str.find(",", b);
-            std::string z = str.substr(b, e);
-            vec.z() = atof(z.c_str());
-            return vec;
-        }
     private:
 
         enum LoadStage {

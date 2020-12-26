@@ -19,6 +19,7 @@ namespace fs = std::filesystem;
 #include <Scene/TransformComponent.h>
 #include <Scene/LightComponent.h>
 #include <Scene/Entity.h>
+#include <Scene/Scene.h>
 
 namespace ICE {
     Project::Project(const std::string &baseDirectory, const std::string &name) : baseDirectory(baseDirectory),
@@ -47,199 +48,130 @@ namespace ICE {
     void Project::writeToFile() {
         std::ofstream outstream;
         outstream.open(baseDirectory + "/" + name + "/" + name+ ".ice");
-        outstream << "Scenes\n";
+        json j;
+        std::vector<std::string> strvec;
         for(auto s : scenes) {
-            outstream << " - " << s.getName() << "\n";
+            strvec.push_back(s.getName());
         }
-        outstream << "Meshes\n";
+        j["scenes"] = strvec;
+        strvec.clear();
+
         for(auto m : assetBank.getMeshes()) {
             if(m.first.find("__ice__") == std::string::npos) {
-                outstream << " - " << m.first << "\n";
+                strvec.push_back(m.first);
             }
         }
+        j["meshes"] = strvec;
+        strvec.clear();
 
-        outstream << "Materials\n";
         for(auto m : assetBank.getMaterials()) {
             if(m.first.find("__ice__") == std::string::npos) {
-                outstream << " - " << m.first << "\n";
+                strvec.push_back(m.first);
             }
         }
+        j["materials"] = strvec;
+        strvec.clear();
 
-        outstream << "Shaders\n";
         for(auto m : assetBank.getShaders()) {
-            if(m.first.find("__ice__") == std::string::npos) {
-                outstream << " - " << m.first << "\n";
+            if (m.first.find("__ice__") == std::string::npos) {
+                strvec.push_back(m.first);
             }
         }
+        j["shaders"] = strvec;
+        strvec.clear();
 
-        outstream << "Textures\n";
         for(auto m : assetBank.getTextures()) {
             if(m.first.find("__ice__") == std::string::npos) {
-                outstream << " - " << m.first << "\n";
+                strvec.push_back(m.first);
             }
         }
+        j["textures"] = strvec;
+        outstream << j.dump(4);
         outstream.close();
 
         for(auto s : scenes) {
             outstream.open(baseDirectory + "/" + name + "/Scenes/" + s.getName() + ".ics");
-            outstream << "Name\n";
-            outstream << " - " << s.getName() << "\n";
-            outstream << "Entities\n";
+            j.clear();
+
+            j["name"] = s.getName();
+            json entities = json::array();
             for(auto e : s.getEntities()) {
-                outstream << " + " << s.idByEntity(e) << " " << s.getParent(s.idByEntity(e)) << "\n";
+                json entity;
+                entity["name"] = s.idByEntity(e);
+                entity["parent"] = s.getParent(s.idByEntity(e));
                 if(e->hasComponent<RenderComponent>()) {
                     RenderComponent rc = *e->getComponent<RenderComponent>();
-                    outstream << "RenderComponent\n";
-                    outstream << " - " << "Mesh " << assetBank.getName(rc.getMesh()) << "\n";
-                    outstream << " - " << "Material " << assetBank.getName(rc.getMaterial()) << "\n";
-                    outstream << " - " << "Shader " << assetBank.getName(rc.getShader()) << "\n";
+                    json renderjson;
+                    renderjson["mesh"] = assetBank.getName(rc.getMesh());
+                    renderjson["material"] = assetBank.getName(rc.getMaterial());
+                    renderjson["shader"] = assetBank.getName(rc.getShader());
+                    entity["renderComponent"] = renderjson;
                 }
                 if(e->hasComponent<TransformComponent>()) {
                     TransformComponent tc = *e->getComponent<TransformComponent>();
-                    outstream << "TransformComponent\n";
-                    outstream << " - " << "Position " << Vec3ToString(*tc.getPosition()) << "\n";
-                    outstream << " - " << "Rotation " << Vec3ToString(*tc.getRotation()) << "\n";
-                    outstream << " - " << "Scale " << Vec3ToString(*tc.getScale()) << "\n";
+                    json transformjson;
+                    transformjson["position"] = dumpVec3(*tc.getPosition());
+                    transformjson["rotation"] = dumpVec3(*tc.getRotation());
+                    transformjson["scale"] = dumpVec3(*tc.getScale());
+                    entity["transformComponent"] = transformjson;
                 }
                 if(e->hasComponent<LightComponent>()) {
                     LightComponent lc = *e->getComponent<LightComponent>();
-                    outstream << "LightComponent\n";
-                    outstream << " - " << "Color " << Vec3ToString(lc.getColor()) << "\n";
-                    outstream << " - " << "Type " << lc.getType() << "\n";
+                    json lightjson;
+                    lightjson["color"] = dumpVec3(lc.getColor());
+                    lightjson["type"] = lc.getType();
+                    entity["lightComponent"] = lightjson;
                 }
+                entities.push_back(entity);
             }
+            j["entities"] = entities;
+            outstream << j.dump(4);
             outstream.close();
         }
     }
 
     void Project::loadFromFile() {
         std::ifstream infile = std::ifstream(baseDirectory + "/" + name + "/" + name+ ".ice");
-
-        auto stage = LoadStage::Scenes;
-        std::string line;
-        while (std::getline(infile, line)) {
-            std::istringstream iss(line);
-            if(line == "Scenes") {
-                stage = LoadStage::Scenes;
-                continue;
-            } else if(line == "Meshes") {
-                stage = LoadStage::Meshes;
-                continue;
-            } else if(line == "Materials") {
-                stage = LoadStage::Materials;
-                continue;
-            } else if(line == "Shaders") {
-                stage = LoadStage::Shaders;
-                continue;
-            } else if(line == "Textures") {
-                stage = LoadStage::Textures;
-                continue;
-            }
-
-            switch(stage) {
-                case Scenes:
-                    scenes.push_back(Scene(line.substr(3)));
-                    break;
-                case Meshes:
-                    break;
-                case Materials:
-                    break;
-                case Shaders:
-                    break;
-                case Textures:
-                    break;
-            }
-        }
+        json j;
+        infile >> j;
         infile.close();
 
-        auto sls = SceneLoadStage::NameStage;
-        auto els = EntityLoadStage::TransformComponentStage;
-        infile = std::ifstream(baseDirectory + "/" + name + "/Scenes/" + scenes[0].getName() + ".ics");
-        Entity e;
-        std::string uid = "";
-        std::string parent;
-        while (std::getline(infile, line)) {
-            std::istringstream iss(line);
-            if(line == "Name") {
-                sls = NameStage;
-                continue;
-            } else if(line == "Entities") {
-                sls = EntityStage;
-                continue;
-            }
+        std::vector<std::string> sceneNames = j["scenes"];
+        std::vector<std::string> meshesNames = j["meshes"];
+        std::vector<std::string> materialNames = j["materials"];
+        std::vector<std::string> shaderNames = j["shaders"];
+        std::vector<std::string> textureNames = j["textures"];
 
-            if(sls == NameStage) {
-                continue; //skip
-            }
-            if(sls == EntityStage) {
-                if(line.find("+") != std::string::npos) {
-                    if(uid != "") {
-                        Entity* ne = new Entity();
-                        *ne = e;
-                        scenes[0].addEntity(parent, uid, ne);
-                        e = Entity();
-                    }
-                    std::string skipped = line.substr(3);
-                    uid = skipped.substr(0, skipped.find(" "));
-                    parent = skipped.substr(skipped.find(" ") + 1);
-                    continue;
-                } else if(line == "RenderComponent") {
-                    els = RenderComponentStage;
-                    e.addComponent(new RenderComponent(nullptr, nullptr, nullptr));
-                    continue;
-                } else if(line == "TransformComponent") {
-                    els = TransformComponentStage;
-                    e.addComponent(new TransformComponent());
-                    continue;
-                } else if(line == "LightComponent") {
-                    els = LightComponentStage;
-                    e.addComponent(new LightComponent(PointLight, Eigen::Vector3f()));
-                    continue;
+        for(auto s : sceneNames) {
+            infile = std::ifstream(baseDirectory + "/" + name + "/Scenes/" + s + ".ics");
+            json scenejson;
+            infile >> scenejson;
+            infile.close();
+
+            Scene scene = Scene(scenejson["name"]);
+            for(json jentity : scenejson["entities"]) {
+                Entity* e = new Entity();
+                if(!jentity["transformComponent"].is_null()) {
+                    json tj = jentity["transformComponent"];
+                    TransformComponent* tc = new TransformComponent(parseVec3(tj["position"]),parseVec3(tj["rotation"]),parseVec3(tj["scale"]));
+                    e->addComponent(tc);
                 }
-
-                switch(els) {
-                    case RenderComponentStage:
-                        if(line.find("Mesh") != std::string::npos) {
-                            e.getComponent<RenderComponent>()->setMesh(assetBank.getMesh(line.substr(8)));
-                        } else if(line.find("Material") != std::string::npos) {
-                            e.getComponent<RenderComponent>()->setMaterial(assetBank.getMaterial(line.substr(12)));
-                        } else if(line.find("Shader") != std::string::npos) {
-                            e.getComponent<RenderComponent>()->setShader(assetBank.getShader(line.substr(10)));
-                        }
-                        break;
-                    case TransformComponentStage:
-                        if(line.find("Position") != std::string::npos) {
-                            *e.getComponent<TransformComponent>()->getPosition() = FromString(line);
-                        } else if(line.find("Rotation") != std::string::npos) {
-                            *e.getComponent<TransformComponent>()->getRotation() = FromString(line);
-                        } else if(line.find("Scale") != std::string::npos) {
-                            *e.getComponent<TransformComponent>()->getScale() = FromString(line);
-                        }
-                        break;
-                    case LightComponentStage:
-                        if(line.find("Color") != std::string::npos) {
-                            Eigen::Vector3f v = FromString(line);
-                            e.getComponent<LightComponent>()->getColor().x() = v.x();
-                            e.getComponent<LightComponent>()->getColor().y() = v.y();
-                            e.getComponent<LightComponent>()->getColor().z() = v.z();
-                        }
-                        break;
+                if(!jentity["renderComponent"].is_null()) {
+                    json rj = jentity["renderComponent"];
+                    RenderComponent* rc = new RenderComponent(assetBank.getMesh(rj["mesh"]),assetBank.getMaterial(rj["material"]),assetBank.getShader(rj["shader"]));
+                    e->addComponent(rc);
                 }
+                if(!jentity["lightComponent"].is_null()) {
+                    json lj = jentity["lightComponent"];
+                    LightComponent* lc = new LightComponent(PointLight, parseVec3(lj["color"]));
+                    e->addComponent(lc);
+                }
+                scene.addEntity(jentity["parent"], jentity["name"], e);
             }
-
+            scenes.push_back(scene);
         }
-        Entity* ne = new Entity();
-        *ne = e;
-        scenes[0].addEntity(parent, uid, ne);
-        infile.close();
-    }
 
-    void Project::setBaseDirectory(const std::string &baseDirectory) {
-        Project::baseDirectory = baseDirectory;
-    }
 
-    void Project::setName(const std::string &name) {
-        Project::name = name;
     }
 
     std::vector<Scene> &Project::getScenes() {
@@ -256,5 +188,30 @@ namespace ICE {
 
     void Project::setAssetBank(const AssetBank &assetBank) {
         Project::assetBank = assetBank;
+    }
+
+    json Project::dumpVec3(const Eigen::Vector3f &v) {
+        json r;
+        r["x"] = v.x();
+        r["y"] = v.y();
+        r["z"] = v.z();
+        return r;
+    }
+
+    json Project::dumpVec4(const Eigen::Vector4f &v) {
+        json r;
+        r["x"] = v.x();
+        r["y"] = v.y();
+        r["z"] = v.z();
+        r["w"] = v.w();
+        return r;
+    }
+
+    Eigen::Vector3f Project::parseVec3(const json &src) {
+        return Eigen::Vector3f(src["x"],src["y"],src["z"]);
+    }
+
+    Eigen::Vector4f Project::parseVec4(const json &src) {
+        return Eigen::Vector4f(src["x"],src["y"],src["z"],src["w"]);
     }
 }
