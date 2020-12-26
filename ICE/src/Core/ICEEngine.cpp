@@ -59,7 +59,7 @@ using namespace gl;
 namespace ICE {
     ICEEngine::ICEEngine(void* window): systems(std::vector<System*>()), window(window),
                                         camera(Camera(CameraParameters{ {60, 16.f / 9.f, 0.01f, 1000 }, Perspective })),
-                                        config(EngineConfig::LoadFromFile()), gui(ICEGUI(this)) {
+                                        config(EngineConfig::LoadFromFile(&camera)), gui(ICEGUI(this)) {
         api = RendererAPI::Create();
 		selected = nullptr;
     }
@@ -75,7 +75,6 @@ namespace ICE {
         Renderer* renderer = new ForwardRenderer();
         renderer->initialize(RendererConfig());
 
-        camera.getPosition().z() = 1;
         renderSystem = new RenderSystem(renderer, &camera);
         systems.push_back(renderSystem);
 
@@ -196,18 +195,20 @@ namespace ICE {
 
     int import_cnt = 0;
     void ICEEngine::importMesh() {
-        //TODO: Copy the source file in the project directory, add a link from the asset to the copied source file
         const std::string file = FileUtils::openFileDialog("obj");
         if(file != "") {
-            getAssetBank()->addMesh("imported_mesh_"+std::to_string(import_cnt++), OBJLoader::loadFromOBJ(file));
+            std::string aname = "imported_mesh_"+std::to_string(import_cnt++);
+            getAssetBank()->addMesh(aname, OBJLoader::loadFromOBJ(file));
+            project->copyAssetFile("Meshes", aname, file);
         }
     }
 
     void ICEEngine::importTexture() {
-        //TODO: Copy the source file in the project directory, add a link from the asset to the copied source file
         const std::string file = FileUtils::openFileDialog("");
         if(file != "") {
-            getAssetBank()->addTexture("imported_texture_"+std::to_string(import_cnt++), Texture2D::Create(file));
+            std::string aname = "imported_texture_"+std::to_string(import_cnt++);
+            getAssetBank()->addTexture(aname, Texture2D::Create(file));
+            project->copyAssetFile("Textures", aname, file);
         }
     }
 }
@@ -336,7 +337,7 @@ int main(int, char**)
     glfwDestroyWindow(window);
     glfwTerminate();
     engine.getConfig().save();
-    engine.getProject()->writeToFile();
+    engine.getProject()->writeToFile(engine.getCamera());
     Logger::Log(Logger::VERBOSE, "Core", "Engine shutting off...");
     return 0;
 }

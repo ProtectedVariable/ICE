@@ -23,8 +23,12 @@ namespace ICE {
         const std::string &getBaseDirectory() const;
         const std::string &getName() const;
 
-        void writeToFile();
-        void loadFromFile();
+        void writeToFile(Camera* editorCamera);
+        void loadFromFile(Camera* editorCamera);
+        void writeMaterialFile(const std::string& mtlName, const Material& mtl);
+        Material* loadMaterial(const std::string& file);
+        void copyAssetFile(const std::string& folder, const std::string& assetName, const std::string& src);
+        bool renameAsset(const std::string& oldName, const std::string& newName);
 
         std::vector<Scene> &getScenes();
         void setScenes(const std::vector<Scene> &scenes);
@@ -39,6 +43,8 @@ namespace ICE {
         static Eigen::Vector4f parseVec4(const json& src);
 
     private:
+
+        std::vector<std::string> getFilesInDir(const std::string& folder);
 
         enum LoadStage {
             Scenes, Meshes, Materials, Shaders, Textures

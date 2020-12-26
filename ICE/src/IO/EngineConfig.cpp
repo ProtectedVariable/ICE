@@ -10,7 +10,7 @@
 
 namespace ICE {
 
-    EngineConfig EngineConfig::LoadFromFile() {
+    EngineConfig EngineConfig::LoadFromFile(Camera* camera) {
         EngineConfigState state;
         auto config = EngineConfig();
         std::string line;
@@ -29,7 +29,7 @@ namespace ICE {
 
             if(state == PROJECT_LIST) {
                 auto p = Project(line.substr(0, line.find_last_of("/")), line.substr(line.find_last_of("/")+1, line.size()));
-                p.loadFromFile();
+                p.loadFromFile(camera);
                 config.localProjects.push_back(p);
             }
         }

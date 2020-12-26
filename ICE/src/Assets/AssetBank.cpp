@@ -108,6 +108,9 @@ namespace ICE {
     }
 
     std::string AssetBank::getName(const void *ptr) {
+        if(ptr == nullptr) {
+            return "null";
+        }
         for(const auto& e : meshes) {
             if(e.second == ptr) {
                 return e.first;

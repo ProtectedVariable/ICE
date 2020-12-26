@@ -19,7 +19,7 @@ namespace ICE {
         ImGui::SameLine();
         ImGuiInputTextFlags flags = (selectedAsset->find("__ice__") == std::string::npos) ? 0 : ImGuiInputTextFlags_ReadOnly;
         if(ImGui::InputText("##Asset Name", buffer, 512, flags)) {
-            if(engine->getAssetBank()->renameAsset(*selectedAsset, buffer)) {
+            if(engine->getProject()->renameAsset(*selectedAsset, buffer)) {
                 *selectedAsset = buffer;
             }
         }

@@ -16,7 +16,7 @@ namespace ICE {
 
     class EngineConfig {
     public:
-        static EngineConfig LoadFromFile();
+        static EngineConfig LoadFromFile(Camera* camera);
         std::vector<Project>* getLocalProjects();
 
         EngineConfig();

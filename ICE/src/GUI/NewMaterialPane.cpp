@@ -172,7 +172,7 @@ namespace ICE {
             engine->getAssetBank()->addMaterial(name, nm);
         } else {
             std::string newName = oldname;
-            if(engine->getAssetBank()->renameAsset(oldname, name)) {
+            if(engine->getProject()->renameAsset(oldname, name)) {
                 newName = name;
             }
             *engine->getAssetBank()->getMaterial(newName) = mtl;
