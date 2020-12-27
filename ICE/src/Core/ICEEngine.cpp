@@ -337,7 +337,9 @@ int main(int, char**)
     glfwDestroyWindow(window);
     glfwTerminate();
     engine.getConfig().save();
-    engine.getProject()->writeToFile(engine.getCamera());
+    if(engine.getProject() != nullptr) {
+        engine.getProject()->writeToFile(engine.getCamera());
+    }
     Logger::Log(Logger::VERBOSE, "Core", "Engine shutting off...");
     return 0;
 }
