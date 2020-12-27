@@ -1,7 +1,6 @@
-![ICE logo](media/logo.png)
-
-# ICE
 ![CMake](https://github.com/ProtectedVariable/ICE/workflows/CMake/badge.svg)
+# ICE
+![ICE logo](media/logo.png)
 
 ICE is a 3D general purpose game engine written in C++. The aim of the project is to have an engine good enough to create all kind of games in an easy manner, but not to compete with the big names (unity/unreal).
 
@@ -40,3 +39,12 @@ The engine is built with an Entity-Component-System architecture. This allow to 
 ## Roadmap
 
 The [trello board](https://trello.com/b/Jstm3EL9/ice) of the project is available. This is a rough estimate of the progress done on the engine.
+
+## Libraries
+ - [Dear ImGui](https://github.com/ocornut/imgui)
+ - [GLFW](https://github.com/glfw/glfw)
+ - [Eigen](http://eigen.tuxfamily.org/)
+ - [GL3W](https://github.com/skaslev/gl3w)
+ - [nlohmann JSON](https://github.com/nlohmann/json)
+ - [stb](https://github.com/nothings/stb)
+ - [tiny OBJLoader](https://github.com/tinyobjloader/tinyobjloader)
