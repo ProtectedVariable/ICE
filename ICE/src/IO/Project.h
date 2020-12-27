@@ -24,7 +24,7 @@ namespace ICE {
         const std::string &getName() const;
 
         void writeToFile(Camera* editorCamera);
-        void loadFromFile(Camera* editorCamera);
+        void loadFromFile();
         void writeMaterialFile(const std::string& mtlName, const Material& mtl);
         Material* loadMaterial(const std::string& file);
         void copyAssetFile(const std::string& folder, const std::string& assetName, const std::string& src);
@@ -41,6 +41,10 @@ namespace ICE {
 
         static Eigen::Vector3f parseVec3(const json& src);
         static Eigen::Vector4f parseVec4(const json& src);
+
+        const Eigen::Vector3f &getCameraPosition() const;
+
+        const Eigen::Vector3f &getCameraRotation() const;
 
     private:
 
@@ -62,6 +66,7 @@ namespace ICE {
         std::string name;
         std::vector<Scene> scenes;
         AssetBank assetBank;
+        Eigen::Vector3f cameraPosition, cameraRotation;
     };
 }
 

@@ -136,7 +136,7 @@ namespace ICE {
         }
     }
 
-    void Project::loadFromFile(Camera* editorCamera) {
+    void Project::loadFromFile() {
         std::ifstream infile = std::ifstream(baseDirectory + "/" + name + "/" + name+ ".ice");
         json j;
         infile >> j;
@@ -148,16 +148,8 @@ namespace ICE {
         std::vector<std::string> shaderNames = j["shaders"];
         std::vector<std::string> textureNames = j["textures"];
 
-        Eigen::Vector3f cameraPosition = parseVec3(j["camera_position"]);
-        editorCamera->getPosition().x() = cameraPosition.x();
-        editorCamera->getPosition().y() = cameraPosition.y();
-        editorCamera->getPosition().z() = cameraPosition.z();
-
-        Eigen::Vector3f cameraRotation = parseVec3(j["camera_rotation"]);
-        editorCamera->getRotation().x() = cameraRotation.x();
-        editorCamera->getRotation().y() = cameraRotation.y();
-        editorCamera->getRotation().z() = cameraRotation.z();
-
+        cameraPosition = parseVec3(j["camera_position"]);
+        cameraRotation = parseVec3(j["camera_rotation"]);
 
         std::string path = baseDirectory + "/" + name + "/Assets/Textures/";
         std::vector<std::string> files;
@@ -350,5 +342,13 @@ namespace ICE {
 
     Eigen::Vector4f Project::parseVec4(const json &src) {
         return Eigen::Vector4f(src["x"],src["y"],src["z"],src["w"]);
+    }
+
+    const Eigen::Vector3f &Project::getCameraPosition() const {
+        return cameraPosition;
+    }
+
+    const Eigen::Vector3f &Project::getCameraRotation() const {
+        return cameraRotation;
     }
 }

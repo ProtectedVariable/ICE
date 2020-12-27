@@ -59,7 +59,7 @@ using namespace gl;
 namespace ICE {
     ICEEngine::ICEEngine(void* window): systems(std::vector<System*>()), window(window),
                                         camera(Camera(CameraParameters{ {60, 16.f / 9.f, 0.01f, 1000 }, Perspective })),
-                                        config(EngineConfig::LoadFromFile(&camera)), gui(ICEGUI(this)) {
+                                        config(EngineConfig::LoadFromFile()), gui(ICEGUI(this)) {
         api = RendererAPI::Create();
 		selected = nullptr;
     }
@@ -187,6 +187,8 @@ namespace ICE {
     void ICEEngine::setProject(Project *project) {
         this->project = project;
         this->currentScene = &project->getScenes().at(0);
+        this->camera.getPosition() = project->getCameraPosition();
+        this->camera.getRotation() = project->getCameraRotation();
     }
 
     EngineConfig &ICEEngine::getConfig() {
