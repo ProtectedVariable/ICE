@@ -12,7 +12,7 @@
 namespace ICE {
     int y = 45;
     bool AssetViewPane::render() {
-        ImGui::Begin("Asset View");
+        ImGui::BeginChild("Asset View");
         char buffer[512];
         strcpy(buffer, selectedAsset->c_str());
         ImGui::Text("Asset Name");
@@ -61,7 +61,7 @@ namespace ICE {
         } else {
             ImGui::Image(engine->getAssetBank()->getTexture(*selectedAsset)->getTexture(), wsize, ImVec2(0, 1), ImVec2(1, 0));
         }
-        ImGui::End();
+        ImGui::EndChild();
         return true;
     }
 

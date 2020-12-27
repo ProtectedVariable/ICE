@@ -59,11 +59,11 @@ namespace ICE {
             }
         }
         ImGui::Image(diffuseMap == nullptr ? 0 : diffuseMap->getTexture(), ImVec2(ICE_NEWMAT_PICKER_WIDTH, ICE_NEWMAT_PICKER_WIDTH), ImVec2(0, 1), ImVec2(1, 0));
-        ImGui::SameLine();
+        ImGui::SameLine(0, ICE_NEWMAT_PICKER_WIDTH/2);
         ImGui::Image(specularMap == nullptr ? 0 : specularMap->getTexture(), ImVec2(ICE_NEWMAT_PICKER_WIDTH, ICE_NEWMAT_PICKER_WIDTH), ImVec2(0, 1), ImVec2(1, 0));
-        ImGui::SameLine();
+        ImGui::SameLine(0, ICE_NEWMAT_PICKER_WIDTH/2);
         ImGui::Image(ambientMap == nullptr ? 0 : ambientMap->getTexture(), ImVec2(ICE_NEWMAT_PICKER_WIDTH, ICE_NEWMAT_PICKER_WIDTH), ImVec2(0, 1), ImVec2(1, 0));
-        ImGui::SameLine();
+        ImGui::SameLine(0, ICE_NEWMAT_PICKER_WIDTH/2);
         ImGui::Image(normalMap == nullptr ? 0 : normalMap->getTexture(), ImVec2(ICE_NEWMAT_PICKER_WIDTH, ICE_NEWMAT_PICKER_WIDTH), ImVec2(0, 1), ImVec2(1, 0));
 
         for(int i = 0; i < 4; i++) {

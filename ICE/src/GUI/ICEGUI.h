@@ -30,6 +30,9 @@ namespace ICE {
         int getSceneViewportHeight() const;
 
     private:
+
+        void applyStyle();
+
         int sceneViewportWidth, sceneViewportHeight;
         HierarchyPane hierarchyPane;
         InspectorPane inspectorPane;

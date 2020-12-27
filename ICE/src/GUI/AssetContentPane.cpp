@@ -16,7 +16,7 @@ namespace ICE {
                 newMaterialPane.build();
             }
         }
-        ImGui::Begin("Asset Content");
+        ImGui::BeginChild("Asset Content");
         ImGui::Button("New...");
         if (ImGui::BeginPopupContextItem("add_asset", ImGuiPopupFlags_MouseButtonLeft)) {
             if(ImGui::Button("Mesh")) {
@@ -138,7 +138,7 @@ namespace ICE {
                 i++;
             }
         }
-        ImGui::End();
+        ImGui::EndChild();
         return true;
     }
 
