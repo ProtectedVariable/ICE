@@ -70,7 +70,7 @@ vec3 colorToNormal(vec3 color) {
 
 void main() {
     if(material.use_normal_map) {
-        normal = normalize(fnormal + colorToNormal(texture(material.normal_map, ftex_coords).xyz));
+        normal = normalize(fnormal + (fnormal * colorToNormal(texture(material.normal_map, ftex_coords).xyz)));
     } else {
         normal = fnormal;
     }
