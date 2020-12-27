@@ -4,6 +4,7 @@
 // Read online: https://github.com/ocornut/imgui/tree/master/docs
 
 #define TINYOBJLOADER_IMPLEMENTATION
+#define IMGUI_IMPL_OPENGL_LOADER_GL3W
 #include "ICEEngine.h"
 #include <GLFW/glfw3.h>
 #include <ImGUI/imgui.h>
@@ -15,6 +16,7 @@
 //  Modern desktop OpenGL doesn't have a standard portable header file to load OpenGL function pointers.
 //  Helper libraries are often used for this purpose! Here we are supporting a few common ones (gl3w, glew, glad).
 //  You may use another loader/header of your choice (glext, glLoadGen, etc.), or chose to manually implement your own.
+
 #include <GL/gl3w.h>            // Initialize with gl3wInit()
 // Include glfw3.h after our OpenGL definitions
 #include <GLFW/glfw3.h>
