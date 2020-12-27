@@ -2,6 +2,8 @@
 // Created by Thomas Ibanez on 16.11.20.
 //
 #define ICE_TEST
+#define IMGUI_IMPL_OPENGL_LOADER_GL3W
+#include <GL/gl3w.h>
 #include <Scene/Entity.h>
 #include <Scene/TransformComponent.h>
 #include <Scene/Scene.h>
