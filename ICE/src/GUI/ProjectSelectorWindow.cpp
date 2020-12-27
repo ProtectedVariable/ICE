@@ -43,18 +43,20 @@ namespace ICE {
         }
         ImGui::SetCursorPosY(viewport->Size.y);
         ImGui::NextColumn();
-        ImGui::BeginChild("##Projects");
         int i = 0;
         for(auto p : *engine->getConfig().getLocalProjects()) {
-            ImGui::BeginChild(("##Projects"+std::to_string(i)).c_str());
-            ImGui::Text("%s", p.getName().c_str());
-            ImGui::Separator();
-            ImGui::EndChild();
-            if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(0)) {
-                engine->setProject(&(engine->getConfig().getLocalProjects()->at(i)));
+            ImGui::BeginGroup();
+            ImGui::Text("Name: %s", p.getName().c_str());
+            ImGui::Text("%s", p.getBaseDirectory().c_str());
+            ImGui::EndGroup();
+            if (ImGui::IsItemHovered()) {
+                if(ImGui::IsMouseClicked(0)) {
+                    engine->setProject(&(engine->getConfig().getLocalProjects()->at(i)));
+                }
             }
+            ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
+            i++;
         }
-        ImGui::EndChild();
 
         ImGui::End();
         ImGui::PopStyleVar();
