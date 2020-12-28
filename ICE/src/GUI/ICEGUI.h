@@ -42,6 +42,7 @@ namespace ICE {
         ImGuizmo::OPERATION guizmoOperationMode = ImGuizmo::OPERATION::TRANSLATE;
 
         bool showNewScenePopup = false;
+        bool showLoadScenePopup = false;
     };
 }
 

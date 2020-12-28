@@ -41,6 +41,28 @@ namespace ICE {
                 ImGui::End();
             }
 
+            if(showLoadScenePopup) {
+                ImGui::Begin("Load Scene", 0, ImGuiWindowFlags_Modal);
+                ImGui::Text("Scene");
+                ImGui::SameLine();
+                static int selected;
+                std::vector<const char*> sceneNames;
+                sceneNames.reserve(engine->getProject()->getScenes().size());
+                for(auto const& scene : engine->getProject()->getScenes()) {
+                    sceneNames.push_back(scene.getName().c_str());
+                }
+                ImGui::Combo("##LoadScene", &selected, sceneNames.data(), sceneNames.size(), 10);
+                if(ImGui::Button("Load")) {
+                    engine->setCurrentScene(&engine->getProject()->getScenes().at(selected));
+                    showLoadScenePopup = false;
+                }
+                ImGui::SameLine();
+                if(ImGui::Button("Cancel")) {
+                    showLoadScenePopup = false;
+                }
+                ImGui::End();
+            }
+
             ImGuiWindowFlags flags = ImGuiWindowFlags_MenuBar;
             flags |= ImGuiWindowFlags_NoDocking;
             ImGuiViewport* viewport = ImGui::GetMainViewport();
@@ -61,7 +83,9 @@ namespace ICE {
                     if(ImGui::MenuItem("New Scene")) {
                         showNewScenePopup = true;
                     }
-                    ImGui::MenuItem("Load Scene");
+                    if(ImGui::MenuItem("Load Scene")) {
+                        showLoadScenePopup = true;
+                    }
                     ImGui::Separator();
                     ImGui::MenuItem("Save Project");
                     ImGui::Separator();
