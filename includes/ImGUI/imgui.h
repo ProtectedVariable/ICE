@@ -37,7 +37,7 @@ Index of this file:
 */
 
 #pragma once
-
+#define IMGUI_IMPL_OPENGL_LOADER_GL3W
 // Configuration file with compile-time options (edit imconfig.h or #define IMGUI_USER_CONFIG to your own filename)
 #ifdef IMGUI_USER_CONFIG
 #include IMGUI_USER_CONFIG

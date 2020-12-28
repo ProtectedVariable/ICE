@@ -4,7 +4,6 @@
 // Read online: https://github.com/ocornut/imgui/tree/master/docs
 
 #define TINYOBJLOADER_IMPLEMENTATION
-#define IMGUI_IMPL_OPENGL_LOADER_GL3W
 #include "ICEEngine.h"
 #include <GLFW/glfw3.h>
 #include <ImGUI/imgui.h>
