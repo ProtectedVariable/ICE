@@ -34,7 +34,7 @@ namespace ICE {
         fs::create_directories(baseDirectory + "/" + name + "/Assets/Textures");
         fs::create_directories(baseDirectory + "/" + name + "/Assets/Scripts");
         fs::create_directories(baseDirectory + "/" + name + "/Scenes");
-        scenes.push_back(Scene("NewScene0"));
+        scenes.push_back(Scene("MainScene"));
         return true;
     }
 
