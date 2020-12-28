@@ -90,6 +90,9 @@ else()
 
 	add_definitions(${GTK3_CFLAGS_OTHER})
 
-	target_link_libraries(ICE glfw ${GTK3_LIBRARIES} stdc++fs)
-	target_link_libraries(ICE_TEST glfw ${GTK3_LIBRARIES} stdc++fs)
+	find_package(OpenGL REQUIRED)
+	include_directories(${OPENGL_INCLUDE_DIRS})
+
+	target_link_libraries(ICE glfw ${GTK3_LIBRARIES} ${OPENGL_LIBRARIES} stdc++fs)
+	target_link_libraries(ICE_TEST glfw ${GTK3_LIBRARIES} ${OPENGL_LIBRARIES} stdc++fs)
 endif()
