@@ -38,7 +38,7 @@
 
 namespace ICE {
     ICEEngine::ICEEngine(void* window): systems(std::vector<System*>()), window(window),
-                                        camera(Camera(CameraParameters{ {60, 16.f / 9.f, 0.01f, 1000 }, Perspective })),
+                                        camera(Camera(CameraParameters{ {60, 16.f / 9.f, 0.1f, 100000 }, Perspective })),
                                         config(EngineConfig::LoadFromFile()), gui(ICEGUI(this)) {
         api = RendererAPI::Create();
 		selected = nullptr;

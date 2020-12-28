@@ -14,7 +14,7 @@
 #include "InspectorPane.h"
 #include "AssetPane.h"
 
-#define CAMERA_DELTA 0.5f
+#define CAMERA_DELTA 1.f
 
 namespace ICE {
     int gui_init = 0;
@@ -38,9 +38,9 @@ namespace ICE {
             {
                 if(ImGui::BeginMenu("File"))
                 {
-                    ImGui::MenuItem("New Project");
-                    ImGui::MenuItem("Save");
-                    ImGui::MenuItem("Load");
+                    ImGui::MenuItem("New Scene");
+                    ImGui::MenuItem("Save Project");
+                    ImGui::MenuItem("Load Scene");
                     if(ImGui::BeginMenu("Import...")) {
                         if(ImGui::MenuItem("Mesh (.obj)")) {
                             engine->importMesh();
