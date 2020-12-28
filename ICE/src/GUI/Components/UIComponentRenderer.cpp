@@ -81,6 +81,19 @@ namespace ICE {
         }
         ImGui::Combo("##Material", &selected, materialNames.data(), engine->getAssetBank()->getMaterials().size(), 10);
         cmp->setMaterial(engine->getAssetBank()->getMaterial(std::string(materialNames[selected])));
+        ImGui::Text("Shader");
+        ImGui::SameLine();
+        auto shaderNames = std::vector<const char*>(engine->getAssetBank()->getShaders().size());
+        i = 0;
+        selected = 0;
+        for(const auto& e : engine->getAssetBank()->getShaders()) {
+            shaderNames[i++] = (e.first.c_str());
+            if(e.second == cmp->getShader()) {
+                selected = i-1;
+            }
+        }
+        ImGui::Combo("##Shader", &selected, shaderNames.data(), engine->getAssetBank()->getShaders().size(), 10);
+        cmp->setShader(engine->getAssetBank()->getShader(std::string(shaderNames[selected])));
         ImGui::PopID();
     }
 
