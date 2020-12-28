@@ -8,7 +8,7 @@
 namespace fs = std::filesystem;
 #elif __has_include(<experimental/filesystem>)
 #include <experimental/filesystem>
-  namespace fs = std::experimental::filesystem;
+namespace fs = std::experimental::filesystem;
 #else
   error "Missing the <filesystem> header."
 #endif
@@ -25,7 +25,10 @@ namespace fs = std::filesystem;
 namespace ICE {
     Project::Project(const std::string &baseDirectory, const std::string &name) : baseDirectory(baseDirectory),
                                                                                   name(name), scenes(std::vector<Scene>()),
-                                                                                  assetBank(AssetBank()) {}
+                                                                                  assetBank(AssetBank()) {
+		cameraPosition.setZero();
+		cameraRotation.setZero();
+	}
 
     bool Project::CreateDirectories() {
         fs::create_directories(baseDirectory + "/" + name + "/Assets/Meshes");
