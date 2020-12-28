@@ -1,7 +1,6 @@
-![CMake](https://github.com/ProtectedVariable/ICE/workflows/CMake/badge.svg)
-# ICE
+![CMake](https://github.com/ProtectedVariable/ICE/workflows/CMake/badge.svg) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/96f5a31b524947fc94231ceb702f528b)](https://app.codacy.com/gh/ProtectedVariable/ICE)
 ![ICE logo](media/logo.png)
-
+# ICE
 ICE is a 3D general purpose game engine written in C++. The aim of the project is to have an engine good enough to create all kind of games in an easy manner, but not to compete with the big names (unity/unreal).
 
 ## Getting started
@@ -10,7 +9,7 @@ Clone the repo with `git clone https://github.com/ProtectedVariable/ICE`
 
 Create a `build/` directory in `ICE`
 
-## Windows
+### Windows
 
 You can now CMake to configure a VS project (set Source dir: `ICE/`, set build sir: `ICE/build`)
 - Press `Configure`
@@ -19,13 +18,13 @@ You can now CMake to configure a VS project (set Source dir: `ICE/`, set build s
 
 In visual studio set `ICE` as the startup project and build :)
 
-## OSX
+### OSX
 
 - `cd build`
 - `cmake ..`
 - `make`
 
-## Linux
+### Linux
 
 Make sure you have `libxrandr-dev libgtk-3-dev` package installed.
 - `cd build`
