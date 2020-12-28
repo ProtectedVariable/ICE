@@ -14,14 +14,13 @@ namespace ICE {
     int pgui_init = 0;
     char project_name_buffer[64] = {0};
     void ProjectSelectorWindow::render() {
-        ImGuiWindowFlags flags = ImGuiWindowFlags_NoDocking;
+        ImGuiWindowFlags flags = 0;
         ImGuiViewport* viewport = ImGui::GetMainViewport();
         ImGui::SetNextWindowPos(viewport->Pos);
         ImGui::SetNextWindowSize(viewport->Size);
         ImGui::SetNextWindowViewport(viewport->ID);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
         flags |= ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
-        flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
         ImGui::Begin("Project Selection", 0, flags);
         ImGui::PopStyleVar();

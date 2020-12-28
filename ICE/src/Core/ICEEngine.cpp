@@ -193,6 +193,14 @@ namespace ICE {
             project->copyAssetFile("Textures", aname, file);
         }
     }
+
+    Scene *ICEEngine::getCurrentScene() const {
+        return currentScene;
+    }
+
+    void ICEEngine::setCurrentScene(Scene *currentScene) {
+        ICEEngine::currentScene = currentScene;
+    }
 }
 
 using namespace ICE;

@@ -40,6 +40,8 @@ namespace ICE {
         ProjectSelectorWindow projectSelectorWindow;
         ICEEngine* engine;
         ImGuizmo::OPERATION guizmoOperationMode = ImGuizmo::OPERATION::TRANSLATE;
+
+        bool showNewScenePopup = false;
     };
 }
 

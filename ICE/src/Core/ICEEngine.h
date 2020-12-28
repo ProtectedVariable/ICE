@@ -47,6 +47,10 @@ namespace ICE {
 
         void importTexture();
 
+        Scene *getCurrentScene() const;
+
+        void setCurrentScene(Scene *currentScene);
+
     private:
         std::vector<System*> systems;
         void* window;

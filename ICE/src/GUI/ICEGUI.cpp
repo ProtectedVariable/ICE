@@ -21,6 +21,26 @@ namespace ICE {
 
     void ICEGUI::renderImGui() {
         if(engine->getProject() != nullptr) {
+
+            if(showNewScenePopup) {
+                ImGui::Begin("Create New Scene", 0, ImGuiWindowFlags_Modal);
+                ImGui::Text("New scene name: ");
+                ImGui::SameLine();
+                static char namebuffer[128];
+                ImGui::InputText("##NewSceneName", namebuffer, 128);
+                if(ImGui::Button("Create")) {
+                    Scene newScene(namebuffer);
+                    engine->getProject()->addScene(newScene);
+                    engine->setCurrentScene(&engine->getProject()->getScenes().back());
+                    showNewScenePopup = false;
+                }
+                ImGui::SameLine();
+                if(ImGui::Button("Cancel")) {
+                    showNewScenePopup = false;
+                }
+                ImGui::End();
+            }
+
             ImGuiWindowFlags flags = ImGuiWindowFlags_MenuBar;
             flags |= ImGuiWindowFlags_NoDocking;
             ImGuiViewport* viewport = ImGui::GetMainViewport();
@@ -38,9 +58,13 @@ namespace ICE {
             {
                 if(ImGui::BeginMenu("File"))
                 {
-                    ImGui::MenuItem("New Scene");
-                    ImGui::MenuItem("Save Project");
+                    if(ImGui::MenuItem("New Scene")) {
+                        showNewScenePopup = true;
+                    }
                     ImGui::MenuItem("Load Scene");
+                    ImGui::Separator();
+                    ImGui::MenuItem("Save Project");
+                    ImGui::Separator();
                     if(ImGui::BeginMenu("Import...")) {
                         if(ImGui::MenuItem("Mesh (.obj)")) {
                             engine->importMesh();

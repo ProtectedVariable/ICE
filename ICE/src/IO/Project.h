@@ -36,6 +36,8 @@ namespace ICE {
         AssetBank* getAssetBank();
         void setAssetBank(const AssetBank &assetBank);
 
+        void addScene(Scene& scene);
+
         static json dumpVec3(const Eigen::Vector3f& v);
         static json dumpVec4(const Eigen::Vector4f& v);
 

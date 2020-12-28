@@ -319,6 +319,10 @@ namespace ICE {
         Project::assetBank = assetBank;
     }
 
+    void Project::addScene(Scene &scene) {
+        scenes.push_back(scene);
+    }
+
     json Project::dumpVec3(const Eigen::Vector3f &v) {
         json r;
         r["x"] = v.x();
