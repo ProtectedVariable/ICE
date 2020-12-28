@@ -235,7 +235,7 @@ namespace ICE {
         return sceneViewportHeight;
     }
 
-    ICEGUI::ICEGUI(ICEEngine *engine): engine(engine), hierarchyPane(HierarchyPane(engine)), inspectorPane(InspectorPane(engine)), assetPane(AssetPane(engine)), projectSelectorWindow(engine) {
+    ICEGUI::ICEGUI(ICEEngine *engine): engine(engine), hierarchyPane(HierarchyPane(engine)), inspectorPane(InspectorPane(engine)), assetPane(AssetPane(engine)), projectSelectorWindow(engine), sceneViewportWidth(1280), sceneViewportHeight(720) {
         applyStyle();
     }
 
