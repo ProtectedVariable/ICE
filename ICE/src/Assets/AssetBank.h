@@ -35,6 +35,7 @@ namespace ICE {
         const std::unordered_map<std::string, Texture*> &getTextures() const;
 
         std::string getName(const void* ptr);
+        bool nameInUse(const std::string& name);
 
     private:
         std::unordered_map<std::string, Mesh*> meshes;
