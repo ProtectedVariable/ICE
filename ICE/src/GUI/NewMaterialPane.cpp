@@ -125,17 +125,20 @@ namespace ICE {
         light.addComponent(&tcLight);
         scene.addEntity("light", &light);
 
-        camera.setParameters({50, wsize.x / wsize.y, 0.01f, 1000});
-        renderer.setTarget(viewFB);
-        renderer.submitScene(&scene);
-        renderer.prepareFrame(camera);
-        renderer.resize(wsize.x, wsize.y);
+        if(wsize.x > 0 && wsize.y > 0) {
+            camera.setParameters({50, wsize.x / wsize.y, 0.01f, 1000});
+            renderer.setTarget(viewFB);
+            renderer.submitScene(&scene);
+            renderer.prepareFrame(camera);
 
-        tcSphere.getRotation()->y() += y++;
-        renderer.render();
-        renderer.endFrame();
+            renderer.resize(wsize.x, wsize.y);
 
-        ImGui::Image(viewFB->getTexture(), wsize, ImVec2(0, 1), ImVec2(1, 0));
+            tcSphere.getRotation()->y() += y++;
+            renderer.render();
+            renderer.endFrame();
+
+            ImGui::Image(viewFB->getTexture(), wsize, ImVec2(0, 1), ImVec2(1, 0));
+        }
         if(ImGui::Button(editMode ? "Edit" : "Add")) {
             ret = false;
         }

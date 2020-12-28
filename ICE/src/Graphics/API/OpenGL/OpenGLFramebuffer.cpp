@@ -17,6 +17,8 @@ namespace ICE {
     }
 
     void OpenGLFramebuffer::resize(int width, int height) {
+        if(width <= 0) width = 1;
+        if(height<= 0) height = 1;
         fmt.width = width;
         fmt.height = height;
         glBindTexture(GL_TEXTURE_2D, texture);
