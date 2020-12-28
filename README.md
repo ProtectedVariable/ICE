@@ -1,4 +1,4 @@
-![CMake](https://github.com/ProtectedVariable/ICE/workflows/CMake/badge.svg) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/96f5a31b524947fc94231ceb702f528b)](https://app.codacy.com/gh/ProtectedVariable/ICE)
+![CMake](https://github.com/ProtectedVariable/ICE/workflows/CMake/badge.svg) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/96f5a31b524947fc94231ceb702f528b)](https://app.codacy.com/gh/ProtectedVariable/ICE) [![Language grade: C/C++](https://img.shields.io/lgtm/grade/cpp/g/ProtectedVariable/ICE.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/ProtectedVariable/ICE/context:cpp)
 ![ICE logo](media/logo.png)
 # ICE
 ICE is a 3D general purpose game engine written in C++. The aim of the project is to have an engine good enough to create all kind of games in an easy manner, but not to compete with the big names (unity/unreal).
