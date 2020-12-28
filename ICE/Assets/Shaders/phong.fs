@@ -62,9 +62,15 @@ vec3 pointLight(Light light) {
     return rcolor;
 }
 
+
+vec3 colorToNormal(vec3 color) {
+    return normalize(vec3(color.x * 2 - 1, color.y * 2 - 1, color.z * 2 - 1));
+}
+
+
 void main() {
     if(material.use_normal_map) {
-        normal = texture(material.normal_map, ftex_coords).xyz;
+        normal = normalize(fnormal + (fnormal * colorToNormal(texture(material.normal_map, ftex_coords).xyz)));
     } else {
         normal = fnormal;
     }

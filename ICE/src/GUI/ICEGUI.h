@@ -30,6 +30,9 @@ namespace ICE {
         int getSceneViewportHeight() const;
 
     private:
+
+        void applyStyle();
+
         int sceneViewportWidth, sceneViewportHeight;
         HierarchyPane hierarchyPane;
         InspectorPane inspectorPane;
@@ -37,6 +40,9 @@ namespace ICE {
         ProjectSelectorWindow projectSelectorWindow;
         ICEEngine* engine;
         ImGuizmo::OPERATION guizmoOperationMode = ImGuizmo::OPERATION::TRANSLATE;
+
+        bool showNewScenePopup = false;
+        bool showLoadScenePopup = false;
     };
 }
 

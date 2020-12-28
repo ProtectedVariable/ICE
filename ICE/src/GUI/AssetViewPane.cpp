@@ -12,14 +12,14 @@
 namespace ICE {
     int y = 45;
     bool AssetViewPane::render() {
-        ImGui::Begin("Asset View");
+        ImGui::BeginChild("Asset View");
         char buffer[512];
         strcpy(buffer, selectedAsset->c_str());
         ImGui::Text("Asset Name");
         ImGui::SameLine();
         ImGuiInputTextFlags flags = (selectedAsset->find("__ice__") == std::string::npos) ? 0 : ImGuiInputTextFlags_ReadOnly;
         if(ImGui::InputText("##Asset Name", buffer, 512, flags)) {
-            if(engine->getAssetBank()->renameAsset(*selectedAsset, buffer)) {
+            if(engine->getProject()->renameAsset(*selectedAsset, buffer)) {
                 *selectedAsset = buffer;
             }
         }
@@ -30,10 +30,10 @@ namespace ICE {
             Mesh* previewMesh = engine->getAssetBank()->getMeshes().find(*selectedAsset) == engine->getAssetBank()->getMeshes().end() ? engine->getAssetBank()->getMesh("__ice__sphere") :  engine->getAssetBank()->getMesh(*selectedAsset);
             Material* mat = engine->getAssetBank()->getMaterials().find(*selectedAsset) == engine->getAssetBank()->getMaterials().end() ? engine->getAssetBank()->getMaterial("__ice__base_material") :  engine->getAssetBank()->getMaterial(*selectedAsset);
 
-            auto scene = Scene();
+            auto scene = Scene("__ice__assetview_scene");
 
             auto sphere = Entity();
-            auto rcSphere = RenderComponent(previewMesh, mat);
+            auto rcSphere = RenderComponent(previewMesh, mat, engine->getAssetBank()->getShader("__ice__phong_shader"));
             auto tcSphere = TransformComponent();
             sphere.addComponent(&rcSphere);
             sphere.addComponent(&tcSphere);
@@ -61,7 +61,7 @@ namespace ICE {
         } else {
             ImGui::Image(engine->getAssetBank()->getTexture(*selectedAsset)->getTexture(), wsize, ImVec2(0, 1), ImVec2(1, 0));
         }
-        ImGui::End();
+        ImGui::EndChild();
         return true;
     }
 

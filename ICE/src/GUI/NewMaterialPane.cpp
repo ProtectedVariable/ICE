@@ -59,11 +59,11 @@ namespace ICE {
             }
         }
         ImGui::Image(diffuseMap == nullptr ? 0 : diffuseMap->getTexture(), ImVec2(ICE_NEWMAT_PICKER_WIDTH, ICE_NEWMAT_PICKER_WIDTH), ImVec2(0, 1), ImVec2(1, 0));
-        ImGui::SameLine();
+        ImGui::SameLine(0, ICE_NEWMAT_PICKER_WIDTH/2);
         ImGui::Image(specularMap == nullptr ? 0 : specularMap->getTexture(), ImVec2(ICE_NEWMAT_PICKER_WIDTH, ICE_NEWMAT_PICKER_WIDTH), ImVec2(0, 1), ImVec2(1, 0));
-        ImGui::SameLine();
+        ImGui::SameLine(0, ICE_NEWMAT_PICKER_WIDTH/2);
         ImGui::Image(ambientMap == nullptr ? 0 : ambientMap->getTexture(), ImVec2(ICE_NEWMAT_PICKER_WIDTH, ICE_NEWMAT_PICKER_WIDTH), ImVec2(0, 1), ImVec2(1, 0));
-        ImGui::SameLine();
+        ImGui::SameLine(0, ICE_NEWMAT_PICKER_WIDTH/2);
         ImGui::Image(normalMap == nullptr ? 0 : normalMap->getTexture(), ImVec2(ICE_NEWMAT_PICKER_WIDTH, ICE_NEWMAT_PICKER_WIDTH), ImVec2(0, 1), ImVec2(1, 0));
 
         for(int i = 0; i < 4; i++) {
@@ -109,10 +109,10 @@ namespace ICE {
         wsize = ImVec2(wsize.x - pos.x, wsize.y - pos.y - 30);
 
         Material mat = makeMaterial();
-        auto scene = Scene();
+        auto scene = Scene("__ice__newmaterial_scene");
 
         auto sphere = Entity();
-        auto rcSphere = RenderComponent(engine->getAssetBank()->getMesh("__ice__sphere"), &mat);
+        auto rcSphere = RenderComponent(engine->getAssetBank()->getMesh("__ice__sphere"), &mat, engine->getAssetBank()->getShader("__ice__phong_shader"));
         auto tcSphere = TransformComponent();
         sphere.addComponent(&rcSphere);
         sphere.addComponent(&tcSphere);
@@ -165,15 +165,17 @@ namespace ICE {
     }
 
     void NewMaterialPane::build() {
+        auto mtl = Material(albedo, specular, ambient, alpha, diffuseMap, specularMap, ambientMap, normalMap);
         if(!editMode) {
-            auto mtl = Material(engine->getAssetBank()->getShader("__ice__phong_shader"), albedo, specular, ambient, alpha, diffuseMap, specularMap, ambientMap, normalMap);
-            engine->getAssetBank()->addMaterial(name, mtl);
+            auto nm = new Material();
+            *nm = mtl;
+            engine->getAssetBank()->addMaterial(name, nm);
         } else {
             std::string newName = oldname;
-            if(engine->getAssetBank()->renameAsset(oldname, name)) {
+            if(engine->getProject()->renameAsset(oldname, name)) {
                 newName = name;
             }
-            *engine->getAssetBank()->getMaterial(newName) = Material(engine->getAssetBank()->getShader("__ice__phong_shader"), albedo, specular, ambient, alpha);
+            *engine->getAssetBank()->getMaterial(newName) = mtl;
         }
     }
 
@@ -192,6 +194,6 @@ namespace ICE {
     }
 
     Material NewMaterialPane::makeMaterial() {
-        return Material(engine->getAssetBank()->getShader("__ice__phong_shader"), albedo, specular, ambient, alpha, diffuseMap, specularMap, ambientMap, normalMap);
+        return Material(albedo, specular, ambient, alpha, diffuseMap, specularMap, ambientMap, normalMap);
     }
 }

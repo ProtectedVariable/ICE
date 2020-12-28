@@ -6,11 +6,11 @@
 #define ICE_NEWMATERIALPANE_H
 
 
+#include "ICEPane.h"
 #include <Graphics/Material.h>
 #include <Graphics/Framebuffer.h>
 #include <Graphics/Camera.h>
 #include <Graphics/ForwardRenderer.h>
-#include "ICEPane.h"
 
 namespace ICE {
     class ICEEngine;

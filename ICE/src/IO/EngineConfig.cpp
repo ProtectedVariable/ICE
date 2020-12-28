@@ -28,7 +28,9 @@ namespace ICE {
             }
 
             if(state == PROJECT_LIST) {
-                config.localProjects.push_back(Project(line.substr(0, line.find_last_of("/")), line.substr(line.find_last_of("/")+1, line.size())));
+                auto p = Project(line.substr(0, line.find_last_of("/")), line.substr(line.find_last_of("/")+1, line.size()));
+                p.loadFromFile();
+                config.localProjects.push_back(p);
             }
         }
         configFile.close();

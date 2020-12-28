@@ -34,6 +34,8 @@ namespace ICE {
             return this->components.erase(typeid(T));
         }
 
+        Entity() : components(std::unordered_map<std::type_index, Component*>()){}
+
     private:
         std::unordered_map<std::type_index, Component*> components;
     };

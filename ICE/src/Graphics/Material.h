@@ -11,20 +11,17 @@
 namespace ICE {
     class Material {
     public:
-        Material(Shader *shader);
+        Material();
 
-        Material(Shader *shader, const Eigen::Vector3f &albedo, const Eigen::Vector3f &specular,
+        Material(const Eigen::Vector3f &albedo, const Eigen::Vector3f &specular,
                  const Eigen::Vector3f &ambient, float alpha);
 
-        Material(Shader *shader, const Eigen::Vector3f &albedo, const Eigen::Vector3f &specular,
+        Material(const Eigen::Vector3f &albedo, const Eigen::Vector3f &specular,
                  const Eigen::Vector3f &ambient, float alpha, const Texture* diffuseMap, const Texture* specularMap, const Texture* ambientMap);
 
-        Material(Shader *shader, const Eigen::Vector3f &albedo, const Eigen::Vector3f &specular,
+        Material(const Eigen::Vector3f &albedo, const Eigen::Vector3f &specular,
                  const Eigen::Vector3f &ambient, float alpha, const Texture* diffuseMap, const Texture* specularMap, const Texture* ambientMap,
                  const Texture* normalMap);
-
-        Shader *getShader() const;
-        void setShader(Shader *shader);
 
         const Eigen::Vector3f &getAlbedo() const;
         void setAlbedo(const Eigen::Vector3f &albedo);
@@ -51,7 +48,6 @@ namespace ICE {
         void setNormalMap(const Texture *normalMap);
 
     private:
-        Shader* shader;
         Eigen::Vector3f albedo, specular, ambient;
         float alpha;
         const Texture* diffuseMap;

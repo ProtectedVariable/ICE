@@ -16,7 +16,7 @@ namespace ICE {
                 newMaterialPane.build();
             }
         }
-        ImGui::Begin("Asset Content");
+        ImGui::BeginChild("Asset Content");
         ImGui::Button("New...");
         if (ImGui::BeginPopupContextItem("add_asset", ImGuiPopupFlags_MouseButtonLeft)) {
             if(ImGui::Button("Mesh")) {
@@ -36,12 +36,12 @@ namespace ICE {
         if(*selectedDir == 0) {
 
             for(const auto& m : engine->getAssetBank()->getMeshes()) {
-                auto scene = Scene();
+                auto scene = Scene("__ice__assetcontent_scene");
                 Shader* shader = engine->getAssetBank()->getShader("__ice__normal_shader");
-                Material mat = Material(shader);
+                Material mat = Material();
 
                 auto sphere = Entity();
-                auto rcSphere = RenderComponent(&m.second, &mat);
+                auto rcSphere = RenderComponent(m.second, &mat, shader);
                 auto tcSphere = TransformComponent(Eigen::Vector3f(0,0,0), Eigen::Vector3f(0, 45, 0), Eigen::Vector3f(1,1,1));
                 sphere.addComponent(&rcSphere);
                 sphere.addComponent(&tcSphere);
@@ -75,12 +75,12 @@ namespace ICE {
             }
         } else if(*selectedDir == 1) {
             for(const auto& m : engine->getAssetBank()->getMaterials()) {
-                Material mat = m.second;
+                Material mat = *m.second;
 
-                auto scene = Scene();
+                auto scene = Scene("__ice__assetcontent_scene");
 
                 auto sphere = Entity();
-                auto rcSphere = RenderComponent(engine->getAssetBank()->getMesh("__ice__sphere"), &mat);
+                auto rcSphere = RenderComponent(engine->getAssetBank()->getMesh("__ice__sphere"), &mat, engine->getAssetBank()->getShader("__ice__phong_shader"));
                 auto tcSphere = TransformComponent();
                 sphere.addComponent(&rcSphere);
                 sphere.addComponent(&tcSphere);
@@ -138,7 +138,7 @@ namespace ICE {
                 i++;
             }
         }
-        ImGui::End();
+        ImGui::EndChild();
         return true;
     }
 

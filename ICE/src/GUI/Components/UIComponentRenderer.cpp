@@ -6,6 +6,7 @@
 #include <Util/Logger.h>
 #include "UIComponentRenderer.h"
 #include <Core/ICEEngine.h>
+#include <ImGUI/imgui_internal.h>
 
 namespace ICE {
 
@@ -29,6 +30,10 @@ namespace ICE {
 
     void UIComponentRenderer::renderVector3f(Eigen::Vector3f* vec) {
         ImGui::PushItemWidth(60);
+        /*ImDrawList* drawList = ImGui::GetCurrentWindow()->DrawList;
+        ImVec2 rectSize = ImGui::CalcTextSize("X");
+        ImVec2 cursor = ImGui::GetCursorPos();
+        drawList->AddRectFilled(ImVec2(0,0), ImVec2(cursor.x+1000, cursor.y + 1000), 0xFFFFFF);*/
         ImGui::Text("X");
         ImGui::SameLine();
         ImGui::InputFloat("##X", &vec->x());
@@ -57,7 +62,7 @@ namespace ICE {
         int selected = 0;
         for(const auto& e : engine->getAssetBank()->getMeshes()) {
             meshNames[i++] = (e.first.c_str());
-            if(&e.second == cmp->getMesh()) {
+            if(e.second == cmp->getMesh()) {
                 selected = i-1;
             }
         }
@@ -70,7 +75,7 @@ namespace ICE {
         selected = 0;
         for(const auto& e : engine->getAssetBank()->getMaterials()) {
             materialNames[i++] = (e.first.c_str());
-            if(&e.second == cmp->getMaterial()) {
+            if(e.second == cmp->getMaterial()) {
                 selected = i-1;
             }
         }
