@@ -21,7 +21,8 @@ namespace ICE {
             auto tc = new TransformComponent();
             entity->addComponent(rc);
             entity->addComponent(tc);
-            engine->getScene()->addEntity(parent, "newobject" + std::to_string(ctr++), entity);
+            while(engine->getScene()->getByID("newobject" + std::to_string(++ctr)) != nullptr) {}
+            engine->getScene()->addEntity(parent, "newobject" + std::to_string(ctr), entity);
             ImGui::CloseCurrentPopup();
         }
         if(ImGui::Button("Light Source")) {
@@ -30,8 +31,18 @@ namespace ICE {
             auto tc = new TransformComponent();
             entity->addComponent(rc);
             entity->addComponent(tc);
-            engine->getScene()->addEntity(parent, "newlight" + std::to_string(ctr++), entity);
+            while(engine->getScene()->getByID("newlight" + std::to_string(++ctr)) != nullptr) {}
+            engine->getScene()->addEntity(parent, "newlight" + std::to_string(ctr), entity);
             ImGui::CloseCurrentPopup();
+        }
+        if(selected != "root") {
+            ImGui::Separator();
+            if(ImGui::Button("Delete Entity")) {
+                engine->getScene()->removeEntity(selected);
+                selected = "root";
+                engine->setSelected(nullptr);
+                ImGui::CloseCurrentPopup();
+            }
         }
         ImGui::EndPopup();
     }
