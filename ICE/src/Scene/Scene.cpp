@@ -45,7 +45,10 @@ namespace ICE {
         SceneNode* entityNode = this->nodeByID[entity];
         for (auto &it: this->nodeByID) {
             auto position = std::find(it.second->children.begin(), it.second->children.end(), entityNode);
-            it.second->children.erase(position);
+            if(position != it.second->children.end()) {
+                it.second->children.erase(position);
+                break;
+            }
         }
         this->nodeByID[newParent]->children.push_back(entityNode);
     }

@@ -77,6 +77,23 @@ namespace ICE {
                 flags |= ImGuiTreeNodeFlags_Selected;
             }
             if(ImGui::TreeNodeEx(name.c_str(), flags)) {
+                ImGuiDragDropFlags src_flags = 0;
+                src_flags |= ImGuiDragDropFlags_SourceNoDisableHover;     // Keep the source displayed as hovered
+                if(ImGui::BeginDragDropSource(src_flags)) {
+                    int n = 1;
+                    ImGui::SetDragDropPayload("DND_ENTITY_TREE", &name, sizeof(std::string));
+                    if (!(src_flags & ImGuiDragDropFlags_SourceNoPreviewTooltip))
+                        ImGui::Text("%s", name.c_str());
+                    ImGui::EndDragDropSource();
+                }
+                if(ImGui::BeginDragDropTarget()) {
+                    ImGuiDragDropFlags target_flags = 0;
+                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DND_ENTITY_TREE", target_flags)) {
+                        std::string move_from = *(std::string*)payload->Data;
+                        engine->getScene()->setParent(move_from, name);
+                    }
+                    ImGui::EndDragDropTarget();
+                }
                 if(ImGui::IsItemClicked(1) || ImGui::IsItemClicked(0)) {
                     selected.assign(name);
                 }
