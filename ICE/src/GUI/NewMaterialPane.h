@@ -39,6 +39,7 @@ namespace ICE {
         std::string name, oldname;
         bool editMode = false;
         ForwardRenderer renderer;
+        bool canceled = false;
     };
 }
 

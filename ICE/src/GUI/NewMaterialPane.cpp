@@ -5,6 +5,7 @@
 #include "NewMaterialPane.h"
 #include <Core/ICEEngine.h>
 #include <Util/ICEMath.h>
+#include <ImGUI/imgui_internal.h>
 
 #define ICE_NEWMAT_PICKER_WIDTH 150
 
@@ -139,8 +140,15 @@ namespace ICE {
 
             ImGui::Image(viewFB->getTexture(), wsize, ImVec2(0, 1), ImVec2(1, 0));
         }
+        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, engine->getProject()->getAssetBank()->nameInUse(name));
         if(ImGui::Button(editMode ? "Edit" : "Add")) {
             ret = false;
+        }
+        ImGui::PopItemFlag();
+        ImGui::SameLine();
+        if(ImGui::Button("Cancel")) {
+            ret = false;
+            canceled = true;
         }
         ImGui::End();
         return ret;
@@ -165,9 +173,11 @@ namespace ICE {
         diffuseMap = normalMap = ambientMap = specularMap = nullptr;
         editMode = false;
         name = "newmaterial";
+        canceled = false;
     }
 
     void NewMaterialPane::build() {
+        if(canceled) return;
         auto mtl = Material(albedo, specular, ambient, alpha, diffuseMap, specularMap, ambientMap, normalMap);
         if(!editMode) {
             auto nm = new Material();
