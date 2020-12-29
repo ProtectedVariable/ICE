@@ -148,7 +148,7 @@ namespace ICE {
         ImVec2 cursor = ImVec2(wpos.x + cpos.x, wpos.y + cpos.y);
         ImVec2 max = ImVec2(cursor.x + rectSize.x + pad.x * 2, cursor.y + rectSize.y + pad.y * 2);
         dl->AddRectFilled(cursor, max, backgroundColor, 0.0f);
-        ImGui::SetCursorPosY(cpos.y + (rectSize.y / 4));
+        ImGui::SetCursorPosY(cpos.y + pad.y);
         ImGui::SetCursorPosX(cpos.x + pad.x);
         ImGui::Text("%s", text);
         ImGui::SameLine(0, pad.x);
