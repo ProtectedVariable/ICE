@@ -24,6 +24,9 @@ namespace ICE {
         AssetContentPane(const int *selectedDir, ICEEngine *engine, std::string* selectedAsset);
 
     private:
+
+        void renderAssetThumbnail(void* tex, const std::string& name);
+
         const int* selectedDir;
         ICEEngine* engine;
         Framebuffer* thumbnailFBO[ICE_MAX_THUMBNAILS];
