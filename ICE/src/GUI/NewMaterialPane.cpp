@@ -140,7 +140,7 @@ namespace ICE {
 
             ImGui::Image(viewFB->getTexture(), wsize, ImVec2(0, 1), ImVec2(1, 0));
         }
-        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, engine->getProject()->getAssetBank()->nameInUse(name));
+        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, engine->getProject()->getAssetBank()->nameInUse(name) && !editMode);
         if(ImGui::Button(editMode ? "Edit" : "Add")) {
             ret = false;
         }
