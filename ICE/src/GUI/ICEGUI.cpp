@@ -168,6 +168,16 @@ namespace ICE {
                 if(pushed)
                     ImGui::PopStyleColor();
 
+                if(ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Tab))) {
+                    if(guizmoOperationMode == ImGuizmo::TRANSLATE) {
+                        guizmoOperationMode = ImGuizmo::ROTATE;
+                    } else if(guizmoOperationMode == ImGuizmo::ROTATE) {
+                        guizmoOperationMode = ImGuizmo::SCALE;
+                    } else if(guizmoOperationMode == ImGuizmo::SCALE) {
+                        guizmoOperationMode = ImGuizmo::TRANSLATE;
+                    }
+                }
+
                 ImVec2 wpos = ImGui::GetCursorScreenPos();
                 ImVec2 wsize = ImGui::GetWindowContentRegionMax();
                 wsize.x -= ImGui::GetCursorPosX();
