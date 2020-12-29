@@ -48,4 +48,8 @@ namespace ICE {
     const VertexArray* Mesh::getVertexArray() const {
         return vertexArray;
     }
+
+    const AABB &Mesh::getBoundingBox() const {
+        return boundingBox;
+    }
 }

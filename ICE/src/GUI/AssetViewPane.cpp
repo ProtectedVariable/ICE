@@ -34,7 +34,11 @@ namespace ICE {
 
             auto sphere = Entity();
             auto rcSphere = RenderComponent(previewMesh, mat, engine->getAssetBank()->getShader("__ice__phong_shader"));
+            float scale = 2.f/(previewMesh->getBoundingBox().getMax() - previewMesh->getBoundingBox().getMin()).norm();
             auto tcSphere = TransformComponent();
+            tcSphere.getScale()->x() = scale;
+            tcSphere.getScale()->y() = scale;
+            tcSphere.getScale()->z() = scale;
             sphere.addComponent(&rcSphere);
             sphere.addComponent(&tcSphere);
             scene.addEntity("sphere", &sphere);

@@ -42,7 +42,8 @@ namespace ICE {
 
                 auto mesh = Entity();
                 auto rcMesh = RenderComponent(m.second, &mat, shader);
-                auto tcMesh = TransformComponent(Eigen::Vector3f(0,0,0), Eigen::Vector3f(0, 45, 0), Eigen::Vector3f(1,1,1));
+                float scale = 1.5f/(m.second->getBoundingBox().getMax() - m.second->getBoundingBox().getMin()).norm();
+                auto tcMesh = TransformComponent(Eigen::Vector3f(0,0,0), Eigen::Vector3f(0, 45, 0), Eigen::Vector3f(scale, scale, scale));
                 mesh.addComponent(&rcMesh);
                 mesh.addComponent(&tcMesh);
                 scene.addEntity("mesh", &mesh);

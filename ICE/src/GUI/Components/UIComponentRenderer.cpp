@@ -6,7 +6,6 @@
 #include <Util/Logger.h>
 #include "UIComponentRenderer.h"
 #include <Core/ICEEngine.h>
-#include <ImGUI/imgui_internal.h>
 
 namespace ICE {
 

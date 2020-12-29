@@ -14,12 +14,12 @@ namespace ICE {
         AABB(const Eigen::Vector3f& min, const Eigen::Vector3f& max);
         AABB(const std::vector<Eigen::Vector3f>& points);
 
-        float getVolume();
-        bool overlaps(const AABB& other);
-        bool contains(const Eigen::Vector3f& point);
-        AABB operator+(const AABB& other);
-        AABB unionWith(const AABB& other);
-        Eigen::Vector3f getCenter();
+        float getVolume() const;
+        bool overlaps(const AABB& other) const;
+        bool contains(const Eigen::Vector3f& point) const;
+        AABB operator+(const AABB& other) const;
+        AABB unionWith(const AABB& other) const;
+        Eigen::Vector3f getCenter() const;
 
         const Eigen::Vector3f &getMin() const;
 

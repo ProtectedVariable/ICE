@@ -16,31 +16,31 @@ namespace ICE {
         }
     }
 
-    float AABB::getVolume() {
+    float AABB::getVolume() const {
         return (max.x() - min.x()) * (max.y() - min.y()) * (max.z() - min.z());
     }
 
-    bool AABB::overlaps(const AABB &other) {
+    bool AABB::overlaps(const AABB &other) const {
         return (min.x() <= other.max.x() && max.x() >= other.min.x()) &&
                 (min.y() <= other.max.y() && max.y() >= other.min.y()) &&
                 (min.z() <= other.max.z() && max.z() >= other.min.z());
     }
 
-    bool AABB::contains(const Eigen::Vector3f &point) {
+    bool AABB::contains(const Eigen::Vector3f &point) const {
         return (point.x() >= min.x() && point.x() <= max.x()) &&
                 (point.y() >= min.y() && point.y() <= max.y()) &&
                 (point.z() >= min.z() && point.z() <= max.z());
     }
 
-    AABB AABB::operator+(const AABB &other) {
+    AABB AABB::operator+(const AABB &other) const {
         return unionWith(other);
     }
 
-    AABB AABB::unionWith(const AABB &other) {
+    AABB AABB::unionWith(const AABB &other) const {
         return AABB(min.cwiseMin(other.min), max.cwiseMax(other.max));
     }
 
-    Eigen::Vector3f AABB::getCenter() {
+    Eigen::Vector3f AABB::getCenter() const {
         return (min + max) / 2;
     }
 

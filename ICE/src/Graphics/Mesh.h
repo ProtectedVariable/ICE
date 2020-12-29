@@ -25,6 +25,9 @@ namespace ICE {
         const std::vector<Eigen::Vector3i> &getIndices() const;
 
         const VertexArray* getVertexArray() const;
+
+        const AABB &getBoundingBox() const;
+
     private:
         std::vector<Eigen::Vector3f> vertices, normals;
         std::vector<Eigen::Vector2f> uvCoords;
