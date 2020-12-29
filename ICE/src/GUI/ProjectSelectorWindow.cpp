@@ -52,6 +52,7 @@ namespace ICE {
             ImGui::BeginGroup();
             ImGui::Text("Name: %s", p.getName().c_str());
             ImGui::Text("%s", p.getBaseDirectory().c_str());
+            ImGui::SetCursorPosX(ImGui::GetWindowWidth());
             ImGui::EndGroup();
             if (ImGui::IsItemHovered()) {
                 hovered = p.getName();
