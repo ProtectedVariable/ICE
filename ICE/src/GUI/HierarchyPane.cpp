@@ -85,7 +85,11 @@ namespace ICE {
             if(name == selected) {
                 flags |= ImGuiTreeNodeFlags_Selected;
             }
-            if(ImGui::TreeNodeEx(name.c_str(), flags)) {
+            bool expanded = ImGui::TreeNodeEx(name.c_str(), flags);
+            if(ImGui::IsItemClicked(1) || ImGui::IsItemClicked(0)) {
+                selected = name;
+            }
+            if(expanded) {
                 ImGuiDragDropFlags src_flags = 0;
                 src_flags |= ImGuiDragDropFlags_SourceNoDisableHover;     // Keep the source displayed as hovered
                 if(ImGui::BeginDragDropSource(src_flags)) {
@@ -102,9 +106,6 @@ namespace ICE {
                         engine->getScene()->setParent(move_from, name);
                     }
                     ImGui::EndDragDropTarget();
-                }
-                if(ImGui::IsItemClicked(1) || ImGui::IsItemClicked(0)) {
-                    selected.assign(name);
                 }
                 subtree(c);
                 ImGui::TreePop();
