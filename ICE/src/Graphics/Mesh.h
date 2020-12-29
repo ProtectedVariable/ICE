@@ -7,16 +7,11 @@
 
 #include <Eigen/Dense>
 #include <vector>
+#include <Math/AABB.h>
 #include "VertexArray.h"
 
 namespace ICE {
     class Mesh {
-    private:
-        std::vector<Eigen::Vector3f> vertices, normals;
-        std::vector<Eigen::Vector2f> uvCoords;
-        std::vector<Eigen::Vector3i> indices;
-
-        VertexArray* vertexArray;
     public:
         Mesh(const std::vector<Eigen::Vector3f> &vertices, const std::vector<Eigen::Vector3f> &normals,
              const std::vector<Eigen::Vector2f> &uvCoords, const std::vector<Eigen::Vector3i> &indices);
@@ -30,6 +25,15 @@ namespace ICE {
         const std::vector<Eigen::Vector3i> &getIndices() const;
 
         const VertexArray* getVertexArray() const;
+
+        const AABB &getBoundingBox() const;
+
+    private:
+        std::vector<Eigen::Vector3f> vertices, normals;
+        std::vector<Eigen::Vector2f> uvCoords;
+        std::vector<Eigen::Vector3i> indices;
+        VertexArray* vertexArray;
+        AABB boundingBox;
     };
 }
 

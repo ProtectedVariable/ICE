@@ -47,8 +47,6 @@ namespace ICE {
 
         void importTexture();
 
-        Scene *getCurrentScene() const;
-
         void setCurrentScene(Scene *currentScene);
 
     private:

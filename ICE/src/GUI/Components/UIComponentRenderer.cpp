@@ -6,7 +6,6 @@
 #include <Util/Logger.h>
 #include "UIComponentRenderer.h"
 #include <Core/ICEEngine.h>
-#include <ImGUI/imgui_internal.h>
 
 namespace ICE {
 
@@ -30,21 +29,16 @@ namespace ICE {
 
     void UIComponentRenderer::renderVector3f(Eigen::Vector3f* vec) {
         ImGui::PushItemWidth(60);
-        /*ImDrawList* drawList = ImGui::GetCurrentWindow()->DrawList;
-        ImVec2 rectSize = ImGui::CalcTextSize("X");
-        ImVec2 cursor = ImGui::GetCursorPos();
-        drawList->AddRectFilled(ImVec2(0,0), ImVec2(cursor.x+1000, cursor.y + 1000), 0xFFFFFF);*/
-        ImGui::Text("X");
-        ImGui::SameLine();
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
+        renderLabel("X", 0x990000FF);
         ImGui::InputFloat("##X", &vec->x());
         ImGui::SameLine();
-        ImGui::Text("Y");
-        ImGui::SameLine();
+        renderLabel("Y", 0x9900FF00);
         ImGui::InputFloat("##Y", &vec->y());
         ImGui::SameLine();
-        ImGui::Text("Z");
-        ImGui::SameLine();
+        renderLabel("Z", 0x99FF0000);
         ImGui::InputFloat("##Z", &vec->z());
+        ImGui::PopStyleVar();
         ImGui::PopItemWidth();
     }
 
@@ -81,6 +75,19 @@ namespace ICE {
         }
         ImGui::Combo("##Material", &selected, materialNames.data(), engine->getAssetBank()->getMaterials().size(), 10);
         cmp->setMaterial(engine->getAssetBank()->getMaterial(std::string(materialNames[selected])));
+        ImGui::Text("Shader");
+        ImGui::SameLine();
+        auto shaderNames = std::vector<const char*>(engine->getAssetBank()->getShaders().size());
+        i = 0;
+        selected = 0;
+        for(const auto& e : engine->getAssetBank()->getShaders()) {
+            shaderNames[i++] = (e.first.c_str());
+            if(e.second == cmp->getShader()) {
+                selected = i-1;
+            }
+        }
+        ImGui::Combo("##Shader", &selected, shaderNames.data(), engine->getAssetBank()->getShaders().size(), 10);
+        cmp->setShader(engine->getAssetBank()->getShader(std::string(shaderNames[selected])));
         ImGui::PopID();
     }
 
@@ -130,4 +137,21 @@ namespace ICE {
     }
 
     UIComponentRenderer::UIComponentRenderer(ICEEngine *engine) : engine(engine) {}
+
+    void UIComponentRenderer::renderLabel(const char *text, uint32_t backgroundColor) {
+        auto dl = ImGui::GetWindowDrawList();
+        ImVec2 rectSize = ImGui::CalcTextSize(text);
+        rectSize.x = rectSize.y;
+        ImVec2 wpos = ImGui::GetWindowPos();
+        ImVec2 cpos = ImGui::GetCursorPos();
+        ImVec2 pad = ImGui::GetStyle().FramePadding;
+        ImVec2 cursor = ImVec2(wpos.x + cpos.x, wpos.y + cpos.y);
+        ImVec2 max = ImVec2(cursor.x + rectSize.x + pad.x * 2, cursor.y + rectSize.y + pad.y * 2);
+        dl->AddRectFilled(cursor, max, backgroundColor, 0.0f);
+        ImGui::SetCursorPosY(cpos.y + pad.y);
+        ImGui::SetCursorPosX(cpos.x + pad.x);
+        ImGui::Text("%s", text);
+        ImGui::SameLine(0, pad.x);
+        ImGui::SetCursorPosY(cpos.y);
+    }
 }

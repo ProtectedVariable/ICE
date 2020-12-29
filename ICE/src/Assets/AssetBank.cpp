@@ -50,7 +50,7 @@ namespace ICE {
     }
 
     bool AssetBank::addMesh(const std::string &name, Mesh* mesh) {
-        if(meshes.find(name) == meshes.end()) {
+        if(!nameInUse(name)) {
             meshes.insert({name, mesh});
             return true;
         }
@@ -58,7 +58,7 @@ namespace ICE {
     }
 
     bool AssetBank::addMaterial(const std::string &name, Material* mtl) {
-        if(materials.find(name) == materials.end()) {
+        if(!nameInUse(name)) {
             materials.insert({name, mtl});
             return true;
         }
@@ -66,7 +66,7 @@ namespace ICE {
     }
 
     bool AssetBank::addShader(const std::string &name, Shader* shader) {
-        if(shaders.find(name) == shaders.end()) {
+        if(!nameInUse(name)) {
             shaders[name] = shader;
             return true;
         }
@@ -74,7 +74,7 @@ namespace ICE {
     }
 
     bool AssetBank::addTexture(const std::string &name, Texture *texture) {
-        if(textures.find(name) == textures.end()) {
+        if(!nameInUse(name)) {
             textures[name] = texture;
             return true;
         }
@@ -85,24 +85,26 @@ namespace ICE {
         if(oldName.find(ICE_ASSET_PREFIX) != std::string::npos || newName.find(ICE_ASSET_PREFIX) != std::string::npos) {
             return false;
         }
-        if(meshes.find(oldName) != meshes.end() && meshes.find(newName) == meshes.end()) {
-            Mesh* m = meshes.at(oldName);
-            meshes.insert({newName, m});
-            meshes.erase(oldName);
-            return true;
-        } else if(materials.find(oldName) != materials.end() && materials.find(newName) == materials.end()) {
-            Material* m = materials.at(oldName);
-            materials.insert({newName, m});
-            materials.erase(oldName);
-            return true;
-        } else if(shaders.find(oldName) != shaders.end() && shaders.find(newName) == shaders.end()) {
-            shaders[newName] = shaders[oldName];
-            shaders.erase(oldName);
-            return true;
-        } else if(textures.find(oldName) != textures.end() && textures.find(newName) == textures.end()) {
-            textures[newName] = textures[oldName];
-            textures.erase(oldName);
-            return true;
+        if(!nameInUse(newName)) {
+            if(meshes.find(oldName) != meshes.end()) {
+                Mesh* m = meshes.at(oldName);
+                meshes.insert({newName, m});
+                meshes.erase(oldName);
+                return true;
+            } else if(materials.find(oldName) != materials.end()) {
+                Material* m = materials.at(oldName);
+                materials.insert({newName, m});
+                materials.erase(oldName);
+                return true;
+            } else if(shaders.find(oldName) != shaders.end()) {
+                shaders[newName] = shaders[oldName];
+                shaders.erase(oldName);
+                return true;
+            } else if(textures.find(oldName) != textures.end()) {
+                textures[newName] = textures[oldName];
+                textures.erase(oldName);
+                return true;
+            }
         }
         return false;
     }
@@ -132,5 +134,10 @@ namespace ICE {
             }
         }
         throw ICEException();
+    }
+
+    bool AssetBank::nameInUse(const std::string &name) {
+        if(name == "") return true;
+        return !(textures.find(name) == textures.end() && shaders.find(name) == shaders.end() && materials.find(name) == materials.end() && meshes.find(name) == meshes.end());
     }
 }

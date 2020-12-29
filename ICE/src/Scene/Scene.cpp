@@ -45,7 +45,10 @@ namespace ICE {
         SceneNode* entityNode = this->nodeByID[entity];
         for (auto &it: this->nodeByID) {
             auto position = std::find(it.second->children.begin(), it.second->children.end(), entityNode);
-            it.second->children.erase(position);
+            if(position != it.second->children.end()) {
+                it.second->children.erase(position);
+                break;
+            }
         }
         this->nodeByID[newParent]->children.push_back(entityNode);
     }
@@ -122,6 +125,24 @@ namespace ICE {
             }
         }
         return "root";
+    }
+
+    void Scene::removeEntity(const std::string &uid) {
+        SceneNode* toRemove = getByID(uid);
+        if(toRemove == nullptr) return;
+        nodeByID.erase(uid);
+        auto allnodes = getNodes();
+        allnodes.push_back(getByID("root"));
+        for (auto p : allnodes) {
+            int i = 0;
+            for(auto c : p->children) {
+                if(c == toRemove) {
+                    p->children.erase(p->children.begin() + i);
+                    return;
+                }
+                i++;
+            }
+        }
     }
 
 

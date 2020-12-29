@@ -43,12 +43,21 @@ namespace ICE {
         ImGui::SetCursorPosY(viewport->Size.y);
         ImGui::NextColumn();
         int i = 0;
+        static std::string hovered;
+        static ImVec2 endCursor;
         for(auto p : *engine->getConfig().getLocalProjects()) {
+            if(hovered == p.getName()) {
+                ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(0, ImGui::GetCursorScreenPos().y), ImVec2(endCursor.x * ImGui::GetWindowDpiScale(), endCursor.y), 0x88888888);
+            }
             ImGui::BeginGroup();
             ImGui::Text("Name: %s", p.getName().c_str());
             ImGui::Text("%s", p.getBaseDirectory().c_str());
+            ImGui::SetCursorPosX(ImGui::GetWindowWidth());
             ImGui::EndGroup();
             if (ImGui::IsItemHovered()) {
+                hovered = p.getName();
+                endCursor = ImGui::GetCursorScreenPos();
+                endCursor.x = ImGui::GetWindowWidth();
                 if(ImGui::IsMouseClicked(0)) {
                     engine->setProject(&(engine->getConfig().getLocalProjects()->at(i)));
                 }
@@ -56,7 +65,9 @@ namespace ICE {
             ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
             i++;
         }
-
+        if(ImGui::GetMousePos().y > ImGui::GetCursorScreenPos().y || ImGui::GetMousePos().x < ImGui::GetCursorScreenPos().x) {
+            hovered = "";
+        }
         ImGui::End();
         ImGui::PopStyleVar();
     }

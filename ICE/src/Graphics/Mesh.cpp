@@ -9,7 +9,7 @@
 
 namespace ICE {
     Mesh::Mesh(const std::vector<Eigen::Vector3f> &vertices, const std::vector<Eigen::Vector3f> &normals,
-               const std::vector<Eigen::Vector2f> &uvCoords, const std::vector<Eigen::Vector3i> &indices) : vertices(vertices), normals(normals), uvCoords(uvCoords), indices(indices) {
+               const std::vector<Eigen::Vector2f> &uvCoords, const std::vector<Eigen::Vector3i> &indices) : vertices(vertices), normals(normals), uvCoords(uvCoords), indices(indices), boundingBox(vertices) {
 
         vertexArray = VertexArray::Create();
 
@@ -47,5 +47,9 @@ namespace ICE {
 
     const VertexArray* Mesh::getVertexArray() const {
         return vertexArray;
+    }
+
+    const AABB &Mesh::getBoundingBox() const {
+        return boundingBox;
     }
 }

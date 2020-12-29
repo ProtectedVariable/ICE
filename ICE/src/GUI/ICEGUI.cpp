@@ -131,17 +131,53 @@ namespace ICE {
 
             ImGui::Begin("Viewport");
             {
+                bool pushed = false;
+                if(guizmoOperationMode == ImGuizmo::TRANSLATE) {
+                    ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
+                    pushed = true;
+                }
                 if (ImGui::Button("T")) {
                     guizmoOperationMode = ImGuizmo::TRANSLATE;
                 }
-                ImGui::SameLine();
+                if(pushed)
+                    ImGui::PopStyleColor();
+
+                pushed = false;
+                ImGui::SameLine(0, 0);
+
+                if(guizmoOperationMode == ImGuizmo::ROTATE) {
+                    ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
+                    pushed = true;
+                }
                 if (ImGui::Button("R")) {
                     guizmoOperationMode = ImGuizmo::ROTATE;
                 }
-                ImGui::SameLine();
+                if(pushed)
+                    ImGui::PopStyleColor();
+
+                pushed = false;
+                ImGui::SameLine(0, 0);
+
+                if(guizmoOperationMode == ImGuizmo::SCALE) {
+                    ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
+                    pushed = true;
+                }
                 if (ImGui::Button("S")) {
                     guizmoOperationMode = ImGuizmo::SCALE;
                 }
+                if(pushed)
+                    ImGui::PopStyleColor();
+
+                if(ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Tab))) {
+                    if(guizmoOperationMode == ImGuizmo::TRANSLATE) {
+                        guizmoOperationMode = ImGuizmo::ROTATE;
+                    } else if(guizmoOperationMode == ImGuizmo::ROTATE) {
+                        guizmoOperationMode = ImGuizmo::SCALE;
+                    } else if(guizmoOperationMode == ImGuizmo::SCALE) {
+                        guizmoOperationMode = ImGuizmo::TRANSLATE;
+                    }
+                }
+
                 ImVec2 wpos = ImGui::GetCursorScreenPos();
                 ImVec2 wsize = ImGui::GetWindowContentRegionMax();
                 wsize.x -= ImGui::GetCursorPosX();

@@ -45,7 +45,7 @@ namespace ICE {
             shader->bind();
             shader->loadMat4("projection", camera.getProjection());
             shader->loadMat4("view", camera.lookThrough());
-            shader->loadFloat3("ambient_light", Eigen::Vector3f(0.3f,0.3f,0.3f));
+            shader->loadFloat3("ambient_light", Eigen::Vector3f(0.1f,0.1f,0.1f));
             int i = 0;
             for(auto light : lightEntities) {
                 std::string light_name = (std::string("lights[")+std::to_string(i)+std::string("]."));

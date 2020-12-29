@@ -5,7 +5,7 @@
 #include "TransformComponent.h"
 #include "Component.h"
 
-#include <Util/ICEMath.h>
+#include <Math/ICEMath.h>
 namespace ICE {
 
     TransformComponent::TransformComponent():

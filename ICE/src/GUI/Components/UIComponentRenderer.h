@@ -23,6 +23,7 @@ namespace ICE {
 
     private:
         void renderVector3f(Eigen::Vector3f* vec);
+        void renderLabel(const char* text, uint32_t backgroundColor);
         ICEEngine* engine;
     };
 }
