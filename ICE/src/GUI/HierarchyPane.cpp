@@ -50,6 +50,14 @@ namespace ICE {
     bool HierarchyPane::render() {
         selected = engine->getScene()->idByEntity(engine->getSelected());
         ImGui::Begin("Hierarchy");
+        if(ImGui::BeginDragDropTarget()) {
+            ImGuiDragDropFlags target_flags = 0;
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DND_ENTITY_TREE", target_flags)) {
+                std::string move_from = *(std::string*)payload->Data;
+                engine->getScene()->setParent(move_from, "root");
+            }
+            ImGui::EndDragDropTarget();
+        }
         if (ImGui::BeginPopupContextWindow())
         {
             mkPopup(selected);
@@ -60,6 +68,7 @@ namespace ICE {
             }
         }
         subtree(engine->getScene()->getRoot());
+
         ImGui::End();
         if(selected != "root") {
             engine->setSelected(engine->getScene()->getByID(selected)->entity);
