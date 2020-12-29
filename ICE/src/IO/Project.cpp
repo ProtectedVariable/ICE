@@ -214,7 +214,10 @@ namespace ICE {
                     LightComponent* lc = new LightComponent(PointLight, parseVec3(lj["color"]));
                     e->addComponent(lc);
                 }
-                scene.addEntity(jentity["parent"], jentity["name"], e);
+                scene.addEntity(jentity["name"], e);
+            }
+            for(json jentity : scenejson["entities"]) {
+                scene.setParent(jentity["name"], jentity["parent"]);
             }
             scenes.push_back(scene);
         }
