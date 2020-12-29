@@ -3,7 +3,7 @@
 //
 
 #include "Camera.h"
-#include <Util/ICEMath.h>
+#include <Math/ICEMath.h>
 #include <iostream>
 
 namespace ICE {

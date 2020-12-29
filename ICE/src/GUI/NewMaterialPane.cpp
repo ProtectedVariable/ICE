@@ -4,7 +4,7 @@
 
 #include "NewMaterialPane.h"
 #include <Core/ICEEngine.h>
-#include <Util/ICEMath.h>
+#include <Math/ICEMath.h>
 #include <ImGUI/imgui_internal.h>
 
 #define ICE_NEWMAT_PICKER_WIDTH 150
