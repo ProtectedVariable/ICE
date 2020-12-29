@@ -7,7 +7,7 @@
 #include <utility>
 
 namespace ICE {
-    Scene::Scene(const std::string& name) : name(name), root(new SceneNode(nullptr)), nodeByID(std::unordered_map<std::string, SceneNode*>()) {
+    Scene::Scene(const std::string& name) : name(name), root(new SceneNode(nullptr)), nodeByID(std::unordered_map<std::string, SceneNode*>()), skybox(Skybox(nullptr)) {
         nodeByID["root"] = root;
     }
 
@@ -145,5 +145,14 @@ namespace ICE {
         }
     }
 
+    Skybox *Scene::getSkybox() {
+        if(skybox.getTexture() == nullptr) {
+            return nullptr;
+        }
+        return &skybox;
+    }
 
+    void Scene::setSkybox(const Skybox &skybox) {
+        Scene::skybox = skybox;
+    }
 }

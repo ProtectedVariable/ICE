@@ -25,6 +25,8 @@ namespace ICE {
         virtual void renderVertexArray(const VertexArray* va) const = 0;
         virtual void flush() const = 0;
         virtual void finish() const = 0;
+        virtual void setDepthTest(bool enable) const = 0;
+        virtual void setDepthMask(bool enable) const = 0;
 
         static GraphicsAPI GetAPI() { return api; }
         static RendererAPI* Create();

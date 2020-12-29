@@ -18,6 +18,7 @@ namespace ICE {
     }
 
     void ForwardRenderer::submitScene(Scene *scene) {
+        skybox = scene->getSkybox();
         for(auto e : scene->getEntities()) {
             submit(e);
         }
@@ -39,6 +40,16 @@ namespace ICE {
             api->bindDefaultFramebuffer();
         //TODO: Sort entities, make shader list, batch, make instances, set uniforms, etc..
         api->clear();
+        if(skybox != nullptr) {
+            Skybox::getShader()->bind();
+            Skybox::getShader()->loadMat4("projection", camera.getProjection());
+            Eigen::Matrix4f view = camera.lookThrough();
+            view(0, 3) = 0;
+            view(1, 3) = 0;
+            view(2, 3) = 0;
+            Skybox::getShader()->loadMat4("view", view);
+            Skybox::getShader()->loadInt("skybox", 0);
+        }
         for(auto e : renderableEntities) {
             const Material* material = e->getComponent<RenderComponent>()->getMaterial();
             Shader* shader = e->getComponent<RenderComponent>()->getShader();
@@ -60,6 +71,14 @@ namespace ICE {
     }
 
     void ForwardRenderer::render() {
+        if(skybox != nullptr) {
+            api->setDepthMask(false);
+            Skybox::getShader()->bind();
+            skybox->getVAO()->bind();
+            skybox->getTexture()->bind(0);
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
+        api->setDepthMask(true);
         for(auto e : renderableEntities) {
             const Material* mat = e->getComponent<RenderComponent>()->getMaterial();
             Shader* shader = e->getComponent<RenderComponent>()->getShader();

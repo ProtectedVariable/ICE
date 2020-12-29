@@ -26,6 +26,10 @@ namespace ICE {
         void finish() const override;
 
         void bindDefaultFramebuffer() const override;
+
+        void setDepthTest(bool enable) const override;
+
+        void setDepthMask(bool enable) const override;
     };
 }
 

@@ -4,15 +4,13 @@
 
 #include "OpenGLTexture.h"
 #include <GL/gl3w.h>
-#include <stb/stb_image.h>
 #include <Util/ICEException.h>
 
 namespace ICE {
 
     OpenGLTexture2D::OpenGLTexture2D(const std::string &file) : file(file) {
-        stbi_set_flip_vertically_on_load(1);
-        int w,h,channels;
-        stbi_uc* data = stbi_load(file.c_str(), &w, &h, &channels, 0);
+        int channels, w, h;
+        void* data = Texture::getDataFromFile(file, &w, &h, &channels);
         width = w;
         height = h;
         storageFormat = GL_RGBA;

@@ -10,6 +10,7 @@
 #include "RendererConfig.h"
 #include "Camera.h"
 #include "Framebuffer.h"
+#include "Skybox.h"
 #include <vector>
 
 namespace ICE {
@@ -37,6 +38,7 @@ namespace ICE {
         RendererAPI* api;
         RendererConfig config;
         Framebuffer* target;
+        Skybox* skybox;
     };
 }
 

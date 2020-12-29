@@ -4,6 +4,7 @@
 // Read online: https://github.com/ocornut/imgui/tree/master/docs
 
 #define TINYOBJLOADER_IMPLEMENTATION
+#define STB_IMAGE_IMPLEMENTATION
 #include "ICEEngine.h"
 #include <GLFW/glfw3.h>
 #include <ImGUI/imgui.h>
@@ -60,6 +61,8 @@ namespace ICE {
 
         internalFB = Framebuffer::Create({1280, 720, 1});
         pickingFB = Framebuffer::Create({1280, 720, 1});
+
+        Skybox::Initialize();
     }
 
     void ICEEngine::loop() {
