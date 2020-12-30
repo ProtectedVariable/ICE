@@ -68,11 +68,11 @@ namespace ICE {
             out.x() = -x;
             out.y() = 1;
             out.z() = -y;
-        } else if(face == ICE_CUBEMAP_PY) {
+        } else if(face == ICE_CUBEMAP_NY) {
             out.x() = -y;
             out.y() = -x;
             out.z() = 1;
-        } else if(face == ICE_CUBEMAP_NY) {
+        } else if(face == ICE_CUBEMAP_PY) {
             out.x() = y;
             out.y() = -x;
             out.z() = -1;
@@ -96,19 +96,20 @@ namespace ICE {
             outputPixels[i] = new uint8_t[bsize];
             for (int x = 0; x < faceWidth; x++) {
                 for (int y = 0; y < faceHeight; y++) {
-                    int to = 3 * (y * faceWidth + x);
+                    int to = 3 * ((faceHeight-1-y) * faceWidth + x);
                     Eigen::Vector3f cube = orientation(i, (2 * (x + 0.5) / faceWidth - 1), (2 * (y + 0.5) / faceHeight - 1));
 
                     auto r = cube.norm();
                     auto lon = fmod(atan2(cube.y(), cube.x()) + rotation, 2 * M_PI);
                     auto lat = acos(cube.z() / r);
 
-                    int fx = faceWidth * lon / M_PI / 2 - 0.5;
-                    int fy = faceHeight * lat / M_PI - 0.5;
-                    fx = clamp(fx, 0, faceWidth-1);
-                    fy = clamp(fy, 0, faceHeight-1);
-                    for(int chan = 0; chan < 3; chan++)
-                        outputPixels[i][to+chan] = inputPixels[3*(fx + width * fy) + chan];
+                    int fx = width * lon / M_PI / 2 - 0.5;
+                    int fy = height * lat / M_PI - 0.5;
+                    fx = clamp(fx, 0, width-1);
+                    fy = clamp(fy, 0, height-1);
+                    for(int chan = 0; chan < 3; chan++) {
+                        outputPixels[i][to + chan] = inputPixels[3 * (fy * width + fx) + chan];
+                    }
                 }
             }
         }
