@@ -293,10 +293,12 @@ namespace ICE {
                             return true;
                         } else {
                             assetBank.renameAsset(newName, oldName);
+                            return false;
                         }
                     }
                 }
             }
+            return true;
         }
         return false;
     }
