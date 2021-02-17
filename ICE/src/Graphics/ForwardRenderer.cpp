@@ -133,4 +133,8 @@ namespace ICE {
         this->target->resize(width, height);
         this->api->setViewport(0, 0, width, height);
     }
+
+    void ForwardRenderer::setClearColor(Eigen::Vector4f clearColor) {
+        this->api->setClearColor(clearColor.x(), clearColor.y(), clearColor.z(), clearColor.w());
+    }
 }

@@ -32,6 +32,7 @@ namespace ICE {
 
         void resize(uint32_t width, uint32_t height) override;
 
+        void setClearColor(Eigen::Vector4f clearColor) override;
     private:
         std::vector<Entity*> renderableEntities;
         std::vector<Entity*> lightEntities;

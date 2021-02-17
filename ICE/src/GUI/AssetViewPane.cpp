@@ -51,8 +51,9 @@ namespace ICE {
             scene.addEntity("light", &light);
 
             camera.setParameters({60, wsize.x/wsize.y, 0.01f, 100});
-
             renderer.setTarget(viewFB);
+            renderer.setClearColor(Eigen::Vector4f(0, 0, 0.2, 1));
+
             renderer.submitScene(&scene);
             renderer.prepareFrame(camera);
             renderer.resize(wsize.x, wsize.y);

@@ -15,7 +15,7 @@ namespace ICE {
 
         void setViewport(int x, int y, int width, int height) const override;
 
-        void setClearColor(int r, int g, int b, int a) const override;
+        void setClearColor(float r, float g, float b, float a) const override;
 
         void clear() const override;
 

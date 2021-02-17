@@ -11,7 +11,7 @@ namespace ICE {
         glViewport(x, y, width, height);
     }
 
-    void OpenGLRendererAPI::setClearColor(int r, int g, int b, int a) const {
+    void OpenGLRendererAPI::setClearColor(float r, float g, float b, float a) const {
         glClearColor(r, g, b, a);
     }
 
