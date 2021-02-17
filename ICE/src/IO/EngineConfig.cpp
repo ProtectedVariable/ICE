@@ -29,7 +29,6 @@ namespace ICE {
 
             if(state == PROJECT_LIST) {
                 auto p = Project(line.substr(0, line.find_last_of("/")), line.substr(line.find_last_of("/")+1, line.size()));
-                p.loadFromFile();
                 config.localProjects.push_back(p);
             }
         }
@@ -55,5 +54,9 @@ namespace ICE {
             configFile << p.getBaseDirectory() << "/" << p.getName() << "\n";
         }
         configFile.close();
+    }
+
+    Project *EngineConfig::getProjectAt(int i) {
+        return &(localProjects.at(i));
     }
 }
