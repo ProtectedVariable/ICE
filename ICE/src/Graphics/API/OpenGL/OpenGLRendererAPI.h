@@ -30,6 +30,8 @@ namespace ICE {
         void setDepthTest(bool enable) const override;
 
         void setDepthMask(bool enable) const override;
+
+        void checkAndLogErrors() const override;
     };
 }
 

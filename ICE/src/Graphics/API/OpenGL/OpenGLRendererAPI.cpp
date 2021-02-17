@@ -4,6 +4,7 @@
 
 #include "OpenGLRendererAPI.h"
 #include <GL/gl3w.h>
+#include <Util/Logger.h>
 
 namespace ICE {
 
@@ -53,5 +54,12 @@ namespace ICE {
 
     void OpenGLRendererAPI::setDepthMask(bool enable) const {
         glDepthMask(enable ? GL_TRUE : GL_FALSE);
+    }
+
+    void OpenGLRendererAPI::checkAndLogErrors() const {
+        unsigned int err;
+        while((err = glGetError()) != GL_NO_ERROR){
+            Logger::Log(Logger::ERROR, "Graphics", "OpenGL Error %d", err);
+        }
     }
 }

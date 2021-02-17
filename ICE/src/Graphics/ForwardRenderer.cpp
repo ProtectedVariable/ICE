@@ -113,10 +113,7 @@ namespace ICE {
     }
 
     void ForwardRenderer::endFrame() {
-        unsigned int err;
-        while((err = glGetError()) != GL_NO_ERROR){
-            Logger::Log(Logger::ERROR, "Graphics", "OpenGL Error %d", err);
-        }
+        api->checkAndLogErrors();
         renderableEntities.clear();
         lightEntities.clear();
         //TODO: Cleanup and restore state

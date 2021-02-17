@@ -95,7 +95,7 @@ namespace ICE {
             }
             int display_w, display_h;
             glfwGetFramebufferSize(static_cast<GLFWwindow *>(window), &display_w, &display_h);
-            glViewport(0, 0, display_w, display_h);
+            api->setViewport(0, 0, display_w, display_h);
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
             // Update and Render additional Platform Windows
@@ -139,7 +139,7 @@ namespace ICE {
     Eigen::Vector4i ICEEngine::getPickingTextureAt(int x, int y) {
         pickingFB->bind();
         pickingFB->resize(gui.getSceneViewportWidth(), gui.getSceneViewportHeight());
-        glViewport(0, 0, gui.getSceneViewportWidth(), gui.getSceneViewportHeight());
+        api->setViewport(0, 0, gui.getSceneViewportWidth(), gui.getSceneViewportHeight());
         camera.setParameters(
                 {60, (float) gui.getSceneViewportWidth() / (float) gui.getSceneViewportHeight(), 0.01f, 1000});
         api->clear();
