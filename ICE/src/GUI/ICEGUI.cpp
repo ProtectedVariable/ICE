@@ -22,47 +22,6 @@ namespace ICE {
     void ICEGUI::renderImGui() {
         if(engine->getProject() != nullptr) {
 
-            if(showNewScenePopup) {
-                ImGui::Begin("Create New Scene", 0, ImGuiWindowFlags_Modal);
-                ImGui::Text("New scene name: ");
-                ImGui::SameLine();
-                static char namebuffer[128];
-                ImGui::InputText("##NewSceneName", namebuffer, 128);
-                if(ImGui::Button("Create")) {
-                    Scene newScene(namebuffer);
-                    engine->getProject()->addScene(newScene);
-                    engine->setCurrentScene(&engine->getProject()->getScenes().back());
-                    showNewScenePopup = false;
-                }
-                ImGui::SameLine();
-                if(ImGui::Button("Cancel")) {
-                    showNewScenePopup = false;
-                }
-                ImGui::End();
-            }
-
-            if(showLoadScenePopup) {
-                ImGui::Begin("Load Scene", 0, ImGuiWindowFlags_Modal);
-                ImGui::Text("Scene");
-                ImGui::SameLine();
-                static int selected;
-                std::vector<const char*> sceneNames;
-                sceneNames.reserve(engine->getProject()->getScenes().size());
-                for(auto const& scene : engine->getProject()->getScenes()) {
-                    sceneNames.push_back(scene.getName().c_str());
-                }
-                ImGui::Combo("##LoadScene", &selected, sceneNames.data(), sceneNames.size(), 10);
-                if(ImGui::Button("Load")) {
-                    engine->setCurrentScene(&engine->getProject()->getScenes().at(selected));
-                    showLoadScenePopup = false;
-                }
-                ImGui::SameLine();
-                if(ImGui::Button("Cancel")) {
-                    showLoadScenePopup = false;
-                }
-                ImGui::End();
-            }
-
             ImGuiWindowFlags flags = ImGuiWindowFlags_MenuBar;
             flags |= ImGuiWindowFlags_NoDocking;
             ImGuiViewport* viewport = ImGui::GetMainViewport();
@@ -103,6 +62,58 @@ namespace ICE {
 
                 ImGui::EndMenuBar();
             }
+
+            if(showNewScenePopup) {
+                ImGui::OpenPopup("Create Scene...");
+            }
+
+            if(showLoadScenePopup) {
+                ImGui::OpenPopup("Load Scene...");
+            }
+
+            if(ImGui::BeginPopupModal("Create Scene...", 0, ImGuiWindowFlags_AlwaysAutoResize)) {
+                ImGui::Text("New scene name: ");
+                ImGui::SameLine();
+                static char namebuffer[128];
+                ImGui::InputText("##NewSceneName", namebuffer, 128);
+                if(ImGui::Button("Create")) {
+                    Scene newScene(namebuffer);
+                    engine->getProject()->addScene(newScene);
+                    engine->setCurrentScene(&engine->getProject()->getScenes().back());
+                    showNewScenePopup = false;
+                    ImGui::CloseCurrentPopup();
+                }
+                ImGui::SameLine();
+                if(ImGui::Button("Cancel")) {
+                    showNewScenePopup = false;
+                    ImGui::CloseCurrentPopup();
+                }
+                ImGui::EndPopup();
+            }
+
+            if(ImGui::BeginPopupModal("Load Scene...", 0, ImGuiWindowFlags_AlwaysAutoResize)) {
+                ImGui::Text("Scene");
+                ImGui::SameLine();
+                static int selected;
+                std::vector<const char *> sceneNames;
+                sceneNames.reserve(engine->getProject()->getScenes().size());
+                for (auto const &scene : engine->getProject()->getScenes()) {
+                    sceneNames.push_back(scene.getName().c_str());
+                }
+                ImGui::Combo("##LoadScene", &selected, sceneNames.data(), sceneNames.size(), 10);
+                if (ImGui::Button("Load")) {
+                    engine->setCurrentScene(&engine->getProject()->getScenes().at(selected));
+                    ImGui::CloseCurrentPopup();
+                    showLoadScenePopup = false;
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Cancel")) {
+                    ImGui::CloseCurrentPopup();
+                    showLoadScenePopup = false;
+                }
+                ImGui::End();
+            }
+
             ImGuiID dockspace_id = ImGui::GetID("mainspace");
 
             if(gui_init == 0) {
