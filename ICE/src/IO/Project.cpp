@@ -219,7 +219,6 @@ namespace ICE {
             for(json jentity : scenejson["entities"]) {
                 scene.setParent(jentity["name"], jentity["parent"]);
             }
-            scene.setSkybox(Skybox(TextureCube::Create("Assets/Textures/skybox.png")));
             scenes.push_back(scene);
         }
     }

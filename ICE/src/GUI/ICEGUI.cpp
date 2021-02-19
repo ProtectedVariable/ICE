@@ -131,6 +131,7 @@ namespace ICE {
                 ImGui::DockBuilderDockWindow("Hierarchy", dock_id_left);
                 ImGui::DockBuilderDockWindow("Viewport", dock_id_up);
                 ImGui::DockBuilderDockWindow("Inspector", dock_id_right);
+                ImGui::DockBuilderDockWindow("Scene Parameters", dock_id_right);
                 ImGui::DockBuilderFinish(dockspace_id);
                 gui_init = 1;
             }
@@ -266,6 +267,7 @@ namespace ICE {
             ImGui::End();
 
             inspectorPane.render();
+            sceneParamPane.render();
 
             ImGui::End();
             ImGui::PopStyleVar();
@@ -282,7 +284,9 @@ namespace ICE {
         return sceneViewportHeight;
     }
 
-    ICEGUI::ICEGUI(ICEEngine *engine): engine(engine), hierarchyPane(HierarchyPane(engine)), inspectorPane(InspectorPane(engine)), assetPane(AssetPane(engine)), projectSelectorWindow(engine), sceneViewportWidth(1280), sceneViewportHeight(720) {
+    ICEGUI::ICEGUI(ICEEngine *engine): engine(engine), hierarchyPane(HierarchyPane(engine)), inspectorPane(InspectorPane(engine)),
+                                        assetPane(AssetPane(engine)), projectSelectorWindow(engine), sceneParamPane(engine),
+                                        sceneViewportWidth(1280), sceneViewportHeight(720) {
         applyStyle();
     }
 

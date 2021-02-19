@@ -146,9 +146,6 @@ namespace ICE {
     }
 
     Skybox *Scene::getSkybox() {
-        if(skybox.getTexture() == nullptr) {
-            return nullptr;
-        }
         return &skybox;
     }
 

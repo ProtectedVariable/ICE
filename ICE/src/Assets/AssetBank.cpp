@@ -15,6 +15,7 @@ namespace ICE {
         shaders["__ice__normal_shader"] = Shader::Create("Assets/Shaders/normal.vs", "Assets/Shaders/normal.fs");
         shaders["__ice__picking_shader"] = Shader::Create("Assets/Shaders/picking.vs", "Assets/Shaders/picking.fs");
         materials.insert({"__ice__base_material", new Material(Eigen::Vector3f(0.8f,0.8f,0.8f), Eigen::Vector3f(1,1,1), Eigen::Vector3f(1,1,1), 16.0f)});
+        textures.insert({"__ice__skybox", TextureCube::Create("Assets/Textures/skybox.png")});
     }
 
     Mesh* AssetBank::getMesh(const std::string &name) {

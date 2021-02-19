@@ -72,6 +72,7 @@ namespace ICE {
         {
             api->bindDefaultFramebuffer();
             glfwPollEvents();
+            api->setClearColor(0,0,0,1);
             api->clear();
 
             ImGui_ImplOpenGL3_NewFrame();
@@ -88,6 +89,7 @@ namespace ICE {
             if(project != nullptr) {
                 renderSystem->setTarget(internalFB, gui.getSceneViewportWidth(), gui.getSceneViewportHeight());
                 camera.setParameters({60, (float) gui.getSceneViewportWidth() / (float) gui.getSceneViewportHeight(), 0.01f, 1000});
+                api->setClearColor(0,0,0,1);
                 api->clear();
                 for (auto s : systems) {
                     s->update(currentScene, 0.f);
@@ -142,6 +144,7 @@ namespace ICE {
         api->setViewport(0, 0, gui.getSceneViewportWidth(), gui.getSceneViewportHeight());
         camera.setParameters(
                 {60, (float) gui.getSceneViewportWidth() / (float) gui.getSceneViewportHeight(), 0.01f, 1000});
+        api->setClearColor(0,0,0,0);
         api->clear();
         getAssetBank()->getShader("__ice__picking_shader")->bind();
         getAssetBank()->getShader("__ice__picking_shader")->loadMat4("projection", camera.getProjection());

@@ -13,6 +13,7 @@
 #include "InspectorPane.h"
 #include "AssetPane.h"
 #include "ProjectSelectorWindow.h"
+#include "SceneParamPane.h"
 #include <ImGUI/imgui.h>
 #include <ImGUI/ImGuizmo.h>
 
@@ -36,6 +37,7 @@ namespace ICE {
         int sceneViewportWidth, sceneViewportHeight;
         HierarchyPane hierarchyPane;
         InspectorPane inspectorPane;
+        SceneParamPane sceneParamPane;
         AssetPane assetPane;
         ProjectSelectorWindow projectSelectorWindow;
         ICEEngine* engine;

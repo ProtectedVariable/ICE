@@ -71,7 +71,7 @@ namespace ICE {
     }
 
     void ForwardRenderer::render() {
-        if(skybox != nullptr) {
+        if(skybox->getTexture() != nullptr) {
             api->setDepthMask(false);
             Skybox::getShader()->bind();
             skybox->getVAO()->bind();

@@ -59,4 +59,8 @@ namespace ICE {
     void *OpenGLTextureCube::getTexture() const {
         return static_cast<char*>(0)+id;
     }
+
+    TextureType OpenGLTextureCube::getType() const {
+        return TextureType::CubeMap;
+    }
 }
