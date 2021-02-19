@@ -134,12 +134,14 @@ namespace ICE {
                 entities.push_back(entity);
             }
             j["entities"] = entities;
+            j["skybox"] = assetBank.getName(s.getSkybox()->getTexture());
             outstream << j.dump(4);
             outstream.close();
         }
     }
 
     void Project::loadFromFile() {
+        assetBank.fillWithDefaults();
         std::ifstream infile = std::ifstream(baseDirectory + "/" + name + "/" + name+ ".ice");
         json j;
         infile >> j;
@@ -197,6 +199,10 @@ namespace ICE {
             infile.close();
 
             Scene scene = Scene(scenejson["name"]);
+
+            if(scenejson["skybox"] != "null") {
+                scene.setSkybox(Skybox(assetBank.getTexture(scenejson["skybox"])));
+            }
             for(json jentity : scenejson["entities"]) {
                 Entity* e = new Entity();
                 if(!jentity["transformComponent"].is_null()) {

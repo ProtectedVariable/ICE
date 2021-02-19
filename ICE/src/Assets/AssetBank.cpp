@@ -8,7 +8,9 @@
 
 namespace ICE {
 
-    AssetBank::AssetBank(): meshes(std::unordered_map<std::string, Mesh*>()), materials(std::unordered_map<std::string, Material*>()), shaders(std::unordered_map<std::string, Shader*>()) {
+    AssetBank::AssetBank(): meshes(std::unordered_map<std::string, Mesh*>()), materials(std::unordered_map<std::string, Material*>()), shaders(std::unordered_map<std::string, Shader*>()) { }
+
+    void AssetBank::fillWithDefaults() {
         meshes.insert({"__ice__cube", OBJLoader::loadFromOBJ("Assets/Meshes/cube.obj")});
         meshes.insert({"__ice__sphere", OBJLoader::loadFromOBJ("Assets/Meshes/sphere.obj")});
         shaders["__ice__phong_shader"] = Shader::Create("Assets/Shaders/phong.vs", "Assets/Shaders/phong.fs");
