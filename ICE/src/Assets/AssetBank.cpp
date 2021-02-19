@@ -8,13 +8,16 @@
 
 namespace ICE {
 
-    AssetBank::AssetBank(): meshes(std::unordered_map<std::string, Mesh*>()), materials(std::unordered_map<std::string, Material*>()), shaders(std::unordered_map<std::string, Shader*>()) {
+    AssetBank::AssetBank(): meshes(std::unordered_map<std::string, Mesh*>()), materials(std::unordered_map<std::string, Material*>()), shaders(std::unordered_map<std::string, Shader*>()) { }
+
+    void AssetBank::fillWithDefaults() {
         meshes.insert({"__ice__cube", OBJLoader::loadFromOBJ("Assets/Meshes/cube.obj")});
         meshes.insert({"__ice__sphere", OBJLoader::loadFromOBJ("Assets/Meshes/sphere.obj")});
         shaders["__ice__phong_shader"] = Shader::Create("Assets/Shaders/phong.vs", "Assets/Shaders/phong.fs");
         shaders["__ice__normal_shader"] = Shader::Create("Assets/Shaders/normal.vs", "Assets/Shaders/normal.fs");
         shaders["__ice__picking_shader"] = Shader::Create("Assets/Shaders/picking.vs", "Assets/Shaders/picking.fs");
         materials.insert({"__ice__base_material", new Material(Eigen::Vector3f(0.8f,0.8f,0.8f), Eigen::Vector3f(1,1,1), Eigen::Vector3f(1,1,1), 16.0f)});
+        textures.insert({"__ice__skybox", TextureCube::Create("Assets/Textures/skybox.png")});
     }
 
     Mesh* AssetBank::getMesh(const std::string &name) {

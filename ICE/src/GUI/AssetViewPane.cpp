@@ -10,8 +10,8 @@
 #include <cstring>
 
 namespace ICE {
-    int y = 45;
     bool AssetViewPane::render() {
+        static int y = 45;
         ImGui::BeginChild("Asset View");
         char buffer[512];
         strcpy(buffer, selectedAsset->c_str());
@@ -51,19 +51,36 @@ namespace ICE {
             scene.addEntity("light", &light);
 
             camera.setParameters({60, wsize.x/wsize.y, 0.01f, 100});
-
             renderer.setTarget(viewFB);
+            renderer.setClearColor(Eigen::Vector4f(0, 0, 0.2, 1));
+
             renderer.submitScene(&scene);
             renderer.prepareFrame(camera);
             renderer.resize(wsize.x, wsize.y);
 
-            tcSphere.getRotation()->y() += y++;
+            tcSphere.getRotation()->y() = y++;
             renderer.render();
             renderer.endFrame();
 
             ImGui::Image(viewFB->getTexture(), wsize, ImVec2(0, 1), ImVec2(1, 0));
         } else {
-            ImGui::Image(engine->getAssetBank()->getTexture(*selectedAsset)->getTexture(), wsize, ImVec2(0, 1), ImVec2(1, 0));
+            Texture* tex = engine->getAssetBank()->getTexture(*selectedAsset);
+            if(tex->getType() == TextureType::Tex2D) {
+                ImGui::Image(tex->getTexture(), wsize, ImVec2(0, 1), ImVec2(1, 0));
+            } else if(tex->getType() == TextureType::CubeMap) {
+                Scene scene("__ice__assetview_scene");
+                scene.setSkybox(Skybox(tex));
+                renderer.setTarget(viewFB);
+                renderer.submitScene(&scene);
+                renderer.resize(ICE_THUMBNAIL_SIZE, ICE_THUMBNAIL_SIZE);
+                Camera camera = Camera({{30, 1.f, 0.01f, 1000 }, Perspective});
+                camera.getRotation().y() = y++ /2;
+                renderer.prepareFrame(camera);
+                renderer.render();
+                renderer.endFrame();
+
+                ImGui::Image(viewFB->getTexture(), wsize, ImVec2(0, 1), ImVec2(1, 0));
+            }
         }
         ImGui::EndChild();
         return true;

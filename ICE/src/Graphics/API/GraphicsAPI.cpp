@@ -76,4 +76,11 @@ namespace ICE {
         }
         return nullptr;
     }
+
+    TextureCube* TextureCube::Create(const std::string &file) {
+        switch(RendererAPI::GetAPI()) {
+            case OpenGL: return new OpenGLTextureCube(file);
+        }
+        return nullptr;
+    }
 }

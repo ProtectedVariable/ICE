@@ -11,9 +11,9 @@
 namespace ICE {
     ProjectSelectorWindow::ProjectSelectorWindow(ICE::ICEEngine *engine) : engine(engine) {}
 
-    int pgui_init = 0;
-    char project_name_buffer[64] = {0};
     void ProjectSelectorWindow::render() {
+        static char project_name_buffer[64] = {0};
+
         ImGuiWindowFlags flags = 0;
         ImGuiViewport* viewport = ImGui::GetMainViewport();
         ImGui::SetNextWindowPos(viewport->Pos);
@@ -35,6 +35,7 @@ namespace ICE {
             std::string baseFolder = FileUtils::openFolderDialog();
             if(baseFolder != "") {
                 Project p = Project(baseFolder, project_name_buffer);
+                p.getAssetBank()->fillWithDefaults();
                 p.CreateDirectories();
                 engine->getConfig().getLocalProjects()->push_back(p);
                 engine->setProject(&engine->getConfig().getLocalProjects()->back());
@@ -59,7 +60,9 @@ namespace ICE {
                 endCursor = ImGui::GetCursorScreenPos();
                 endCursor.x = ImGui::GetWindowWidth();
                 if(ImGui::IsMouseClicked(0)) {
-                    engine->setProject(&(engine->getConfig().getLocalProjects()->at(i)));
+                    Project* selected = engine->getConfig().getProjectAt(i);
+                    selected->loadFromFile();
+                    engine->setProject(selected);
                 }
             }
             ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);

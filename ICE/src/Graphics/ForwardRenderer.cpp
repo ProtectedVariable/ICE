@@ -18,6 +18,7 @@ namespace ICE {
     }
 
     void ForwardRenderer::submitScene(Scene *scene) {
+        skybox = scene->getSkybox();
         for(auto e : scene->getEntities()) {
             submit(e);
         }
@@ -39,6 +40,16 @@ namespace ICE {
             api->bindDefaultFramebuffer();
         //TODO: Sort entities, make shader list, batch, make instances, set uniforms, etc..
         api->clear();
+        if(skybox != nullptr) {
+            Skybox::getShader()->bind();
+            Skybox::getShader()->loadMat4("projection", camera.getProjection());
+            Eigen::Matrix4f view = camera.lookThrough();
+            view(0, 3) = 0;
+            view(1, 3) = 0;
+            view(2, 3) = 0;
+            Skybox::getShader()->loadMat4("view", view);
+            Skybox::getShader()->loadInt("skybox", 0);
+        }
         for(auto e : renderableEntities) {
             const Material* material = e->getComponent<RenderComponent>()->getMaterial();
             Shader* shader = e->getComponent<RenderComponent>()->getShader();
@@ -60,6 +71,14 @@ namespace ICE {
     }
 
     void ForwardRenderer::render() {
+        if(skybox->getTexture() != nullptr) {
+            api->setDepthMask(false);
+            Skybox::getShader()->bind();
+            skybox->getVAO()->bind();
+            skybox->getTexture()->bind(0);
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
+        api->setDepthMask(true);
         for(auto e : renderableEntities) {
             const Material* mat = e->getComponent<RenderComponent>()->getMaterial();
             Shader* shader = e->getComponent<RenderComponent>()->getShader();
@@ -94,10 +113,7 @@ namespace ICE {
     }
 
     void ForwardRenderer::endFrame() {
-        unsigned int err;
-        while((err = glGetError()) != GL_NO_ERROR){
-            Logger::Log(Logger::ERROR, "Graphics", "OpenGL Error %d", err);
-        }
+        api->checkAndLogErrors();
         renderableEntities.clear();
         lightEntities.clear();
         //TODO: Cleanup and restore state
@@ -113,5 +129,9 @@ namespace ICE {
         this->target->bind();
         this->target->resize(width, height);
         this->api->setViewport(0, 0, width, height);
+    }
+
+    void ForwardRenderer::setClearColor(Eigen::Vector4f clearColor) {
+        this->api->setClearColor(clearColor.x(), clearColor.y(), clearColor.z(), clearColor.w());
     }
 }

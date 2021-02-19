@@ -15,7 +15,7 @@ namespace ICE {
 
         void setViewport(int x, int y, int width, int height) const override;
 
-        void setClearColor(int r, int g, int b, int a) const override;
+        void setClearColor(float r, float g, float b, float a) const override;
 
         void clear() const override;
 
@@ -26,6 +26,12 @@ namespace ICE {
         void finish() const override;
 
         void bindDefaultFramebuffer() const override;
+
+        void setDepthTest(bool enable) const override;
+
+        void setDepthMask(bool enable) const override;
+
+        void checkAndLogErrors() const override;
     };
 }
 

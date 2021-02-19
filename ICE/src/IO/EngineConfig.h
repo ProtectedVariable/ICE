@@ -18,6 +18,7 @@ namespace ICE {
     public:
         static EngineConfig LoadFromFile();
         std::vector<Project>* getLocalProjects();
+        Project* getProjectAt(int id);
 
         EngineConfig();
         void save();

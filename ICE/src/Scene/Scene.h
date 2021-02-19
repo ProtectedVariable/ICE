@@ -9,6 +9,7 @@
 #include "Entity.h"
 #include <string>
 #include <Graphics/Renderer.h>
+#include <Graphics/Skybox.h>
 
 namespace ICE {
     class Renderer;
@@ -44,10 +45,15 @@ namespace ICE {
 
         void setName(const std::string &name);
 
+        Skybox* getSkybox();
+
+        void setSkybox(const Skybox &skybox);
+
     private:
         std::string name;
         SceneNode* root;
         std::unordered_map<std::string, SceneNode*> nodeByID;
+        Skybox skybox;
     };
 }
 

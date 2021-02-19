@@ -10,6 +10,7 @@
 #include "RendererConfig.h"
 #include "Camera.h"
 #include "Framebuffer.h"
+#include "Skybox.h"
 #include <vector>
 
 namespace ICE {
@@ -31,12 +32,14 @@ namespace ICE {
 
         void resize(uint32_t width, uint32_t height) override;
 
+        void setClearColor(Eigen::Vector4f clearColor) override;
     private:
         std::vector<Entity*> renderableEntities;
         std::vector<Entity*> lightEntities;
         RendererAPI* api;
         RendererConfig config;
         Framebuffer* target;
+        Skybox* skybox;
     };
 }
 

@@ -20,11 +20,14 @@ namespace ICE {
         virtual void initialize() const = 0;
         virtual void bindDefaultFramebuffer() const = 0;
         virtual void setViewport(int x, int y, int width, int height) const = 0;
-        virtual void setClearColor(int r, int g, int b, int a) const = 0;
+        virtual void setClearColor(float r, float g, float b, float a) const = 0;
         virtual void clear() const = 0;
         virtual void renderVertexArray(const VertexArray* va) const = 0;
         virtual void flush() const = 0;
         virtual void finish() const = 0;
+        virtual void setDepthTest(bool enable) const = 0;
+        virtual void setDepthMask(bool enable) const = 0;
+        virtual void checkAndLogErrors() const = 0;
 
         static GraphicsAPI GetAPI() { return api; }
         static RendererAPI* Create();

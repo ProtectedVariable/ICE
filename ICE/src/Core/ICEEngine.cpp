@@ -4,6 +4,7 @@
 // Read online: https://github.com/ocornut/imgui/tree/master/docs
 
 #define TINYOBJLOADER_IMPLEMENTATION
+#define STB_IMAGE_IMPLEMENTATION
 #include "ICEEngine.h"
 #include <GLFW/glfw3.h>
 #include <ImGUI/imgui.h>
@@ -60,6 +61,8 @@ namespace ICE {
 
         internalFB = Framebuffer::Create({1280, 720, 1});
         pickingFB = Framebuffer::Create({1280, 720, 1});
+
+        Skybox::Initialize();
     }
 
     void ICEEngine::loop() {
@@ -69,6 +72,7 @@ namespace ICE {
         {
             api->bindDefaultFramebuffer();
             glfwPollEvents();
+            api->setClearColor(0,0,0,1);
             api->clear();
 
             ImGui_ImplOpenGL3_NewFrame();
@@ -85,6 +89,7 @@ namespace ICE {
             if(project != nullptr) {
                 renderSystem->setTarget(internalFB, gui.getSceneViewportWidth(), gui.getSceneViewportHeight());
                 camera.setParameters({60, (float) gui.getSceneViewportWidth() / (float) gui.getSceneViewportHeight(), 0.01f, 1000});
+                api->setClearColor(0,0,0,1);
                 api->clear();
                 for (auto s : systems) {
                     s->update(currentScene, 0.f);
@@ -92,7 +97,7 @@ namespace ICE {
             }
             int display_w, display_h;
             glfwGetFramebufferSize(static_cast<GLFWwindow *>(window), &display_w, &display_h);
-            glViewport(0, 0, display_w, display_h);
+            api->setViewport(0, 0, display_w, display_h);
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
             // Update and Render additional Platform Windows
@@ -136,9 +141,10 @@ namespace ICE {
     Eigen::Vector4i ICEEngine::getPickingTextureAt(int x, int y) {
         pickingFB->bind();
         pickingFB->resize(gui.getSceneViewportWidth(), gui.getSceneViewportHeight());
-        glViewport(0, 0, gui.getSceneViewportWidth(), gui.getSceneViewportHeight());
+        api->setViewport(0, 0, gui.getSceneViewportWidth(), gui.getSceneViewportHeight());
         camera.setParameters(
                 {60, (float) gui.getSceneViewportWidth() / (float) gui.getSceneViewportHeight(), 0.01f, 1000});
+        api->setClearColor(0,0,0,0);
         api->clear();
         getAssetBank()->getShader("__ice__picking_shader")->bind();
         getAssetBank()->getShader("__ice__picking_shader")->loadMat4("projection", camera.getProjection());
@@ -185,11 +191,15 @@ namespace ICE {
         }
     }
 
-    void ICEEngine::importTexture() {
+    void ICEEngine::importTexture(bool cubeMap) {
         const std::string file = FileUtils::openFileDialog("");
         if(file != "") {
             std::string aname = "imported_texture_"+std::to_string(import_cnt++);
-            getAssetBank()->addTexture(aname, Texture2D::Create(file));
+            if(cubeMap) {
+                getAssetBank()->addTexture(aname, TextureCube::Create(file));
+            } else {
+                getAssetBank()->addTexture(aname, Texture2D::Create(file));
+            }
             project->copyAssetFile("Textures", aname, file);
         }
     }
