@@ -70,6 +70,9 @@ namespace ICE {
         subtree(engine->getScene()->getRoot());
 
         ImGui::End();
+        if(engine->getScene()->getByID(selected) == nullptr) {
+            selected = "root";
+        }
         if(selected != "root") {
             engine->setSelected(engine->getScene()->getByID(selected)->entity);
         }

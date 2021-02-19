@@ -101,7 +101,21 @@ namespace ICE {
         } else if(*selectedDir == 3) {
             i = 0;
             for(const auto& m : engine->getAssetBank()->getTextures()) {
-                renderAssetThumbnail(m.second->getTexture(), m.first);
+                if(m.second->getType() == TextureType::Tex2D) {
+                    renderAssetThumbnail(m.second->getTexture(), m.first);
+                } else if(m.second->getType() == TextureType::CubeMap) {
+                    Scene scene("__ice__assetcontent_scene");
+                    scene.setSkybox(Skybox(m.second));
+                    renderer.setTarget(thumbnailFBO[i]);
+                    renderer.submitScene(&scene);
+                    renderer.resize(ICE_THUMBNAIL_SIZE, ICE_THUMBNAIL_SIZE);
+                    Camera camera = Camera({{30, 1.f, 0.01f, 1000 }, Perspective});
+                    renderer.prepareFrame(camera);
+                    renderer.render();
+                    renderer.endFrame();
+
+                    renderAssetThumbnail(thumbnailFBO[i]->getTexture(), m.first);
+                }
                 i++;
             }
         }
