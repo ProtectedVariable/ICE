@@ -52,8 +52,11 @@ namespace ICE {
                         if(ImGui::MenuItem("Mesh (.obj)")) {
                             engine->importMesh();
                         }
-                        if(ImGui::MenuItem("Texture")) {
-                            engine->importTexture();
+                        if(ImGui::MenuItem("2D Texture")) {
+                            engine->importTexture(false);
+                        }
+                        if(ImGui::MenuItem("CubeMap Texture")) {
+                            engine->importTexture(true);
                         }
                         ImGui::EndMenu();
                     }

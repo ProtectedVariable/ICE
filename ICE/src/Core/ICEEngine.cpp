@@ -191,11 +191,15 @@ namespace ICE {
         }
     }
 
-    void ICEEngine::importTexture() {
+    void ICEEngine::importTexture(bool cubeMap) {
         const std::string file = FileUtils::openFileDialog("");
         if(file != "") {
             std::string aname = "imported_texture_"+std::to_string(import_cnt++);
-            getAssetBank()->addTexture(aname, Texture2D::Create(file));
+            if(cubeMap) {
+                getAssetBank()->addTexture(aname, TextureCube::Create(file));
+            } else {
+                getAssetBank()->addTexture(aname, Texture2D::Create(file));
+            }
             project->copyAssetFile("Textures", aname, file);
         }
     }

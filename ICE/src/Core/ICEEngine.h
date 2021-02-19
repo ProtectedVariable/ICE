@@ -45,7 +45,7 @@ namespace ICE {
 
         void importMesh();
 
-        void importTexture();
+        void importTexture(bool cubeMap);
 
         void setCurrentScene(Scene *currentScene);
 

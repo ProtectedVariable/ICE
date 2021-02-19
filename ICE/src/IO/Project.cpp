@@ -91,10 +91,20 @@ namespace ICE {
 
         for(auto m : assetBank.getTextures()) {
             if(m.first.find("__ice__") == std::string::npos) {
-                strvec.push_back(m.first);
+                if(m.second->getType() == TextureType::Tex2D)
+                    strvec.push_back(m.first);
             }
         }
-        j["textures"] = strvec;
+        j["textures2D"] = strvec;
+        strvec.clear();
+
+        for(auto m : assetBank.getTextures()) {
+            if(m.first.find("__ice__") == std::string::npos) {
+                if(m.second->getType() == TextureType::CubeMap)
+                    strvec.push_back(m.first);
+            }
+        }
+        j["cubeMaps"] = strvec;
         outstream << j.dump(4);
         outstream.close();
 
@@ -151,7 +161,8 @@ namespace ICE {
         std::vector<std::string> meshesNames = j["meshes"];
         std::vector<std::string> materialNames = j["materials"];
         std::vector<std::string> shaderNames = j["shaders"];
-        std::vector<std::string> textureNames = j["textures"];
+        std::vector<std::string> textureNames = j["textures2D"];
+        std::vector<std::string> cubeMapNames = j["cubeMaps"];
 
         cameraPosition = parseVec3(j["camera_position"]);
         cameraRotation = parseVec3(j["camera_rotation"]);
@@ -167,6 +178,15 @@ namespace ICE {
             for(auto file : files) {
                 if(file.find(m) != std::string::npos) {
                     assetBank.addTexture(m, Texture2D::Create(path+file));
+                    break;
+                }
+            }
+        }
+
+        for(auto m : cubeMapNames) {
+            for(auto file : files) {
+                if(file.find(m) != std::string::npos) {
+                    assetBank.addTexture(m, TextureCube::Create(path+file));
                     break;
                 }
             }
