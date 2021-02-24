@@ -12,23 +12,7 @@
 
 using namespace ICE;
 
-TEST(AssetBankTest, AddedAssetsCanBeRetrieved)
-{
-    RendererAPI::SetAPI(None);
-    AssetBank ab = AssetBank();
-    Material mtl = Material();
-    ab.addMaterial("a_ice_test_mtl", &mtl);
-    ASSERT_EQ(ab.getMaterial("a_ice_test_mtl"), &mtl);
-    ASSERT_EQ(ab.getMaterial("lol"), nullptr);
-
-    auto dummy_vert = std::vector<Eigen::Vector3f>();
-    dummy_vert.emplace_back(1,1,1);
-    Mesh mesh = Mesh(dummy_vert, std::vector<Eigen::Vector3f>(), std::vector<Eigen::Vector2f>(),std::vector<Eigen::Vector3i>());
-    ab.addMesh("a_ice_test_mesh", &mesh);
-    ASSERT_EQ(ab.getMesh("a_ice_test_mesh"), &mesh);
-    ASSERT_EQ(ab.getMesh("lel"), nullptr);
-
-}
+#include "AssetBankTest.h"
 
 int main(int argc, char** argv) {
     testing::InitGoogleTest(&argc, argv);

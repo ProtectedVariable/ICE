@@ -69,7 +69,7 @@ add_executable(ICE
 add_executable(ICE_TEST
 		"${EXTRA_SRC}"
 		ICE/test/Tests.cpp
-		${ICE_SRC})
+		${ICE_SRC} ICE/test/AssetBankTest.h)
 
 target_compile_definitions(ICE_TEST PUBLIC ICE_TEST)
 file(COPY ICE/Assets DESTINATION ${CMAKE_BINARY_DIR})
