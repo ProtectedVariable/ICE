@@ -14,8 +14,11 @@
 #include <Graphics/API/OpenGL/OpenGLFramebuffer.h>
 #include <Graphics/Texture.h>
 #include <Graphics/API/OpenGL/OpenGLTexture.h>
+#include <Graphics/API/None/NoneGraphics.h>
 
 namespace ICE {
+
+    GraphicsAPI RendererAPI::api = OpenGL;
 
     Context* Context::Create(void* windowHandle) {
         switch(RendererAPI::GetAPI()) {
@@ -28,36 +31,36 @@ namespace ICE {
     Framebuffer* Framebuffer::Create(FrameBufferFormat format) {
         switch(RendererAPI::GetAPI()) {
             case OpenGL: return new OpenGLFramebuffer(format);
+            case None: return new NoneFramebuffer();
         }
-        return nullptr;
     }
 
     RendererAPI* RendererAPI::Create() {
         switch(RendererAPI::GetAPI()) {
             case OpenGL: return new OpenGLRendererAPI();
+            case None: return new NoneRendererAPI();
         }
-        return nullptr;
     }
 
     VertexArray* VertexArray::Create() {
         switch(RendererAPI::GetAPI()) {
             case OpenGL: return new OpenGLVertexArray();
+            case None: return new NoneVertexArray();
         }
-        return nullptr;
     }
 
     VertexBuffer* VertexBuffer::Create() {
         switch(RendererAPI::GetAPI()) {
             case OpenGL: return new OpenGLVertexBuffer();
+            case None: return new NoneVertexBuffer();
         }
-        return nullptr;
     }
 
     IndexBuffer* IndexBuffer::Create() {
         switch(RendererAPI::GetAPI()) {
             case OpenGL: return new OpenGLIndexBuffer();
+            case None: return new NoneIndexBuffer();
         }
-        return nullptr;
     }
 
     Shader* Shader::Create(const std::string &vertexFile, const std::string &fragmentFile) {
@@ -67,21 +70,21 @@ namespace ICE {
     Shader* Shader::Create(const std::string &vertexFile, const std::string &geometryFile, const std::string &fragmentFile) {
         switch(RendererAPI::GetAPI()) {
             case OpenGL: return new OpenGLShader(vertexFile, geometryFile, fragmentFile);
+            case None: return new NoneShader();
         }
-        return nullptr;
     }
 
     Texture2D* Texture2D::Create(const std::string& file) {
         switch(RendererAPI::GetAPI()) {
             case OpenGL: return new OpenGLTexture2D(file);
+            case None: return new NoneTexture2D();
         }
-        return nullptr;
     }
 
     TextureCube* TextureCube::Create(const std::string &file) {
         switch(RendererAPI::GetAPI()) {
             case OpenGL: return new OpenGLTextureCube(file);
+            case None: return new NoneTextureCube();
         }
-        return nullptr;
     }
 }

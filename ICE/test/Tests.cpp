@@ -14,6 +14,7 @@ using namespace ICE;
 
 TEST(AssetBankTest, AddedAssetsCanBeRetrieved)
 {
+    RendererAPI::SetAPI(None);
     AssetBank ab = AssetBank();
     Material mtl = Material();
     ab.addMaterial("a_ice_test_mtl", &mtl);
