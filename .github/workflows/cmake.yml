@@ -38,6 +38,14 @@ jobs:
             export CC=gcc-10
             export CXX=g++-10
 
+            sudo apt-get install libgtest-dev
+            cd /usr/src/gtest
+            sudo mkdir build
+            cd build
+            sudo cmake ..
+            sudo make
+            sudo make install
+
     - name: OSX dev lib
       if: runner.os == 'macOS'
       run: |
