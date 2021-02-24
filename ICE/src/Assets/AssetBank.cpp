@@ -21,18 +21,22 @@ namespace ICE {
     }
 
     Mesh* AssetBank::getMesh(const std::string &name) {
+        if(!nameInUse(name)) return nullptr;
         return meshes.find(name)->second;
     }
 
     Material* AssetBank::getMaterial(const std::string &name) {
+        if(!nameInUse(name)) return nullptr;
         return materials.find(name)->second;
     }
 
     Shader* AssetBank::getShader(const std::string &name) {
+        if(!nameInUse(name)) return nullptr;
         return shaders[name];
     }
 
     Texture* AssetBank::getTexture(const std::string &name) {
+        if(!nameInUse(name)) return nullptr;
         return textures[name];
     }
 

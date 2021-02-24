@@ -20,6 +20,7 @@ namespace ICE {
     Context* Context::Create(void* windowHandle) {
         switch(RendererAPI::GetAPI()) {
             case OpenGL: return new OpenGLContext(static_cast<GLFWwindow*>(windowHandle));
+            case None: return new NoneContext();
         }
         return nullptr;
     }

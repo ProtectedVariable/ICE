@@ -1,18 +1,37 @@
 //
 // Created by Thomas Ibanez on 16.11.20.
 //
-#define ICE_TEST
 #define IMGUI_IMPL_OPENGL_LOADER_GL3W
 #include <GL/gl3w.h>
 #include <Scene/Entity.h>
 #include <Scene/TransformComponent.h>
 #include <Scene/Scene.h>
+#include <Assets/AssetBank.h>
 #include <Util/Logger.h>
+#include <gtest/gtest.h>
 
 using namespace ICE;
 
-//TODO: Add a real testing library
-int main(void) {
+TEST(AssetBankTest, AddedAssetsCanBeRetrieved)
+{
+    AssetBank ab = AssetBank();
+    Material mtl = Material();
+    ab.addMaterial("a_ice_test_mtl", &mtl);
+    ASSERT_EQ(ab.getMaterial("a_ice_test_mtl"), &mtl);
+    ASSERT_EQ(ab.getMaterial("lol"), nullptr);
+
+    auto dummy_vert = std::vector<Eigen::Vector3f>();
+    dummy_vert.emplace_back(1,1,1);
+    Mesh mesh = Mesh(dummy_vert, std::vector<Eigen::Vector3f>(), std::vector<Eigen::Vector2f>(),std::vector<Eigen::Vector3i>());
+    ab.addMesh("a_ice_test_mesh", &mesh);
+    ASSERT_EQ(ab.getMesh("a_ice_test_mesh"), &mesh);
+    ASSERT_EQ(ab.getMesh("lel"), nullptr);
+
+}
+
+int main(int argc, char** argv) {
+    testing::InitGoogleTest(&argc, argv);
+    /*
     Entity e;
     assert(!e.hasComponent<TransformComponent>());
     TransformComponent tr;
@@ -24,12 +43,12 @@ int main(void) {
     s.addEntity("root", "my", &e);
     assert(s.getByID("my") != nullptr);
     assert(s.getByID("my")->entity == &e);
+    */
     Logger::Log(Logger::DEBUG, "Core", "This is a debug message !");
     Logger::Log(Logger::VERBOSE, "Core", "This is a verbose message !");
     Logger::Log(Logger::INFO, "Core", "This is a info message !");
     Logger::Log(Logger::WARNING, "Core", "This is a warning message !");
     Logger::Log(Logger::ERROR, "Core", "This is a error message !");
     Logger::Log(Logger::FATAL, "Core", "This is a fatal message !");
-    Logger::Log(Logger::VERBOSE, "Core", "Creating context...");
-    return 0;
+    return RUN_ALL_TESTS();
 }
