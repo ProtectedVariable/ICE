@@ -24,13 +24,6 @@ if(APPLE)
 	set(EXTRA_SRC ICE/src/Platform/OSX/dialog.mm)
 elseif(WIN32)
 	set(EXTRA_SRC ICE/src/Platform/Win32/dialog.cpp)
-	include(FetchContent)
-	FetchContent_Declare(
-			googletest
-			URL https://github.com/google/googletest/archive/965f8ecbfd8b91bbd4f5ee4914c028660bb89029.zip
-	)
-	set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-	FetchContent_MakeAvailable(googletest)
 else()
 	link_libraries(-lstdc++fs)
 	set(EXTRA_SRC ICE/src/Platform/Linux/dialog.cpp)
@@ -65,32 +58,28 @@ set(ICE_SRC includes/GL/gl3w.h
 		ICE/src/Math/AABB.cpp ICE/src/Math/AABB.h ICE/src/Graphics/API/OpenGL/OpenGLTextureCube.cpp ICE/src/Graphics/Skybox.cpp ICE/src/Graphics/Skybox.h ICE/src/GUI/SceneParamPane.cpp ICE/src/GUI/SceneParamPane.h
 		ICE/src/Graphics/API/None/NoneGraphics.h)
 
-enable_testing()
-find_package(GTest REQUIRED)
-include_directories(${GTEST_INCLUDE_DIRS})
-
 add_executable(ICE
 		"${EXTRA_SRC}"
 		${ICE_SRC})
 
-add_executable(ICE_TEST
-		"${EXTRA_SRC}"
-		ICE/test/Tests.cpp
-		${ICE_SRC} ICE/test/AssetBankTest.h)
-
-target_compile_definitions(ICE_TEST PUBLIC ICE_TEST)
 file(COPY ICE/Assets DESTINATION ${CMAKE_BINARY_DIR})
 
 
 if(APPLE)
 	target_link_libraries(ICE glfw ${COCOA_LIBRARY} ${OPENGL_LIBRARY} ${IOKIT_LIBRARY})
-	target_link_libraries(ICE_TEST glfw ${COCOA_LIBRARY} ${OPENGL_LIBRARY} ${IOKIT_LIBRARY} ${GTEST_LIBRARIES})
 elseif(WIN32)
 	target_link_libraries(ICE glfw)
-	target_link_libraries(ICE_TEST glfw)
 else()
+	enable_testing()
+	find_package(GTest REQUIRED)
+	include_directories(${GTEST_INCLUDE_DIRS})
 	find_package(PkgConfig REQUIRED)
 	pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
+
+	add_executable(ICE_TEST
+			"${EXTRA_SRC}"
+			ICE/test/Tests.cpp
+			${ICE_SRC} ICE/test/AssetBankTest.h)
 
 	include_directories(${GTK3_INCLUDE_DIRS})
 	link_directories(${GTK3_LIBRARY_DIRS})
