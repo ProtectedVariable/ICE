@@ -24,6 +24,13 @@ if(APPLE)
 	set(EXTRA_SRC ICE/src/Platform/OSX/dialog.mm)
 elseif(WIN32)
 	set(EXTRA_SRC ICE/src/Platform/Win32/dialog.cpp)
+	include(FetchContent)
+	FetchContent_Declare(
+			googletest
+			URL https://github.com/google/googletest/archive/965f8ecbfd8b91bbd4f5ee4914c028660bb89029.zip
+	)
+	set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+	FetchContent_MakeAvailable(googletest)
 else()
 	link_libraries(-lstdc++fs)
 	set(EXTRA_SRC ICE/src/Platform/Linux/dialog.cpp)
