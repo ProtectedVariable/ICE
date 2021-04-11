@@ -80,6 +80,7 @@ else()
 			"${EXTRA_SRC}"
 			ICE/test/Tests.cpp
 			${ICE_SRC} ICE/test/AssetBankTest.h)
+	target_compile_definitions(ICE_TEST PUBLIC ICE_TEST)
 
 	include_directories(${GTK3_INCLUDE_DIRS})
 	link_directories(${GTK3_LIBRARY_DIRS})
