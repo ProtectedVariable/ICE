@@ -30,6 +30,8 @@ namespace ICE {
 
         int getSceneViewportHeight() const;
 
+        void initializeEditorUI();
+
     private:
 
         void applyStyle();

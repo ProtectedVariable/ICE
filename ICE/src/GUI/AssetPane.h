@@ -16,13 +16,15 @@ namespace ICE {
     public:
         explicit AssetPane(ICEEngine *engine);
 
+        void initialize() override;
+
         bool render() override;
     private:
         ICEEngine* engine;
         AssetViewPane viewPane;
         AssetContentPane contentPane;
         int selectedDirectory = 0;
-        std::string selectedAsset = "";
+        std::string selectedAsset = "__ice__cube";
     };
 }
 

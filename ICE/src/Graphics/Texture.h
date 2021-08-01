@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <string>
 #include <stb/stb_image.h>
+#include <Assets/Asset.h>
 
 
 namespace ICE {
@@ -31,7 +32,7 @@ namespace ICE {
         CubeMap = 1
     };
 
-    class Texture {
+    class Texture : public Asset {
     public:
         virtual void bind(uint32_t slot = 0) const = 0;
         virtual void setData(void* data, uint32_t size) = 0;
@@ -49,6 +50,10 @@ namespace ICE {
             stbi_set_flip_vertically_on_load(1);
             stbi_uc* data = stbi_load(file.c_str(), width, height, channels, force);
             return data;
+        }
+
+        std::string getTypeName() override {
+            return "Texture";
         }
     };
 

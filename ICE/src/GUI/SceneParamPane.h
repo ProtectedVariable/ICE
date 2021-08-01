@@ -14,6 +14,9 @@ namespace ICE {
     public:
         bool render() override;
         SceneParamPane(ICEEngine* engine);
+
+        void initialize() override;
+
     private:
         ICEEngine* engine;
     };

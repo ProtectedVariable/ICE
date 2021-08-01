@@ -12,24 +12,24 @@
 namespace ICE {
     class RenderComponent : public Component {
     public:
-        RenderComponent(const Mesh* mesh, const Material* material, Shader* shader);
+        RenderComponent(AssetUID mesh, AssetUID material, AssetUID shader);
 
-        const Mesh* getMesh() const;
+        AssetUID getMesh() const;
 
-        const Material* getMaterial() const;
+        AssetUID getMaterial() const;
 
-        void setMesh(Mesh *mesh);
+        void setMesh(AssetUID mesh);
 
-        void setMaterial(Material *material);
+        void setMaterial(AssetUID material);
 
-        Shader *getShader();
+        AssetUID getShader();
 
-        void setShader(Shader *shader);
+        void setShader(AssetUID shader);
 
     private:
-        const Mesh* mesh;
-        const Material* material;
-        Shader* shader;
+        AssetUID mesh;
+        AssetUID material;
+        AssetUID shader;
     };
 }
 

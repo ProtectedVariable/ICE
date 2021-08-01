@@ -41,9 +41,6 @@ namespace ICE {
         static json dumpVec3(const Eigen::Vector3f& v);
         static json dumpVec4(const Eigen::Vector4f& v);
 
-        static Eigen::Vector3f parseVec3(const json& src);
-        static Eigen::Vector4f parseVec4(const json& src);
-
         const Eigen::Vector3f &getCameraPosition() const;
 
         const Eigen::Vector3f &getCameraRotation() const;

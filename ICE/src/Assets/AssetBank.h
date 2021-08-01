@@ -9,41 +9,101 @@
 #include <Graphics/Mesh.h>
 #include <Graphics/Material.h>
 #include <Graphics/Texture.h>
+#include "Asset.h"
+#include "Resource.h"
+#include "ResourceLoader.h"
+#include <typeindex>
 
 #define ICE_ASSET_PREFIX "__ice__"
 
 namespace ICE {
+    struct AssetBankEntry {
+        std::string& name;
+        Asset* asset;
+    };
+
     class AssetBank {
     public:
         AssetBank();
 
         void fillWithDefaults();
 
-        bool addMesh(const std::string& name, Mesh* mesh);
-        bool addMaterial(const std::string& name, Material* mtl);
-        bool addShader(const std::string& name, Shader* shader);
-        bool addTexture(const std::string& name, Texture* texture);
+        template<typename T>
+        T *getAsset(AssetUID uid) {
+            if(uid == NO_ASSET_ID) return nullptr;
+            return dynamic_cast<T*>(getResource(uid)->asset);
+        }
 
-        bool renameAsset(const std::string& oldName, const std::string& newName);
+        template<typename T>
+        T *getAsset(const std::string &name) {
+            return dynamic_cast<T*>(getResource(typenames[typeid(T)]+"/"+name)->asset);
+        }
 
-        Mesh* getMesh(const std::string& name);
-        Material* getMaterial(const std::string& name);
-        Shader* getShader(const std::string& name);
-        Texture* getTexture(const std::string& name);
+        Resource *getResource(AssetUID uid) {
+            if(uid == NO_ASSET_ID) return nullptr;
+            return resources[uid];
+        }
 
-        const std::unordered_map<std::string, Mesh*> &getMeshes() const;
-        const std::unordered_map<std::string, Material*> &getMaterials() const;
-        const std::unordered_map<std::string, Shader*> &getShaders() const;
-        const std::unordered_map<std::string, Texture*> &getTextures() const;
+        Resource *getResource(const std::string &name) {
+            return getResource(nameMapping[name]);
+        }
 
-        std::string getName(const void* ptr);
+        template<typename T>
+        bool addResource(const std::string &name, const std::vector<std::string> &sources) {
+            Resource* res = loader.LoadResource<T>(sources);
+            return addResource<T>(name, res);
+        }
+
+        template<typename T>
+        bool addResource(const std::string &name, Resource* res) {
+            resources[nextUID] = res;
+            nameMapping[typenames[typeid(T)]+"/"+name] = nextUID;
+            nextUID++;
+            return true;
+        }
+
+        template<typename T>
+        bool renameAsset(const std::string &oldName, const std::string &newName) {
+            return 1;
+        }
+
+        template<typename T>
+        std::unordered_map<AssetUID, T *> getAll() {
+            auto all = std::unordered_map<AssetUID, T*>();
+            for(auto kv : resources) {
+                T* asset = dynamic_cast<T*>(kv.second->asset);
+                if(asset != nullptr) {
+                    all[kv.first] = asset;
+                }
+            }
+            return all;
+        }
+
+        std::string getName(AssetUID uid) {
+            for(auto entry : nameMapping) {
+                if(entry.second == uid) {
+                    return entry.first;
+                }
+            }
+            return "";
+        }
+
+        template<typename T>
+        AssetUID getUID(const std::string &name) {
+            return getUIDFromFullName(typenames[typeid(T)]+"/"+name);
+        }
+
+        AssetUID getUIDFromFullName(const std::string &name) {
+            return nameMapping[name];
+        }
+
         bool nameInUse(const std::string& name);
-
     private:
-        std::unordered_map<std::string, Mesh*> meshes;
-        std::unordered_map<std::string, Material*> materials;
-        std::unordered_map<std::string, Shader*> shaders;
-        std::unordered_map<std::string, Texture*> textures;
+        AssetUID nextUID = 1;
+        std::unordered_map<std::string, AssetUID> nameMapping;
+        std::unordered_map<AssetUID, Resource*> resources;
+        std::unordered_map<std::type_index, std::string> typenames;
+        ResourceLoader loader;
     };
 }
 

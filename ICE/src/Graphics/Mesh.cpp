@@ -52,4 +52,8 @@ namespace ICE {
     const AABB &Mesh::getBoundingBox() const {
         return boundingBox;
     }
+
+    std::string Mesh::getTypeName() {
+        return "Mesh";
+    }
 }

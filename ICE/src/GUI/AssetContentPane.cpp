@@ -35,13 +35,13 @@ namespace ICE {
         int i = 0;
         if(*selectedDir == 0) {
 
-            for(const auto& m : engine->getAssetBank()->getMeshes()) {
+            for(const auto& m : engine->getAssetBank()->getAll<Mesh>()) {
                 auto scene = Scene("__ice__assetcontent_scene");
-                Shader* shader = engine->getAssetBank()->getShader("__ice__normal_shader");
-                Material mat = Material();
+                AssetUID shader = engine->getAssetBank()->getUID<Shader>("__ice__normal_shader");
+                AssetUID mat = engine->getAssetBank()->getUID<Material>("__ice__base_material");
 
                 auto mesh = Entity();
-                auto rcMesh = RenderComponent(m.second, &mat, shader);
+                auto rcMesh = RenderComponent(m.first, mat, shader);
                 float scale = 1.5f/(m.second->getBoundingBox().getMax() - m.second->getBoundingBox().getMin()).norm();
                 auto tcMesh = TransformComponent(Eigen::Vector3f(0,0,0), Eigen::Vector3f(0, 45, 0), Eigen::Vector3f(scale, scale, scale));
                 mesh.addComponent(&rcMesh);
@@ -54,18 +54,19 @@ namespace ICE {
                 renderer.prepareFrame(camera);
                 renderer.render();
                 renderer.endFrame();
+                std::string name = engine->getAssetBank()->getName(m.first);
 
-                renderAssetThumbnail(thumbnailFBO[i]->getTexture(), m.first);
+                renderAssetThumbnail(thumbnailFBO[i]->getTexture(), name.substr(name.find_last_of('/')+1));
                 i++;
             }
         } else if(*selectedDir == 1) {
-            for(const auto& m : engine->getAssetBank()->getMaterials()) {
+            for(const auto& m : engine->getAssetBank()->getAll<Material>()) {
                 Material mat = *m.second;
 
                 auto scene = Scene("__ice__assetcontent_scene");
 
                 auto sphere = Entity();
-                auto rcSphere = RenderComponent(engine->getAssetBank()->getMesh("__ice__sphere"), &mat, engine->getAssetBank()->getShader("__ice__phong_shader"));
+                auto rcSphere = RenderComponent(engine->getAssetBank()->getUID<Mesh>("__ice__sphere"), m.first, engine->getAssetBank()->getUID<Shader>("__ice__phong_shader"));
                 auto tcSphere = TransformComponent();
                 sphere.addComponent(&rcSphere);
                 sphere.addComponent(&tcSphere);
@@ -85,8 +86,9 @@ namespace ICE {
                 renderer.render();
                 renderer.endFrame();
 
-                renderAssetThumbnail(thumbnailFBO[i]->getTexture(), m.first);
-                if(ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()) {
+                std::string name = engine->getAssetBank()->getName(m.first);
+
+                renderAssetThumbnail(thumbnailFBO[i]->getTexture(), name.substr(name.find_last_of('/')+1));                if(ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()) {
                     newMaterialPaneShow = true;
                     newMaterialPane.edit(*selectedAsset, mat);
                 }
@@ -94,18 +96,18 @@ namespace ICE {
                 i++;
             }
         } else if(*selectedDir == 2) {
-            for(const auto& m : engine->getAssetBank()->getShaders()) {
+            for(const auto& m : engine->getAssetBank()->getAll<Shader>()) {
                 //TODO: Add file icon
-                ImGui::Text("%s", m.first.c_str());
+                ImGui::Text("%s", engine->getAssetBank()->getName(m.first).c_str());
             }
         } else if(*selectedDir == 3) {
             i = 0;
-            for(const auto& m : engine->getAssetBank()->getTextures()) {
+            for(const auto& m : engine->getAssetBank()->getAll<Texture>()) {
                 if(m.second->getType() == TextureType::Tex2D) {
-                    renderAssetThumbnail(m.second->getTexture(), m.first);
+                    renderAssetThumbnail(m.second->getTexture(), engine->getAssetBank()->getName(m.first));
                 } else if(m.second->getType() == TextureType::CubeMap) {
                     Scene scene("__ice__assetcontent_scene");
-                    scene.setSkybox(Skybox(m.second));
+                    scene.setSkybox(Skybox(m.first));
                     renderer.setTarget(thumbnailFBO[i]);
                     renderer.submitScene(&scene);
                     renderer.resize(ICE_THUMBNAIL_SIZE, ICE_THUMBNAIL_SIZE);
@@ -114,7 +116,9 @@ namespace ICE {
                     renderer.render();
                     renderer.endFrame();
 
-                    renderAssetThumbnail(thumbnailFBO[i]->getTexture(), m.first);
+                    std::string name = engine->getAssetBank()->getName(m.first);
+
+                    renderAssetThumbnail(thumbnailFBO[i]->getTexture(), name.substr(name.find_last_of('/')+1));
                 }
                 i++;
             }
@@ -131,10 +135,6 @@ namespace ICE {
         camera.getPosition().z() = 3;
         camera.getPosition().y() = 2;
         camera.getRotation().x() = -35;
-        renderer.initialize(RendererConfig());
-        for(int i = 0; i < ICE_MAX_THUMBNAILS; i++) {
-            this->thumbnailFBO[i] = Framebuffer::Create({ICE_THUMBNAIL_SIZE, ICE_THUMBNAIL_SIZE, 1});
-        }
     }
 
     void AssetContentPane::renderAssetThumbnail(void *tex, const std::string& name) {
@@ -151,6 +151,13 @@ namespace ICE {
         ImGui::EndGroup();
         if(ImGui::GetCursorPosX() + ICE_THUMBNAIL_SIZE < ImGui::GetContentRegionAvailWidth()) {
             ImGui::SameLine();
+        }
+    }
+
+    void AssetContentPane::initialize() {
+        renderer.initialize(RendererConfig(), engine->getAssetBank());
+        for(int i = 0; i < ICE_MAX_THUMBNAILS; i++) {
+            this->thumbnailFBO[i] = Framebuffer::Create({ICE_THUMBNAIL_SIZE, ICE_THUMBNAIL_SIZE, 1});
         }
     }
 }

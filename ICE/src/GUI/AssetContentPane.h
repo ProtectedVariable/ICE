@@ -23,6 +23,8 @@ namespace ICE {
 
         AssetContentPane(const int *selectedDir, ICEEngine *engine, std::string* selectedAsset);
 
+        void initialize() override;
+
     private:
 
         void renderAssetThumbnail(void* tex, const std::string& name);

@@ -11,15 +11,15 @@ namespace ICE {
 
     Material::Material(const Eigen::Vector3f &albedo, const Eigen::Vector3f &specular,
                        const Eigen::Vector3f &ambient, float alpha) : Material(albedo, specular, ambient, alpha,
-                                                                               nullptr, nullptr, nullptr) {}
+                                                                               NO_ASSET_ID, NO_ASSET_ID, NO_ASSET_ID) {}
 
     Material::Material(const Eigen::Vector3f &albedo, const Eigen::Vector3f &specular,
-                       const Eigen::Vector3f &ambient, float alpha, const Texture *diffuseMap, const Texture *specularMap,
-                       const Texture *ambientMap) : Material(albedo, specular, ambient, alpha, diffuseMap, specularMap, ambientMap, nullptr){}
+                       const Eigen::Vector3f &ambient, float alpha, AssetUID diffuseMap, AssetUID specularMap,
+                       AssetUID ambientMap) : Material(albedo, specular, ambient, alpha, diffuseMap, specularMap, ambientMap, NO_ASSET_ID){}
 
     Material::Material(const Eigen::Vector3f &albedo, const Eigen::Vector3f &specular,
-                       const Eigen::Vector3f &ambient, float alpha, const Texture *diffuseMap,
-                       const Texture *specularMap, const Texture *ambientMap, const Texture *normalMap) : albedo(albedo),
+                       const Eigen::Vector3f &ambient, float alpha, AssetUID diffuseMap,
+                       AssetUID specularMap, AssetUID ambientMap, AssetUID normalMap) : albedo(albedo),
                                                                                                           specular(specular), ambient(ambient),
                                                                                                           alpha(alpha), diffuseMap(diffuseMap), specularMap(specularMap),
                                                                                                           ambientMap(ambientMap), normalMap(normalMap) {}
@@ -56,36 +56,39 @@ namespace ICE {
         Material::alpha = alpha;
     }
 
-    const Texture *Material::getDiffuseMap() const {
+    AssetUID Material::getDiffuseMap() const {
         return diffuseMap;
     }
 
-    void Material::setDiffuseMap(const Texture *diffuseMap) {
+    void Material::setDiffuseMap(AssetUID diffuseMap) {
         this->diffuseMap = diffuseMap;
     }
 
-    const Texture *Material::getSpecularMap() const {
+    AssetUID Material::getSpecularMap() const {
         return specularMap;
     }
 
-    void Material::setSpecularMap(const Texture *specularMap) {
+    void Material::setSpecularMap(AssetUID specularMap) {
         this->specularMap = specularMap;
     }
 
-    const Texture *Material::getAmbientMap() const {
+    AssetUID Material::getAmbientMap() const {
         return ambientMap;
     }
 
-    void Material::setAmbientMap(const Texture *ambientMap) {
+    void Material::setAmbientMap(AssetUID ambientMap) {
         this->ambientMap = ambientMap;
     }
 
-    const Texture *Material::getNormalMap() const {
+    AssetUID Material::getNormalMap() const {
         return normalMap;
     }
 
-    void Material::setNormalMap(const Texture *normalMap) {
+    void Material::setNormalMap(AssetUID normalMap) {
         this->normalMap = normalMap;
     }
 
+    std::string Material::getTypeName() {
+        return "Material";
+    }
 }

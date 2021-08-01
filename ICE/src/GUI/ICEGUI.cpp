@@ -359,4 +359,11 @@ namespace ICE {
         style->TabRounding = 0.0f;
         style->WindowRounding = 4.0f;
     }
+
+    void ICEGUI::initializeEditorUI() {
+        hierarchyPane.initialize();
+        inspectorPane.initialize();
+        assetPane.initialize();
+        sceneParamPane.initialize();
+    }
 }

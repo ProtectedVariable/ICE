@@ -8,10 +8,11 @@
 #include <Eigen/Dense>
 #include <vector>
 #include <Math/AABB.h>
+#include <Assets/Asset.h>
 #include "VertexArray.h"
 
 namespace ICE {
-    class Mesh {
+    class Mesh : public Asset {
     public:
         Mesh(const std::vector<Eigen::Vector3f> &vertices, const std::vector<Eigen::Vector3f> &normals,
              const std::vector<Eigen::Vector2f> &uvCoords, const std::vector<Eigen::Vector3i> &indices);
@@ -27,6 +28,8 @@ namespace ICE {
         const VertexArray* getVertexArray() const;
 
         const AABB &getBoundingBox() const;
+
+        std::string getTypeName() override;
 
     private:
         std::vector<Eigen::Vector3f> vertices, normals;

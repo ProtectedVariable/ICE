@@ -14,6 +14,9 @@ namespace ICE {
     public:
         HierarchyPane(ICEEngine* engine);
         bool render() override;
+
+        void initialize() override;
+
     private:
         void mkPopup(const std::string parent);
         void subtree(Scene::SceneNode* node);

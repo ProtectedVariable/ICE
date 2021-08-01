@@ -16,16 +16,16 @@ namespace ICE {
         auto textures = std::vector<const char*>();
         static int selected = 0;
         textures.push_back("None");
-        for(const auto& e : engine->getAssetBank()->getTextures()) {
+        for(const auto& e : engine->getAssetBank()->getAll<Texture>()) {
             if(e.second->getType() == TextureType::CubeMap) {
-                textures.push_back(e.first.c_str());
-                if(e.second == engine->getScene()->getSkybox()->getTexture()) {
+                textures.push_back(engine->getAssetBank()->getName(e.first).c_str());
+                if(e.first == engine->getScene()->getSkybox()->getTexture()) {
                     selected = textures.size()-1;
                 }
             }
         }
         ImGui::Combo("##SkyboxCmb", &selected, textures.data(), textures.size());
-        Texture* nt = selected == 0 ? nullptr : engine->getAssetBank()->getTextures().at(textures[selected]);
+        AssetUID nt = selected == 0 ? NO_ASSET_ID : engine->getAssetBank()->getUIDFromFullName(textures[selected]);
         if(engine->getScene()->getSkybox()->getTexture() != nt) {
             engine->getScene()->setSkybox(nt);
         }
@@ -34,4 +34,8 @@ namespace ICE {
     }
 
     SceneParamPane::SceneParamPane(ICEEngine *engine): engine(engine) {}
+
+    void SceneParamPane::initialize() {
+
+    }
 }

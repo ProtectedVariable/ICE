@@ -24,15 +24,18 @@ namespace ICE {
         NewMaterialPane(ICEEngine* engine);
 
     private:
+        void initialize() override;
+
+    private:
         Material makeMaterial();
 
         ICEEngine* engine;
         Eigen::Vector3f albedo, specular, ambient;
         float alpha;
-        const Texture* diffuseMap;
-        const Texture* specularMap;
-        const Texture* ambientMap;
-        const Texture* normalMap;
+        AssetUID diffuseMap;
+        AssetUID specularMap;
+        AssetUID ambientMap;
+        AssetUID normalMap;
         Framebuffer* viewFB;
         Camera camera;
         float y = 0;

@@ -1,6 +1,6 @@
 // Dear ImGui: standalone example application for GLFW + OpenGL 3, using programmable pipeline
 // (GLFW is a cross-platform general purpose library for handling windows, inputs, OpenGL/Vulkan/Metal graphics context creation, etc.)
-// If you are new to Dear ImGui, read documentation from the docs/ folder + read the top of imgui.cpp.
+// If you are new to Dear ImGui, read documentation from the docs/ folder + read the top of imgui->cpp.
 // Read online: https://github.com/ocornut/imgui/tree/master/docs
 
 #define TINYOBJLOADER_IMPLEMENTATION
@@ -40,9 +40,10 @@
 namespace ICE {
     ICEEngine::ICEEngine(void* window): systems(std::vector<System*>()), window(window),
                                         camera(Camera(CameraParameters{ {60, 16.f / 9.f, 0.1f, 100000 }, Perspective })),
-                                        config(EngineConfig::LoadFromFile()), gui(ICEGUI(this)) {
+                                        config(EngineConfig::LoadFromFile()) {
         api = RendererAPI::Create();
 		selected = nullptr;
+		gui = new ICEGUI(this);
     }
 
     void ICEEngine::initialize() {
@@ -53,11 +54,6 @@ namespace ICE {
         Logger::Log(Logger::VERBOSE, "Core", "Done");
 
         api->initialize();
-        Renderer* renderer = new ForwardRenderer();
-        renderer->initialize(RendererConfig());
-
-        renderSystem = new RenderSystem(renderer, &camera);
-        systems.push_back(renderSystem);
 
         internalFB = Framebuffer::Create({1280, 720, 1});
         pickingFB = Framebuffer::Create({1280, 720, 1});
@@ -81,14 +77,14 @@ namespace ICE {
             ImGuizmo::BeginFrame();
             ImGuizmo::SetOrthographic(false);
 
-            gui.renderImGui();
+            gui->renderImGui();
             // Rendering
             ImGui::Render();
 
 
             if(project != nullptr) {
-                renderSystem->setTarget(internalFB, gui.getSceneViewportWidth(), gui.getSceneViewportHeight());
-                camera.setParameters({60, (float) gui.getSceneViewportWidth() / (float) gui.getSceneViewportHeight(), 0.01f, 1000});
+                renderSystem->setTarget(internalFB, gui->getSceneViewportWidth(), gui->getSceneViewportHeight());
+                camera.setParameters({60, (float) gui->getSceneViewportWidth() / (float) gui->getSceneViewportHeight(), 0.01f, 1000});
                 api->setClearColor(0,0,0,1);
                 api->clear();
                 for (auto s : systems) {
@@ -140,21 +136,21 @@ namespace ICE {
 
     Eigen::Vector4i ICEEngine::getPickingTextureAt(int x, int y) {
         pickingFB->bind();
-        pickingFB->resize(gui.getSceneViewportWidth(), gui.getSceneViewportHeight());
-        api->setViewport(0, 0, gui.getSceneViewportWidth(), gui.getSceneViewportHeight());
+        pickingFB->resize(gui->getSceneViewportWidth(), gui->getSceneViewportHeight());
+        api->setViewport(0, 0, gui->getSceneViewportWidth(), gui->getSceneViewportHeight());
         camera.setParameters(
-                {60, (float) gui.getSceneViewportWidth() / (float) gui.getSceneViewportHeight(), 0.01f, 1000});
+                {60, (float) gui->getSceneViewportWidth() / (float) gui->getSceneViewportHeight(), 0.01f, 1000});
         api->setClearColor(0,0,0,0);
         api->clear();
-        getAssetBank()->getShader("__ice__picking_shader")->bind();
-        getAssetBank()->getShader("__ice__picking_shader")->loadMat4("projection", camera.getProjection());
-        getAssetBank()->getShader("__ice__picking_shader")->loadMat4("view", camera.lookThrough());
+        getAssetBank()->getAsset<Shader>("__ice__picking_shader")->bind();
+        getAssetBank()->getAsset<Shader>("__ice__picking_shader")->loadMat4("projection", camera.getProjection());
+        getAssetBank()->getAsset<Shader>("__ice__picking_shader")->loadMat4("view", camera.lookThrough());
         int id = 1;
         for(auto e : currentScene->getEntities()) {
-            getAssetBank()->getShader("__ice__picking_shader")->loadMat4("model", e->getComponent<TransformComponent>()->getTransformation());
-            getAssetBank()->getShader("__ice__picking_shader")->loadInt("objectID", id++);
+            getAssetBank()->getAsset<Shader>("__ice__picking_shader")->loadMat4("model", e->getComponent<TransformComponent>()->getTransformation());
+            getAssetBank()->getAsset<Shader>("__ice__picking_shader")->loadInt("objectID", id++);
             if(e->hasComponent<RenderComponent>()) {
-                api->renderVertexArray(e->getComponent<RenderComponent>()->getMesh()->getVertexArray());
+                api->renderVertexArray(getAssetBank()->getAsset<Mesh>(e->getComponent<RenderComponent>()->getMesh())->getVertexArray());
             }
         }
         auto color = internalFB->readPixel(x, y);
@@ -175,6 +171,11 @@ namespace ICE {
         this->currentScene = &project->getScenes().at(0);
         this->camera.getPosition() = project->getCameraPosition();
         this->camera.getRotation() = project->getCameraRotation();
+        Renderer* renderer = new ForwardRenderer();
+        renderer->initialize(RendererConfig(), project->getAssetBank());
+        this->renderSystem = new RenderSystem(renderer, &camera);
+        systems.push_back(renderSystem);
+        this->gui->initializeEditorUI();
     }
 
     EngineConfig &ICEEngine::getConfig() {
@@ -186,7 +187,7 @@ namespace ICE {
         const std::string file = FileUtils::openFileDialog("obj");
         if(file != "") {
             std::string aname = "imported_mesh_"+std::to_string(import_cnt++);
-            getAssetBank()->addMesh(aname, OBJLoader::loadFromOBJ(file));
+            getAssetBank()->addResource<Mesh>(aname, {file});
             project->copyAssetFile("Meshes", aname, file);
         }
     }
@@ -196,9 +197,9 @@ namespace ICE {
         if(file != "") {
             std::string aname = "imported_texture_"+std::to_string(import_cnt++);
             if(cubeMap) {
-                getAssetBank()->addTexture(aname, TextureCube::Create(file));
+                getAssetBank()->addResource<TextureCube>(aname, {file});
             } else {
-                getAssetBank()->addTexture(aname, Texture2D::Create(file));
+                getAssetBank()->addResource<Texture2D>(aname, {file});
             }
             project->copyAssetFile("Textures", aname, file);
         }

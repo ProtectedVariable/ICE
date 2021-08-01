@@ -7,9 +7,10 @@
 
 #include <string>
 #include <Eigen/Dense>
+#include <Assets/Asset.h>
 
 namespace ICE {
-    class Shader {
+    class Shader : public Asset {
     public:
         virtual void bind() const = 0;
         virtual void unbind() const = 0;
@@ -25,6 +26,10 @@ namespace ICE {
 
         static Shader* Create(const std::string &vertexFile, const std::string &fragmentFile);
         static Shader* Create(const std::string &vertexFile, const std::string &geometryFile, const std::string &fragmentFile);
+
+        std::string getTypeName() {
+            return "Shader";
+        };
     };
 }
 

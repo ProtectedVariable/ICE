@@ -41,9 +41,9 @@ namespace ICE {
                 if(!engine->getSelected()->hasComponent<RenderComponent>()) {
                     if(ImGui::Button("Render Component")) {
                         engine->getSelected()->addComponent(
-                                new RenderComponent(engine->getAssetBank()->getMesh("__ice__cube"),
-                                                    engine->getAssetBank()->getMaterial("__ice__base_material"),
-                                                    engine->getAssetBank()->getShader("__ice_phong_shader")));
+                                new RenderComponent(engine->getAssetBank()->getUID<Mesh>("__ice__cube"),
+                                                    engine->getAssetBank()->getUID<Material>("__ice__base_material"),
+                                                    engine->getAssetBank()->getUID<Shader>("__ice_phong_shader")));
                         ImGui::CloseCurrentPopup();
                     }
                 }
@@ -61,4 +61,6 @@ namespace ICE {
     }
 
     InspectorPane::InspectorPane(ICEEngine *engine): engine(engine), componentRenderer(UIComponentRenderer(engine)) {}
+
+    void InspectorPane::initialize() {  }
 }

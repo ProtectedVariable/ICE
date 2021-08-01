@@ -18,6 +18,8 @@ namespace ICE {
 
         AssetViewPane(ICEEngine *engine, std::string* selectedAsset);
 
+        void initialize() override;
+
     private:
         ICEEngine* engine;
         Framebuffer* viewFB;

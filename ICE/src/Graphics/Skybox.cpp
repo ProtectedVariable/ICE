@@ -9,13 +9,13 @@ namespace ICE {
     static VertexArray* vao;
     static Shader* shader;
 
-    Skybox::Skybox(Texture *texture) : texture(texture) {}
+    Skybox::Skybox(AssetUID texture) : texture(texture) {}
 
     VertexArray *Skybox::getVAO() {
         return vao;
     }
 
-    Texture *Skybox::getTexture() const {
+    AssetUID Skybox::getTexture() const {
         return texture;
     }
 
