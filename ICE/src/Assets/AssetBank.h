@@ -35,8 +35,8 @@ namespace ICE {
         }
 
         template<typename T>
-        T *getAsset(const std::string &name) {
-            return dynamic_cast<T*>(getResource(typenames[typeid(T)]+"/"+name)->asset);
+        T *getAsset(const std::string name) {
+            return dynamic_cast<T*>(getResource(getUID<T>(name))->asset);
         }
 
         Resource *getResource(AssetUID uid) {
@@ -44,18 +44,20 @@ namespace ICE {
             return resources[uid];
         }
 
-        Resource *getResource(const std::string &name) {
-            return getResource(nameMapping[name]);
+        Resource *getResource(const std::string name) {
+            if(nameMapping.find(name) != nameMapping.end())
+                return getResource(nameMapping[name]);
+            return nullptr;
         }
 
         template<typename T>
-        bool addResource(const std::string &name, const std::vector<std::string> &sources) {
+        bool addResource(const std::string name, const std::vector<std::string> &sources) {
             Resource* res = loader.LoadResource<T>(sources);
             return addResource<T>(name, res);
         }
 
         template<typename T>
-        bool addResource(const std::string &name, Resource* res) {
+        bool addResource(const std::string name, Resource* res) {
             resources[nextUID] = res;
             nameMapping[typenames[typeid(T)]+"/"+name] = nextUID;
             nextUID++;
@@ -64,11 +66,11 @@ namespace ICE {
 
         template<typename T>
         bool renameAsset(const std::string &oldName, const std::string &newName) {
-            return 1;
+            return true;
         }
 
         template<typename T>
-        std::unordered_map<AssetUID, T *> getAll() {
+        std::unordered_map<AssetUID, T*> getAll() {
             auto all = std::unordered_map<AssetUID, T*>();
             for(auto kv : resources) {
                 T* asset = dynamic_cast<T*>(kv.second->asset);
@@ -80,7 +82,7 @@ namespace ICE {
         }
 
         std::string getName(AssetUID uid) {
-            for(auto entry : nameMapping) {
+            for(auto &entry : nameMapping) {
                 if(entry.second == uid) {
                     return entry.first;
                 }
@@ -89,12 +91,14 @@ namespace ICE {
         }
 
         template<typename T>
-        AssetUID getUID(const std::string &name) {
+        AssetUID getUID(const std::string name) {
             return getUIDFromFullName(typenames[typeid(T)]+"/"+name);
         }
 
-        AssetUID getUIDFromFullName(const std::string &name) {
-            return nameMapping[name];
+        AssetUID getUIDFromFullName(const std::string name) {
+            if(nameMapping.find(name) != nameMapping.end())
+                return nameMapping[name];
+            return NO_ASSET_ID;
         }
 
         bool nameInUse(const std::string& name);

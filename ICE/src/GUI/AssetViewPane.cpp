@@ -26,10 +26,10 @@ namespace ICE {
         ImVec2 wsize = ImGui::GetWindowContentRegionMax();
         ImVec2 pos = ImGui::GetCursorPos();
         wsize = ImVec2(wsize.x - pos.x, wsize.y - pos.y);
-        AssetUID selectedUID = engine->getAssetBank()->getUID<Texture2D>(*selectedAsset);
-        if(engine->getAssetBank()->getAll<Texture>().find(selectedUID) == engine->getAssetBank()->getAll<Texture>().end()) {
-            AssetUID previewMeshId = engine->getAssetBank()->getAll<Mesh>().find(selectedUID) == engine->getAssetBank()->getAll<Mesh>().end() ? engine->getAssetBank()->getUID<Mesh>("__ice__sphere") :  engine->getAssetBank()->getUID<Mesh>(*selectedAsset);
-            AssetUID mat = engine->getAssetBank()->getAll<Material>().find(selectedUID) == engine->getAssetBank()->getAll<Material>().end() ? engine->getAssetBank()->getUID<Material>("__ice__base_material") :  engine->getAssetBank()->getUID<Material>(*selectedAsset);
+        AssetUID selectedUID = engine->getAssetBank()->getUIDFromFullName(*selectedAsset);
+        if(engine->getAssetBank()->getAll<Texture2D>().find(selectedUID) == engine->getAssetBank()->getAll<Texture2D>().end()) {
+            AssetUID previewMeshId = engine->getAssetBank()->getAll<Mesh>().find(selectedUID) == engine->getAssetBank()->getAll<Mesh>().end() ? engine->getAssetBank()->getUID<Mesh>("__ice__sphere") :  engine->getAssetBank()->getUIDFromFullName(*selectedAsset);
+            AssetUID mat = engine->getAssetBank()->getAll<Material>().find(selectedUID) == engine->getAssetBank()->getAll<Material>().end() ? engine->getAssetBank()->getUID<Material>("__ice__base_material") :  engine->getAssetBank()->getUIDFromFullName(*selectedAsset);
 
             auto scene = Scene("__ice__assetview_scene");
 

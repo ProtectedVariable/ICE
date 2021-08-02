@@ -56,7 +56,7 @@ namespace ICE {
                 renderer.endFrame();
                 std::string name = engine->getAssetBank()->getName(m.first);
 
-                renderAssetThumbnail(thumbnailFBO[i]->getTexture(), name.substr(name.find_last_of('/')+1));
+                renderAssetThumbnail(thumbnailFBO[i]->getTexture(), name);
                 i++;
             }
         } else if(*selectedDir == 1) {
@@ -88,7 +88,8 @@ namespace ICE {
 
                 std::string name = engine->getAssetBank()->getName(m.first);
 
-                renderAssetThumbnail(thumbnailFBO[i]->getTexture(), name.substr(name.find_last_of('/')+1));                if(ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()) {
+                renderAssetThumbnail(thumbnailFBO[i]->getTexture(), name);
+                if(ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()) {
                     newMaterialPaneShow = true;
                     newMaterialPane.edit(*selectedAsset, mat);
                 }
@@ -118,7 +119,7 @@ namespace ICE {
 
                     std::string name = engine->getAssetBank()->getName(m.first);
 
-                    renderAssetThumbnail(thumbnailFBO[i]->getTexture(), name.substr(name.find_last_of('/')+1));
+                    renderAssetThumbnail(thumbnailFBO[i]->getTexture(), name);
                 }
                 i++;
             }
@@ -138,15 +139,16 @@ namespace ICE {
     }
 
     void AssetContentPane::renderAssetThumbnail(void *tex, const std::string& name) {
+        std::string displayedName = name.substr(name.find_first_of('/')+1);
         ImGui::BeginGroup();
         ImGui::Image(tex, ImVec2(ICE_THUMBNAIL_SIZE, ICE_THUMBNAIL_SIZE), ImVec2(0, 1), ImVec2(1, 0));
         if(ImGui::IsItemClicked(0)) {
             *selectedAsset = name;
         }
         if(*selectedAsset == name) {
-            ImGui::TextColored(ImVec4(0,0.8f,1,1), "%s", name.c_str());
+            ImGui::TextColored(ImVec4(0,0.8f,1,1), "%s", displayedName.c_str());
         } else {
-            ImGui::Text("%s", name.c_str());
+            ImGui::Text("%s", displayedName.c_str());
         }
         ImGui::EndGroup();
         if(ImGui::GetCursorPosX() + ICE_THUMBNAIL_SIZE < ImGui::GetContentRegionAvailWidth()) {

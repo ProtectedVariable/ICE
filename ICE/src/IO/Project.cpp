@@ -28,7 +28,6 @@ namespace ICE {
                                                                                   assetBank(AssetBank()) {
 		cameraPosition.setZero();
 		cameraRotation.setZero();
-		assetBank.fillWithDefaults();
 	}
 
     bool Project::CreateDirectories() {
@@ -39,6 +38,7 @@ namespace ICE {
         fs::create_directories(baseDirectory + "/" + name + "/Assets/Scripts");
         fs::create_directories(baseDirectory + "/" + name + "/Scenes");
         scenes.push_back(Scene("MainScene"));
+        assetBank.fillWithDefaults();
         return true;
     }
 
@@ -266,10 +266,6 @@ namespace ICE {
         infile.close();
     }
 
-    Material* Project::loadMaterial(const std::string& mtlName) {
-
-    }
-
     void Project::copyAssetFile(const std::string& folder, const std::string& assetName, const std::string &src) {
         std::ifstream  srcStream(src, std::ios::binary);
         std::string dst = baseDirectory + "/" + name + "/Assets/"+folder+"/" + assetName + src.substr(src.find_last_of("."));
@@ -305,6 +301,7 @@ namespace ICE {
         }
         return false;
          */
+        return true;
     }
 
     std::vector<std::string> Project::getFilesInDir(const std::string &folder) {

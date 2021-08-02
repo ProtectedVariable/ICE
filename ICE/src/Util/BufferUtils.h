@@ -7,6 +7,7 @@
 
 #include <Eigen/Dense>
 #include <vector>
+#include <string>
 
 namespace ICE {
     class BufferUtils {
@@ -45,6 +46,15 @@ namespace ICE {
                 i += 3;
             }
             return buffer;
+        }
+
+        static std::vector<const char*> CreateCharBuffer(const std::vector<std::string>& strings) {
+            std::vector<const char*> pointerVec(strings.size());
+            for(unsigned i = 0; i < strings.size(); ++i)
+            {
+                pointerVec[i] = strings[i].data();
+            } //you can use transform instead of this loop
+            return pointerVec;
         }
     };
 }
