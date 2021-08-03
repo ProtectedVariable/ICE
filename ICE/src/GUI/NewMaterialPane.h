@@ -20,7 +20,7 @@ namespace ICE {
         bool render() override;
         void build();
         void reset();
-        void edit(const std::string& name, Material& material);
+        void edit(AssetUID selectedAsset, Material& material);
         NewMaterialPane(ICEEngine* engine);
         void initialize() override;
 

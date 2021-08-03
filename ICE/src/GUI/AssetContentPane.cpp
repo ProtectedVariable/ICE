@@ -128,7 +128,7 @@ namespace ICE {
         return true;
     }
 
-    AssetContentPane::AssetContentPane(const int *selectedDir, ICEEngine *engine, std::string* selectedAsset) : selectedDir(selectedDir),
+    AssetContentPane::AssetContentPane(const int *selectedDir, ICEEngine *engine, AssetUID* selectedAsset) : selectedDir(selectedDir),
                                                                                     engine(engine), selectedAsset(selectedAsset),
                                                                                     camera(Camera({{30, 1.f, 0.01f, 1000 }, Perspective})),
                                                                                     newMaterialPane(NewMaterialPane(engine)),
@@ -143,9 +143,9 @@ namespace ICE {
         ImGui::BeginGroup();
         ImGui::Image(tex, ImVec2(ICE_THUMBNAIL_SIZE, ICE_THUMBNAIL_SIZE), ImVec2(0, 1), ImVec2(1, 0));
         if(ImGui::IsItemClicked(0)) {
-            *selectedAsset = name.toString();
+            *selectedAsset = engine->getAssetBank()->getUID(name);
         }
-        if(*selectedAsset == name.toString()) {
+        if(*selectedAsset == engine->getAssetBank()->getUID(name)) {
             ImGui::TextColored(ImVec4(0,0.8f,1,1), "%s", displayedName.c_str());
         } else {
             ImGui::Text("%s", displayedName.c_str());

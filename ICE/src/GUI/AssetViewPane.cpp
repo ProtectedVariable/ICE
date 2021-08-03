@@ -14,22 +14,22 @@ namespace ICE {
         static int y = 45;
         ImGui::BeginChild("Asset View");
         char buffer[512];
-        strcpy(buffer, selectedAsset->c_str());
+        std::string assetName = engine->getAssetBank()->getName(*selectedAsset).getName();
+        strcpy(buffer, assetName.c_str());
         ImGui::Text("Asset Name");
         ImGui::SameLine();
-        ImGuiInputTextFlags flags = (selectedAsset->find("__ice__") == std::string::npos) ? 0 : ImGuiInputTextFlags_ReadOnly;
+        ImGuiInputTextFlags flags = (assetName.find("__ice__") == std::string::npos) ? 0 : ImGuiInputTextFlags_ReadOnly;
         if(ImGui::InputText("##Asset Name", buffer, 512, flags)) {
-            if(engine->getProject()->renameAsset(*selectedAsset, buffer)) {
-                *selectedAsset = buffer;
+            if(engine->getProject()->renameAsset(assetName, buffer)) {
+                assetName = buffer;
             }
         }
         ImVec2 wsize = ImGui::GetWindowContentRegionMax();
         ImVec2 pos = ImGui::GetCursorPos();
         wsize = ImVec2(wsize.x - pos.x, wsize.y - pos.y);
-        AssetUID selectedUID = engine->getAssetBank()->getUID(*selectedAsset);
-        if(engine->getAssetBank()->getAll<Texture>().find(selectedUID) == engine->getAssetBank()->getAll<Texture>().end()) {
-            AssetUID previewMeshId = engine->getAssetBank()->getAll<Mesh>().find(selectedUID) == engine->getAssetBank()->getAll<Mesh>().end() ? engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Mesh>("__ice__sphere")) :  engine->getAssetBank()->getUID(*selectedAsset);
-            AssetUID mat = engine->getAssetBank()->getAll<Material>().find(selectedUID) == engine->getAssetBank()->getAll<Material>().end() ? engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Material>("__ice__base_material")) :  engine->getAssetBank()->getUID(*selectedAsset);
+        if(engine->getAssetBank()->getAll<Texture>().find(*selectedAsset) == engine->getAssetBank()->getAll<Texture>().end()) {
+            AssetUID previewMeshId = engine->getAssetBank()->getAll<Mesh>().find(*selectedAsset) == engine->getAssetBank()->getAll<Mesh>().end() ? engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Mesh>("__ice__sphere")) : *selectedAsset;
+            AssetUID mat = engine->getAssetBank()->getAll<Material>().find(*selectedAsset) == engine->getAssetBank()->getAll<Material>().end() ? engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Material>("__ice__base_material")) :  *selectedAsset;
 
             auto scene = Scene("__ice__assetview_scene");
 
@@ -69,13 +69,13 @@ namespace ICE {
 
                 ImGui::Image(viewFB->getTexture(), wsize, ImVec2(0, 1), ImVec2(1, 0));
             }
-        } else if(engine->getAssetBank()->getAll<Texture>().find(selectedUID) != engine->getAssetBank()->getAll<Texture>().end()) {
-            Texture* tex = engine->getAssetBank()->getAsset<Texture>(engine->getAssetBank()->getUID(*selectedAsset));
+        } else if(engine->getAssetBank()->getAll<Texture>().find(*selectedAsset) != engine->getAssetBank()->getAll<Texture>().end()) {
+            Texture* tex = engine->getAssetBank()->getAsset<Texture>(*selectedAsset);
             if(tex->getType() == TextureType::Tex2D) {
                 ImGui::Image(tex->getTexture(), wsize, ImVec2(0, 1), ImVec2(1, 0));
             } else if(tex->getType() == TextureType::CubeMap) {
                 Scene scene("__ice__assetview_scene");
-                scene.setSkybox(engine->getAssetBank()->getUID(*selectedAsset));
+                scene.setSkybox(*selectedAsset);
                 renderer.setTarget(viewFB);
                 renderer.submitScene(&scene);
                 renderer.resize(ICE_THUMBNAIL_SIZE, ICE_THUMBNAIL_SIZE);
@@ -92,7 +92,7 @@ namespace ICE {
         return true;
     }
 
-    AssetViewPane::AssetViewPane(ICEEngine *engine, std::string* selectedAsset) : engine(engine), selectedAsset(selectedAsset),
+    AssetViewPane::AssetViewPane(ICEEngine *engine, AssetUID* selectedAsset) : engine(engine), selectedAsset(selectedAsset),
                                                                                     viewFB(Framebuffer::Create({400, 400, 1})),
                                                                                     camera(Camera({{60, 16.f / 9.f, 0.01f, 1000 }, Perspective })),
                                                                                     renderer(ForwardRenderer()) {

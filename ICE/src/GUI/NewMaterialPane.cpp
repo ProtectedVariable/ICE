@@ -167,7 +167,7 @@ namespace ICE {
         }
     }
 
-    void NewMaterialPane::edit(const std::string& name, Material& m) {
+    void NewMaterialPane::edit(AssetUID selectedAsset, Material& m) {
         albedo = m.getAlbedo();
         specular = m.getSpecular();
         ambient = m.getAmbient();
@@ -177,7 +177,7 @@ namespace ICE {
         ambientMap = m.getAmbientMap();
         normalMap = m.getNormalMap();
         editMode = true;
-        this->name = name;
+        this->name = engine->getAssetBank()->getName(selectedAsset).getName();
         this->oldname = name;
     }
 

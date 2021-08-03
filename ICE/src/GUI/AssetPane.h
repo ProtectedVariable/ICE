@@ -24,7 +24,7 @@ namespace ICE {
         AssetViewPane viewPane;
         AssetContentPane contentPane;
         int selectedDirectory = 0;
-        std::string selectedAsset = "__ice__cube";
+        AssetUID selectedAsset = NO_ASSET_ID;
     };
 }
 
