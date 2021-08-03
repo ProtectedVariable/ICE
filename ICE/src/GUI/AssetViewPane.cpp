@@ -27,7 +27,7 @@ namespace ICE {
         ImVec2 pos = ImGui::GetCursorPos();
         wsize = ImVec2(wsize.x - pos.x, wsize.y - pos.y);
         AssetUID selectedUID = engine->getAssetBank()->getUID(*selectedAsset);
-        if(engine->getAssetBank()->getAll<Texture2D>().find(selectedUID) == engine->getAssetBank()->getAll<Texture2D>().end()) {
+        if(engine->getAssetBank()->getAll<Texture>().find(selectedUID) == engine->getAssetBank()->getAll<Texture>().end()) {
             AssetUID previewMeshId = engine->getAssetBank()->getAll<Mesh>().find(selectedUID) == engine->getAssetBank()->getAll<Mesh>().end() ? engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Mesh>("__ice__sphere")) :  engine->getAssetBank()->getUID(*selectedAsset);
             AssetUID mat = engine->getAssetBank()->getAll<Material>().find(selectedUID) == engine->getAssetBank()->getAll<Material>().end() ? engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Material>("__ice__base_material")) :  engine->getAssetBank()->getUID(*selectedAsset);
 
@@ -69,13 +69,13 @@ namespace ICE {
 
                 ImGui::Image(viewFB->getTexture(), wsize, ImVec2(0, 1), ImVec2(1, 0));
             }
-        } else {
-            Texture* tex = engine->getAssetBank()->getAsset<Texture>(*selectedAsset);
+        } else if(engine->getAssetBank()->getAll<Texture>().find(selectedUID) != engine->getAssetBank()->getAll<Texture>().end()) {
+            Texture* tex = engine->getAssetBank()->getAsset<Texture>(engine->getAssetBank()->getUID(*selectedAsset));
             if(tex->getType() == TextureType::Tex2D) {
                 ImGui::Image(tex->getTexture(), wsize, ImVec2(0, 1), ImVec2(1, 0));
             } else if(tex->getType() == TextureType::CubeMap) {
                 Scene scene("__ice__assetview_scene");
-                scene.setSkybox(engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Mesh>(*selectedAsset)));
+                scene.setSkybox(engine->getAssetBank()->getUID(*selectedAsset));
                 renderer.setTarget(viewFB);
                 renderer.submitScene(&scene);
                 renderer.resize(ICE_THUMBNAIL_SIZE, ICE_THUMBNAIL_SIZE);

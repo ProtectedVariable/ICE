@@ -54,7 +54,7 @@ namespace ICE {
                 renderer.prepareFrame(camera);
                 renderer.render();
                 renderer.endFrame();
-                std::string name = engine->getAssetBank()->getName(m.first).getName();
+                AssetPath name = engine->getAssetBank()->getName(m.first);
 
                 renderAssetThumbnail(thumbnailFBO[i]->getTexture(), name);
                 i++;
