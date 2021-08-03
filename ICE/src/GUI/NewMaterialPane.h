@@ -22,8 +22,6 @@ namespace ICE {
         void reset();
         void edit(const std::string& name, Material& material);
         NewMaterialPane(ICEEngine* engine);
-
-    private:
         void initialize() override;
 
     private:

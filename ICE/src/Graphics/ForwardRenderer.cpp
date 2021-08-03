@@ -53,7 +53,6 @@ namespace ICE {
         }
         for(auto e : renderableEntities) {
             auto rc = e->getComponent<RenderComponent>();
-            const Material* material = assetBank->getAsset<Material>(e->getComponent<RenderComponent>()->getMaterial());
             Shader* shader = assetBank->getAsset<Shader>(e->getComponent<RenderComponent>()->getShader());
             shader->bind();
             shader->loadMat4("projection", camera.getProjection());

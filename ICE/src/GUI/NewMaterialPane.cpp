@@ -45,7 +45,7 @@ namespace ICE {
         int selected[4] = {0,0,0,0};
         const char* mapNames[4] =  {"Diffuse", "Specular", "Ambient", "Normal"};
         for(const auto &t : engine->getAssetBank()->getAll<Texture>()) {
-            textures[i++] = engine->getAssetBank()->getName(t.first).c_str();
+            textures[i++] = engine->getAssetBank()->getName(t.first).toString().c_str();
             if(t.first == diffuseMap) {
                 selected[0] = i-1;
             }
@@ -86,11 +86,11 @@ namespace ICE {
         ImVec2 pos = ImGui::GetCursorPos();
         wsize = ImVec2(wsize.x - pos.x, wsize.y - pos.y - 30);
 
-        AssetUID mat = engine->getAssetBank()->getUID<Material>(name);
+        AssetUID mat = engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Material>(name));
         auto scene = Scene("__ice__newmaterial_scene");
 
         auto sphere = Entity();
-        auto rcSphere = RenderComponent(engine->getAssetBank()->getUID<Mesh>("__ice__sphere"), mat, engine->getAssetBank()->getUID<Shader>("__ice__phong_shader"));
+        auto rcSphere = RenderComponent(engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Mesh>("__ice__sphere")), mat, engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Shader>("__ice__phong_shader")));
         auto tcSphere = TransformComponent();
         sphere.addComponent(&rcSphere);
         sphere.addComponent(&tcSphere);
@@ -187,7 +187,5 @@ namespace ICE {
 
     void NewMaterialPane::initialize() {
         renderer.initialize(RendererConfig(), engine->getAssetBank());
-        engine->getAssetBank()->addResource<Material>(name, new Resource(new Material(), {}));
-
     }
 }

@@ -37,8 +37,8 @@ namespace ICE {
 
             for(const auto& m : engine->getAssetBank()->getAll<Mesh>()) {
                 auto scene = Scene("__ice__assetcontent_scene");
-                AssetUID shader = engine->getAssetBank()->getUID<Shader>("__ice__normal_shader");
-                AssetUID mat = engine->getAssetBank()->getUID<Material>("__ice__base_material");
+                AssetUID shader = engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Shader>("__ice__normal_shader"));
+                AssetUID mat = engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Material>("__ice__base_material"));
 
                 auto mesh = Entity();
                 auto rcMesh = RenderComponent(m.first, mat, shader);
@@ -54,7 +54,7 @@ namespace ICE {
                 renderer.prepareFrame(camera);
                 renderer.render();
                 renderer.endFrame();
-                std::string name = engine->getAssetBank()->getName(m.first);
+                std::string name = engine->getAssetBank()->getName(m.first).getName();
 
                 renderAssetThumbnail(thumbnailFBO[i]->getTexture(), name);
                 i++;
@@ -66,7 +66,7 @@ namespace ICE {
                 auto scene = Scene("__ice__assetcontent_scene");
 
                 auto sphere = Entity();
-                auto rcSphere = RenderComponent(engine->getAssetBank()->getUID<Mesh>("__ice__sphere"), m.first, engine->getAssetBank()->getUID<Shader>("__ice__phong_shader"));
+                auto rcSphere = RenderComponent(engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Mesh>("__ice__sphere")), m.first, engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Shader>("__ice__phong_shader")));
                 auto tcSphere = TransformComponent();
                 sphere.addComponent(&rcSphere);
                 sphere.addComponent(&tcSphere);
@@ -86,7 +86,7 @@ namespace ICE {
                 renderer.render();
                 renderer.endFrame();
 
-                std::string name = engine->getAssetBank()->getName(m.first);
+                AssetPath name = engine->getAssetBank()->getName(m.first);
 
                 renderAssetThumbnail(thumbnailFBO[i]->getTexture(), name);
                 if(ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()) {
@@ -99,13 +99,13 @@ namespace ICE {
         } else if(*selectedDir == 2) {
             for(const auto& m : engine->getAssetBank()->getAll<Shader>()) {
                 //TODO: Add file icon
-                ImGui::Text("%s", engine->getAssetBank()->getName(m.first).c_str());
+                ImGui::Text("%s", engine->getAssetBank()->getName(m.first).getName().c_str());
             }
         } else if(*selectedDir == 3) {
             i = 0;
             for(const auto& m : engine->getAssetBank()->getAll<Texture>()) {
                 if(m.second->getType() == TextureType::Tex2D) {
-                    renderAssetThumbnail(m.second->getTexture(), engine->getAssetBank()->getName(m.first));
+                    renderAssetThumbnail(m.second->getTexture(), engine->getAssetBank()->getName(m.first).getName());
                 } else if(m.second->getType() == TextureType::CubeMap) {
                     Scene scene("__ice__assetcontent_scene");
                     scene.setSkybox(Skybox(m.first));
@@ -117,7 +117,7 @@ namespace ICE {
                     renderer.render();
                     renderer.endFrame();
 
-                    std::string name = engine->getAssetBank()->getName(m.first);
+                    AssetPath name = engine->getAssetBank()->getName(m.first);
 
                     renderAssetThumbnail(thumbnailFBO[i]->getTexture(), name);
                 }
@@ -138,14 +138,14 @@ namespace ICE {
         camera.getRotation().x() = -35;
     }
 
-    void AssetContentPane::renderAssetThumbnail(void *tex, const std::string& name) {
-        std::string displayedName = name.substr(name.find_first_of('/')+1);
+    void AssetContentPane::renderAssetThumbnail(void *tex, const AssetPath& name) {
+        std::string displayedName = name.getName();
         ImGui::BeginGroup();
         ImGui::Image(tex, ImVec2(ICE_THUMBNAIL_SIZE, ICE_THUMBNAIL_SIZE), ImVec2(0, 1), ImVec2(1, 0));
         if(ImGui::IsItemClicked(0)) {
-            *selectedAsset = name;
+            *selectedAsset = name.toString();
         }
-        if(*selectedAsset == name) {
+        if(*selectedAsset == name.toString()) {
             ImGui::TextColored(ImVec4(0,0.8f,1,1), "%s", displayedName.c_str());
         } else {
             ImGui::Text("%s", displayedName.c_str());
@@ -157,6 +157,7 @@ namespace ICE {
     }
 
     void AssetContentPane::initialize() {
+        newMaterialPane.initialize();
         renderer.initialize(RendererConfig(), engine->getAssetBank());
         for(int i = 0; i < ICE_MAX_THUMBNAILS; i++) {
             this->thumbnailFBO[i] = Framebuffer::Create({ICE_THUMBNAIL_SIZE, ICE_THUMBNAIL_SIZE, 1});

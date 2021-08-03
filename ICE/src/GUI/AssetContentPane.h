@@ -27,7 +27,7 @@ namespace ICE {
 
     private:
 
-        void renderAssetThumbnail(void* tex, const std::string& name);
+        void renderAssetThumbnail(void* tex,  const AssetPath& name);
 
         const int* selectedDir;
         ICEEngine* engine;

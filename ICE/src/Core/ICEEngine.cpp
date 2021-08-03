@@ -57,8 +57,6 @@ namespace ICE {
 
         internalFB = Framebuffer::Create({1280, 720, 1});
         pickingFB = Framebuffer::Create({1280, 720, 1});
-
-        Skybox::Initialize();
     }
 
     void ICEEngine::loop() {
@@ -175,6 +173,7 @@ namespace ICE {
         renderer->initialize(RendererConfig(), project->getAssetBank());
         this->renderSystem = new RenderSystem(renderer, &camera);
         systems.push_back(renderSystem);
+        Skybox::Initialize();
         this->gui->initializeEditorUI();
     }
 

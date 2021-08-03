@@ -17,7 +17,7 @@ namespace ICE {
         ImGui::Text("Create...");
         if(ImGui::Button("3D Object")) {
             auto entity = new Entity();
-            auto rc = new RenderComponent(engine->getAssetBank()->getUID<Mesh>("__ice__cube"), engine->getAssetBank()->getUID<Material>("__ice__base_material"), engine->getAssetBank()->getUID<Shader>("__ice__phong_shader"));
+            auto rc = new RenderComponent(engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Mesh>("__ice__cube")), engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Material>("__ice__base_material")), engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Shader>("__ice__phong_shader")));
             auto tc = new TransformComponent();
             entity->addComponent(rc);
             entity->addComponent(tc);

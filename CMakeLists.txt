@@ -57,7 +57,7 @@ set(ICE_SRC includes/GL/gl3w.h
 		ICE/src/IO/EngineConfig.h ICE/src/GUI/NewMaterialPane.cpp ICE/src/GUI/NewMaterialPane.h ICE/src/Util/ICEException.cpp ICE/src/Util/ICEException.h ICE/src/Graphics/Texture.h ICE/src/Graphics/API/OpenGL/OpenGLTexture2D.cpp ICE/src/Graphics/API/OpenGL/OpenGLTexture.h includes/stb/stb_image.h includes/json/json.h
 		ICE/src/Math/AABB.cpp ICE/src/Math/AABB.h ICE/src/Graphics/API/OpenGL/OpenGLTextureCube.cpp ICE/src/Graphics/Skybox.cpp ICE/src/Graphics/Skybox.h ICE/src/GUI/SceneParamPane.cpp ICE/src/GUI/SceneParamPane.h
 		ICE/src/Graphics/API/None/NoneGraphics.h
-		ICE/src/Assets/Asset.h ICE/src/Assets/ResourceLoader.h ICE/src/Assets/TextureLoader.cpp ICE/src/Assets/TextureLoader.h ICE/src/Assets/Resource.h ICE/src/Filesystem/Filesystem.cpp ICE/src/Filesystem/Filesystem.h ICE/src/Assets/IResourceLoader.h ICE/src/Assets/MeshLoader.cpp ICE/src/Assets/MeshLoader.h ICE/src/Assets/ShaderLoader.cpp ICE/src/Assets/ShaderLoader.h ICE/src/Assets/MaterialLoader.cpp ICE/src/Assets/MaterialLoader.h ICE/src/Filesystem/JsonParser.h)
+		ICE/src/Assets/Asset.h ICE/src/Assets/ResourceLoader.h ICE/src/Assets/TextureLoader.cpp ICE/src/Assets/TextureLoader.h ICE/src/Assets/Resource.h ICE/src/Filesystem/Filesystem.cpp ICE/src/Filesystem/Filesystem.h ICE/src/Assets/IResourceLoader.h ICE/src/Assets/MeshLoader.cpp ICE/src/Assets/MeshLoader.h ICE/src/Assets/ShaderLoader.cpp ICE/src/Assets/ShaderLoader.h ICE/src/Assets/MaterialLoader.cpp ICE/src/Assets/MaterialLoader.h ICE/src/Filesystem/JsonParser.h ICE/src/Assets/AssetPath.cpp ICE/src/Assets/AssetPath.h)
 
 add_executable(ICE
 		"${EXTRA_SRC}"

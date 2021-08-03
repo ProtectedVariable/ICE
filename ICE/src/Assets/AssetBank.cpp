@@ -12,13 +12,7 @@
 
 namespace ICE {
 
-    AssetBank::AssetBank(): resources(std::unordered_map<AssetUID, Resource*>()), typenames(std::unordered_map<std::type_index, std::string>()), nameMapping(std::unordered_map<std::string, AssetUID>()), loader(ResourceLoader()) {
-        typenames[typeid(Texture2D)] = "Texture";
-        typenames[typeid(TextureCube)] = "CubeMap";
-        typenames[typeid(Mesh)] = "Mesh";
-        typenames[typeid(Material)] = "Material";
-        typenames[typeid(Shader)] = "Shader";
-
+    AssetBank::AssetBank(): resources(std::unordered_map<AssetUID, Resource*>()), nameMapping(std::unordered_map<AssetPath, AssetUID>()), loader(ResourceLoader()) {
         loader.AddLoader<Texture2D>(new Texture2DLoader());
         loader.AddLoader<TextureCube>(new TextureCubeLoader());
         loader.AddLoader<Mesh>(new MeshLoader());

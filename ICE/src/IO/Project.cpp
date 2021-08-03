@@ -66,43 +66,43 @@ namespace ICE {
         strvec.clear();
 
         for(auto m : assetBank.getAll<Mesh>()) {
-            if(assetBank.getName(m.first).find("__ice__") == std::string::npos) {
-                strvec.push_back(assetBank.getName(m.first));
+            if(assetBank.getName(m.first).getName().find("__ice__") == std::string::npos) {
+                strvec.push_back(assetBank.getName(m.first).getName());
             }
         }
         j["meshes"] = strvec;
         strvec.clear();
 
         for(auto m : assetBank.getAll<Material>()) {
-            if(assetBank.getName(m.first).find("__ice__") == std::string::npos) {
-                strvec.push_back(assetBank.getName(m.first));
-                writeMaterialFile(assetBank.getName(m.first), *m.second);
+            if(assetBank.getName(m.first).getName().find("__ice__") == std::string::npos) {
+                strvec.push_back(assetBank.getName(m.first).getName());
+                writeMaterialFile(assetBank.getName(m.first).getName(), *m.second);
             }
         }
         j["materials"] = strvec;
         strvec.clear();
 
         for(auto m : assetBank.getAll<Shader>()) {
-            if (assetBank.getName(m.first).find("__ice__") == std::string::npos) {
-                strvec.push_back(assetBank.getName(m.first));
+            if (assetBank.getName(m.first).getName().find("__ice__") == std::string::npos) {
+                strvec.push_back(assetBank.getName(m.first).getName());
             }
         }
         j["shaders"] = strvec;
         strvec.clear();
 
         for(auto m : assetBank.getAll<Texture>()) {
-            if(assetBank.getName(m.first).find("__ice__") == std::string::npos) {
+            if(assetBank.getName(m.first).getName().find("__ice__") == std::string::npos) {
                 if(m.second->getType() == TextureType::Tex2D)
-                    strvec.push_back(assetBank.getName(m.first));
+                    strvec.push_back(assetBank.getName(m.first).getName());
             }
         }
         j["textures2D"] = strvec;
         strvec.clear();
 
         for(auto m : assetBank.getAll<Texture>()) {
-            if(assetBank.getName(m.first).find("__ice__") == std::string::npos) {
+            if(assetBank.getName(m.first).getName().find("__ice__") == std::string::npos) {
                 if(m.second->getType() == TextureType::CubeMap)
-                    strvec.push_back(assetBank.getName(m.first));
+                    strvec.push_back(assetBank.getName(m.first).getName());
             }
         }
         j["cubeMaps"] = strvec;
@@ -122,9 +122,9 @@ namespace ICE {
                 if(e->hasComponent<RenderComponent>()) {
                     RenderComponent rc = *e->getComponent<RenderComponent>();
                     json renderjson;
-                    renderjson["mesh"] = assetBank.getName(rc.getMesh());
-                    renderjson["material"] = assetBank.getName(rc.getMaterial());
-                    renderjson["shader"] = assetBank.getName(rc.getShader());
+                    renderjson["mesh"] = assetBank.getName(rc.getMesh()).toString();
+                    renderjson["material"] = assetBank.getName(rc.getMaterial()).toString();
+                    renderjson["shader"] = assetBank.getName(rc.getShader()).toString();
                     entity["renderComponent"] = renderjson;
                 }
                 if(e->hasComponent<TransformComponent>()) {
@@ -145,7 +145,7 @@ namespace ICE {
                 entities.push_back(entity);
             }
             j["entities"] = entities;
-            j["skybox"] = assetBank.getName(s.getSkybox()->getTexture());
+            j["skybox"] = assetBank.getName(s.getSkybox()->getTexture()).toString();
             outstream << j.dump(4);
             outstream.close();
         }

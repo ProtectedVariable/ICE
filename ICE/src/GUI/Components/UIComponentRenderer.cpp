@@ -58,13 +58,13 @@ namespace ICE {
         int i = 0;
         int selected = 0;
         for(const auto& e : engine->getAssetBank()->getAll<Mesh>()) {
-            meshNames[i++] =engine->getAssetBank()->getName(e.first);
+            meshNames[i++] = engine->getAssetBank()->getName(e.first).toString();
             if(e.first == cmp->getMesh()) {
                 selected = i-1;
             }
         }
         ImGui::Combo("##Mesh", &selected, BufferUtils::CreateCharBuffer(meshNames).data(), meshNames.size(), 10);
-        cmp->setMesh(engine->getAssetBank()->getUIDFromFullName(std::string(meshNames[selected])));
+        cmp->setMesh(engine->getAssetBank()->getUID(std::string(meshNames[selected])));
         ImGui::Text("Material");
         ImGui::SameLine();
 
@@ -72,13 +72,13 @@ namespace ICE {
         i = 0;
         selected = 0;
         for(const auto& e : engine->getAssetBank()->getAll<Material>()) {
-            materialNames[i++] = engine->getAssetBank()->getName(e.first);
+            materialNames[i++] = engine->getAssetBank()->getName(e.first).toString();
             if(e.first == cmp->getMaterial()) {
                 selected = i-1;
             }
         }
         ImGui::Combo("##Material", &selected, BufferUtils::CreateCharBuffer(materialNames).data(), materialNames.size(), 10);
-        cmp->setMaterial(engine->getAssetBank()->getUIDFromFullName(std::string(materialNames[selected])));
+        cmp->setMaterial(engine->getAssetBank()->getUID(std::string(materialNames[selected])));
         ImGui::Text("Shader");
         ImGui::SameLine();
 
@@ -86,13 +86,13 @@ namespace ICE {
         i = 0;
         selected = 0;
         for(const auto& e : engine->getAssetBank()->getAll<Shader>()) {
-            shaderNames[i++] = engine->getAssetBank()->getName(e.first);
+            shaderNames[i++] = engine->getAssetBank()->getName(e.first).toString();
             if(e.first == cmp->getShader()) {
                 selected = i-1;
             }
         }
         ImGui::Combo("##Shader", &selected, BufferUtils::CreateCharBuffer(shaderNames).data(), shaderNames.size(), 10);
-        cmp->setShader(engine->getAssetBank()->getUIDFromFullName(std::string(shaderNames[selected])));
+        cmp->setShader(engine->getAssetBank()->getUID(std::string(shaderNames[selected])));
         ImGui::PopID();
 
     }

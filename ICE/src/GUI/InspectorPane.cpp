@@ -41,9 +41,9 @@ namespace ICE {
                 if(!engine->getSelected()->hasComponent<RenderComponent>()) {
                     if(ImGui::Button("Render Component")) {
                         engine->getSelected()->addComponent(
-                                new RenderComponent(engine->getAssetBank()->getUID<Mesh>("__ice__cube"),
-                                                    engine->getAssetBank()->getUID<Material>("__ice__base_material"),
-                                                    engine->getAssetBank()->getUID<Shader>("__ice_phong_shader")));
+                                new RenderComponent(engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Mesh>("__ice__cube")),
+                                                    engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Material>("__ice__base_material")),
+                                                    engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Shader>("__ice_phong_shader"))));
                         ImGui::CloseCurrentPopup();
                     }
                 }

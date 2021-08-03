@@ -12,6 +12,7 @@
 #include "Asset.h"
 #include "Resource.h"
 #include "ResourceLoader.h"
+#include "AssetPath.h"
 #include <typeindex>
 
 #define ICE_ASSET_PREFIX "__ice__"
@@ -36,7 +37,7 @@ namespace ICE {
 
         template<typename T>
         T *getAsset(const std::string name) {
-            return dynamic_cast<T*>(getResource(getUID<T>(name))->asset);
+            return dynamic_cast<T*>(getResource(getUID(AssetPath::WithTypePrefix<T>(name)))->asset);
         }
 
         Resource *getResource(AssetUID uid) {
@@ -59,7 +60,7 @@ namespace ICE {
         template<typename T>
         bool addResource(const std::string name, Resource* res) {
             resources[nextUID] = res;
-            nameMapping[typenames[typeid(T)]+"/"+name] = nextUID;
+            nameMapping[AssetPath::WithTypePrefix<T>(name)] = nextUID;
             nextUID++;
             return true;
         }
@@ -81,21 +82,16 @@ namespace ICE {
             return all;
         }
 
-        std::string getName(AssetUID uid) {
+        AssetPath getName(AssetUID uid) {
             for(auto &entry : nameMapping) {
                 if(entry.second == uid) {
                     return entry.first;
                 }
             }
-            return "";
+            return AssetPath("");
         }
 
-        template<typename T>
-        AssetUID getUID(const std::string name) {
-            return getUIDFromFullName(typenames[typeid(T)]+"/"+name);
-        }
-
-        AssetUID getUIDFromFullName(const std::string name) {
+        AssetUID getUID(AssetPath name) {
             if(nameMapping.find(name) != nameMapping.end())
                 return nameMapping[name];
             return NO_ASSET_ID;
@@ -104,9 +100,8 @@ namespace ICE {
         bool nameInUse(const std::string& name);
     private:
         AssetUID nextUID = 1;
-        std::unordered_map<std::string, AssetUID> nameMapping;
+        std::unordered_map<AssetPath, AssetUID> nameMapping;
         std::unordered_map<AssetUID, Resource*> resources;
-        std::unordered_map<std::type_index, std::string> typenames;
         ResourceLoader loader;
     };
 }
