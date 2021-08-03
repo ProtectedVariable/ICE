@@ -11,26 +11,26 @@ TEST(AssetBankTest, AddedAssetsCanBeRetrieved)
     RendererAPI::SetAPI(None);
     AssetBank ab = AssetBank();
     Material mtl = Material();
-    ab.addMaterial("a_ice_test_mtl", &mtl);
-    ASSERT_EQ(ab.getMaterial("a_ice_test_mtl"), &mtl);
-    ASSERT_EQ(ab.getMaterial("lol"), nullptr);
+    ab.addResource<Material>("a_ice_test_mtl", new Resource(&mtl, {}));
+    ASSERT_EQ(ab.getAsset<Material>("a_ice_test_mtl"), &mtl);
+    ASSERT_EQ(ab.getAsset<Material>("lol"), nullptr);
 
     auto dummy_vert = std::vector<Eigen::Vector3f>();
     dummy_vert.emplace_back(1,1,1);
     Mesh mesh = Mesh(dummy_vert, std::vector<Eigen::Vector3f>(), std::vector<Eigen::Vector2f>(),std::vector<Eigen::Vector3i>());
-    ab.addMesh("a_ice_test_mesh", &mesh);
-    ASSERT_EQ(ab.getMesh("a_ice_test_mesh"), &mesh);
-    ASSERT_EQ(ab.getMesh("lel"), nullptr);
+    ab.addResource<Mesh>("a_ice_test_mesh", new Resource(&mesh, {}));
+    ASSERT_EQ(ab.getAsset<Mesh>("a_ice_test_mesh"), &mesh);
+    ASSERT_EQ(ab.getAsset<Mesh>("lel"), nullptr);
 
     Texture* tex = Texture2D::Create("Not needed for this");
-    ab.addTexture("a_ice_test_tex", tex);
-    ASSERT_EQ(ab.getTexture("a_ice_test_tex"), tex);
-    ASSERT_EQ(ab.getTexture("lil"), nullptr);
+    ab.addResource<Texture2D>("a_ice_test_tex", new Resource(tex, {}));
+    ASSERT_EQ(ab.getAsset<Texture>("a_ice_test_tex"), tex);
+    ASSERT_EQ(ab.getAsset<Texture>("lil"), nullptr);
 
     Shader* shader = Shader::Create("","");
-    ab.addShader("a_ice_test_shader", shader);
-    ASSERT_EQ(ab.getShader("a_ice_test_shader"), shader);
-    ASSERT_EQ(ab.getShader("lul"), nullptr);
+    ab.addResource<Shader>("a_ice_test_shader", new Resource(shader, {}));
+    ASSERT_EQ(ab.getAsset<Shader>("a_ice_test_shader"), shader);
+    ASSERT_EQ(ab.getAsset<Shader>("lul"), nullptr);
 }
 
 TEST(AssetBankTest, AssetsCanBeRenamed)
@@ -38,13 +38,13 @@ TEST(AssetBankTest, AssetsCanBeRenamed)
     RendererAPI::SetAPI(None);
     AssetBank ab = AssetBank();
     Material mtl = Material();
-    ab.addMaterial("a_ice_test_mtl", &mtl);
-    ASSERT_EQ(ab.getMaterial("a_ice_test_mtl"), &mtl);
-    ASSERT_EQ(ab.getMaterial("lol"), nullptr);
+    ab.addResource<Material>("a_ice_test_mtl", new Resource(&mtl, {}));
+    ASSERT_EQ(ab.getAsset<Material>("a_ice_test_mtl"), &mtl);
+    ASSERT_EQ(ab.getAsset<Material>("lol"), nullptr);
 
     ab.renameAsset("a_ice_test_mtl", "lol");
-    ASSERT_EQ(ab.getMaterial("lol"), &mtl);
-    ASSERT_EQ(ab.getMaterial("a_ice_test_mtl"), nullptr);
+    ASSERT_EQ(ab.getAsset<Material>("lol"), &mtl);
+    ASSERT_EQ(ab.getAsset<Material>("a_ice_test_mtl"), nullptr);
 }
 
 TEST(AssetBankTest, GetNameReturnsCorrectName)
@@ -52,9 +52,9 @@ TEST(AssetBankTest, GetNameReturnsCorrectName)
     RendererAPI::SetAPI(None);
     AssetBank ab = AssetBank();
     Material mtl = Material();
-    ab.addMaterial("a_ice_test_mtl", &mtl);
-    ASSERT_EQ("a_ice_test_mtl", ab.getName(&mtl));
-    ASSERT_EQ("null", ab.getName(nullptr));
+    ab.addResource<Material>("a_ice_test_mtl", new Resource(&mtl, {}));
+    ASSERT_EQ(AssetPath("a_ice_test_mtl"), ab.getName(ab.getUID(AssetPath("a_ice_test_mtl"))));
+    ASSERT_EQ(AssetPath(""), ab.getName(0));
 }
 
 TEST(AssetBankTest, NameInUseBehavesCorrectly)
@@ -62,7 +62,7 @@ TEST(AssetBankTest, NameInUseBehavesCorrectly)
     RendererAPI::SetAPI(None);
     AssetBank ab = AssetBank();
     Material mtl = Material();
-    ab.addMaterial("a_ice_test_mtl", &mtl);
+    ab.addResource<Material>("a_ice_test_mtl", new Resource(&mtl, {}));
     ASSERT_TRUE(ab.nameInUse("a_ice_test_mtl"));
     ASSERT_FALSE(ab.nameInUse("hey"));
 }

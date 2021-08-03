@@ -65,7 +65,6 @@ namespace ICE {
             return true;
         }
 
-        template<typename T>
         bool renameAsset(const std::string &oldName, const std::string &newName) {
             return true;
         }
