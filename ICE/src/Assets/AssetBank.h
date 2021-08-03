@@ -37,7 +37,11 @@ namespace ICE {
 
         template<typename T>
         T *getAsset(const std::string name) {
-            return dynamic_cast<T*>(getResource(getUID(AssetPath::WithTypePrefix<T>(name)))->asset);
+            Resource* res = getResource(getUID(AssetPath::WithTypePrefix<T>(name)));
+            if(res != nullptr) {
+                return dynamic_cast<T*>(res->asset);
+            }
+            return nullptr;
         }
 
         Resource *getResource(AssetUID uid) {
@@ -65,8 +69,17 @@ namespace ICE {
             return true;
         }
 
-        bool renameAsset(const std::string &oldName, const std::string &newName) {
-            return true;
+        bool renameAsset(const AssetPath &oldName, const AssetPath &newName) {
+            if(oldName.getPath()[0] != newName.getPath()[0]) return false;
+            AssetUID id = nameMapping.find(oldName) == nameMapping.end() ? 0 : nameMapping[oldName];
+            if(id != NO_ASSET_ID) {
+                if(nameMapping.find(newName) == nameMapping.end()) {
+                    nameMapping[newName] = id;
+                    nameMapping.erase(oldName);
+                    return true;
+                }
+            }
+            return false;
         }
 
         template<typename T>

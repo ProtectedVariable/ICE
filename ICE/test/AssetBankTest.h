@@ -24,8 +24,8 @@ TEST(AssetBankTest, AddedAssetsCanBeRetrieved)
 
     Texture* tex = Texture2D::Create("Not needed for this");
     ab.addResource<Texture2D>("a_ice_test_tex", new Resource(tex, {}));
-    ASSERT_EQ(ab.getAsset<Texture>("a_ice_test_tex"), tex);
-    ASSERT_EQ(ab.getAsset<Texture>("lil"), nullptr);
+    ASSERT_EQ(ab.getAsset<Texture2D>("a_ice_test_tex"), tex);
+    ASSERT_EQ(ab.getAsset<Texture2D>("lil"), nullptr);
 
     Shader* shader = Shader::Create("","");
     ab.addResource<Shader>("a_ice_test_shader", new Resource(shader, {}));
@@ -42,7 +42,7 @@ TEST(AssetBankTest, AssetsCanBeRenamed)
     ASSERT_EQ(ab.getAsset<Material>("a_ice_test_mtl"), &mtl);
     ASSERT_EQ(ab.getAsset<Material>("lol"), nullptr);
 
-    ab.renameAsset("a_ice_test_mtl", "lol");
+    ab.renameAsset(AssetPath("Material/a_ice_test_mtl"), AssetPath("Material/lol"));
     ASSERT_EQ(ab.getAsset<Material>("lol"), &mtl);
     ASSERT_EQ(ab.getAsset<Material>("a_ice_test_mtl"), nullptr);
 }
@@ -53,7 +53,7 @@ TEST(AssetBankTest, GetNameReturnsCorrectName)
     AssetBank ab = AssetBank();
     Material mtl = Material();
     ab.addResource<Material>("a_ice_test_mtl", new Resource(&mtl, {}));
-    ASSERT_EQ(AssetPath("a_ice_test_mtl"), ab.getName(ab.getUID(AssetPath("a_ice_test_mtl"))));
+    ASSERT_EQ(AssetPath("Material/a_ice_test_mtl"), ab.getName(ab.getUID(AssetPath("Material/a_ice_test_mtl"))));
     ASSERT_EQ(AssetPath(""), ab.getName(0));
 }
 
@@ -63,7 +63,7 @@ TEST(AssetBankTest, NameInUseBehavesCorrectly)
     AssetBank ab = AssetBank();
     Material mtl = Material();
     ab.addResource<Material>("a_ice_test_mtl", new Resource(&mtl, {}));
-    ASSERT_TRUE(ab.nameInUse("a_ice_test_mtl"));
+    ASSERT_TRUE(ab.nameInUse("Material/a_ice_test_mtl"));
     ASSERT_FALSE(ab.nameInUse("hey"));
 }
 
