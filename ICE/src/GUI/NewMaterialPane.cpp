@@ -17,9 +17,12 @@ namespace ICE {
         ImGui::Text("Name");
         ImGui::SameLine();
         char buffer[512];
-        strcpy(buffer, name.c_str());
+        strcpy(buffer, name.getName().c_str());
         ImGui::InputText("##Name", buffer, 512);
-        name = std::string(buffer);
+        AssetPath newName = AssetPath(name);
+        newName.setName(buffer);
+        engine->getAssetBank()->renameAsset(name, newName);
+        name = newName;
 
         //Colors
         ImGui::Text("Albedo");
@@ -86,7 +89,8 @@ namespace ICE {
         ImVec2 pos = ImGui::GetCursorPos();
         wsize = ImVec2(wsize.x - pos.x, wsize.y - pos.y - 30);
 
-        AssetUID mat = engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Material>(name));
+        *engine->getAssetBank()->getAsset<Material>(name) = Material(albedo, specular, ambient, alpha, diffuseMap, specularMap, ambientMap, normalMap);
+        AssetUID mat = engine->getAssetBank()->getUID(name);
         auto scene = Scene("__ice__newmaterial_scene");
 
         auto sphere = Entity();
@@ -117,7 +121,7 @@ namespace ICE {
 
             ImGui::Image(viewFB->getTexture(), wsize, ImVec2(0, 1), ImVec2(1, 0));
         }
-        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, engine->getAssetBank()->nameInUse(name) && !editMode);
+        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, false); //TODO: engine->getAssetBank()->nameInUse(name) && !editMode
         if(ImGui::Button(editMode ? "Edit" : "Add")) {
             ret = false;
         }
@@ -125,13 +129,18 @@ namespace ICE {
         ImGui::SameLine();
         if(ImGui::Button("Cancel")) {
             ret = false;
+            *engine->getAssetBank()->getAsset<Material>(name) = backup;
+            engine->getAssetBank()->renameAsset(name, nameBackup);
+            if(!editMode) {
+                engine->getAssetBank()->removeAsset(name);
+            }
             canceled = true;
         }
         ImGui::End();
         return ret;
     }
 
-    NewMaterialPane::NewMaterialPane(ICEEngine* engine): engine(engine), name("new_material"),
+    NewMaterialPane::NewMaterialPane(ICEEngine* engine): engine(engine), name("new_material"), nameBackup("new_material"),
                                                          viewFB(Framebuffer::Create({200, 200, 1})),
                                                          camera(Camera({{60, 16.f / 9.f, 0.01f, 1000 }, Perspective })),
                                                          renderer(ForwardRenderer()){
@@ -147,24 +156,15 @@ namespace ICE {
         alpha = 1.f;
         diffuseMap = normalMap = ambientMap = specularMap = NO_ASSET_ID;
         editMode = false;
-        name = "newmaterial";
+        name = AssetPath::WithTypePrefix<Material>("new_material");
+        nameBackup = name;
         canceled = false;
+        engine->getAssetBank()->addResource(name, new Resource(new Material(albedo, specular, ambient, alpha, diffuseMap, specularMap, ambientMap, normalMap), {}));
     }
 
     void NewMaterialPane::build() {
         if(canceled) return;
         auto mtl = Material(albedo, specular, ambient, alpha, diffuseMap, specularMap, ambientMap, normalMap);
-        if(!editMode) {
-            auto nm = new Material();
-            *nm = mtl;
-            engine->getAssetBank()->addResource<Material>(name, new Resource(nm, {}));
-        } else {
-            std::string newName = oldname;
-            if(engine->getProject()->renameAsset(oldname, name)) {
-                newName = name;
-            }
-            *engine->getAssetBank()->getAsset<Material>(newName) = mtl;
-        }
     }
 
     void NewMaterialPane::edit(AssetUID selectedAsset, Material& m) {
@@ -177,8 +177,8 @@ namespace ICE {
         ambientMap = m.getAmbientMap();
         normalMap = m.getNormalMap();
         editMode = true;
-        this->name = engine->getAssetBank()->getName(selectedAsset).getName();
-        this->oldname = name;
+        this->name = engine->getAssetBank()->getName(selectedAsset);
+        this->backup = m;
     }
 
     Material NewMaterialPane::makeMaterial() {

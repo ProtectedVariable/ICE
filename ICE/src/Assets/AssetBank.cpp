@@ -31,8 +31,7 @@ namespace ICE {
 
     }
 
-    bool AssetBank::nameInUse(const std::string &name) {
-        if(name == "") return true;
+    bool AssetBank::nameInUse(const AssetPath &name) {
         return !(nameMapping.find(name) == nameMapping.end());
     }
 }

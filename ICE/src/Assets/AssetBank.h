@@ -36,8 +36,13 @@ namespace ICE {
         }
 
         template<typename T>
-        T *getAsset(const std::string name) {
-            Resource* res = getResource(getUID(AssetPath::WithTypePrefix<T>(name)));
+        T *getAsset(const std::string& name) {
+            return getAsset<T>(AssetPath::WithTypePrefix<T>(name));
+        }
+
+        template<typename T>
+        T *getAsset(const AssetPath& fullpath) {
+            Resource* res = getResource(getUID(fullpath));
             if(res != nullptr) {
                 return dynamic_cast<T*>(res->asset);
             }
@@ -63,8 +68,12 @@ namespace ICE {
 
         template<typename T>
         bool addResource(const std::string name, Resource* res) {
+            return addResource(AssetPath::WithTypePrefix<T>(name), res);
+        }
+
+        bool addResource(const AssetPath name, Resource* res) {
             resources[nextUID] = res;
-            nameMapping[AssetPath::WithTypePrefix<T>(name)] = nextUID;
+            nameMapping[name] = nextUID;
             nextUID++;
             return true;
         }
@@ -78,6 +87,17 @@ namespace ICE {
                     nameMapping.erase(oldName);
                     return true;
                 }
+            }
+            return false;
+        }
+
+        bool removeAsset(const AssetPath& name) {
+            if(nameMapping.find(name) != nameMapping.end()) {
+                AssetUID id = getUID(name);
+                nameMapping.erase(name);
+                resources.erase(id);
+                //TODO: Actual deload and release of resources
+                return true;
             }
             return false;
         }
@@ -109,7 +129,7 @@ namespace ICE {
             return NO_ASSET_ID;
         }
 
-        bool nameInUse(const std::string& name);
+        bool nameInUse(const AssetPath& name);
     private:
         AssetUID nextUID = 1;
         std::unordered_map<AssetPath, AssetUID> nameMapping;

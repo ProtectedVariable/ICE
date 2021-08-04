@@ -44,4 +44,10 @@ namespace ICE {
     const std::string &AssetPath::getName() const {
         return name;
     }
+
+    void AssetPath::setName(const std::string &name) {
+        AssetPath::name = name;
+    }
+
+    AssetPath::AssetPath(const AssetPath& cpy) : AssetPath(cpy.toString()) {}
 }

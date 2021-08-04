@@ -15,6 +15,7 @@
 namespace ICE {
     class AssetPath {
     public:
+        AssetPath(const AssetPath& cpy);
         AssetPath(std::string path);
         std::string toString() const;
         template<typename T>
@@ -29,6 +30,8 @@ namespace ICE {
         const std::vector<std::string> &getPath() const;
 
         const std::string &getName() const;
+
+        void setName(const std::string &name);
 
     private:
         std::vector<std::string> path;

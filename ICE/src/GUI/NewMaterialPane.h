@@ -37,10 +37,11 @@ namespace ICE {
         Framebuffer* viewFB;
         Camera camera;
         float y = 0;
-        std::string name, oldname;
+        AssetPath name, nameBackup;
         bool editMode = false;
         ForwardRenderer renderer;
         bool canceled = false;
+        Material backup;
     };
 }
 
