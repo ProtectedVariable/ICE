@@ -63,8 +63,8 @@ TEST(AssetBankTest, NameInUseBehavesCorrectly)
     AssetBank ab = AssetBank();
     Material mtl = Material();
     ab.addResource<Material>("a_ice_test_mtl", new Resource(&mtl, {}));
-    ASSERT_TRUE(ab.nameInUse("Material/a_ice_test_mtl"));
-    ASSERT_FALSE(ab.nameInUse("hey"));
+    ASSERT_TRUE(ab.nameInUse(AssetPath::WithTypePrefix<Material>("a_ice_test_mtl")));
+    ASSERT_FALSE(ab.nameInUse(AssetPath::WithTypePrefix<Material>("hey")));
 }
 
 #endif //ICE_ASSETBANKTEST_H
