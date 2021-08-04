@@ -71,11 +71,23 @@ namespace ICE {
             return addResource(AssetPath::WithTypePrefix<T>(name), res);
         }
 
-        bool addResource(const AssetPath name, Resource* res) {
+        bool addResource(const AssetPath& name, Resource* res) {
             resources[nextUID] = res;
             nameMapping[name] = nextUID;
             nextUID++;
             return true;
+        }
+
+        template<typename T>
+        bool addResourceWithSpecificUID(const AssetPath& name, const std::vector<std::string> &sources, AssetUID id) {
+            if(resources.find(id) == resources.end() && nameMapping.find(name) == nameMapping.end()) {
+                Resource* res = loader.LoadResource<T>(sources);
+                resources[id] = res;
+                nameMapping[name] = id;
+                nextUID = nextUID > id ? nextUID : id;
+                return true;
+            }
+            return false;
         }
 
         bool renameAsset(const AssetPath &oldName, const AssetPath &newName) {

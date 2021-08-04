@@ -58,54 +58,62 @@ namespace ICE {
         j["camera_position"] = dumpVec3(editorCamera->getPosition());
         j["camera_rotation"] = dumpVec3(editorCamera->getRotation());
 
-        std::vector<std::string> strvec;
+        std::vector<json> vec;
         for(auto s : scenes) {
-            strvec.push_back(s.getName());
+            vec.push_back(s.getName());
         }
-        j["scenes"] = strvec;
-        strvec.clear();
+        j["scenes"] = vec;
+        vec.clear();
 
         for(auto m : assetBank.getAll<Mesh>()) {
-            if(assetBank.getName(m.first).getName().find("__ice__") == std::string::npos) {
-                strvec.push_back(assetBank.getName(m.first).getName());
+            if(assetBank.getName(m.first).getName().find(ICE_ASSET_PREFIX) == std::string::npos) {
+                json tmp;
+                tmp[assetBank.getName(m.first).toString()] = m.first;
+                vec.push_back(tmp);
             }
         }
-        j["meshes"] = strvec;
-        strvec.clear();
+        j["meshes"] = vec;
+        vec.clear();
 
         for(auto m : assetBank.getAll<Material>()) {
-            if(assetBank.getName(m.first).getName().find("__ice__") == std::string::npos) {
-                strvec.push_back(assetBank.getName(m.first).getName());
+            if(assetBank.getName(m.first).getName().find(ICE_ASSET_PREFIX) == std::string::npos) {
+                json tmp;
+                tmp[assetBank.getName(m.first).toString()] = m.first;
+                vec.push_back(tmp);
                 writeMaterialFile(assetBank.getName(m.first).getName(), *m.second);
             }
         }
-        j["materials"] = strvec;
-        strvec.clear();
+        j["materials"] = vec;
+        vec.clear();
 
         for(auto m : assetBank.getAll<Shader>()) {
-            if (assetBank.getName(m.first).getName().find("__ice__") == std::string::npos) {
-                strvec.push_back(assetBank.getName(m.first).getName());
+            if (assetBank.getName(m.first).getName().find(ICE_ASSET_PREFIX) == std::string::npos) {
+                json tmp;
+                tmp[assetBank.getName(m.first).toString()] = m.first;
+                vec.push_back(tmp);
             }
         }
-        j["shaders"] = strvec;
-        strvec.clear();
+        j["shaders"] = vec;
+        vec.clear();
 
-        for(auto m : assetBank.getAll<Texture>()) {
+        for(auto m : assetBank.getAll<Texture2D>()) {
             if(assetBank.getName(m.first).getName().find("__ice__") == std::string::npos) {
-                if(m.second->getType() == TextureType::Tex2D)
-                    strvec.push_back(assetBank.getName(m.first).getName());
+                json tmp;
+                tmp[assetBank.getName(m.first).toString()] = m.first;
+                vec.push_back(tmp);
             }
         }
-        j["textures2D"] = strvec;
-        strvec.clear();
+        j["textures2D"] = vec;
+        vec.clear();
 
-        for(auto m : assetBank.getAll<Texture>()) {
+        for(auto m : assetBank.getAll<TextureCube>()) {
             if(assetBank.getName(m.first).getName().find("__ice__") == std::string::npos) {
-                if(m.second->getType() == TextureType::CubeMap)
-                    strvec.push_back(assetBank.getName(m.first).getName());
+                json tmp;
+                tmp[assetBank.getName(m.first).toString()] = m.first;
+                vec.push_back(tmp);
             }
         }
-        j["cubeMaps"] = strvec;
+        j["cubeMaps"] = vec;
         outstream << j.dump(4);
         outstream.close();
 
@@ -122,9 +130,9 @@ namespace ICE {
                 if(e->hasComponent<RenderComponent>()) {
                     RenderComponent rc = *e->getComponent<RenderComponent>();
                     json renderjson;
-                    renderjson["mesh"] = assetBank.getName(rc.getMesh()).toString();
-                    renderjson["material"] = assetBank.getName(rc.getMaterial()).toString();
-                    renderjson["shader"] = assetBank.getName(rc.getShader()).toString();
+                    renderjson["mesh"] = rc.getMesh();
+                    renderjson["material"] = rc.getMaterial();
+                    renderjson["shader"] = rc.getShader();
                     entity["renderComponent"] = renderjson;
                 }
                 if(e->hasComponent<TransformComponent>()) {
@@ -145,7 +153,7 @@ namespace ICE {
                 entities.push_back(entity);
             }
             j["entities"] = entities;
-            j["skybox"] = assetBank.getName(s.getSkybox()->getTexture()).toString();
+            j["skybox"] = s.getSkybox()->getTexture();
             outstream << j.dump(4);
             outstream.close();
         }
@@ -159,11 +167,11 @@ namespace ICE {
         infile.close();
 
         std::vector<std::string> sceneNames = j["scenes"];
-        std::vector<std::string> meshesNames = j["meshes"];
-        std::vector<std::string> materialNames = j["materials"];
-        std::vector<std::string> shaderNames = j["shaders"];
-        std::vector<std::string> textureNames = j["textures2D"];
-        std::vector<std::string> cubeMapNames = j["cubeMaps"];
+        json meshesNames = j["meshes"];
+        json materialNames = j["materials"];
+        json shaderNames = j["shaders"];
+        json textureNames = j["textures2D"];
+        json cubeMapNames = j["cubeMaps"];
 
         cameraPosition = JsonParser::parseVec3(j["camera_position"]);
         cameraRotation = JsonParser::parseVec3(j["camera_rotation"]);
@@ -175,19 +183,19 @@ namespace ICE {
             files.push_back(sp.substr(sp.find_last_of("/")+1));
         }
 
-        for(auto m : textureNames) {
+        for(auto m : textureNames.items()) {
             for(auto file : files) {
-                if(file.find(m) != std::string::npos) {
-                    assetBank.addResource<Texture2D>(m, {(path+file)});
+                if(file.find(m.value().begin().key()) != std::string::npos) {
+                    assetBank.addResourceWithSpecificUID<Texture2D>(m.value().begin().key(), {(path+file)}, m.value().begin().value());
                     break;
                 }
             }
         }
 
-        for(auto m : cubeMapNames) {
+        for(auto m : cubeMapNames.items()) {
             for(auto file : files) {
-                if(file.find(m) != std::string::npos) {
-                    assetBank.addResource<TextureCube>(m, {(path+file)});
+                if(file.find(m.value().begin().key()) != std::string::npos) {
+                    assetBank.addResourceWithSpecificUID<TextureCube>(m.value().begin().key(), {(path+file)}, m.value().begin().value());
                     break;
                 }
             }
@@ -200,17 +208,17 @@ namespace ICE {
             files.push_back(sp.substr(sp.find_last_of("/")+1));
         }
 
-        for(auto m : meshesNames) {
+        for(auto m : meshesNames.items()) {
             for(auto file : files) {
-                if(file.find(m) != std::string::npos) {
-                    assetBank.addResource<Mesh>(m, {(path+file)});
+                if(file.find(m.value().begin().key()) != std::string::npos) {
+                    assetBank.addResourceWithSpecificUID<Mesh>(m.value().begin().key(), {(path+file)}, m.value().begin().value());
                     break;
                 }
             }
         }
 
-        for(auto m : materialNames) {
-            assetBank.addResource<Material>(m, {m}); //baseDirectory + "/" + name + "/Assets/Materials/" + mtlName + ".icm"
+        for(auto m : materialNames.items()) {
+            assetBank.addResourceWithSpecificUID<Material>(m.value().begin().key(), {baseDirectory + "/" + name + "/Assets/"+m.value().begin().key()+".icm"}, m.value().begin().value()); //baseDirectory + "/" + name + "/Assets/Materials/" + mtlName + ".icm"
         }
 
         for(auto s : sceneNames) {

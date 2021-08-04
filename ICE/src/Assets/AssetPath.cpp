@@ -11,11 +11,11 @@
 namespace ICE {
 
     std::unordered_map<std::type_index, std::string> AssetPath::typenames = {
-            {typeid(Texture2D), "Texture"},
-            {typeid(TextureCube), "CubeMap"},
-            {typeid(Mesh), "Mesh"},
-            {typeid(Material), "Material"},
-            {typeid(Shader), "Shader"}
+            {typeid(Texture2D), "Textures"},
+            {typeid(TextureCube), "CubeMaps"},
+            {typeid(Mesh), "Meshes"},
+            {typeid(Material), "Materials"},
+            {typeid(Shader), "Shaders"}
     };
 
     AssetPath::AssetPath(std::string path) {
