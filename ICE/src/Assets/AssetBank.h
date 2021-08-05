@@ -84,7 +84,7 @@ namespace ICE {
                 Resource* res = loader.LoadResource<T>(sources);
                 resources[id] = res;
                 nameMapping[name] = id;
-                nextUID = nextUID > id ? nextUID : id;
+                nextUID = nextUID > id ? nextUID : id+1;
                 return true;
             }
             return false;

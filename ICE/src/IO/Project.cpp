@@ -3,15 +3,6 @@
 //
 
 #include "Project.h"
-#if __has_include(<filesystem>)
-#include <filesystem>
-namespace fs = std::filesystem;
-#elif __has_include(<experimental/filesystem>)
-#include <experimental/filesystem>
-namespace fs = std::experimental::filesystem;
-#else
-  error "Missing the <filesystem> header."
-#endif
 
 #include <iostream>
 #include <fstream>
@@ -35,6 +26,7 @@ namespace ICE {
         fs::create_directories(baseDirectory + "/" + name + "/Assets/Materials");
         fs::create_directories(baseDirectory + "/" + name + "/Assets/Shaders");
         fs::create_directories(baseDirectory + "/" + name + "/Assets/Textures");
+        fs::create_directories(baseDirectory + "/" + name + "/Assets/CubeMaps");
         fs::create_directories(baseDirectory + "/" + name + "/Assets/Scripts");
         fs::create_directories(baseDirectory + "/" + name + "/Scenes");
         scenes.push_back(Scene("MainScene"));
@@ -176,50 +168,13 @@ namespace ICE {
         cameraPosition = JsonParser::parseVec3(j["camera_position"]);
         cameraRotation = JsonParser::parseVec3(j["camera_rotation"]);
 
-        std::string path = baseDirectory + "/" + name + "/Assets/Textures/";
-        std::vector<std::string> files;
-        for (const auto& entry : fs::directory_iterator(path)) {
-            std::string sp = entry.path().string();
-            files.push_back(sp.substr(sp.find_last_of("/")+1));
-        }
+        std::string path = baseDirectory + "/" + name + "/Assets/";
 
-        for(auto m : textureNames.items()) {
-            for(auto file : files) {
-                if(file.find(m.value().begin().key()) != std::string::npos) {
-                    assetBank.addResourceWithSpecificUID<Texture2D>(m.value().begin().key(), {(path+file)}, m.value().begin().value());
-                    break;
-                }
-            }
-        }
-
-        for(auto m : cubeMapNames.items()) {
-            for(auto file : files) {
-                if(file.find(m.value().begin().key()) != std::string::npos) {
-                    assetBank.addResourceWithSpecificUID<TextureCube>(m.value().begin().key(), {(path+file)}, m.value().begin().value());
-                    break;
-                }
-            }
-        }
-
-        files.clear();
-        path = baseDirectory + "/" + name + "/Assets/Meshes/";
-        for (const auto& entry : fs::directory_iterator(path)) {
-            std::string sp = entry.path().string();
-            files.push_back(sp.substr(sp.find_last_of("/")+1));
-        }
-
-        for(auto m : meshesNames.items()) {
-            for(auto file : files) {
-                if(file.find(m.value().begin().key()) != std::string::npos) {
-                    assetBank.addResourceWithSpecificUID<Mesh>(m.value().begin().key(), {(path+file)}, m.value().begin().value());
-                    break;
-                }
-            }
-        }
-
-        for(auto m : materialNames.items()) {
-            assetBank.addResourceWithSpecificUID<Material>(m.value().begin().key(), {baseDirectory + "/" + name + "/Assets/"+m.value().begin().key()+".icm"}, m.value().begin().value()); //baseDirectory + "/" + name + "/Assets/Materials/" + mtlName + ".icm"
-        }
+        loadAssetsOfType<Texture2D>(path, textureNames);
+        loadAssetsOfType<TextureCube>(path, cubeMapNames);
+        loadAssetsOfType<Mesh>(path, meshesNames);
+        loadAssetsOfType<Material>(path, materialNames);
+        loadAssetsOfType<Shader>(path, shaderNames);
 
         for(auto s : sceneNames) {
             infile = std::ifstream(baseDirectory + "/" + name + "/Scenes/" + s + ".ics");
@@ -285,31 +240,22 @@ namespace ICE {
         dstStream.close();
     }
 
-    bool Project::renameAsset(const std::string& oldName, const std::string& newName) {
-        /*
-        if(newName == "") {
+    bool Project::renameAsset(const AssetPath& oldName, const AssetPath& newName) {
+        if(newName.getName() == "" || newName.prefix() != oldName.prefix()) {
             return false;
         }
         if(assetBank.renameAsset(oldName, newName)) {
             std::string path = baseDirectory + "/" + name + "/Assets/";
-            std::string searchDir[3] = {"Textures/", "Meshes/", "Materials/"};
-            for(int i = 0; i < 3; i++) {
-                for(auto file : getFilesInDir(path+searchDir[i])) {
-                    if(file.substr(0,file.find_last_of(".")) == oldName) {
-                        if(rename((path+searchDir[i]+file).c_str(), (path+searchDir[i]+(newName+file.substr(file.find_last_of(".")))).c_str()) == 0) {
-                            return true;
-                        } else {
-                            assetBank.renameAsset(newName, oldName);
-                            return false;
-                        }
+            for(auto file : getFilesInDir(path+oldName.prefix())) {
+                if(file.substr(0,file.find_last_of(".")) == oldName.getName()) {
+                    if(rename((path+oldName.prefix()+file).c_str(), (path+oldName.prefix()+(newName.getName()+file.substr(file.find_last_of(".")))).c_str()) == 0) {
+                        return true;
                     }
                 }
             }
             return true;
         }
         return false;
-         */
-        return true;
     }
 
     std::vector<std::string> Project::getFilesInDir(const std::string &folder) {

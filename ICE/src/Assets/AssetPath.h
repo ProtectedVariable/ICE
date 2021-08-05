@@ -18,6 +18,7 @@ namespace ICE {
         AssetPath(const AssetPath& cpy);
         AssetPath(std::string path);
         std::string toString() const;
+        std::string prefix() const;
         template<typename T>
         static AssetPath WithTypePrefix(std::string path) {
             return AssetPath(typenames[typeid(T)]+ASSET_PATH_SEPARATOR+path);

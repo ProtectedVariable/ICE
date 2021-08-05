@@ -14,14 +14,16 @@ namespace ICE {
         static int y = 45;
         ImGui::BeginChild("Asset View");
         char buffer[512];
-        std::string assetName = engine->getAssetBank()->getName(*selectedAsset).getName();
-        strcpy(buffer, assetName.c_str());
+        AssetPath assetName = engine->getAssetBank()->getName(*selectedAsset);
+        AssetPath newName = AssetPath(assetName);
+        strcpy(buffer, assetName.getName().c_str());
         ImGui::Text("Asset Name");
         ImGui::SameLine();
-        ImGuiInputTextFlags flags = (assetName.find("__ice__") == std::string::npos) ? 0 : ImGuiInputTextFlags_ReadOnly;
+        ImGuiInputTextFlags flags = (assetName.getName().find("__ice__") == std::string::npos) ? 0 : ImGuiInputTextFlags_ReadOnly;
         if(ImGui::InputText("##Asset Name", buffer, 512, flags)) {
-            if(engine->getProject()->renameAsset(assetName, buffer)) {
-                assetName = buffer;
+            newName.setName(buffer);
+            if(engine->getProject()->renameAsset(assetName, newName)) {
+
             }
         }
         ImVec2 wsize = ImGui::GetWindowContentRegionMax();

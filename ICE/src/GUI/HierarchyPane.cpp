@@ -13,7 +13,7 @@ namespace ICE {
 
     int ctr = 0;
 
-    void HierarchyPane::mkPopup(const std::string parent) {
+    void HierarchyPane::mkPopup(const std::string& parent) {
         ImGui::Text("Create...");
         if(ImGui::Button("3D Object")) {
             auto entity = new Entity();

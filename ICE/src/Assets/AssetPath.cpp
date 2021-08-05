@@ -30,11 +30,7 @@ namespace ICE {
     }
 
     std::string AssetPath::toString() const {
-        auto str = std::string();
-        for(auto &p : path) {
-            str += p+ASSET_PATH_SEPARATOR;
-        }
-        return (str + name);
+        return (prefix() + name);
     }
 
     const std::vector<std::string> &AssetPath::getPath() const {
@@ -50,4 +46,12 @@ namespace ICE {
     }
 
     AssetPath::AssetPath(const AssetPath& cpy) : AssetPath(cpy.toString()) {}
+
+    std::string AssetPath::prefix() const {
+        auto str = std::string();
+        for(auto &p : path) {
+            str += p+ASSET_PATH_SEPARATOR;
+        }
+        return str;
+    }
 }
