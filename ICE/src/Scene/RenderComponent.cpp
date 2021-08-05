@@ -5,29 +5,29 @@
 #include "RenderComponent.h"
 
 namespace ICE {
-    RenderComponent::RenderComponent(const Mesh* mesh, const Material* material, Shader* shader) : mesh(mesh), material(material), shader(shader) {}
+    RenderComponent::RenderComponent(AssetUID mesh, AssetUID material, AssetUID shader) : mesh(mesh), material(material), shader(shader) {}
 
-    const Mesh* RenderComponent::getMesh() const {
+    AssetUID RenderComponent::getMesh() const {
         return mesh;
     }
 
-    const Material* RenderComponent::getMaterial() const {
+    AssetUID RenderComponent::getMaterial() const {
         return material;
     }
 
-    void RenderComponent::setMesh(Mesh *mesh) {
-        RenderComponent::mesh = mesh;
+    void RenderComponent::setMesh(AssetUID mesh) {
+        this->mesh = mesh;
     }
 
-    void RenderComponent::setMaterial(Material *material) {
-        RenderComponent::material = material;
+    void RenderComponent::setMaterial(AssetUID material) {
+        this->material = material;
     }
 
-    Shader *RenderComponent::getShader() {
+    AssetUID RenderComponent::getShader() {
         return shader;
     }
 
-    void RenderComponent::setShader(Shader *shader) {
-        RenderComponent::shader = shader;
+    void RenderComponent::setShader(AssetUID shader) {
+        this->shader = shader;
     }
 }

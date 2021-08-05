@@ -228,24 +228,28 @@ namespace ICE {
                         *engine->getSelected()->getComponent<TransformComponent>()->getScale() += (deltaS - Eigen::Vector3f(1, 1,1));
                     }
                 }
-                auto drag = ImGui::GetMouseDragDelta();
+                auto drag = ImGui::GetMouseDragDelta(0);
                 if (!ImGuizmo::IsUsing()) {
                     if(ImGui::IsWindowHovered()) {
-                        engine->getCamera()->getRotation().x() += drag.y / 100.f;
-                        engine->getCamera()->getRotation().y() += drag.x / 100.f;
-                    }
-                    if (ImGui::IsMouseClicked(0)) {
-                        int x = ImGui::GetMousePos().x - wpos.x;
-                        int y = ImGui::GetMousePos().y - wpos.y;
-                        if (x > 0 && y > 0 && x < wsize.x && y < wsize.y) {
-                            auto color = engine->getPickingTextureAt(x, y);
-                            int id = color.x() & 0xFF + ((color.y() & 0xFF) << 8) + ((color.z() & 0xFF) << 16);
-                            if (id != 0) {
-                                auto picked = engine->getScene()->getEntities()[id - 1];
-                                engine->setSelected(picked);
-                            } else {
-                                engine->setSelected(nullptr);
+                        if(ImGui::IsMouseDragging(0)) {
+                            selecting = false;
+                            engine->getCamera()->getRotation().x() += drag.y / 6.f;
+                            engine->getCamera()->getRotation().y() += drag.x / 6.f;
+                            ImGui::ResetMouseDragDelta(0);
+                        } else if (selecting && ImGui::IsMouseReleased(0)) {
+                            int x = ImGui::GetMousePos().x - wpos.x;
+                            int y = ImGui::GetMousePos().y - wpos.y;
+                            if (x > 0 && y > 0 && x < wsize.x && y < wsize.y) {
+                                auto color = engine->getPickingTextureAt(x, y);
+                                int id = color.x() & 0xFF + ((color.y() & 0xFF) << 8) + ((color.z() & 0xFF) << 16);
+                                if (id != 0) {
+                                    auto picked = engine->getScene()->getEntities()[id - 1];
+                                    engine->setSelected(picked);
+                                }
                             }
+                        }
+                        if(ImGui::IsMouseDown(0) && !ImGui::IsMouseDragging(0)) {
+                            selecting = true;
                         }
                     }
                 }
@@ -358,5 +362,12 @@ namespace ICE {
         style->TabBorderSize = 1.0f;
         style->TabRounding = 0.0f;
         style->WindowRounding = 4.0f;
+    }
+
+    void ICEGUI::initializeEditorUI() {
+        hierarchyPane.initialize();
+        inspectorPane.initialize();
+        assetPane.initialize();
+        sceneParamPane.initialize();
     }
 }

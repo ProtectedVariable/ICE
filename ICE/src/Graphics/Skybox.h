@@ -12,18 +12,18 @@
 namespace ICE {
     class Skybox {
     public:
-        Skybox(Texture *texture);
+        Skybox(AssetUID texture);
 
         static VertexArray *getVAO();
 
-        Texture *getTexture() const;
+        AssetUID getTexture() const;
 
         static Shader *getShader();
 
         static void Initialize();
 
     private:
-        Texture* texture;
+        AssetUID texture;
 
         constexpr static float skyboxVertices[] = {
                 // positions

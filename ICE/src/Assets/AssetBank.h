@@ -9,41 +9,144 @@
 #include <Graphics/Mesh.h>
 #include <Graphics/Material.h>
 #include <Graphics/Texture.h>
+#include "Asset.h"
+#include "Resource.h"
+#include "ResourceLoader.h"
+#include "AssetPath.h"
+#include <typeindex>
 
 #define ICE_ASSET_PREFIX "__ice__"
 
 namespace ICE {
+    struct AssetBankEntry {
+        std::string& name;
+        Asset* asset;
+    };
+
     class AssetBank {
     public:
         AssetBank();
 
         void fillWithDefaults();
 
-        bool addMesh(const std::string& name, Mesh* mesh);
-        bool addMaterial(const std::string& name, Material* mtl);
-        bool addShader(const std::string& name, Shader* shader);
-        bool addTexture(const std::string& name, Texture* texture);
+        template<typename T>
+        T *getAsset(AssetUID uid) {
+            if(uid == NO_ASSET_ID) return nullptr;
+            return dynamic_cast<T*>(getResource(uid)->asset);
+        }
 
-        bool renameAsset(const std::string& oldName, const std::string& newName);
+        template<typename T>
+        T *getAsset(const std::string& name) {
+            return getAsset<T>(AssetPath::WithTypePrefix<T>(name));
+        }
 
-        Mesh* getMesh(const std::string& name);
-        Material* getMaterial(const std::string& name);
-        Shader* getShader(const std::string& name);
-        Texture* getTexture(const std::string& name);
+        template<typename T>
+        T *getAsset(const AssetPath& fullpath) {
+            Resource* res = getResource(getUID(fullpath));
+            if(res != nullptr) {
+                return dynamic_cast<T*>(res->asset);
+            }
+            return nullptr;
+        }
 
-        const std::unordered_map<std::string, Mesh*> &getMeshes() const;
-        const std::unordered_map<std::string, Material*> &getMaterials() const;
-        const std::unordered_map<std::string, Shader*> &getShaders() const;
-        const std::unordered_map<std::string, Texture*> &getTextures() const;
+        Resource *getResource(AssetUID uid) {
+            if(uid == NO_ASSET_ID) return nullptr;
+            return resources[uid];
+        }
 
-        std::string getName(const void* ptr);
-        bool nameInUse(const std::string& name);
+        Resource *getResource(const std::string name) {
+            if(nameMapping.find(name) != nameMapping.end())
+                return getResource(nameMapping[name]);
+            return nullptr;
+        }
 
+        template<typename T>
+        bool addResource(const std::string name, const std::vector<std::string> &sources) {
+            Resource* res = loader.LoadResource<T>(sources);
+            return addResource<T>(name, res);
+        }
+
+        template<typename T>
+        bool addResource(const std::string name, Resource* res) {
+            return addResource(AssetPath::WithTypePrefix<T>(name), res);
+        }
+
+        bool addResource(const AssetPath& name, Resource* res) {
+            resources[nextUID] = res;
+            nameMapping[name] = nextUID;
+            nextUID++;
+            return true;
+        }
+
+        template<typename T>
+        bool addResourceWithSpecificUID(const AssetPath& name, const std::vector<std::string> &sources, AssetUID id) {
+            if(resources.find(id) == resources.end() && nameMapping.find(name) == nameMapping.end()) {
+                Resource* res = loader.LoadResource<T>(sources);
+                resources[id] = res;
+                nameMapping[name] = id;
+                nextUID = nextUID > id ? nextUID : id+1;
+                return true;
+            }
+            return false;
+        }
+
+        bool renameAsset(const AssetPath &oldName, const AssetPath &newName) {
+            if(oldName.prefix() != newName.prefix()) return false;
+            AssetUID id = nameMapping.find(oldName) == nameMapping.end() ? 0 : nameMapping[oldName];
+            if(id != NO_ASSET_ID) {
+                if(nameMapping.find(newName) == nameMapping.end()) {
+                    nameMapping[newName] = id;
+                    nameMapping.erase(oldName);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        bool removeAsset(const AssetPath& name) {
+            if(nameMapping.find(name) != nameMapping.end()) {
+                AssetUID id = getUID(name);
+                nameMapping.erase(name);
+                resources.erase(id);
+                //TODO: Actual deload and release of resources
+                return true;
+            }
+            return false;
+        }
+
+        template<typename T>
+        std::unordered_map<AssetUID, T*> getAll() {
+            auto all = std::unordered_map<AssetUID, T*>();
+            for(auto kv : resources) {
+                T* asset = dynamic_cast<T*>(kv.second->asset);
+                if(asset != nullptr) {
+                    all[kv.first] = asset;
+                }
+            }
+            return all;
+        }
+
+        AssetPath getName(AssetUID uid) {
+            for(auto &entry : nameMapping) {
+                if(entry.second == uid) {
+                    return entry.first;
+                }
+            }
+            return AssetPath("");
+        }
+
+        AssetUID getUID(AssetPath name) {
+            if(nameMapping.find(name) != nameMapping.end())
+                return nameMapping[name];
+            return NO_ASSET_ID;
+        }
+
+        bool nameInUse(const AssetPath& name);
     private:
-        std::unordered_map<std::string, Mesh*> meshes;
-        std::unordered_map<std::string, Material*> materials;
-        std::unordered_map<std::string, Shader*> shaders;
-        std::unordered_map<std::string, Texture*> textures;
+        AssetUID nextUID = 1;
+        std::unordered_map<AssetPath, AssetUID> nameMapping;
+        std::unordered_map<AssetUID, Resource*> resources;
+        ResourceLoader loader;
     };
 }
 

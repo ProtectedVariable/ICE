@@ -16,7 +16,7 @@
 namespace ICE {
     class ForwardRenderer : public Renderer {
     public:
-        void initialize(RendererConfig config) override;
+        void initialize(RendererConfig config, AssetBank* assetBank) override;
 
         void submitScene(Scene *scene) override;
 
@@ -40,6 +40,7 @@ namespace ICE {
         RendererConfig config;
         Framebuffer* target;
         Skybox* skybox;
+        AssetBank* assetBank;
     };
 }
 

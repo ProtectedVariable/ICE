@@ -7,7 +7,7 @@
 #include <utility>
 
 namespace ICE {
-    Scene::Scene(const std::string& name) : name(name), root(new SceneNode(nullptr)), nodeByID(std::unordered_map<std::string, SceneNode*>()), skybox(Skybox(nullptr)) {
+    Scene::Scene(const std::string& name) : name(name), root(new SceneNode(nullptr)), nodeByID(std::unordered_map<std::string, SceneNode*>()), skybox(Skybox(NO_ASSET_ID)) {
         nodeByID["root"] = root;
     }
 

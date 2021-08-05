@@ -20,8 +20,9 @@ namespace ICE {
         bool render() override;
         void build();
         void reset();
-        void edit(const std::string& name, Material& material);
+        void edit(AssetUID selectedAsset, Material& material);
         NewMaterialPane(ICEEngine* engine);
+        void initialize() override;
 
     private:
         Material makeMaterial();
@@ -29,17 +30,18 @@ namespace ICE {
         ICEEngine* engine;
         Eigen::Vector3f albedo, specular, ambient;
         float alpha;
-        const Texture* diffuseMap;
-        const Texture* specularMap;
-        const Texture* ambientMap;
-        const Texture* normalMap;
+        AssetUID diffuseMap;
+        AssetUID specularMap;
+        AssetUID ambientMap;
+        AssetUID normalMap;
         Framebuffer* viewFB;
         Camera camera;
         float y = 0;
-        std::string name, oldname;
+        AssetPath name, nameBackup;
         bool editMode = false;
         ForwardRenderer renderer;
         bool canceled = false;
+        Material backup;
     };
 }
 

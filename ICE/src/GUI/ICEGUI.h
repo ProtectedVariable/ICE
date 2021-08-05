@@ -30,6 +30,8 @@ namespace ICE {
 
         int getSceneViewportHeight() const;
 
+        void initializeEditorUI();
+
     private:
 
         void applyStyle();
@@ -45,6 +47,8 @@ namespace ICE {
 
         bool showNewScenePopup = false;
         bool showLoadScenePopup = false;
+
+        bool selecting = true;
     };
 }
 

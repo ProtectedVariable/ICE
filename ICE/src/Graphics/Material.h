@@ -9,7 +9,7 @@
 #include "Texture.h"
 
 namespace ICE {
-    class Material {
+    class Material : public Asset {
     public:
         Material();
 
@@ -17,11 +17,11 @@ namespace ICE {
                  const Eigen::Vector3f &ambient, float alpha);
 
         Material(const Eigen::Vector3f &albedo, const Eigen::Vector3f &specular,
-                 const Eigen::Vector3f &ambient, float alpha, const Texture* diffuseMap, const Texture* specularMap, const Texture* ambientMap);
+                 const Eigen::Vector3f &ambient, float alpha, AssetUID  diffuseMap, AssetUID  specularMap, AssetUID  ambientMap);
 
         Material(const Eigen::Vector3f &albedo, const Eigen::Vector3f &specular,
-                 const Eigen::Vector3f &ambient, float alpha, const Texture* diffuseMap, const Texture* specularMap, const Texture* ambientMap,
-                 const Texture* normalMap);
+                 const Eigen::Vector3f &ambient, float alpha, AssetUID  diffuseMap, AssetUID  specularMap, AssetUID  ambientMap,
+                 AssetUID  normalMap);
 
         const Eigen::Vector3f &getAlbedo() const;
         void setAlbedo(const Eigen::Vector3f &albedo);
@@ -35,25 +35,27 @@ namespace ICE {
         float getAlpha() const;
         void setAlpha(float alpha);
 
-        const Texture *getDiffuseMap() const;
-        void setDiffuseMap(const Texture *diffuseMap);
+        AssetUID getDiffuseMap() const;
+        void setDiffuseMap(AssetUID diffuseMap);
 
-        const Texture *getSpecularMap() const;
-        void setSpecularMap(const Texture *specularMap);
+        AssetUID getSpecularMap() const;
+        void setSpecularMap(AssetUID specularMap);
 
-        const Texture *getAmbientMap() const;
-        void setAmbientMap(const Texture *ambientMap);
+        AssetUID getAmbientMap() const;
+        void setAmbientMap(AssetUID ambientMap);
 
-        const Texture *getNormalMap() const;
-        void setNormalMap(const Texture *normalMap);
+        AssetUID getNormalMap() const;
+        void setNormalMap(AssetUID normalMap);
+
+        std::string getTypeName() override;
 
     private:
         Eigen::Vector3f albedo, specular, ambient;
         float alpha;
-        const Texture* diffuseMap;
-        const Texture* specularMap;
-        const Texture* ambientMap;
-        const Texture* normalMap;
+        AssetUID diffuseMap;
+        AssetUID specularMap;
+        AssetUID ambientMap;
+        AssetUID normalMap;
     };
 }
 

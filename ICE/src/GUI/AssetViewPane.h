@@ -16,13 +16,15 @@ namespace ICE {
     public:
         bool render() override;
 
-        AssetViewPane(ICEEngine *engine, std::string* selectedAsset);
+        AssetViewPane(ICEEngine *engine, AssetUID* selectedAsset);
+
+        void initialize() override;
 
     private:
         ICEEngine* engine;
         Framebuffer* viewFB;
         Camera camera;
-        std::string* selectedAsset;
+        AssetUID* selectedAsset;
         ForwardRenderer renderer;
     };
 }

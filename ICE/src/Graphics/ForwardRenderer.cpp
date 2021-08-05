@@ -12,9 +12,10 @@
 
 namespace ICE {
 
-    void ForwardRenderer::initialize(RendererConfig config) {
+    void ForwardRenderer::initialize(RendererConfig config, AssetBank* assetBank) {
         this->api = RendererAPI::Create();
         this->config = config;
+        this->assetBank = assetBank;
     }
 
     void ForwardRenderer::submitScene(Scene *scene) {
@@ -51,8 +52,8 @@ namespace ICE {
             Skybox::getShader()->loadInt("skybox", 0);
         }
         for(auto e : renderableEntities) {
-            const Material* material = e->getComponent<RenderComponent>()->getMaterial();
-            Shader* shader = e->getComponent<RenderComponent>()->getShader();
+            auto rc = e->getComponent<RenderComponent>();
+            Shader* shader = assetBank->getAsset<Shader>(e->getComponent<RenderComponent>()->getShader());
             shader->bind();
             shader->loadMat4("projection", camera.getProjection());
             shader->loadMat4("view", camera.lookThrough());
@@ -71,44 +72,45 @@ namespace ICE {
     }
 
     void ForwardRenderer::render() {
-        if(skybox->getTexture() != nullptr) {
+        if(skybox->getTexture() != NO_ASSET_ID) {
             api->setDepthMask(false);
             Skybox::getShader()->bind();
             skybox->getVAO()->bind();
-            skybox->getTexture()->bind(0);
+            assetBank->getAsset<TextureCube>(skybox->getTexture())->bind(0);
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
         api->setDepthMask(true);
         for(auto e : renderableEntities) {
-            const Material* mat = e->getComponent<RenderComponent>()->getMaterial();
-            Shader* shader = e->getComponent<RenderComponent>()->getShader();
+            auto rc = e->getComponent<RenderComponent>();
+            const Material* mat = assetBank->getAsset<Material>(e->getComponent<RenderComponent>()->getMaterial());
+            Shader* shader = assetBank->getAsset<Shader>(e->getComponent<RenderComponent>()->getShader());
             shader->bind();
-            if(mat->getDiffuseMap() != nullptr) {
-                mat->getDiffuseMap()->bind(0);
+            if(mat->getDiffuseMap() != NO_ASSET_ID) {
+                assetBank->getAsset<Texture2D>(mat->getDiffuseMap())->bind(0);
             }
-            if(mat->getSpecularMap() != nullptr) {
-                mat->getSpecularMap()->bind(1);
+            if(mat->getSpecularMap() != NO_ASSET_ID) {
+                assetBank->getAsset<Texture2D>(mat->getSpecularMap())->bind(1);
             }
-            if(mat->getAmbientMap() != nullptr) {
-                mat->getAmbientMap()->bind(2);
+            if(mat->getAmbientMap() != NO_ASSET_ID) {
+                assetBank->getAsset<Texture2D>(mat->getAmbientMap())->bind(2);
             }
-            if(mat->getNormalMap() != nullptr) {
-                mat->getNormalMap()->bind(3);
+            if(mat->getNormalMap() != NO_ASSET_ID) {
+                assetBank->getAsset<Texture2D>(mat->getNormalMap())->bind(3);
             }
             shader->loadMat4("model", e->getComponent<TransformComponent>()->getTransformation());
             shader->loadFloat3("material.albedo", mat->getAlbedo());
             shader->loadFloat3("material.specular", mat->getSpecular());
             shader->loadFloat3("material.ambient", mat->getAmbient());
             shader->loadFloat("material.alpha", mat->getAlpha());
-            shader->loadInt("material.use_diffuse_map", mat->getDiffuseMap() != nullptr);
+            shader->loadInt("material.use_diffuse_map", mat->getDiffuseMap() != NO_ASSET_ID);
             shader->loadInt("material.diffuse_map", 0);
-            shader->loadInt("material.use_specular_map", mat->getSpecularMap() != nullptr);
+            shader->loadInt("material.use_specular_map", mat->getSpecularMap() != NO_ASSET_ID);
             shader->loadInt("material.specular_map", 1);
-            shader->loadInt("material.use_ambient_map", mat->getAmbientMap() != nullptr);
+            shader->loadInt("material.use_ambient_map", mat->getAmbientMap() != NO_ASSET_ID);
             shader->loadInt("material.ambient_map", 2);
-            shader->loadInt("material.use_normal_map", mat->getNormalMap() != nullptr);
+            shader->loadInt("material.use_normal_map", mat->getNormalMap() != NO_ASSET_ID);
             shader->loadInt("material.normal_map", 3);
-            api->renderVertexArray(e->getComponent<RenderComponent>()->getMesh()->getVertexArray());
+            api->renderVertexArray(assetBank->getAsset<Mesh>(e->getComponent<RenderComponent>()->getMesh())->getVertexArray());
         }
     }
 

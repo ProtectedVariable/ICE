@@ -21,16 +21,18 @@ namespace ICE {
     public:
         bool render() override;
 
-        AssetContentPane(const int *selectedDir, ICEEngine *engine, std::string* selectedAsset);
+        AssetContentPane(const int *selectedDir, ICEEngine *engine, AssetUID* selectedAsset);
+
+        void initialize() override;
 
     private:
 
-        void renderAssetThumbnail(void* tex, const std::string& name);
+        void renderAssetThumbnail(void* tex,  const AssetPath& name);
 
         const int* selectedDir;
         ICEEngine* engine;
         Framebuffer* thumbnailFBO[ICE_MAX_THUMBNAILS];
-        std::string* selectedAsset;
+        AssetUID* selectedAsset;
         Camera camera;
         NewMaterialPane newMaterialPane;
         bool newMaterialPaneShow = false;

@@ -4,7 +4,15 @@
 
 #ifndef ICE_PROJECT_H
 #define ICE_PROJECT_H
-
+#if __has_include(<filesystem>)
+#include <filesystem>
+namespace fs = std::filesystem;
+#elif __has_include(<experimental/filesystem>)
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+#else
+error "Missing the <filesystem> header."
+#endif
 #include <string>
 #include <vector>
 #include <Scene/Scene.h>
@@ -26,9 +34,8 @@ namespace ICE {
         void writeToFile(Camera* editorCamera);
         void loadFromFile();
         void writeMaterialFile(const std::string& mtlName, const Material& mtl);
-        Material* loadMaterial(const std::string& file);
         void copyAssetFile(const std::string& folder, const std::string& assetName, const std::string& src);
-        bool renameAsset(const std::string& oldName, const std::string& newName);
+        bool renameAsset(const AssetPath& oldName, const AssetPath& newName);
 
         std::vector<Scene> &getScenes();
         void setScenes(const std::vector<Scene> &scenes);
@@ -41,9 +48,6 @@ namespace ICE {
         static json dumpVec3(const Eigen::Vector3f& v);
         static json dumpVec4(const Eigen::Vector4f& v);
 
-        static Eigen::Vector3f parseVec3(const json& src);
-        static Eigen::Vector4f parseVec4(const json& src);
-
         const Eigen::Vector3f &getCameraPosition() const;
 
         const Eigen::Vector3f &getCameraRotation() const;
@@ -51,6 +55,25 @@ namespace ICE {
     private:
 
         std::vector<std::string> getFilesInDir(const std::string& folder);
+
+        template<typename T>
+        void loadAssetsOfType(std::string basepath, json names) {
+            std::vector<std::string> files;
+            std::string typeFolder = AssetPath::WithTypePrefix<T>("").toString();
+            for (const auto& entry : fs::directory_iterator(basepath+typeFolder)) {
+                std::string sp = entry.path().string();
+                files.push_back(sp.substr(sp.find_last_of("/")+1));
+            }
+            for(auto m : names.items()) {
+                AssetPath assetPath = AssetPath(m.value().begin().key());
+                for(auto file : files) {
+                    if(file.substr(0,file.find_last_of(".")) == assetPath.getName()) {
+                        assetBank.addResourceWithSpecificUID<T>(m.value().begin().key(), {(basepath+typeFolder+file)}, m.value().begin().value());
+                        break;
+                    }
+                }
+            }
+        }
 
         enum LoadStage {
             Scenes, Meshes, Materials, Shaders, Textures
@@ -69,6 +92,7 @@ namespace ICE {
         std::vector<Scene> scenes;
         AssetBank assetBank;
         Eigen::Vector3f cameraPosition, cameraRotation;
+
     };
 }
 

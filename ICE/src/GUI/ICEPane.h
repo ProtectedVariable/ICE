@@ -8,6 +8,7 @@
 namespace ICE {
     class ICEPane {
     public:
+        virtual void initialize() = 0;
         virtual bool render() = 0;
     };
 }

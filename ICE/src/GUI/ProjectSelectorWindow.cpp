@@ -35,7 +35,6 @@ namespace ICE {
             std::string baseFolder = FileUtils::openFolderDialog();
             if(baseFolder != "") {
                 Project p = Project(baseFolder, project_name_buffer);
-                p.getAssetBank()->fillWithDefaults();
                 p.CreateDirectories();
                 engine->getConfig().getLocalProjects()->push_back(p);
                 engine->setProject(&engine->getConfig().getLocalProjects()->back());

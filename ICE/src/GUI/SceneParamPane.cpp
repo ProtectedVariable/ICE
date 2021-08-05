@@ -6,6 +6,7 @@
 #include "SceneParamPane.h"
 #include <vector>
 #include <Core/ICEEngine.h>
+#include <Util/BufferUtils.h>
 
 namespace ICE {
 
@@ -13,19 +14,20 @@ namespace ICE {
         ImGui::Begin("Scene Parameters");
         ImGui::Text("Skybox");
         ImGui::SameLine();
-        auto textures = std::vector<const char*>();
+        auto textures = std::vector<AssetPath>();
+        auto textureNames = std::vector<std::string>();
         static int selected = 0;
-        textures.push_back("None");
-        for(const auto& e : engine->getAssetBank()->getTextures()) {
-            if(e.second->getType() == TextureType::CubeMap) {
-                textures.push_back(e.first.c_str());
-                if(e.second == engine->getScene()->getSkybox()->getTexture()) {
-                    selected = textures.size()-1;
-                }
+        textures.push_back(AssetPath("None"));
+        textureNames.push_back("None");
+        for(const auto& e : engine->getAssetBank()->getAll<TextureCube>()) {
+            textures.push_back(engine->getAssetBank()->getName(e.first));
+            textureNames.push_back(engine->getAssetBank()->getName(e.first).getName());
+            if(e.first == engine->getScene()->getSkybox()->getTexture()) {
+                selected = textures.size()-1;
             }
         }
-        ImGui::Combo("##SkyboxCmb", &selected, textures.data(), textures.size());
-        Texture* nt = selected == 0 ? nullptr : engine->getAssetBank()->getTextures().at(textures[selected]);
+        ImGui::Combo("##SkyboxCmb", &selected, BufferUtils::CreateCharBuffer(textureNames).data(), textures.size());
+        AssetUID nt = selected == 0 ? NO_ASSET_ID : engine->getAssetBank()->getUID(textures[selected]);
         if(engine->getScene()->getSkybox()->getTexture() != nt) {
             engine->getScene()->setSkybox(nt);
         }
@@ -34,4 +36,8 @@ namespace ICE {
     }
 
     SceneParamPane::SceneParamPane(ICEEngine *engine): engine(engine) {}
+
+    void SceneParamPane::initialize() {
+
+    }
 }

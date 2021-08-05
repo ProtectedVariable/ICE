@@ -13,6 +13,10 @@ namespace ICE {
     bool InspectorPane::render() {
 
         ImGui::Begin("Inspector");
+        if(init < 2) { //Make sure inspector is the focused tab at the beginning
+            ImGui::SetWindowFocus();
+            init++;
+        }
         if(engine->getSelected() != nullptr) {
             ImGui::Text("Entity's unique ID:");
             static char buffer[ICE_UID_MAX_SIZE];
@@ -41,9 +45,9 @@ namespace ICE {
                 if(!engine->getSelected()->hasComponent<RenderComponent>()) {
                     if(ImGui::Button("Render Component")) {
                         engine->getSelected()->addComponent(
-                                new RenderComponent(engine->getAssetBank()->getMesh("__ice__cube"),
-                                                    engine->getAssetBank()->getMaterial("__ice__base_material"),
-                                                    engine->getAssetBank()->getShader("__ice_phong_shader")));
+                                new RenderComponent(engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Mesh>("__ice__cube")),
+                                                    engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Material>("__ice__base_material")),
+                                                    engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Shader>("__ice_phong_shader"))));
                         ImGui::CloseCurrentPopup();
                     }
                 }
@@ -61,4 +65,6 @@ namespace ICE {
     }
 
     InspectorPane::InspectorPane(ICEEngine *engine): engine(engine), componentRenderer(UIComponentRenderer(engine)) {}
+
+    void InspectorPane::initialize() {  }
 }

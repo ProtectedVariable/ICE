@@ -31,10 +31,12 @@ namespace ICE {
 
         static GraphicsAPI GetAPI() { return api; }
         static RendererAPI* Create();
+        static void SetAPI(GraphicsAPI _api) { api = _api; }
 
     private:
-        const static GraphicsAPI api = OpenGL; //TODO: Allow for switches
+        static GraphicsAPI api;
     };
+
 }
 
 #endif //ICE_GRAPHICSAPI_H

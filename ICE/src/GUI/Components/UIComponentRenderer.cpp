@@ -6,6 +6,7 @@
 #include <Util/Logger.h>
 #include "UIComponentRenderer.h"
 #include <Core/ICEEngine.h>
+#include <Util/BufferUtils.h>
 
 namespace ICE {
 
@@ -43,6 +44,7 @@ namespace ICE {
     }
 
     void UIComponentRenderer::render(RenderComponent* cmp) {
+
         ImGui::Text("Render Component");
         ImGui::SameLine();
         ImGui::PushID("ice_rendercomponent");
@@ -51,44 +53,48 @@ namespace ICE {
         }
         ImGui::Text("Meshes");
         ImGui::SameLine();
-        auto meshNames = std::vector<const char*>(engine->getAssetBank()->getMeshes().size());
+
+        auto meshNames = std::vector<std::string>(engine->getAssetBank()->getAll<Mesh>().size());
         int i = 0;
         int selected = 0;
-        for(const auto& e : engine->getAssetBank()->getMeshes()) {
-            meshNames[i++] = (e.first.c_str());
-            if(e.second == cmp->getMesh()) {
+        for(const auto& e : engine->getAssetBank()->getAll<Mesh>()) {
+            meshNames[i++] = engine->getAssetBank()->getName(e.first).toString();
+            if(e.first == cmp->getMesh()) {
                 selected = i-1;
             }
         }
-        ImGui::Combo("##Mesh", &selected, meshNames.data(), engine->getAssetBank()->getMeshes().size(), 10);
-        cmp->setMesh(engine->getAssetBank()->getMesh(std::string(meshNames[selected])));
+        ImGui::Combo("##Mesh", &selected, BufferUtils::CreateCharBuffer(meshNames).data(), meshNames.size(), 10);
+        cmp->setMesh(engine->getAssetBank()->getUID(std::string(meshNames[selected])));
         ImGui::Text("Material");
         ImGui::SameLine();
-        auto materialNames = std::vector<const char*>(engine->getAssetBank()->getMaterials().size());
+
+        auto materialNames = std::vector<std::string>(engine->getAssetBank()->getAll<Material>().size());
         i = 0;
         selected = 0;
-        for(const auto& e : engine->getAssetBank()->getMaterials()) {
-            materialNames[i++] = (e.first.c_str());
-            if(e.second == cmp->getMaterial()) {
+        for(const auto& e : engine->getAssetBank()->getAll<Material>()) {
+            materialNames[i++] = engine->getAssetBank()->getName(e.first).toString();
+            if(e.first == cmp->getMaterial()) {
                 selected = i-1;
             }
         }
-        ImGui::Combo("##Material", &selected, materialNames.data(), engine->getAssetBank()->getMaterials().size(), 10);
-        cmp->setMaterial(engine->getAssetBank()->getMaterial(std::string(materialNames[selected])));
+        ImGui::Combo("##Material", &selected, BufferUtils::CreateCharBuffer(materialNames).data(), materialNames.size(), 10);
+        cmp->setMaterial(engine->getAssetBank()->getUID(std::string(materialNames[selected])));
         ImGui::Text("Shader");
         ImGui::SameLine();
-        auto shaderNames = std::vector<const char*>(engine->getAssetBank()->getShaders().size());
+
+        auto shaderNames = std::vector<std::string>(engine->getAssetBank()->getAll<Shader>().size());
         i = 0;
         selected = 0;
-        for(const auto& e : engine->getAssetBank()->getShaders()) {
-            shaderNames[i++] = (e.first.c_str());
-            if(e.second == cmp->getShader()) {
+        for(const auto& e : engine->getAssetBank()->getAll<Shader>()) {
+            shaderNames[i++] = engine->getAssetBank()->getName(e.first).toString();
+            if(e.first == cmp->getShader()) {
                 selected = i-1;
             }
         }
-        ImGui::Combo("##Shader", &selected, shaderNames.data(), engine->getAssetBank()->getShaders().size(), 10);
-        cmp->setShader(engine->getAssetBank()->getShader(std::string(shaderNames[selected])));
+        ImGui::Combo("##Shader", &selected, BufferUtils::CreateCharBuffer(shaderNames).data(), shaderNames.size(), 10);
+        cmp->setShader(engine->getAssetBank()->getUID(std::string(shaderNames[selected])));
         ImGui::PopID();
+
     }
 
     void UIComponentRenderer::render(LightComponent* lc) {

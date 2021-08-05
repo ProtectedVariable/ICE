@@ -13,11 +13,11 @@ namespace ICE {
 
     int ctr = 0;
 
-    void HierarchyPane::mkPopup(const std::string parent) {
+    void HierarchyPane::mkPopup(const std::string& parent) {
         ImGui::Text("Create...");
         if(ImGui::Button("3D Object")) {
             auto entity = new Entity();
-            auto rc = new RenderComponent(engine->getAssetBank()->getMesh("__ice__cube"), engine->getAssetBank()->getMaterial("__ice__base_material"), engine->getAssetBank()->getShader("__ice__phong_shader"));
+            auto rc = new RenderComponent(engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Mesh>("__ice__cube")), engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Material>("__ice__base_material")), engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Shader>("__ice__phong_shader")));
             auto tc = new TransformComponent();
             entity->addComponent(rc);
             entity->addComponent(tc);
@@ -114,5 +114,9 @@ namespace ICE {
                 ImGui::TreePop();
             }
         }
+
+
     }
+
+    void HierarchyPane::initialize() { }
 }

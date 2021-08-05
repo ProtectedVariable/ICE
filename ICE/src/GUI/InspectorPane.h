@@ -14,11 +14,14 @@ namespace ICE {
     class InspectorPane : public ICEPane {
     public:
         bool render() override;
+
+        void initialize() override;
+
         InspectorPane(ICEEngine* engine);
     private:
         ICEEngine* engine;
         UIComponentRenderer componentRenderer;
-
+        int init = 0;
     };
 }
 

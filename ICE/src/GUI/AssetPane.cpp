@@ -62,5 +62,10 @@ namespace ICE {
         return true;
     }
 
-    AssetPane::AssetPane(ICEEngine *engine) : engine(engine), viewPane(AssetViewPane(engine, &selectedAsset)), contentPane(AssetContentPane(&selectedDirectory, engine, &selectedAsset)), selectedAsset("__ice__cube") {}
+    AssetPane::AssetPane(ICEEngine *engine) : engine(engine), viewPane(AssetViewPane(engine, &selectedAsset)), contentPane(AssetContentPane(&selectedDirectory, engine, &selectedAsset)) {}
+
+    void AssetPane::initialize() {
+        viewPane.initialize();
+        contentPane.initialize();
+    }
 }
