@@ -136,6 +136,7 @@ namespace ICE {
                 ImGui::DockBuilderDockWindow("Inspector", dock_id_right);
                 ImGui::DockBuilderDockWindow("Scene Parameters", dock_id_right);
                 ImGui::DockBuilderFinish(dockspace_id);
+
                 gui_init = 1;
             }
             ImGui::DockSpace(dockspace_id);

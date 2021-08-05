@@ -1,6 +1,6 @@
 // Dear ImGui: standalone example application for GLFW + OpenGL 3, using programmable pipeline
 // (GLFW is a cross-platform general purpose library for handling windows, inputs, OpenGL/Vulkan/Metal graphics context creation, etc.)
-// If you are new to Dear ImGui, read documentation from the docs/ folder + read the top of imgui->cpp.
+// If you are new to Dear ImGui, read documentation from the docs/ folder + read the top of imgui.cpp.
 // Read online: https://github.com/ocornut/imgui/tree/master/docs
 
 #define TINYOBJLOADER_IMPLEMENTATION
@@ -40,10 +40,9 @@
 namespace ICE {
     ICEEngine::ICEEngine(void* window): systems(std::vector<System*>()), window(window),
                                         camera(Camera(CameraParameters{ {60, 16.f / 9.f, 0.1f, 100000 }, Perspective })),
-                                        config(EngineConfig::LoadFromFile()) {
+                                        config(EngineConfig::LoadFromFile()), gui(this) {
         api = RendererAPI::Create();
 		selected = nullptr;
-		gui = new ICEGUI(this);
     }
 
     void ICEEngine::initialize() {
@@ -75,14 +74,14 @@ namespace ICE {
             ImGuizmo::BeginFrame();
             ImGuizmo::SetOrthographic(false);
 
-            gui->renderImGui();
+            gui.renderImGui();
             // Rendering
             ImGui::Render();
 
 
             if(project != nullptr) {
-                renderSystem->setTarget(internalFB, gui->getSceneViewportWidth(), gui->getSceneViewportHeight());
-                camera.setParameters({60, (float) gui->getSceneViewportWidth() / (float) gui->getSceneViewportHeight(), 0.01f, 1000});
+                renderSystem->setTarget(internalFB, gui.getSceneViewportWidth(), gui.getSceneViewportHeight());
+                camera.setParameters({60, (float) gui.getSceneViewportWidth() / (float) gui.getSceneViewportHeight(), 0.01f, 1000});
                 api->setClearColor(0,0,0,1);
                 api->clear();
                 for (auto s : systems) {
@@ -134,10 +133,10 @@ namespace ICE {
 
     Eigen::Vector4i ICEEngine::getPickingTextureAt(int x, int y) {
         pickingFB->bind();
-        pickingFB->resize(gui->getSceneViewportWidth(), gui->getSceneViewportHeight());
-        api->setViewport(0, 0, gui->getSceneViewportWidth(), gui->getSceneViewportHeight());
+        pickingFB->resize(gui.getSceneViewportWidth(), gui.getSceneViewportHeight());
+        api->setViewport(0, 0, gui.getSceneViewportWidth(), gui.getSceneViewportHeight());
         camera.setParameters(
-                {60, (float) gui->getSceneViewportWidth() / (float) gui->getSceneViewportHeight(), 0.01f, 1000});
+                {60, (float) gui.getSceneViewportWidth() / (float) gui.getSceneViewportHeight(), 0.01f, 1000});
         api->setClearColor(0,0,0,0);
         api->clear();
         getAssetBank()->getAsset<Shader>("__ice__picking_shader")->bind();
@@ -174,7 +173,7 @@ namespace ICE {
         this->renderSystem = new RenderSystem(renderer, &camera);
         systems.push_back(renderSystem);
         Skybox::Initialize();
-        this->gui->initializeEditorUI();
+        this->gui.initializeEditorUI();
     }
 
     EngineConfig &ICEEngine::getConfig() {

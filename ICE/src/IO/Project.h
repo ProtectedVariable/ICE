@@ -34,7 +34,6 @@ namespace ICE {
         void writeToFile(Camera* editorCamera);
         void loadFromFile();
         void writeMaterialFile(const std::string& mtlName, const Material& mtl);
-        Material* loadMaterial(const std::string& file);
         void copyAssetFile(const std::string& folder, const std::string& assetName, const std::string& src);
         bool renameAsset(const AssetPath& oldName, const AssetPath& newName);
 
