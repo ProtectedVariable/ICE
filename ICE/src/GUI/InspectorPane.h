@@ -21,7 +21,7 @@ namespace ICE {
     private:
         ICEEngine* engine;
         UIComponentRenderer componentRenderer;
-
+        int init = 0;
     };
 }
 

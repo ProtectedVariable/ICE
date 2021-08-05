@@ -13,6 +13,10 @@ namespace ICE {
     bool InspectorPane::render() {
 
         ImGui::Begin("Inspector");
+        if(init < 2) { //Make sure inspector is the focused tab at the beginning
+            ImGui::SetWindowFocus();
+            init++;
+        }
         if(engine->getSelected() != nullptr) {
             ImGui::Text("Entity's unique ID:");
             static char buffer[ICE_UID_MAX_SIZE];

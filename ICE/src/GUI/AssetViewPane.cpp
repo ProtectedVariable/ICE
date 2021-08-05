@@ -19,12 +19,10 @@ namespace ICE {
         strcpy(buffer, assetName.getName().c_str());
         ImGui::Text("Asset Name");
         ImGui::SameLine();
-        ImGuiInputTextFlags flags = (assetName.getName().find("__ice__") == std::string::npos) ? 0 : ImGuiInputTextFlags_ReadOnly;
+        ImGuiInputTextFlags flags = (assetName.getName().find(ICE_ASSET_PREFIX) == std::string::npos) ? 0 : ImGuiInputTextFlags_ReadOnly;
         if(ImGui::InputText("##Asset Name", buffer, 512, flags)) {
             newName.setName(buffer);
-            if(engine->getProject()->renameAsset(assetName, newName)) {
-
-            }
+            engine->getProject()->renameAsset(assetName, newName);
         }
         ImVec2 wsize = ImGui::GetWindowContentRegionMax();
         ImVec2 pos = ImGui::GetCursorPos();

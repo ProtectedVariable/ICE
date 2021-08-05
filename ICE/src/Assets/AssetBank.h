@@ -91,7 +91,7 @@ namespace ICE {
         }
 
         bool renameAsset(const AssetPath &oldName, const AssetPath &newName) {
-            if(oldName.getPath()[0] != newName.getPath()[0]) return false;
+            if(oldName.prefix() != newName.prefix()) return false;
             AssetUID id = nameMapping.find(oldName) == nameMapping.end() ? 0 : nameMapping[oldName];
             if(id != NO_ASSET_ID) {
                 if(nameMapping.find(newName) == nameMapping.end()) {

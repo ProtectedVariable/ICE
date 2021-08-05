@@ -47,6 +47,8 @@ namespace ICE {
 
         bool showNewScenePopup = false;
         bool showLoadScenePopup = false;
+
+        bool selecting = true;
     };
 }
 
