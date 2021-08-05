@@ -228,13 +228,14 @@ namespace ICE {
                         *engine->getSelected()->getComponent<TransformComponent>()->getScale() += (deltaS - Eigen::Vector3f(1, 1,1));
                     }
                 }
-                auto drag = ImGui::GetMouseDragDelta();
+                auto drag = ImGui::GetMouseDragDelta(0);
                 if (!ImGuizmo::IsUsing()) {
                     if(ImGui::IsWindowHovered()) {
                         if(ImGui::IsMouseDragging(0)) {
                             selecting = false;
-                            engine->getCamera()->getRotation().x() += drag.y / 100.f;
-                            engine->getCamera()->getRotation().y() += drag.x / 100.f;
+                            engine->getCamera()->getRotation().x() += drag.y / 6.f;
+                            engine->getCamera()->getRotation().y() += drag.x / 6.f;
+                            ImGui::ResetMouseDragDelta(0);
                         } else if (selecting && ImGui::IsMouseReleased(0)) {
                             int x = ImGui::GetMousePos().x - wpos.x;
                             int y = ImGui::GetMousePos().y - wpos.y;
