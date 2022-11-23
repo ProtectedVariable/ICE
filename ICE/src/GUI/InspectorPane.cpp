@@ -20,13 +20,13 @@ namespace ICE {
         if(engine->getSelected() != nullptr) {
             ImGui::Text("Entity's unique ID:");
             static char buffer[ICE_UID_MAX_SIZE];
-			std::string oldName = engine->getScene()->idByEntity(engine->getSelected());
+			/*std::string oldName = engine->getScene()->idByEntity(engine->getSelected());
             strcpy(buffer, oldName.c_str());
 			if(ImGui::InputText("##EntityUID", buffer, ICE_UID_MAX_SIZE)) {
                 engine->getScene()->renameEntity(oldName, buffer);
             }
             ImGui::Separator();
-            auto tc = engine->getSelected()->getComponent<TransformComponent>();
+            /*auto tc = engine->getSelected()->getComponent<TransformComponent>();
             componentRenderer.render(tc);
             ImGui::Separator();
             if(engine->getSelected()->hasComponent<RenderComponent>()) {
@@ -59,6 +59,7 @@ namespace ICE {
                 }
                 ImGui::EndPopup();
             }
+            */
         }
         ImGui::End();
         return true;

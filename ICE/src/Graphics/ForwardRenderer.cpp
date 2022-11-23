@@ -25,13 +25,14 @@ namespace ICE {
         }
     }
 
-    void ForwardRenderer::submit(Entity *e) {
-        if(e->hasComponent<RenderComponent>() && e->hasComponent<TransformComponent>()) {
+    void ForwardRenderer::submit(Entity e) {
+        
+        /*if(e->hasComponent<RenderComponent>() && e->hasComponent<TransformComponent>()) {
             renderableEntities.push_back(e);
         }
         if(e->hasComponent<LightComponent>() && e->hasComponent<TransformComponent>()) {
             lightEntities.push_back(e);
-        }
+        }*/
     }
 
     void ForwardRenderer::prepareFrame(Camera& camera) {
@@ -52,7 +53,7 @@ namespace ICE {
             Skybox::getShader()->loadInt("skybox", 0);
         }
         for(auto e : renderableEntities) {
-            auto rc = e->getComponent<RenderComponent>();
+            /*auto rc = e->getComponent<RenderComponent>();
             Shader* shader = assetBank->getAsset<Shader>(e->getComponent<RenderComponent>()->getShader());
             shader->bind();
             shader->loadMat4("projection", camera.getProjection());
@@ -68,6 +69,7 @@ namespace ICE {
                 i++;
             }
             shader->loadInt("light_count", i);
+            */
         }
     }
 
@@ -81,7 +83,7 @@ namespace ICE {
         }
         api->setDepthMask(true);
         for(auto e : renderableEntities) {
-            auto rc = e->getComponent<RenderComponent>();
+            /*auto rc = e->getComponent<RenderComponent>();
             const Material* mat = assetBank->getAsset<Material>(e->getComponent<RenderComponent>()->getMaterial());
             Shader* shader = assetBank->getAsset<Shader>(e->getComponent<RenderComponent>()->getShader());
             shader->bind();
@@ -97,7 +99,7 @@ namespace ICE {
             if(mat->getNormalMap() != NO_ASSET_ID) {
                 assetBank->getAsset<Texture2D>(mat->getNormalMap())->bind(3);
             }
-            shader->loadMat4("model", e->getComponent<TransformComponent>()->getTransformation());
+            //shader->loadMat4("model", e->getComponent<TransformComponent>()->getTransformation());
             shader->loadFloat3("material.albedo", mat->getAlbedo());
             shader->loadFloat3("material.specular", mat->getSpecular());
             shader->loadFloat3("material.ambient", mat->getAmbient());
@@ -111,6 +113,7 @@ namespace ICE {
             shader->loadInt("material.use_normal_map", mat->getNormalMap() != NO_ASSET_ID);
             shader->loadInt("material.normal_map", 3);
             api->renderVertexArray(assetBank->getAsset<Mesh>(e->getComponent<RenderComponent>()->getMesh())->getVertexArray());
+            */
         }
     }
 

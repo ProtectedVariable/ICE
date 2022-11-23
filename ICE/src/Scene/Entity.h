@@ -7,38 +7,44 @@
 
 #include <cstdlib>
 #include <unordered_map>
-#include <Scene/Component.h>
 #include <typeindex>
+#include <bitset>
+#include <queue>
 
 namespace ICE {
-    class Entity {
-    public:
-        template<typename T>
-        T* getComponent() {
-            return static_cast<T*>(this->components[typeid(T)]);
-        }
+    using Entity = std::uint32_t;
+    using Signature = std::bitset<32>;
 
-        template<typename T>
-        bool hasComponent() {
-            auto f = this->components.find(typeid(T));
-            return f != this->components.end();
-        }
+    class EntityManager {
+	public:
+		Entity createEntity() {
+			Entity e = entityCount+1;
+			//Reuse free ids before using the next
+			if(releasedEntities.size() > 0) {
+				e = releasedEntities.front();
+				releasedEntities.pop();
+			}
+			entityCount++;
+			return e;
+		}
 
-        template<typename T>
-        bool addComponent(T* component) {
-            this->components[typeid(T)] = component;
-            return true;
-        }
-        template<typename T>
-        bool removeComponent() {
-            return this->components.erase(typeid(T));
-        }
+		void releaseEntity(Entity e) {
+			signatures[e].reset();
+			releasedEntities.push(e);
+		}
 
-        Entity() : components(std::unordered_map<std::type_index, Component*>()){}
+		void setSignature(Entity e, Signature s) {
+			signatures[e] = s; 
+		}
 
-    private:
-        std::unordered_map<std::type_index, Component*> components;
-    };
+		Signature getSignature(Entity e) {
+			return signatures[e];
+		}
+	private:
+		std::queue<Entity> releasedEntities{};
+		std::vector<Signature> signatures{};
+		std::uint32_t entityCount;
+	};
 }
 
 #endif //ICE_ENTITY_H

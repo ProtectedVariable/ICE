@@ -22,7 +22,7 @@ namespace ICE {
     public:
         virtual void initialize(RendererConfig config, AssetBank* assetBank) = 0;
         virtual void submitScene(Scene* scene) = 0;
-        virtual void submit(Entity* e) = 0;
+        virtual void submit(Entity e) = 0;
         virtual void prepareFrame(Camera& camera) = 0;
         virtual void render() = 0;
         virtual void endFrame() = 0;

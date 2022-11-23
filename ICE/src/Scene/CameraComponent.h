@@ -8,15 +8,7 @@
 #include <Graphics/Camera.h>
 
 namespace ICE {
-    class CameraComponent {
-    public:
-        CameraComponent(Camera *camera);
-
-        Camera *getCamera() const;
-
-        bool isActive() const;
-
-    private:
+    struct CameraComponent {
         Camera* camera;
         bool active;
     };

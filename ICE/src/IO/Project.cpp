@@ -13,6 +13,20 @@
 #include <Scene/Scene.h>
 #include <Filesystem/JsonParser.h>
 
+#define FSEP ("/")
+#define ICE_PROJECT_EXT ".ice"
+
+#define ICE_ASSET_FOLDER            FSEP + "Assets"
+#define ICE_ASSET_MESH_FOLDER       ICE_ASSET_FOLDER + FSEP + "Meshes"
+#define ICE_ASSET_MATERIAL_FOLDER   ICE_ASSET_FOLDER + FSEP + "Materials"
+#define ICE_ASSET_SHADERS_FOLDER    ICE_ASSET_FOLDER + FSEP + "Shaders"
+#define ICE_ASSET_TEXTURES_FOLDER   ICE_ASSET_FOLDER + FSEP + "Textures" 
+#define ICE_ASSET_CUBEMAPS_FOLDER   ICE_ASSET_FOLDER + FSEP + "CubeMaps" 
+#define ICE_ASSET_SCRIPTS_FOLDER    ICE_ASSET_FOLDER + FSEP + "Scripts"
+
+#define ICE_SCENES_FOLDER           FSEP + "Scenes"
+
+
 namespace ICE {
     Project::Project(const std::string &baseDirectory, const std::string &name) : baseDirectory(baseDirectory),
                                                                                   name(name), scenes(std::vector<Scene>()),
@@ -22,13 +36,13 @@ namespace ICE {
 	}
 
     bool Project::CreateDirectories() {
-        fs::create_directories(baseDirectory + "/" + name + "/Assets/Meshes");
-        fs::create_directories(baseDirectory + "/" + name + "/Assets/Materials");
-        fs::create_directories(baseDirectory + "/" + name + "/Assets/Shaders");
-        fs::create_directories(baseDirectory + "/" + name + "/Assets/Textures");
-        fs::create_directories(baseDirectory + "/" + name + "/Assets/CubeMaps");
-        fs::create_directories(baseDirectory + "/" + name + "/Assets/Scripts");
-        fs::create_directories(baseDirectory + "/" + name + "/Scenes");
+        fs::create_directories(baseDirectory + FSEP + name + ICE_ASSET_MESH_FOLDER);
+        fs::create_directories(baseDirectory + FSEP + name + ICE_ASSET_MATERIAL_FOLDER);
+        fs::create_directories(baseDirectory + FSEP + name + ICE_ASSET_SHADERS_FOLDER);
+        fs::create_directories(baseDirectory + FSEP + name + ICE_ASSET_TEXTURES_FOLDER);
+        fs::create_directories(baseDirectory + FSEP + name + ICE_ASSET_CUBEMAPS_FOLDER);
+        fs::create_directories(baseDirectory + FSEP + name + ICE_ASSET_SCRIPTS_FOLDER);
+        fs::create_directories(baseDirectory + FSEP + name + ICE_SCENES_FOLDER);
         scenes.push_back(Scene("MainScene"));
         assetBank.fillWithDefaults();
         return true;
@@ -44,7 +58,7 @@ namespace ICE {
 
     void Project::writeToFile(Camera* editorCamera) {
         std::ofstream outstream;
-        outstream.open(baseDirectory + "/" + name + "/" + name+ ".ice");
+        outstream.open(baseDirectory + FSEP + name + FSEP + name + ICE_PROJECT_EXT);
         json j;
 
         j["camera_position"] = dumpVec3(editorCamera->getPosition());
@@ -117,29 +131,30 @@ namespace ICE {
             json entities = json::array();
             for(auto e : s.getEntities()) {
                 json entity;
-                entity["name"] = s.idByEntity(e);
-                entity["parent"] = s.getParent(s.idByEntity(e));
-                if(e->hasComponent<RenderComponent>()) {
-                    RenderComponent rc = *e->getComponent<RenderComponent>();
+                entity["name"] = e;
+                //entity["parent"] = s.getParent(e);
+                
+                if(s.entityHasComponent<RenderComponent>(e)) {
+                    RenderComponent rc = *s.getComponent<RenderComponent>(e);
                     json renderjson;
-                    renderjson["mesh"] = rc.getMesh();
-                    renderjson["material"] = rc.getMaterial();
-                    renderjson["shader"] = rc.getShader();
+                    renderjson["mesh"] = rc.mesh;
+                    renderjson["material"] = rc.material;
+                    renderjson["shader"] = rc.shader;
                     entity["renderComponent"] = renderjson;
                 }
-                if(e->hasComponent<TransformComponent>()) {
-                    TransformComponent tc = *e->getComponent<TransformComponent>();
+                if(s.entityHasComponent<TransformComponent>(e)) {
+                    TransformComponent tc = *s.getComponent<TransformComponent>(e);
                     json transformjson;
-                    transformjson["position"] = dumpVec3(*tc.getPosition());
-                    transformjson["rotation"] = dumpVec3(*tc.getRotation());
-                    transformjson["scale"] = dumpVec3(*tc.getScale());
+                    transformjson["position"] = dumpVec3(tc.position);
+                    transformjson["rotation"] = dumpVec3(tc.rotation);
+                    transformjson["scale"] = dumpVec3(tc.scale);
                     entity["transformComponent"] = transformjson;
                 }
-                if(e->hasComponent<LightComponent>()) {
-                    LightComponent lc = *e->getComponent<LightComponent>();
+                if(s.entityHasComponent<LightComponent>(e)) {
+                    LightComponent lc = *s.getComponent<LightComponent>(e);
                     json lightjson;
-                    lightjson["color"] = dumpVec3(lc.getColor());
-                    lightjson["type"] = lc.getType();
+                    lightjson["color"] = dumpVec3(lc.color);
+                    lightjson["type"] = lc.type;
                     entity["lightComponent"] = lightjson;
                 }
                 entities.push_back(entity);
@@ -188,26 +203,28 @@ namespace ICE {
                 scene.setSkybox(Skybox((AssetUID)scenejson["skybox"]));
             }
             for(json jentity : scenejson["entities"]) {
-                Entity* e = new Entity();
+                //Entity e = scene.addEntity();
                 if(!jentity["transformComponent"].is_null()) {
                     json tj = jentity["transformComponent"];
-                    TransformComponent* tc = new TransformComponent(JsonParser::parseVec3(tj["position"]),JsonParser::parseVec3(tj["rotation"]),JsonParser::parseVec3(tj["scale"]));
-                    e->addComponent(tc);
+                    TransformComponent tc = {.position = JsonParser::parseVec3(tj["position"]),
+                                                    .rotation = JsonParser::parseVec3(tj["rotation"]),
+                                                    .scale = JsonParser::parseVec3(tj["scale"])};
+                    //scene.addComponent(tc);
                 }
                 if(!jentity["renderComponent"].is_null()) {
                     json rj = jentity["renderComponent"];
-                    RenderComponent* rc = new RenderComponent((AssetUID)rj["mesh"], (AssetUID)rj["material"], (AssetUID)rj["shader"]);
-                    e->addComponent(rc);
+                    //RenderComponent* rc = new RenderComponent((AssetUID)rj["mesh"], (AssetUID)rj["material"], (AssetUID)rj["shader"]);
+                    //e->addComponent(rc);
                 }
                 if(!jentity["lightComponent"].is_null()) {
                     json lj = jentity["lightComponent"];
-                    LightComponent* lc = new LightComponent(PointLight, JsonParser::parseVec3(lj["color"]));
-                    e->addComponent(lc);
+                    //LightComponent* lc = new LightComponent(PointLight, JsonParser::parseVec3(lj["color"]));
+                    //e->addComponent(lc);
                 }
-                scene.addEntity(jentity["name"], e);
+                //scene.addEntity(jentity["name"], e);
             }
             for(json jentity : scenejson["entities"]) {
-                scene.setParent(jentity["name"], jentity["parent"]);
+                //scene.setParent(jentity["name"], jentity["parent"]);
             }
             scenes.push_back(scene);
         }

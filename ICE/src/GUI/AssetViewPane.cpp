@@ -34,26 +34,30 @@ namespace ICE {
             auto scene = Scene("__ice__assetview_scene");
 
             auto sphere = Entity();
-            auto rcSphere = RenderComponent(previewMeshId, mat, engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Shader>("__ice__phong_shader")));
+            auto rcSphere = RenderComponent{
+                .mesh = previewMeshId, 
+                .material = mat, 
+                .shader = engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Shader>("__ice__phong_shader"))
+            };
 
             Mesh* previewMesh = engine->getAssetBank()->getAsset<Mesh>(previewMeshId);
             if(previewMesh != nullptr) {
 
-                float scale = 2.f/(previewMesh->getBoundingBox().getMax() - previewMesh->getBoundingBox().getMin()).norm();
-                auto tcSphere = TransformComponent();
-                tcSphere.getScale()->x() = scale;
-                tcSphere.getScale()->y() = scale;
-                tcSphere.getScale()->z() = scale;
-                sphere.addComponent(&rcSphere);
-                sphere.addComponent(&tcSphere);
-                scene.addEntity("sphere", &sphere);
+                //float scale = 2.f/(previewMesh->getBoundingBox().getMax() - previewMesh->getBoundingBox().getMin()).norm();
+                //TransformComponent tcSphere;
+                //tcSphere.scale.x() = scale;
+                //tcSphere.scale.y() = scale;
+                //tcSphere.scale.z() = scale;
+                //scene.addComponent(sphere, rcSphere);
+                //scene.addComponent(sphere, tcSphere);
+                //scene.addEntity("sphere", &sphere);
 
                 auto light = Entity();
-                auto lcLight = LightComponent(PointLight, Eigen::Vector3f(1,1,1));
-                auto tcLight = TransformComponent(Eigen::Vector3f(10,20,10), Eigen::Vector3f(0,0,0), Eigen::Vector3f(1,1,1));
-                light.addComponent(&lcLight);
-                light.addComponent(&tcLight);
-                scene.addEntity("light", &light);
+                //auto lcLight = LightComponent(PointLight, Eigen::Vector3f(1,1,1));
+                //auto tcLight = TransformComponent(Eigen::Vector3f(10,20,10), Eigen::Vector3f(0,0,0), Eigen::Vector3f(1,1,1));
+                //light.addComponent(&lcLight);
+                //light.addComponent(&tcLight);
+                //scene.addEntity("light", &light);
 
                 camera.setParameters({60, wsize.x/wsize.y, 0.01f, 100});
                 renderer.setTarget(viewFB);
@@ -63,7 +67,7 @@ namespace ICE {
                 renderer.prepareFrame(camera);
                 renderer.resize(wsize.x, wsize.y);
 
-                tcSphere.getRotation()->y() = y++;
+                //tcSphere.getRotation()->y() = y++;
                 renderer.render();
                 renderer.endFrame();
 

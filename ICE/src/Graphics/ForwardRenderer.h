@@ -20,7 +20,7 @@ namespace ICE {
 
         void submitScene(Scene *scene) override;
 
-        void submit(Entity *e) override;
+        void submit(Entity e) override;
 
         void prepareFrame(Camera& camera) override;
 

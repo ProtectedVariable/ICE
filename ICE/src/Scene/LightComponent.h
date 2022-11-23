@@ -15,19 +15,7 @@ namespace ICE {
         SpotLight
     };
 
-    class LightComponent : public Component {
-    public:
-        LightComponent(LightType type, Eigen::Vector3f color);
-
-        LightType getType() const;
-
-        void setType(LightType type);
-
-        Eigen::Vector3f &getColor();
-
-        void setColor(const Eigen::Vector3f &color);
-
-    private:
+    struct LightComponent : public Component {
         LightType type;
         Eigen::Vector3f color;
     };

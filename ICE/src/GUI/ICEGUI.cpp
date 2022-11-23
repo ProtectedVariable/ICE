@@ -207,11 +207,11 @@ namespace ICE {
                 if (engine->getSelected() != nullptr) {
                     auto e = Eigen::Matrix4f();
                     e.setZero();
-                    ImGuizmo::Manipulate(engine->getCamera()->lookThrough().data(),
-                                         engine->getCamera()->getProjection().data(), guizmoOperationMode,
-                                         ImGuizmo::WORLD,
-                                         engine->getSelected()->getComponent<TransformComponent>()->getTransformation().data(),
-                                         e.data());
+                    //ImGuizmo::Manipulate(engine->getCamera()->lookThrough().data(),
+                    //                     engine->getCamera()->getProjection().data(), guizmoOperationMode,
+                    //                     ImGuizmo::WORLD,
+                    //                     engine->getSelected()->getComponent<TransformComponent>()->getTransformation().data(),
+                    //                     e.data());
                     auto deltaT = Eigen::Vector3f();
                     auto deltaR = Eigen::Vector3f();
                     auto deltaS = Eigen::Vector3f();
@@ -221,11 +221,11 @@ namespace ICE {
 
                     ImGuizmo::DecomposeMatrixToComponents(e.data(), deltaT.data(), deltaR.data(), deltaS.data());
                     if (guizmoOperationMode == ImGuizmo::TRANSLATE) {
-                        *engine->getSelected()->getComponent<TransformComponent>()->getPosition() += deltaT;
+                        //*engine->getSelected()->getComponent<TransformComponent>()->getPosition() += deltaT;
                     } else if (guizmoOperationMode == ImGuizmo::ROTATE) {
-                        *engine->getSelected()->getComponent<TransformComponent>()->getRotation() += deltaR;
+                        //*engine->getSelected()->getComponent<TransformComponent>()->getRotation() += deltaR;
                     } else {
-                        *engine->getSelected()->getComponent<TransformComponent>()->getScale() += (deltaS - Eigen::Vector3f(1, 1,1));
+                        //*engine->getSelected()->getComponent<TransformComponent>()->getScale() += (deltaS - Eigen::Vector3f(1, 1,1));
                     }
                 }
                 auto drag = ImGui::GetMouseDragDelta(0);
@@ -244,7 +244,7 @@ namespace ICE {
                                 int id = color.x() & 0xFF + ((color.y() & 0xFF) << 8) + ((color.z() & 0xFF) << 16);
                                 if (id != 0) {
                                     auto picked = engine->getScene()->getEntities()[id - 1];
-                                    engine->setSelected(picked);
+                                    //engine->setSelected(picked);
                                 }
                             }
                         }

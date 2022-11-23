@@ -12,7 +12,9 @@
 
 using namespace ICE;
 
-#include "AssetBankTest.h"
+//#include "AssetBankTest.h"
+#include "SceneTest.h"
+#include "SceneGraphTest.h"
 
 int main(int argc, char** argv) {
     testing::InitGoogleTest(&argc, argv);

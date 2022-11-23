@@ -10,23 +10,7 @@
 #include <Graphics/Material.h>
 
 namespace ICE {
-    class RenderComponent : public Component {
-    public:
-        RenderComponent(AssetUID mesh, AssetUID material, AssetUID shader);
-
-        AssetUID getMesh() const;
-
-        AssetUID getMaterial() const;
-
-        void setMesh(AssetUID mesh);
-
-        void setMaterial(AssetUID material);
-
-        AssetUID getShader();
-
-        void setShader(AssetUID shader);
-
-    private:
+    struct RenderComponent : public Component {
         AssetUID mesh;
         AssetUID material;
         AssetUID shader;

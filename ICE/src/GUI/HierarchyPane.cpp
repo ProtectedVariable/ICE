@@ -15,7 +15,7 @@ namespace ICE {
 
     void HierarchyPane::mkPopup(const std::string& parent) {
         ImGui::Text("Create...");
-        if(ImGui::Button("3D Object")) {
+        /*if(ImGui::Button("3D Object")) {
             auto entity = new Entity();
             auto rc = new RenderComponent(engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Mesh>("__ice__cube")), engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Material>("__ice__base_material")), engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Shader>("__ice__phong_shader")));
             auto tc = new TransformComponent();
@@ -44,11 +44,12 @@ namespace ICE {
                 ImGui::CloseCurrentPopup();
             }
         }
+        */
         ImGui::EndPopup();
     }
 
     bool HierarchyPane::render() {
-        selected = engine->getScene()->idByEntity(engine->getSelected());
+        /*selected = engine->getScene()->idByEntity(engine->getSelected());
         ImGui::Begin("Hierarchy");
         if(ImGui::BeginDragDropTarget()) {
             ImGuiDragDropFlags target_flags = 0;
@@ -74,14 +75,16 @@ namespace ICE {
             selected = "root";
         }
         if(selected != "root") {
-            engine->setSelected(engine->getScene()->getByID(selected)->entity);
+            //engine->setSelected(engine->getScene()->getByID(selected)->entity);
         }
+        */
         return true;
     }
 
     HierarchyPane::HierarchyPane(ICEEngine* engine) : engine(engine), selected("root") {}
 
-    void HierarchyPane::subtree(Scene::SceneNode *node) {
+    void HierarchyPane::subtree(SceneGraph::SceneNode *node) {
+        /*
         for(const auto& c : node->children) {
             const std::string& name = engine->getScene()->idByNode(c);
             ImGuiTreeNodeFlags flags = c->children.size() == 0 ? ImGuiTreeNodeFlags_Leaf : 0;
@@ -114,8 +117,7 @@ namespace ICE {
                 ImGui::TreePop();
             }
         }
-
-
+        */
     }
 
     void HierarchyPane::initialize() { }

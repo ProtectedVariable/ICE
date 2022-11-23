@@ -19,7 +19,7 @@ namespace ICE {
 
     private:
         void mkPopup(const std::string& parent);
-        void subtree(Scene::SceneNode* node);
+        void subtree(SceneGraph::SceneNode* node);
         ICEEngine* engine;
         std::string selected;
     };

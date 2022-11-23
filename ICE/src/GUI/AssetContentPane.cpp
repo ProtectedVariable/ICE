@@ -41,12 +41,12 @@ namespace ICE {
                 AssetUID mat = engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Material>("__ice__base_material"));
 
                 auto mesh = Entity();
-                auto rcMesh = RenderComponent(m.first, mat, shader);
-                float scale = 1.5f/(m.second->getBoundingBox().getMax() - m.second->getBoundingBox().getMin()).norm();
-                auto tcMesh = TransformComponent(Eigen::Vector3f(0,0,0), Eigen::Vector3f(0, 45, 0), Eigen::Vector3f(scale, scale, scale));
-                mesh.addComponent(&rcMesh);
-                mesh.addComponent(&tcMesh);
-                scene.addEntity("mesh", &mesh);
+                //auto rcMesh = RenderComponent(m.first, mat, shader);
+                //float scale = 1.5f/(m.second->getBoundingBox().getMax() - m.second->getBoundingBox().getMin()).norm();
+                //auto tcMesh = TransformComponent(Eigen::Vector3f(0,0,0), Eigen::Vector3f(0, 45, 0), Eigen::Vector3f(scale, scale, scale));
+                //mesh.addComponent(&rcMesh);
+                //mesh.addComponent(&tcMesh);
+                //scene.addEntity("mesh", &mesh);
 
                 renderer.setTarget(thumbnailFBO[i]);
                 renderer.submitScene(&scene);
@@ -66,18 +66,18 @@ namespace ICE {
                 auto scene = Scene("__ice__assetcontent_scene");
 
                 auto sphere = Entity();
-                auto rcSphere = RenderComponent(engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Mesh>("__ice__sphere")), m.first, engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Shader>("__ice__phong_shader")));
-                auto tcSphere = TransformComponent();
-                sphere.addComponent(&rcSphere);
-                sphere.addComponent(&tcSphere);
-                scene.addEntity("sphere", &sphere);
+                //auto rcSphere = RenderComponent(engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Mesh>("__ice__sphere")), m.first, engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Shader>("__ice__phong_shader")));
+                //auto tcSphere = TransformComponent();
+                //sphere.addComponent(&rcSphere);
+                //sphere.addComponent(&tcSphere);
+                //scene.addEntity("sphere", &sphere);
 
                 auto light = Entity();
-                auto lcLight = LightComponent(PointLight, Eigen::Vector3f(1,1,1));
-                auto tcLight = TransformComponent(Eigen::Vector3f(10,20,10), Eigen::Vector3f(0,0,0), Eigen::Vector3f(1,1,1));
-                light.addComponent(&lcLight);
-                light.addComponent(&tcLight);
-                scene.addEntity("light", &light);
+                //auto lcLight = LightComponent(PointLight, Eigen::Vector3f(1,1,1));
+                //auto tcLight = TransformComponent(Eigen::Vector3f(10,20,10), Eigen::Vector3f(0,0,0), Eigen::Vector3f(1,1,1));
+                //light.addComponent(&lcLight);
+                //light.addComponent(&tcLight);
+                //scene.addEntity("light", &light);
 
                 renderer.setTarget(thumbnailFBO[i]);
                 renderer.submitScene(&scene);

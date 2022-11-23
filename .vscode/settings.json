@@ -1,0 +1,7 @@
+{
+	"files.associations": {
+		"*.sage": "python",
+		"bitset": "cpp",
+		"vector": "cpp"
+	}
+}

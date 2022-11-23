@@ -11,6 +11,11 @@ namespace ICE {
     class System {
     public:
         virtual void update(Scene* scene, double delta) = 0;
+        virtual void entitySignatureChanged(Entity e);
+    };
+
+    class SystemManager {
+
     };
 }
 
