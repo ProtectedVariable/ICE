@@ -46,6 +46,7 @@ namespace ICE {
 
     bool Scene::setAlias(Entity entity, const std::string& newName) {
         aliases[entity] = newName;
+        return true;
     }
 
     std::string Scene::getAlias(Entity e) {

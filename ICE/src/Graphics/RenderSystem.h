@@ -13,6 +13,7 @@ namespace ICE {
         RenderSystem(Renderer *renderer, Camera* camera);
 
         void update(Scene* scene, double delta) override;
+        void entitySignatureChanged(Entity e) override;
 
         Renderer *getRenderer() const;
         void setRenderer(Renderer *renderer);

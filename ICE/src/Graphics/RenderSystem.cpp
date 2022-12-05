@@ -12,6 +12,11 @@ namespace ICE {
         renderer->endFrame();
     }
 
+    void RenderSystem::entitySignatureChanged(Entity e) {
+
+    }
+
+
     RenderSystem::RenderSystem(Renderer *renderer, Camera* camera) : renderer(renderer), camera(camera) {}
 
     Renderer *RenderSystem::getRenderer() const {

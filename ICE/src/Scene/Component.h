@@ -6,6 +6,7 @@
 #define ICE_COMPONENT_H
 
 #include <Scene/Entity.h>
+#include <typeindex>
 
 namespace ICE {
 
@@ -96,15 +97,15 @@ namespace ICE {
         template<typename T>
         void registerComponent()
         {
-            const char* typeName = typeid(T).name();
+            auto const& type = typeid(T);
 
-            assert(componentTypes.find(typeName) == componentTypes.end() && "Registering component type more than once.");
+            assert(componentTypes.find(type) == componentTypes.end() && "Registering component type more than once.");
 
             // Add this component type to the component type map
-            componentTypes.insert({typeName, nextComponentType});
+            componentTypes.insert({type, nextComponentType});
 
             // Create a ComponentArray pointer and add it to the component arrays map
-            componentArrays.insert({typeName, std::make_shared<ComponentArray<T>>()});
+            componentArrays.insert({type, std::make_shared<ComponentArray<T>>()});
 
             // Increment the value so that the next component registered will be different
             ++nextComponentType;
@@ -113,12 +114,12 @@ namespace ICE {
         template<typename T>
         ComponentType getComponentType()
         {
-            const char* typeName = typeid(T).name();
+            auto const& type = typeid(T);
 
-            assert(componentTypes.find(typeName) != componentTypes.end() && "Component not registered before use.");
+            assert(componentTypes.find(type) != componentTypes.end() && "Component not registered before use.");
 
             // Return this component's type - used for creating signatures
-            return componentTypes[typeName];
+            return componentTypes[type];
         }
 
         template<typename T>
@@ -156,10 +157,10 @@ namespace ICE {
 
     private:
         // Map from type string pointer to a component type
-        std::unordered_map<const char*, ComponentType> componentTypes{};
+        std::unordered_map<std::type_index, ComponentType> componentTypes{};
 
         // Map from type string pointer to a component array
-        std::unordered_map<const char*, std::shared_ptr<IComponentArray>> componentArrays{};
+        std::unordered_map<std::type_index, std::shared_ptr<IComponentArray>> componentArrays{};
 
         // The component type to be assigned to the next registered component - starting at 0
         ComponentType nextComponentType{};
@@ -168,11 +169,11 @@ namespace ICE {
         template<typename T>
         std::shared_ptr<ComponentArray<T>> getComponentArray()
         {
-            const char* typeName = typeid(T).name();
+            auto const& type = typeid(T);
 
-            assert(componentTypes.find(typeName) != componentTypes.end() && "Component not registered before use.");
+            assert(componentTypes.find(type) != componentTypes.end() && "Component not registered before use.");
 
-            return std::static_pointer_cast<ComponentArray<T>>(componentArrays[typeName]);
+            return std::static_pointer_cast<ComponentArray<T>>(componentArrays[type]);
         }
     };
 }
