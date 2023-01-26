@@ -6,10 +6,10 @@
 
 #include <iostream>
 #include <fstream>
-#include <Scene/RenderComponent.h>
-#include <Scene/TransformComponent.h>
-#include <Scene/LightComponent.h>
-#include <Scene/Entity.h>
+#include <ECS/RenderComponent.h>
+#include <ECS/TransformComponent.h>
+#include <ECS/LightComponent.h>
+#include <ECS/Entity.h>
 #include <Scene/Scene.h>
 #include <Filesystem/JsonParser.h>
 

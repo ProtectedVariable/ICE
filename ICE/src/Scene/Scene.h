@@ -6,8 +6,8 @@
 #define ICE_SCENE_H
 
 #include <vector>
-#include "Entity.h"
-#include <Scene/Component.h>
+#include <ECS/Entity.h>
+#include <ECS/Component.h>
 #include <string>
 #include <Graphics/Renderer.h>
 #include <Graphics/Skybox.h>
@@ -102,32 +102,6 @@ namespace ICE {
 
         Skybox* getSkybox();
         void setSkybox(const Skybox &skybox);
-
-        template <typename T>
-        bool entityHasComponent(Entity e) {
-            return entityManager.getSignature(e).test(componentManager.getComponentType<T>());
-        }
-
-        template <typename T>
-        T* getComponent(Entity e) {
-            return componentManager.getComponent<T>(e);
-        }
-
-        template <typename T>
-        void addComponent(Entity e, T component) {
-            componentManager.addComponent<T>(e, component);
-            auto signature = entityManager.getSignature(e);
-            signature.set(componentManager.getComponentType<T>(), true);
-            entityManager.setSignature(e, signature);
-        }
-
-        template <typename T>
-        void removeComponent(Entity e) {
-            componentManager.removeComponent<T>(e);
-            auto signature = entityManager.getSignature(e);
-            signature.set(componentManager.getComponentType<T>(), false);
-            entityManager.setSignature(e, signature);
-        }
 
     private:
         std::string name;

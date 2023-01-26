@@ -3,11 +3,11 @@
 //
 
 #include <ImGUI/imgui.h>
-#include <Scene/TransformComponent.h>
+#include <ECS/TransformComponent.h>
 #include <Util/Logger.h>
 #include "HierarchyPane.h"
 #include <Core/ICEEngine.h>
-#include <Scene/LightComponent.h>
+#include <ECS/LightComponent.h>
 
 namespace ICE {
 

@@ -31,9 +31,12 @@ endif()
 include_directories(includes)
 include_directories(ICE/src)
 
-set(ICE_SRC includes/GL/gl3w.h
+set(ICE_SRC 
+		# Rendering API
+		includes/GL/gl3w.h
+		
+		# ImGUI
 		includes/ImGUI/gl3w.c
-		includes/OBJLoader/tiny_obj_loader.h
 		includes/ImGUI/imgui_impl_glfw.cpp
 		includes/ImGUI/imgui_impl_opengl3.cpp
 		includes/ImGUI/imgui_impl_glfw.h
@@ -46,20 +49,76 @@ set(ICE_SRC includes/GL/gl3w.h
 		includes/ImGUI/ImGradient.cpp
 		includes/ImGUI/ImGuizmo.cpp
 		includes/ImGUI/ImSequencer.cpp
-		ICE/src/Scene/Entity.h ICE/src/Scene/Component.h ICE/src/Scene/TransformComponent.h ICE/src/Scene/RenderComponent.h ICE/src/Graphics/Material.cpp ICE/src/Graphics/Material.h ICE/src/Graphics/Mesh.cpp ICE/src/Graphics/Mesh.h
-		ICE/src/Scene/Scene.cpp ICE/src/Scene/Scene.h ICE/src/Util/OBJLoader.cpp ICE/src/Util/OBJLoader.h ICE/src/Graphics/Renderer.h ICE/src/Graphics/RenderSystem.cpp ICE/src/Graphics/RenderSystem.h ICE/src/Core/System.h ICE/src/Graphics/RendererConfig.h ICE/src/Graphics/RenderCommand.h ICE/src/Graphics/Buffers.h
-		ICE/src/Graphics/Framebuffer.h ICE/src/Graphics/Context.h ICE/src/Graphics/VertexArray.h ICE/src/Graphics/API/GraphicsAPI.h ICE/src/Graphics/API/OpenGL/OpenGLVertexArray.cpp ICE/src/Graphics/API/OpenGL/OpenGLVertexArray.h ICE/src/Graphics/API/OpenGL/OpenGLContext.cpp ICE/src/Graphics/API/OpenGL/OpenGLContext.h
-		ICE/src/Graphics/API/OpenGL/OpenGLRendererAPI.cpp ICE/src/Graphics/API/OpenGL/OpenGLRendererAPI.h ICE/src/Graphics/API/OpenGL/OpenGLBuffers.cpp ICE/src/Graphics/API/OpenGL/OpenGLBuffers.h ICE/src/Graphics/API/GraphicsAPI.cpp ICE/src/Graphics/Shader.h ICE/src/Graphics/API/OpenGL/OpenGLShader.cpp ICE/src/Graphics/API/OpenGL/OpenGLShader.h
-		ICE/src/Graphics/ForwardRenderer.cpp ICE/src/Graphics/ForwardRenderer.h ICE/src/Graphics/Camera.cpp ICE/src/Graphics/Camera.h ICE/src/Scene/LightComponent.h ICE/src/Util/BufferUtils.cpp ICE/src/Util/BufferUtils.h ICE/src/Math/ICEMath.h ICE/src/Util/Logger.cpp ICE/src/Util/Logger.h
-		ICE/src/Math/ICEMath.cpp ICE/src/Scene/CameraComponent.h ICE/src/Core/ICEEngine.cpp ICE/src/Core/ICEEngine.h ICE/src/GUI/ICEGUI.cpp ICE/src/GUI/ICEGUI.h ICE/src/Graphics/API/OpenGL/OpenGLFramebuffer.cpp ICE/src/Graphics/API/OpenGL/OpenGLFramebuffer.h ICE/src/GUI/HierarchyPane.cpp
-		ICE/src/GUI/HierarchyPane.h ICE/src/GUI/ICEPane.h ICE/src/Assets/AssetBank.cpp ICE/src/Assets/AssetBank.h ICE/src/GUI/InspectorPane.cpp ICE/src/GUI/InspectorPane.h ICE/src/GUI/Components/UIComponentRenderer.cpp ICE/src/GUI/Components/UIComponentRenderer.h ICE/src/GUI/AssetPane.cpp ICE/src/GUI/AssetPane.h
-		ICE/src/GUI/AssetViewPane.cpp ICE/src/GUI/AssetViewPane.h ICE/src/GUI/AssetContentPane.cpp ICE/src/GUI/AssetContentPane.h ICE/src/Platform/FileUtils.cpp ICE/src/Platform/FileUtils.h ICE/src/IO/Project.cpp ICE/src/IO/Project.h ICE/src/GUI/ProjectSelectorWindow.cpp ICE/src/GUI/ProjectSelectorWindow.h ICE/src/IO/EngineConfig.cpp
-		ICE/src/IO/EngineConfig.h ICE/src/GUI/NewMaterialPane.cpp ICE/src/GUI/NewMaterialPane.h ICE/src/Util/ICEException.cpp ICE/src/Util/ICEException.h ICE/src/Graphics/Texture.h ICE/src/Graphics/API/OpenGL/OpenGLTexture2D.cpp ICE/src/Graphics/API/OpenGL/OpenGLTexture.h includes/stb/stb_image.h includes/json/json.h
-		ICE/src/Math/AABB.cpp ICE/src/Math/AABB.h ICE/src/Graphics/API/OpenGL/OpenGLTextureCube.cpp ICE/src/Graphics/Skybox.cpp ICE/src/Graphics/Skybox.h ICE/src/GUI/SceneParamPane.cpp ICE/src/GUI/SceneParamPane.h
+		
+		# External Libs
+		includes/OBJLoader/tiny_obj_loader.h
+		includes/stb/stb_image.h 
+		includes/json/json.h
+		
+		# Graphics
+		ICE/src/Graphics/Material.cpp ICE/src/Graphics/Material.h ICE/src/Graphics/Mesh.cpp ICE/src/Graphics/Mesh.h
+		ICE/src/Graphics/Renderer.h ICE/src/Graphics/RenderSystem.cpp ICE/src/Graphics/RenderSystem.h 
+		ICE/src/Graphics/RendererConfig.h ICE/src/Graphics/RenderCommand.h ICE/src/Graphics/Buffers.h
+		ICE/src/Graphics/Framebuffer.h ICE/src/Graphics/Context.h ICE/src/Graphics/VertexArray.h ICE/src/Graphics/API/GraphicsAPI.h
+		ICE/src/Graphics/API/OpenGL/OpenGLVertexArray.cpp ICE/src/Graphics/API/OpenGL/OpenGLVertexArray.h 
+		ICE/src/Graphics/API/OpenGL/OpenGLContext.cpp ICE/src/Graphics/API/OpenGL/OpenGLContext.h
+		ICE/src/Graphics/API/OpenGL/OpenGLRendererAPI.cpp ICE/src/Graphics/API/OpenGL/OpenGLRendererAPI.h 
+		ICE/src/Graphics/API/OpenGL/OpenGLBuffers.cpp ICE/src/Graphics/API/OpenGL/OpenGLBuffers.h ICE/src/Graphics/API/GraphicsAPI.cpp 
+		ICE/src/Graphics/Shader.h ICE/src/Graphics/API/OpenGL/OpenGLShader.cpp ICE/src/Graphics/API/OpenGL/OpenGLShader.h
+		ICE/src/Graphics/ForwardRenderer.cpp ICE/src/Graphics/ForwardRenderer.h ICE/src/Graphics/Camera.cpp ICE/src/Graphics/Camera.h
+		ICE/src/Graphics/API/OpenGL/OpenGLFramebuffer.cpp ICE/src/Graphics/API/OpenGL/OpenGLFramebuffer.h
+		ICE/src/Graphics/Texture.h ICE/src/Graphics/API/OpenGL/OpenGLTexture2D.cpp ICE/src/Graphics/API/OpenGL/OpenGLTexture.h
+		ICE/src/Graphics/API/OpenGL/OpenGLTextureCube.cpp ICE/src/Graphics/Skybox.cpp ICE/src/Graphics/Skybox.h
 		ICE/src/Graphics/API/None/NoneGraphics.h
-		ICE/src/Assets/Asset.h ICE/src/Assets/ResourceLoader.h ICE/src/Assets/TextureLoader.cpp ICE/src/Assets/TextureLoader.h ICE/src/Assets/Resource.h ICE/src/Filesystem/Filesystem.cpp ICE/src/Filesystem/Filesystem.h ICE/src/Assets/IResourceLoader.h
-		ICE/src/Assets/MeshLoader.cpp ICE/src/Assets/MeshLoader.h ICE/src/Assets/ShaderLoader.cpp ICE/src/Assets/ShaderLoader.h ICE/src/Assets/MaterialLoader.cpp ICE/src/Assets/MaterialLoader.h ICE/src/Filesystem/JsonParser.h ICE/src/Assets/AssetPath.cpp ICE/src/Assets/AssetPath.h)
-
+		
+		# Math
+		ICE/src/Math/ICEMath.h ICE/src/Math/ICEMath.cpp 
+		ICE/src/Math/AABB.cpp ICE/src/Math/AABB.h
+		
+		# Scene
+		ICE/src/Scene/Scene.cpp ICE/src/Scene/Scene.h 
+		
+		# Utils
+		ICE/src/Util/OBJLoader.cpp ICE/src/Util/OBJLoader.h 
+		ICE/src/Util/BufferUtils.cpp ICE/src/Util/BufferUtils.h 
+		ICE/src/Util/Logger.cpp ICE/src/Util/Logger.h
+		ICE/src/Util/ICEException.cpp ICE/src/Util/ICEException.h
+		
+		# Core
+		ICE/src/Core/System.h 
+		ICE/src/Core/ICEEngine.cpp ICE/src/Core/ICEEngine.h
+		
+		# Assets
+		ICE/src/Assets/AssetBank.cpp ICE/src/Assets/AssetBank.h
+		ICE/src/Assets/Asset.h ICE/src/Assets/ResourceLoader.h ICE/src/Assets/TextureLoader.cpp ICE/src/Assets/TextureLoader.h ICE/src/Assets/Resource.h 
+		ICE/src/Assets/IResourceLoader.h
+		ICE/src/Assets/MeshLoader.cpp ICE/src/Assets/MeshLoader.h ICE/src/Assets/ShaderLoader.cpp ICE/src/Assets/ShaderLoader.h ICE/src/Assets/MaterialLoader.cpp 
+		ICE/src/Assets/MaterialLoader.h ICE/src/Assets/AssetPath.cpp ICE/src/Assets/AssetPath.h
+		
+		# GUI
+		ICE/src/GUI/ICEGUI.cpp ICE/src/GUI/ICEGUI.h
+		ICE/src/GUI/HierarchyPane.cpp
+		ICE/src/GUI/HierarchyPane.h ICE/src/GUI/ICEPane.h ICE/src/GUI/InspectorPane.cpp ICE/src/GUI/InspectorPane.h ICE/src/GUI/Components/UIComponentRenderer.cpp
+		ICE/src/GUI/Components/UIComponentRenderer.h ICE/src/GUI/AssetPane.cpp ICE/src/GUI/AssetPane.h
+		ICE/src/GUI/AssetViewPane.cpp ICE/src/GUI/AssetViewPane.h ICE/src/GUI/AssetContentPane.cpp ICE/src/GUI/AssetContentPane.h 
+		ICE/src/GUI/ProjectSelectorWindow.cpp ICE/src/GUI/ProjectSelectorWindow.h
+		ICE/src/GUI/NewMaterialPane.cpp ICE/src/GUI/NewMaterialPane.h 
+		ICE/src/GUI/SceneParamPane.cpp ICE/src/GUI/SceneParamPane.h
+		
+		# Platform
+		ICE/src/Platform/FileUtils.cpp ICE/src/Platform/FileUtils.h 
+		
+		# IO
+		ICE/src/IO/Project.cpp ICE/src/IO/Project.h 
+		ICE/src/IO/EngineConfig.cpp ICE/src/IO/EngineConfig.h
+		
+		# Filesystem
+		ICE/src/Filesystem/Filesystem.cpp ICE/src/Filesystem/Filesystem.h
+		ICE/src/Filesystem/JsonParser.h
+		
+		# ECS
+		ICE/src/ECS/Registry.h ICE/src/ECS/Entity.h ICE/src/ECS/Entity.h ICE/src/ECS/Component.h ICE/src/ECS/TransformComponent.h ICE/src/ECS/RenderComponent.h
+		ICE/src/ECS/CameraComponent.h ICE/src/ECS/LightComponent.h)
 add_executable(ICE
 		"${EXTRA_SRC}"
 		${ICE_SRC})

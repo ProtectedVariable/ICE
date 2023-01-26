@@ -2,11 +2,7 @@
 // Created by Thomas Ibanez on 16.11.20.
 //
 #define IMGUI_IMPL_OPENGL_LOADER_GL3W
-#include <GL/gl3w.h>
-#include <Scene/Entity.h>
-#include <Scene/TransformComponent.h>
-#include <Scene/Scene.h>
-#include <Assets/AssetBank.h>
+
 #include <Util/Logger.h>
 #include <gtest/gtest.h>
 

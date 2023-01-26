@@ -5,10 +5,10 @@
 #ifndef ICE_UICOMPONENTRENDERER_H
 #define ICE_UICOMPONENTRENDERER_H
 #define FLOAT_MAX_DIGITS 128
-#include <Scene/TransformComponent.h>
-#include <Scene/RenderComponent.h>
+#include <ECS/TransformComponent.h>
+#include <ECS/RenderComponent.h>
+#include <ECS/LightComponent.h>
 #include <unordered_map>
-#include <Scene/LightComponent.h>
 
 namespace ICE {
     class ICEEngine;

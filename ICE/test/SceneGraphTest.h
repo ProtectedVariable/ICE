@@ -1,6 +1,7 @@
 #ifndef ICE_SCENEGRAPHTEST_H
 #define ICE_SCENEGRAPHTEST_H
 #include <gtest/gtest.h>
+#include <Scene/Scene.h>
 
 TEST(SceneGraphTest, SceneGraphCreated)
 {

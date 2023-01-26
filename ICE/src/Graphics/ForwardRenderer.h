@@ -6,7 +6,7 @@
 #define ICE_FORWARDRENDERER_H
 
 #include "Renderer.h"
-#include <Scene/Entity.h>
+#include <ECS/Entity.h>
 #include "RendererConfig.h"
 #include "Camera.h"
 #include "Framebuffer.h"

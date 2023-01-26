@@ -12,7 +12,7 @@
 #include "RendererConfig.h"
 #include "Camera.h"
 #include "Framebuffer.h"
-#include <Scene/Entity.h>
+#include <ECS/Entity.h>
 #include <Assets/AssetBank.h>
 
 namespace ICE {

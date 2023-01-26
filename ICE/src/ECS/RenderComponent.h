@@ -5,7 +5,7 @@
 #ifndef ICE_RENDERCOMPONENT_H
 #define ICE_RENDERCOMPONENT_H
 
-#include <Scene/Component.h>
+#include <ECS/Component.h>
 #include <Graphics/Mesh.h>
 #include <Graphics/Material.h>
 

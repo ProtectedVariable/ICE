@@ -5,7 +5,7 @@
 #ifndef ICE_COMPONENT_H
 #define ICE_COMPONENT_H
 
-#include <Scene/Entity.h>
+#include <ECS/Entity.h>
 #include <typeindex>
 
 namespace ICE {

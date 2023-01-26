@@ -4,11 +4,11 @@
 
 #include <GL/gl3w.h>
 #include "ForwardRenderer.h"
-#include <Scene/TransformComponent.h>
-#include <Scene/LightComponent.h>
+#include <ECS/TransformComponent.h>
+#include <ECS/LightComponent.h>
+#include <ECS/RenderComponent.h>
 #include <Util/Logger.h>
 #include <Scene/Scene.h>
-#include <Scene/RenderComponent.h>
 
 namespace ICE {
 

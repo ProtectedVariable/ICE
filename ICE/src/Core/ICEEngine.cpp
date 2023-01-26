@@ -23,7 +23,7 @@
 #include <Util/Logger.h>
 #include <Graphics/ForwardRenderer.h>
 #include <Util/OBJLoader.h>
-#include <Scene/TransformComponent.h>
+#include <ECS/TransformComponent.h>
 #include <Graphics/RenderSystem.h>
 #include <ImGUI/imgui_internal.h>
 #include <Platform/FileUtils.h>
