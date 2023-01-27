@@ -5,16 +5,18 @@
 #ifndef ICE_SYSTEM_H
 #define ICE_SYSTEM_H
 
-#include <Scene/Scene.h>
 #include <set>
 #include <typeindex>
+#include <vector>
+#include <ECS/Entity.h>
 
 namespace ICE {
+    class Scene;
+
     class System {
     public:
         std::set<Entity> entities;
         virtual void update(Scene* scene, double delta) = 0;
-        virtual void entitySignatureChanged(Entity e) = 0;
     };
 
     class SystemManager {
@@ -26,15 +28,16 @@ namespace ICE {
             // Create a pointer to the system and return it so it can be used externally
             auto system = std::make_shared<T>();
             systems.insert({typeid(T), system});
+            signatures.insert({typeid(T), std::vector<Signature>()});
             return system;
         }
 
         template<typename T>
-        void setSignature(Signature signature) {
+        void addSignature(Signature signature) {
             assert(systems.find(typeid(T)) != systems.end() && "System used before registered.");
 
             // Set the signature for this system
-            signatures.insert({typeid(T), signature});
+            signatures[typeid(T)].push_back(signature);
         }
 
         void entityDestroyed(Entity entity) {
@@ -56,12 +59,17 @@ namespace ICE {
                 auto const& systemSignature = signatures[pair.first];
 
                 // Entity signature matches system signature - insert into set
-                if ((entitySignature & systemSignature) == systemSignature)
-                {
-                    system->entities.insert(entity);
+                bool match = false;
+                for(auto s : systemSignature) {
+                    if ((entitySignature & s) == s)
+                    {
+                        system->entities.insert(entity);
+                        match = true;
+                        break;
+                    }
                 }
                 // Entity signature does not match system signature - erase from set
-                else
+                if(!match)
                 {
                     system->entities.erase(entity);
                 }
@@ -70,7 +78,7 @@ namespace ICE {
 
     private:
         // Map from system type string pointer to a signature
-        std::unordered_map<std::type_index, Signature> signatures{};
+        std::unordered_map<std::type_index, std::vector<Signature>> signatures{};
 
         // Map from system type string pointer to a system pointer
         std::unordered_map<std::type_index, std::shared_ptr<System>> systems{};

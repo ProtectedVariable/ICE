@@ -12,14 +12,12 @@
 #include <ECS/TransformComponent.h>
 #include <ECS/RenderComponent.h>
 #include <ECS/LightComponent.h>
+#include <ECS/System.h>
+#include <ECS/RenderSystem.h>
 
 namespace ICE {
     class Registry
     {
-    private:
-        EntityManager entityManager;
-        ComponentManager componentManager;
-        std::vector<Entity> entities;
     public:
         Registry(/* args */) {
             componentManager.registerComponent<TransformComponent>();
@@ -27,7 +25,16 @@ namespace ICE {
             componentManager.registerComponent<LightComponent>();
             componentManager.registerComponent<CameraComponent>();
 
-        };
+            Signature signature;
+            signature.set(componentManager.getComponentType<RenderComponent>());
+            signature.set(componentManager.getComponentType<TransformComponent>());
+            systemManager.registerSystem<RenderSystem>();
+            systemManager.addSignature<RenderSystem>(signature);
+            signature.set(componentManager.getComponentType<RenderComponent>(), false);
+            signature.set(componentManager.getComponentType<LightComponent>());
+            systemManager.addSignature<RenderSystem>(signature);
+            signature.reset();
+        }
         ~Registry() {};
 
         Entity createEntity() {
@@ -40,6 +47,7 @@ namespace ICE {
             auto it = std::find(entities.begin(), entities.end(), e);
             entities.erase(it);
             entityManager.releaseEntity(e);
+            systemManager.entityDestroyed(e);
         }
 
         std::vector<Entity> getEntities() const {
@@ -62,6 +70,7 @@ namespace ICE {
             auto signature = entityManager.getSignature(e);
             signature.set(componentManager.getComponentType<T>(), true);
             entityManager.setSignature(e, signature);
+            systemManager.entitySignatureChanged(e, signature);
         }
 
         template <typename T>
@@ -70,7 +79,14 @@ namespace ICE {
             auto signature = entityManager.getSignature(e);
             signature.set(componentManager.getComponentType<T>(), false);
             entityManager.setSignature(e, signature);
+            systemManager.entitySignatureChanged(e, signature);
         }
+
+    private:
+        EntityManager entityManager;
+        ComponentManager componentManager;
+        SystemManager systemManager;
+        std::vector<Entity> entities;
     };
 }
 

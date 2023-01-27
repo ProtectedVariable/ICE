@@ -9,15 +9,15 @@
 #include <Graphics/Renderer.h>
 #include <Graphics/Camera.h>
 #include <Graphics/Framebuffer.h>
-#include <Scene/Scene.h>
 
 namespace ICE {
+    class Scene;
+
     class RenderSystem : public System {
     public:
-        RenderSystem(Renderer *renderer, Camera* camera);
+        RenderSystem() {};
 
         void update(Scene* scene, double delta) override;
-        void entitySignatureChanged(Entity e) override;
 
         Renderer *getRenderer() const;
         void setRenderer(Renderer *renderer);

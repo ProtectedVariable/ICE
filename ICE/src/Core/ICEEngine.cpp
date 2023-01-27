@@ -169,7 +169,7 @@ namespace ICE {
         this->camera.getRotation() = project->getCameraRotation();
         Renderer* renderer = new ForwardRenderer();
         renderer->initialize(RendererConfig(), project->getAssetBank());
-        this->renderSystem = new RenderSystem(renderer, &camera);
+        this->renderSystem = new RenderSystem();
         systems.push_back(renderSystem);
         Skybox::Initialize();
         this->gui.initializeEditorUI();
