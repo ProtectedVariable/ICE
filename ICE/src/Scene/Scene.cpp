@@ -3,7 +3,7 @@
 //
 
 #include "Scene.h"
-
+#include <ECS/Registry.h>
 #include <utility>
 
 namespace ICE {

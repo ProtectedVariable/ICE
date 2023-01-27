@@ -18,6 +18,7 @@ error "Missing the <filesystem> header."
 #include <Scene/Scene.h>
 #include <Assets/AssetBank.h>
 #include <json/json.h>
+#include <Graphics/Camera.h>
 
 using json = nlohmann::json;
 

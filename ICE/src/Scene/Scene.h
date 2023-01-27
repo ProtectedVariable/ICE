@@ -7,10 +7,9 @@
 
 #include <vector>
 #include <ECS/Entity.h>
-#include <ECS/Registry.h>
 #include <string>
-#include <Graphics/Renderer.h>
 #include <Graphics/Skybox.h>
+#include <ECS/Registry.h>
 
 namespace ICE {
     class Renderer;

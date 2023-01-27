@@ -5,7 +5,11 @@
 #ifndef ICE_RENDERSYSTEM_H
 #define ICE_RENDERSYSTEM_H
 
-#include <Core/System.h>
+#include <ECS/System.h>
+#include <Graphics/Renderer.h>
+#include <Graphics/Camera.h>
+#include <Graphics/Framebuffer.h>
+#include <Scene/Scene.h>
 
 namespace ICE {
     class RenderSystem : public System {

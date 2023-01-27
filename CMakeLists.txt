@@ -57,7 +57,7 @@ set(ICE_SRC
 		
 		# Graphics
 		ICE/src/Graphics/Material.cpp ICE/src/Graphics/Material.h ICE/src/Graphics/Mesh.cpp ICE/src/Graphics/Mesh.h
-		ICE/src/Graphics/Renderer.h ICE/src/Graphics/RenderSystem.cpp ICE/src/Graphics/RenderSystem.h 
+		ICE/src/Graphics/Renderer.h
 		ICE/src/Graphics/RendererConfig.h ICE/src/Graphics/RenderCommand.h ICE/src/Graphics/Buffers.h
 		ICE/src/Graphics/Framebuffer.h ICE/src/Graphics/Context.h ICE/src/Graphics/VertexArray.h ICE/src/Graphics/API/GraphicsAPI.h
 		ICE/src/Graphics/API/OpenGL/OpenGLVertexArray.cpp ICE/src/Graphics/API/OpenGL/OpenGLVertexArray.h 
@@ -85,7 +85,6 @@ set(ICE_SRC
 		ICE/src/Util/ICEException.cpp ICE/src/Util/ICEException.h
 		
 		# Core
-		ICE/src/Core/System.h 
 		ICE/src/Core/ICEEngine.cpp ICE/src/Core/ICEEngine.h
 		
 		# Assets
@@ -117,6 +116,8 @@ set(ICE_SRC
 		ICE/src/Filesystem/JsonParser.h
 		
 		# ECS
+		ICE/src/ECS/System.h
+		ICE/src/ECS/RenderSystem.h ICE/src/ECS/RenderSystem.cpp
 		ICE/src/ECS/Registry.h ICE/src/ECS/Entity.h ICE/src/ECS/Entity.h ICE/src/ECS/Component.h ICE/src/ECS/TransformComponent.h ICE/src/ECS/RenderComponent.h
 		ICE/src/ECS/CameraComponent.h ICE/src/ECS/LightComponent.h)
 		

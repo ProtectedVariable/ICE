@@ -24,7 +24,6 @@
 #include <Graphics/ForwardRenderer.h>
 #include <Util/OBJLoader.h>
 #include <ECS/TransformComponent.h>
-#include <Graphics/RenderSystem.h>
 #include <ImGUI/imgui_internal.h>
 #include <Platform/FileUtils.h>
 

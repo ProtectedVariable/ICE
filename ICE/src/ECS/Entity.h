@@ -17,20 +17,25 @@ namespace ICE {
 
     class EntityManager {
 	public:
+		EntityManager(): entityCount(0) {}
+
 		Entity createEntity() {
 			Entity e = entityCount+1;
 			//Reuse free ids before using the next
 			if(releasedEntities.size() > 0) {
 				e = releasedEntities.front();
 				releasedEntities.pop();
-			}
+			} 
 			entityCount++;
+			
+			signatures.insert_or_assign(e, Signature(0));
 			return e;
 		}
 
 		void releaseEntity(Entity e) {
 			signatures[e].reset();
 			releasedEntities.push(e);
+			entityCount--;
 		}
 
 		void setSignature(Entity e, Signature s) {
@@ -38,12 +43,12 @@ namespace ICE {
 		}
 
 		Signature getSignature(Entity e) const {
-			return signatures[e];
+			return signatures.at(e);
 		}
 
 	private:
 		std::queue<Entity> releasedEntities{};
-		std::vector<Signature> signatures{};
+		std::unordered_map<Entity, Signature> signatures{};
 		std::uint32_t entityCount;
 	};
 }

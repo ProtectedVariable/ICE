@@ -10,9 +10,10 @@
 #include <GUI/ICEGUI.h>
 #include <Assets/AssetBank.h>
 #include <IO/Project.h>
-#include "System.h"
+#include <ECS/System.h>
 #include <IO/EngineConfig.h>
-#include <Graphics/RenderSystem.h>
+#include <ECS/RenderSystem.h>
+#include <ECS/Registry.h>
 
 namespace ICE {
     class ICEEngine {
@@ -63,6 +64,7 @@ namespace ICE {
         Project* project = nullptr;
         EngineConfig config;
         RenderSystem* renderSystem;
+        Registry registry;
     };
 }
 

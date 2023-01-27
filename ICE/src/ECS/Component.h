@@ -34,7 +34,7 @@ namespace ICE {
             size_t newIndex = size;
             entityToIndexMap[entity] = newIndex;
             indexToEntityMap[newIndex] = entity;
-            componentArray[newIndex] = component;
+            componentArray.push_back(component);
             size++;
         }
 

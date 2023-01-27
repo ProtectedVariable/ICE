@@ -8,6 +8,10 @@
 #include <ECS/Entity.h>
 #include <ECS/Component.h>
 #include <vector>
+#include <ECS/CameraComponent.h>
+#include <ECS/TransformComponent.h>
+#include <ECS/RenderComponent.h>
+#include <ECS/LightComponent.h>
 
 namespace ICE {
     class Registry
@@ -17,7 +21,13 @@ namespace ICE {
         ComponentManager componentManager;
         std::vector<Entity> entities;
     public:
-        Registry(/* args */) {};
+        Registry(/* args */) {
+            componentManager.registerComponent<TransformComponent>();
+            componentManager.registerComponent<RenderComponent>();
+            componentManager.registerComponent<LightComponent>();
+            componentManager.registerComponent<CameraComponent>();
+
+        };
         ~Registry() {};
 
         Entity createEntity() {
@@ -29,6 +39,7 @@ namespace ICE {
         void removeEntity(Entity e) {
             auto it = std::find(entities.begin(), entities.end(), e);
             entities.erase(it);
+            entityManager.releaseEntity(e);
         }
 
         std::vector<Entity> getEntities() const {
