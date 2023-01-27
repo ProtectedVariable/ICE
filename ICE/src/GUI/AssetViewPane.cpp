@@ -31,7 +31,7 @@ namespace ICE {
             AssetUID previewMeshId = engine->getAssetBank()->getAll<Mesh>().find(*selectedAsset) == engine->getAssetBank()->getAll<Mesh>().end() ? engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Mesh>("__ice__sphere")) : *selectedAsset;
             AssetUID mat = engine->getAssetBank()->getAll<Material>().find(*selectedAsset) == engine->getAssetBank()->getAll<Material>().end() ? engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Material>("__ice__base_material")) :  *selectedAsset;
 
-            auto scene = Scene("__ice__assetview_scene");
+            auto scene = Scene("__ice__assetview_scene", new Registry());
 
             auto sphere = Entity();
             auto rcSphere = RenderComponent{
@@ -78,7 +78,7 @@ namespace ICE {
             if(tex->getType() == TextureType::Tex2D) {
                 ImGui::Image(tex->getTexture(), wsize, ImVec2(0, 1), ImVec2(1, 0));
             } else if(tex->getType() == TextureType::CubeMap) {
-                Scene scene("__ice__assetview_scene");
+                Scene scene("__ice__assetview_scene", new Registry());
                 scene.setSkybox(*selectedAsset);
                 renderer.setTarget(viewFB);
                 renderer.submitScene(&scene);

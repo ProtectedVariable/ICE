@@ -91,7 +91,7 @@ namespace ICE {
 
         *engine->getAssetBank()->getAsset<Material>(name) = Material(albedo, specular, ambient, alpha, diffuseMap, specularMap, ambientMap, normalMap);
         AssetUID mat = engine->getAssetBank()->getUID(name);
-        auto scene = Scene("__ice__newmaterial_scene");
+        auto scene = Scene("__ice__newmaterial_scene", new Registry());
         /*
         auto sphere = Entity();
         auto rcSphere = RenderComponent(engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Mesh>("__ice__sphere")), mat, engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Shader>("__ice__phong_shader")));

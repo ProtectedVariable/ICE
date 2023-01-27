@@ -80,7 +80,7 @@ namespace ICE {
                 static char namebuffer[128];
                 ImGui::InputText("##NewSceneName", namebuffer, 128);
                 if(ImGui::Button("Create")) {
-                    Scene newScene(namebuffer);
+                    Scene newScene(namebuffer, new Registry());
                     engine->getProject()->addScene(newScene);
                     engine->setCurrentScene(&engine->getProject()->getScenes().back());
                     showNewScenePopup = false;
@@ -243,7 +243,7 @@ namespace ICE {
                                 auto color = engine->getPickingTextureAt(x, y);
                                 int id = color.x() & 0xFF + ((color.y() & 0xFF) << 8) + ((color.z() & 0xFF) << 16);
                                 if (id != 0) {
-                                    auto picked = engine->getScene()->getEntities()[id - 1];
+                                    auto picked = engine->getScene()->getRegistry()->getEntities()[id - 1];
                                     //engine->setSelected(picked);
                                 }
                             }

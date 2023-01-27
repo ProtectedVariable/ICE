@@ -143,7 +143,7 @@ namespace ICE {
         getAssetBank()->getAsset<Shader>("__ice__picking_shader")->loadMat4("projection", camera.getProjection());
         getAssetBank()->getAsset<Shader>("__ice__picking_shader")->loadMat4("view", camera.lookThrough());
         int id = 1;
-        for(auto e : currentScene->getEntities()) {
+        for(auto e : currentScene->getRegistry()->getEntities()) {
             //getAssetBank()->getAsset<Shader>("__ice__picking_shader")->loadMat4("model", e->getComponent<TransformComponent>()->getTransformation());
             //getAssetBank()->getAsset<Shader>("__ice__picking_shader")->loadInt("objectID", id++);
             //if(e->hasComponent<RenderComponent>()) {

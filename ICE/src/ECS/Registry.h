@@ -7,6 +7,7 @@
 
 #include <ECS/Entity.h>
 #include <ECS/Component.h>
+#include <vector>
 
 namespace ICE {
     class Registry
@@ -14,10 +15,25 @@ namespace ICE {
     private:
         EntityManager entityManager;
         ComponentManager componentManager;
-
+        std::vector<Entity> entities;
     public:
         Registry(/* args */) {};
         ~Registry() {};
+
+        Entity createEntity() {
+            Entity e = entityManager.createEntity();
+            entities.push_back(e);
+            return e;
+        }
+
+        void removeEntity(Entity e) {
+            auto it = std::find(entities.begin(), entities.end(), e);
+            entities.erase(it);
+        }
+
+        std::vector<Entity> getEntities() const {
+            return entities;
+        }
 
         template <typename T>
         bool entityHasComponent(Entity e) {
@@ -45,7 +61,6 @@ namespace ICE {
             entityManager.setSignature(e, signature);
         }
     };
-    
-
+}
 
 #endif //ICE_REGISTRY_H

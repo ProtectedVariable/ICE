@@ -36,7 +36,7 @@ namespace ICE {
         if(*selectedDir == 0) {
 
             for(const auto& m : engine->getAssetBank()->getAll<Mesh>()) {
-                auto scene = Scene("__ice__assetcontent_scene");
+                auto scene = Scene("__ice__assetcontent_scene", new Registry());
                 AssetUID shader = engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Shader>("__ice__normal_shader"));
                 AssetUID mat = engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Material>("__ice__base_material"));
 
@@ -63,7 +63,7 @@ namespace ICE {
             for(const auto& m : engine->getAssetBank()->getAll<Material>()) {
                 Material mat = *m.second;
 
-                auto scene = Scene("__ice__assetcontent_scene");
+                auto scene = Scene("__ice__assetcontent_scene", new Registry());
 
                 auto sphere = Entity();
                 //auto rcSphere = RenderComponent(engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Mesh>("__ice__sphere")), m.first, engine->getAssetBank()->getUID(AssetPath::WithTypePrefix<Shader>("__ice__phong_shader")));
@@ -107,7 +107,7 @@ namespace ICE {
                 if(m.second->getType() == TextureType::Tex2D) {
                     renderAssetThumbnail(m.second->getTexture(), engine->getAssetBank()->getName(m.first).getName());
                 } else if(m.second->getType() == TextureType::CubeMap) {
-                    Scene scene("__ice__assetcontent_scene");
+                    Scene scene("__ice__assetcontent_scene", new Registry());
                     scene.setSkybox(Skybox(m.first));
                     renderer.setTarget(thumbnailFBO[i]);
                     renderer.submitScene(&scene);

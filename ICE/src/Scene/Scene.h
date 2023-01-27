@@ -7,7 +7,7 @@
 
 #include <vector>
 #include <ECS/Entity.h>
-#include <ECS/Component.h>
+#include <ECS/Registry.h>
 #include <string>
 #include <Graphics/Renderer.h>
 #include <Graphics/Skybox.h>
@@ -85,15 +85,10 @@ namespace ICE {
     class Scene {
     public:
         
-        Scene(const std::string& name);
+        Scene(const std::string& name, Registry* registry);
 
-        Entity createEntity();
-        bool addEntity(Entity entity);
-        void removeEntity(Entity entity);
         bool setAlias(Entity entity, const std::string& newName);
         std::string getAlias(Entity e);
-
-        std::vector<Entity> getEntities() const;
 
         SceneGraph getGraph();
 
@@ -103,14 +98,15 @@ namespace ICE {
         Skybox* getSkybox();
         void setSkybox(const Skybox &skybox);
 
+        Registry* getRegistry();
+        Entity createEntity();
+        void removeEntity(Entity e);
     private:
         std::string name;
         Skybox skybox;
-        std::vector<Entity> entities;
         SceneGraph graph;
-        EntityManager entityManager;
-        ComponentManager componentManager;
         std::unordered_map<Entity, std::string> aliases;
+        Registry* registry;
     };
 }
 

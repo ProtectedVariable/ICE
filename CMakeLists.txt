@@ -119,6 +119,7 @@ set(ICE_SRC
 		# ECS
 		ICE/src/ECS/Registry.h ICE/src/ECS/Entity.h ICE/src/ECS/Entity.h ICE/src/ECS/Component.h ICE/src/ECS/TransformComponent.h ICE/src/ECS/RenderComponent.h
 		ICE/src/ECS/CameraComponent.h ICE/src/ECS/LightComponent.h)
+		
 add_executable(ICE
 		"${EXTRA_SRC}"
 		${ICE_SRC})

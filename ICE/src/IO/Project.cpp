@@ -43,7 +43,7 @@ namespace ICE {
         fs::create_directories(baseDirectory + FSEP + name + ICE_ASSET_CUBEMAPS_FOLDER);
         fs::create_directories(baseDirectory + FSEP + name + ICE_ASSET_SCRIPTS_FOLDER);
         fs::create_directories(baseDirectory + FSEP + name + ICE_SCENES_FOLDER);
-        scenes.push_back(Scene("MainScene"));
+        scenes.push_back(Scene("MainScene", new Registry()));
         assetBank.fillWithDefaults();
         return true;
     }
@@ -129,29 +129,29 @@ namespace ICE {
 
             j["name"] = s.getName();
             json entities = json::array();
-            for(auto e : s.getEntities()) {
+            for(auto e : s.getRegistry()->getEntities()) {
                 json entity;
                 entity["name"] = e;
                 //entity["parent"] = s.getParent(e);
                 
-                if(s.entityHasComponent<RenderComponent>(e)) {
-                    RenderComponent rc = *s.getComponent<RenderComponent>(e);
+                if(s.getRegistry()->entityHasComponent<RenderComponent>(e)) {
+                    RenderComponent rc = *s.getRegistry()->getComponent<RenderComponent>(e);
                     json renderjson;
                     renderjson["mesh"] = rc.mesh;
                     renderjson["material"] = rc.material;
                     renderjson["shader"] = rc.shader;
                     entity["renderComponent"] = renderjson;
                 }
-                if(s.entityHasComponent<TransformComponent>(e)) {
-                    TransformComponent tc = *s.getComponent<TransformComponent>(e);
+                if(s.getRegistry()->entityHasComponent<TransformComponent>(e)) {
+                    TransformComponent tc = *s.getRegistry()->getComponent<TransformComponent>(e);
                     json transformjson;
                     transformjson["position"] = dumpVec3(tc.position);
                     transformjson["rotation"] = dumpVec3(tc.rotation);
                     transformjson["scale"] = dumpVec3(tc.scale);
                     entity["transformComponent"] = transformjson;
                 }
-                if(s.entityHasComponent<LightComponent>(e)) {
-                    LightComponent lc = *s.getComponent<LightComponent>(e);
+                if(s.getRegistry()->entityHasComponent<LightComponent>(e)) {
+                    LightComponent lc = *s.getRegistry()->getComponent<LightComponent>(e);
                     json lightjson;
                     lightjson["color"] = dumpVec3(lc.color);
                     lightjson["type"] = lc.type;
@@ -197,7 +197,7 @@ namespace ICE {
             infile >> scenejson;
             infile.close();
 
-            Scene scene = Scene(scenejson["name"]);
+            Scene scene = Scene(scenejson["name"], new Registry());
 
             if(scenejson["skybox"] != "null") {
                 scene.setSkybox(Skybox((AssetUID)scenejson["skybox"]));

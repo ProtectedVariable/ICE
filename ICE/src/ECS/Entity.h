@@ -37,9 +37,10 @@ namespace ICE {
 			signatures[e] = s; 
 		}
 
-		Signature getSignature(Entity e) {
+		Signature getSignature(Entity e) const {
 			return signatures[e];
 		}
+
 	private:
 		std::queue<Entity> releasedEntities{};
 		std::vector<Signature> signatures{};

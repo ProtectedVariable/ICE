@@ -7,24 +7,7 @@
 #include <utility>
 
 namespace ICE {
-    Scene::Scene(const std::string& name) : name(name), graph(SceneGraph()), skybox(Skybox(NO_ASSET_ID)) {}
-
-    Entity Scene::createEntity() {
-        Entity e = entityManager.createEntity();
-        addEntity(e);
-        return e;
-    }
-
-    bool Scene::addEntity(Entity entity) {
-        entities.push_back(entity);
-        graph.addEntity(entity);
-        aliases.insert({entity, "object"});
-        return true;
-    }
-
-    std::vector<Entity> Scene::getEntities() const {
-        return entities;
-    }
+    Scene::Scene(const std::string& name, Registry* registry) : name(name), graph(SceneGraph()), skybox(Skybox(NO_ASSET_ID)), registry(registry) {}
 
     SceneGraph Scene::getGraph() {
         return graph;
@@ -36,12 +19,6 @@ namespace ICE {
 
     void Scene::setName(const std::string &name) {
         Scene::name = name;
-    }
-
-    void Scene::removeEntity(Entity e) {
-        auto it = std::find(entities.begin(), entities.end(), e);
-        entities.erase(it);
-        graph.removeEntity(e);
     }
 
     bool Scene::setAlias(Entity entity, const std::string& newName) {
@@ -59,5 +36,22 @@ namespace ICE {
 
     void Scene::setSkybox(const Skybox &skybox) {
         Scene::skybox = skybox;
+    }
+
+    Registry* Scene::getRegistry() {
+        return registry;
+    }
+
+    Entity Scene::createEntity() {
+        Entity e = registry->createEntity();
+        graph.addEntity(e);
+        aliases.insert({e, "entity_"+std::to_string(e)});
+        return e;
+    }
+
+    void Scene::removeEntity(Entity e) {
+        registry->removeEntity(e);
+        aliases.erase(e);
+        graph.removeEntity(e);
     }
 }
