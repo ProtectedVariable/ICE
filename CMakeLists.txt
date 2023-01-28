@@ -94,16 +94,6 @@ set(ICE_SRC
 		ICE/src/Assets/MeshLoader.cpp ICE/src/Assets/MeshLoader.h ICE/src/Assets/ShaderLoader.cpp ICE/src/Assets/ShaderLoader.h ICE/src/Assets/MaterialLoader.cpp 
 		ICE/src/Assets/MaterialLoader.h ICE/src/Assets/AssetPath.cpp ICE/src/Assets/AssetPath.h
 		
-		# GUI
-		ICE/src/GUI/ICEGUI.cpp ICE/src/GUI/ICEGUI.h
-		ICE/src/GUI/HierarchyPane.cpp
-		ICE/src/GUI/HierarchyPane.h ICE/src/GUI/ICEPane.h ICE/src/GUI/InspectorPane.cpp ICE/src/GUI/InspectorPane.h ICE/src/GUI/Components/UIComponentRenderer.cpp
-		ICE/src/GUI/Components/UIComponentRenderer.h ICE/src/GUI/AssetPane.cpp ICE/src/GUI/AssetPane.h
-		ICE/src/GUI/AssetViewPane.cpp ICE/src/GUI/AssetViewPane.h ICE/src/GUI/AssetContentPane.cpp ICE/src/GUI/AssetContentPane.h 
-		ICE/src/GUI/ProjectSelectorWindow.cpp ICE/src/GUI/ProjectSelectorWindow.h
-		ICE/src/GUI/NewMaterialPane.cpp ICE/src/GUI/NewMaterialPane.h 
-		ICE/src/GUI/SceneParamPane.cpp ICE/src/GUI/SceneParamPane.h
-		
 		# Platform
 		ICE/src/Platform/FileUtils.cpp ICE/src/Platform/FileUtils.h 
 		
@@ -120,10 +110,22 @@ set(ICE_SRC
 		ICE/src/ECS/RenderSystem.h ICE/src/ECS/RenderSystem.cpp
 		ICE/src/ECS/Registry.h ICE/src/ECS/Entity.h ICE/src/ECS/Entity.h ICE/src/ECS/Component.h ICE/src/ECS/TransformComponent.h ICE/src/ECS/RenderComponent.h
 		ICE/src/ECS/CameraComponent.h ICE/src/ECS/LightComponent.h)
+
+set(ICE_GUI_SRC
+	# GUI
+	ICE/src/GUI/ICEGUI.cpp ICE/src/GUI/ICEGUI.h
+	ICE/src/GUI/HierarchyPane.cpp
+	ICE/src/GUI/HierarchyPane.h ICE/src/GUI/ICEPane.h ICE/src/GUI/InspectorPane.cpp ICE/src/GUI/InspectorPane.h ICE/src/GUI/Components/UIComponentRenderer.cpp
+	ICE/src/GUI/Components/UIComponentRenderer.h ICE/src/GUI/AssetPane.cpp ICE/src/GUI/AssetPane.h
+	ICE/src/GUI/AssetViewPane.cpp ICE/src/GUI/AssetViewPane.h ICE/src/GUI/AssetContentPane.cpp ICE/src/GUI/AssetContentPane.h 
+	ICE/src/GUI/ProjectSelectorWindow.cpp ICE/src/GUI/ProjectSelectorWindow.h
+	ICE/src/GUI/NewMaterialPane.cpp ICE/src/GUI/NewMaterialPane.h 
+	ICE/src/GUI/SceneParamPane.cpp ICE/src/GUI/SceneParamPane.h
+)
 		
-add_executable(ICE
-		"${EXTRA_SRC}"
-		${ICE_SRC})
+add_library(ICE SHARED "${EXTRA_SRC}" ${ICE_SRC})
+add_executable(ICEBERG ${ICE_GUI_SRC})
+target_link_libraries(ICEBERG ICE)
 
 file(COPY ICE/Assets DESTINATION ${CMAKE_BINARY_DIR})
 

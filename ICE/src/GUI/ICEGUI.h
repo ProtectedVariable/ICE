@@ -22,7 +22,7 @@ namespace ICE {
 
     class ICEGUI {
     public:
-        ICEGUI(ICEEngine* engine);
+        ICEGUI(void* window);
 
         void renderImGui();
 
@@ -32,23 +32,35 @@ namespace ICE {
 
         void initializeEditorUI();
 
+        void initialize();
+        void loop();
+
     private:
 
         void applyStyle();
 
+        ICEEngine* engine;
+
+        Context* ctx;
+        RendererAPI* api;
+        Framebuffer* internalFB;
+        Framebuffer* pickingFB;
+
+        void* window;
         int sceneViewportWidth, sceneViewportHeight;
-        HierarchyPane hierarchyPane;
+        
+        /*HierarchyPane hierarchyPane;
         InspectorPane inspectorPane;
         SceneParamPane sceneParamPane;
         AssetPane assetPane;
-        ProjectSelectorWindow projectSelectorWindow;
-        ICEEngine* engine;
+        ProjectSelectorWindow projectSelectorWindow;*/
         ImGuizmo::OPERATION guizmoOperationMode = ImGuizmo::OPERATION::TRANSLATE;
 
         bool showNewScenePopup = false;
         bool showLoadScenePopup = false;
 
         bool selecting = true;
+
     };
 }
 

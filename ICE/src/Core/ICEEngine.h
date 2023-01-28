@@ -18,13 +18,13 @@
 namespace ICE {
     class ICEEngine {
     public:
-        ICEEngine(void* window);
+        ICEEngine(void* window, RendererAPI* api, Framebuffer* framebuffer);
 
         void initialize();
-        void loop();
-        Eigen::Vector4i getPickingTextureAt(int x, int y);
 
-        Framebuffer *getInternalFB() const;
+        void loop();
+
+        Eigen::Vector4i getPickingTextureAt(int x, int y);
 
         Camera *getCamera();
 
@@ -52,13 +52,13 @@ namespace ICE {
 
     private:
         std::vector<System*> systems;
-        void* window;
-        Scene* currentScene;
-        RendererAPI* api;
+
         Context* ctx;
-        ICEGUI gui;
+        RendererAPI* api;
+        void* window;
         Framebuffer* internalFB;
-        Framebuffer* pickingFB;
+
+        Scene* currentScene;
         Camera camera;
         Entity* selected;
         Project* project = nullptr;

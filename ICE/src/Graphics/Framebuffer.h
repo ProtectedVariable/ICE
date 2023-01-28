@@ -20,6 +20,10 @@ namespace ICE {
         virtual void* getTexture() = 0;
         virtual Eigen::Vector4i readPixel(int x, int y) = 0;
 
+        FrameBufferFormat getFormat() const {
+            return format;
+        }
+
         static Framebuffer* Create(FrameBufferFormat format);
     private:
         FrameBufferFormat format;
