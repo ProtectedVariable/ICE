@@ -6,16 +6,15 @@
 #define ICE_PROJECTSELECTORWINDOW_H
 
 namespace ICE {
-    class ICEEngine;
 
     class ProjectSelectorWindow {
     public:
         void render();
 
-        ProjectSelectorWindow(ICEEngine *engine);
+        ProjectSelectorWindow();
 
     private:
-        ICEEngine* engine;
+        
     };
 }
 

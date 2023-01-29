@@ -45,7 +45,7 @@ namespace ICE {
         Logger::Log(Logger::INFO, "Core", "Engine starting up...");
     }
 
-    void ICEEngine::loop() {
+    void ICEEngine::loop(GUI* gui) {
         ImGuiIO& io = ImGui::GetIO(); (void)io;
 
         while (!glfwWindowShouldClose(static_cast<GLFWwindow*>(window)))
@@ -61,7 +61,7 @@ namespace ICE {
             ImGuizmo::BeginFrame();
             ImGuizmo::SetOrthographic(false);
 
-            //gui.renderImGui();
+            gui->render();
             // Rendering
             ImGui::Render();
 

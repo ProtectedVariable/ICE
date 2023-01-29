@@ -16,15 +16,16 @@
 #include "SceneParamPane.h"
 #include <ImGUI/imgui.h>
 #include <ImGUI/ImGuizmo.h>
+#include <Core/GUI.h>
 
 namespace ICE {
     class ICEEngine;
 
-    class ICEGUI {
+    class ICEGUI : public GUI {
     public:
         ICEGUI(void* window);
 
-        void renderImGui();
+        virtual void render() override;
 
         int getSceneViewportWidth() const;
 
@@ -52,8 +53,8 @@ namespace ICE {
         /*HierarchyPane hierarchyPane;
         InspectorPane inspectorPane;
         SceneParamPane sceneParamPane;
-        AssetPane assetPane;
-        ProjectSelectorWindow projectSelectorWindow;*/
+        AssetPane assetPane;*/
+        ProjectSelectorWindow projectSelectorWindow;
         ImGuizmo::OPERATION guizmoOperationMode = ImGuizmo::OPERATION::TRANSLATE;
 
         bool showNewScenePopup = false;

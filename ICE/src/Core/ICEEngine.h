@@ -14,6 +14,7 @@
 #include <IO/EngineConfig.h>
 #include <ECS/RenderSystem.h>
 #include <ECS/Registry.h>
+#include <Core/GUI.h>
 
 namespace ICE {
     class ICEEngine {
@@ -22,7 +23,7 @@ namespace ICE {
 
         void initialize();
 
-        void loop();
+        void loop(GUI* gui);
 
         Eigen::Vector4i getPickingTextureAt(int x, int y);
 

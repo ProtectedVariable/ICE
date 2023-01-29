@@ -29,7 +29,7 @@
 namespace ICE {
     int gui_init = 0;
 
-    void ICEGUI::renderImGui() {
+    void ICEGUI::render() {
         if(engine->getProject() != nullptr) {
 
             ImGuiWindowFlags flags = ImGuiWindowFlags_MenuBar;
@@ -289,7 +289,7 @@ namespace ICE {
             ImGui::End();
             ImGui::PopStyleVar();
         } else {
-            //projectSelectorWindow.render();
+            projectSelectorWindow.render();
         }
     }
 
@@ -323,7 +323,7 @@ namespace ICE {
     }
 
     void ICEGUI::loop() {
-        engine->loop();
+        engine->loop(this);
     }
 
     void ICEGUI::applyStyle() {
