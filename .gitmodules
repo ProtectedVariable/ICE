@@ -1,0 +1,3 @@
+[submodule "DearImXML"]
+	path = DearImXML
+	url = git@github.com:ProtectedVariable/DearImXML.git
