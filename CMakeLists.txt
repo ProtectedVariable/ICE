@@ -1,7 +1,8 @@
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.25)
 project(ICE)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20")
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 set(GLFW_LIB_PATH "${CMAKE_CURRENT_SOURCE_DIR}/libs/glfw/")
 
 set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
@@ -85,14 +86,14 @@ set(ICE_SRC
 		ICE/src/Util/ICEException.cpp ICE/src/Util/ICEException.h
 		
 		# Core
-		ICE/src/Core/ICEEngine.cpp ICE/src/Core/ICEEngine.h
+		"ICE/Core/src/ICEEngine.cpp" "ICE/Core/include/ICEEngine.h"
 		
 		# Assets
-		ICE/src/Assets/AssetBank.cpp ICE/src/Assets/AssetBank.h
-		ICE/src/Assets/Asset.h ICE/src/Assets/ResourceLoader.h ICE/src/Assets/TextureLoader.cpp ICE/src/Assets/TextureLoader.h ICE/src/Assets/Resource.h 
-		ICE/src/Assets/IResourceLoader.h
-		ICE/src/Assets/MeshLoader.cpp ICE/src/Assets/MeshLoader.h ICE/src/Assets/ShaderLoader.cpp ICE/src/Assets/ShaderLoader.h ICE/src/Assets/MaterialLoader.cpp 
-		ICE/src/Assets/MaterialLoader.h ICE/src/Assets/AssetPath.cpp ICE/src/Assets/AssetPath.h
+		"ICE/Assets/src/AssetBank.cpp" "ICE/Assets/include/AssetBank.h"
+		"ICE/Assets/include/Asset.h" "ICE/Assets/include/ResourceLoader.h" "ICE/Assets/src/TextureLoader.cpp" "ICE/Assets/include/TextureLoader.h" "ICE/Assets/include/Resource.h" 
+		"ICE/Assets/include/IResourceLoader.h"
+		"ICE/Assets/src/MeshLoader.cpp" "ICE/Assets/include/MeshLoader.h" "ICE/Assets/src/ShaderLoader.cpp" "ICE/Assets/include/ShaderLoader.h" "ICE/Assets/src/MaterialLoader.cpp" 
+		"ICE/Assets/include/MaterialLoader.h" "ICE/Assets/src/AssetPath.cpp" "ICE/Assets/include/AssetPath.h"
 		
 		# Platform
 		ICE/src/Platform/FileUtils.cpp ICE/src/Platform/FileUtils.h 
@@ -106,10 +107,10 @@ set(ICE_SRC
 		ICE/src/Filesystem/JsonParser.h
 		
 		# ECS
-		ICE/src/ECS/System.h
-		ICE/src/ECS/RenderSystem.h ICE/src/ECS/RenderSystem.cpp
-		ICE/src/ECS/Registry.h ICE/src/ECS/Entity.h ICE/src/ECS/Entity.h ICE/src/ECS/Component.h ICE/src/ECS/TransformComponent.h ICE/src/ECS/RenderComponent.h
-		ICE/src/ECS/CameraComponent.h ICE/src/ECS/LightComponent.h)
+		"ICE/System/include/System.h"
+		"ICE/System/include/RenderSystem.h" ICE/src/ECS/RenderSystem.cpp
+		"ICE/System/include/Registry.h" ICE/src/ECS/Entity.h ICE/src/ECS/Entity.h "ICE/Components/include/Component.h" "ICE/Components/include/TransformComponent.h" "ICE/Components/include/RenderComponent.h"
+		"ICE/Components/include/CameraComponent.h" "ICE/Components/include/LightComponent.h")
 
 set(ICE_GUI_SRC
 	# GUI
@@ -123,7 +124,7 @@ set(ICE_GUI_SRC
 	ICE/src/GUI/SceneParamPane.cpp ICE/src/GUI/SceneParamPane.h
 )
 		
-add_library(ICE SHARED "${EXTRA_SRC}" ${ICE_SRC})
+add_library(ICE STATIC "${EXTRA_SRC}" ${ICE_SRC})
 add_executable(ICEBERG ${ICE_GUI_SRC})
 target_link_libraries(ICEBERG ICE)
 

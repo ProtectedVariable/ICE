@@ -8,6 +8,7 @@
 #include <set>
 #include <typeindex>
 #include <vector>
+#include <memory>
 #include <ECS/Entity.h>
 
 namespace ICE {
@@ -60,7 +61,7 @@ namespace ICE {
 
                 // Entity signature matches system signature - insert into set
                 bool match = false;
-                for(auto s : systemSignature) {
+                for(const auto &s : systemSignature) {
                     if ((entitySignature & s) == s)
                     {
                         system->entities.insert(entity);
@@ -78,10 +79,10 @@ namespace ICE {
 
     private:
         // Map from system type string pointer to a signature
-        std::unordered_map<std::type_index, std::vector<Signature>> signatures{};
+        std::unordered_map<std::type_index, std::vector<Signature>> signatures;
 
         // Map from system type string pointer to a system pointer
-        std::unordered_map<std::type_index, std::shared_ptr<System>> systems{};
+        std::unordered_map<std::type_index, std::shared_ptr<System>> systems;
 
     };
 }
