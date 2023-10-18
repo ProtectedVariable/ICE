@@ -1,8 +1,7 @@
 cmake_minimum_required(VERSION 3.25)
 project(ICE)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20")
+
 set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 set(GLFW_LIB_PATH "${CMAKE_CURRENT_SOURCE_DIR}/libs/glfw/")
 
 set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
@@ -57,20 +56,7 @@ set(ICE_SRC
 		includes/json/json.h
 		
 		# Graphics
-		ICE/src/Graphics/Material.cpp ICE/src/Graphics/Material.h ICE/src/Graphics/Mesh.cpp ICE/src/Graphics/Mesh.h
-		ICE/src/Graphics/Renderer.h
-		ICE/src/Graphics/RendererConfig.h ICE/src/Graphics/RenderCommand.h ICE/src/Graphics/Buffers.h
-		ICE/src/Graphics/Framebuffer.h ICE/src/Graphics/Context.h ICE/src/Graphics/VertexArray.h ICE/src/Graphics/API/GraphicsAPI.h
-		ICE/src/Graphics/API/OpenGL/OpenGLVertexArray.cpp ICE/src/Graphics/API/OpenGL/OpenGLVertexArray.h 
-		ICE/src/Graphics/API/OpenGL/OpenGLContext.cpp ICE/src/Graphics/API/OpenGL/OpenGLContext.h
-		ICE/src/Graphics/API/OpenGL/OpenGLRendererAPI.cpp ICE/src/Graphics/API/OpenGL/OpenGLRendererAPI.h 
-		ICE/src/Graphics/API/OpenGL/OpenGLBuffers.cpp ICE/src/Graphics/API/OpenGL/OpenGLBuffers.h ICE/src/Graphics/API/GraphicsAPI.cpp 
-		ICE/src/Graphics/Shader.h ICE/src/Graphics/API/OpenGL/OpenGLShader.cpp ICE/src/Graphics/API/OpenGL/OpenGLShader.h
-		ICE/src/Graphics/ForwardRenderer.cpp ICE/src/Graphics/ForwardRenderer.h ICE/src/Graphics/Camera.cpp ICE/src/Graphics/Camera.h
-		ICE/src/Graphics/API/OpenGL/OpenGLFramebuffer.cpp ICE/src/Graphics/API/OpenGL/OpenGLFramebuffer.h
-		ICE/src/Graphics/Texture.h ICE/src/Graphics/API/OpenGL/OpenGLTexture2D.cpp ICE/src/Graphics/API/OpenGL/OpenGLTexture.h
-		ICE/src/Graphics/API/OpenGL/OpenGLTextureCube.cpp ICE/src/Graphics/Skybox.cpp ICE/src/Graphics/Skybox.h
-		ICE/src/Graphics/API/None/NoneGraphics.h
+		
 		
 		# Math
 		ICE/src/Math/ICEMath.h ICE/src/Math/ICEMath.cpp 
@@ -86,14 +72,8 @@ set(ICE_SRC
 		ICE/src/Util/ICEException.cpp ICE/src/Util/ICEException.h
 		
 		# Core
-		"ICE/Core/src/ICEEngine.cpp" "ICE/Core/include/ICEEngine.h"
 		
 		# Assets
-		"ICE/Assets/src/AssetBank.cpp" "ICE/Assets/include/AssetBank.h"
-		"ICE/Assets/include/Asset.h" "ICE/Assets/include/ResourceLoader.h" "ICE/Assets/src/TextureLoader.cpp" "ICE/Assets/include/TextureLoader.h" "ICE/Assets/include/Resource.h" 
-		"ICE/Assets/include/IResourceLoader.h"
-		"ICE/Assets/src/MeshLoader.cpp" "ICE/Assets/include/MeshLoader.h" "ICE/Assets/src/ShaderLoader.cpp" "ICE/Assets/include/ShaderLoader.h" "ICE/Assets/src/MaterialLoader.cpp" 
-		"ICE/Assets/include/MaterialLoader.h" "ICE/Assets/src/AssetPath.cpp" "ICE/Assets/include/AssetPath.h"
 		
 		# Platform
 		ICE/src/Platform/FileUtils.cpp ICE/src/Platform/FileUtils.h 

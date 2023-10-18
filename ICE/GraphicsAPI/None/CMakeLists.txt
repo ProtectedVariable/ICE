@@ -1,14 +1,9 @@
 cmake_minimum_required(VERSION 3.19)
-project(IO)
+project(graphics_api::None)
 
 message(STATUS "Building ${PROJECT_NAME} module")
 
 add_library(${PROJECT_NAME} STATIC)
-
-target_sources(${PROJECT_NAME} PRIVATE
-    src/EngineConfig.cpp
-    src/Project.cpp
-)
 
 #target_link_libraries(${PROJECT_NAME})
 
