@@ -6,12 +6,12 @@
 
 #include <iostream>
 #include <fstream>
-#include <ECS/RenderComponent.h>
-#include <ECS/TransformComponent.h>
-#include <ECS/LightComponent.h>
-#include <ECS/Entity.h>
-#include <Scene/Scene.h>
-#include <Filesystem/JsonParser.h>
+#include <RenderComponent.h>
+#include <TransformComponent.h>
+#include <LightComponent.h>
+#include <Entity.h>
+#include <Scene.h>
+#include <JsonParser.h>
 
 #define FSEP ("/")
 #define ICE_PROJECT_EXT ".ice"

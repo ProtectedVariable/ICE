@@ -6,10 +6,10 @@
 #define ICE_SCENE_H
 
 #include <vector>
-#include <ECS/Entity.h>
+#include <Entity.h>
 #include <string>
-#include <Graphics/Skybox.h>
-#include <ECS/Registry.h>
+#include <Skybox.h>
+#include <Registry.h>
 
 namespace ICE {
     class Renderer;

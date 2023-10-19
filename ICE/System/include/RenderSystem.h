@@ -5,10 +5,10 @@
 #ifndef ICE_RENDERSYSTEM_H
 #define ICE_RENDERSYSTEM_H
 
-#include <ECS/System.h>
-#include <Graphics/Renderer.h>
-#include <Graphics/Camera.h>
-#include <Graphics/Framebuffer.h>
+#include <System.h>
+#include <Renderer.h>
+#include <Camera.h>
+#include <Framebuffer.h>
 
 namespace ICE {
     class Scene;
