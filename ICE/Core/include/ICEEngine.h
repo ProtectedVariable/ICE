@@ -19,11 +19,11 @@
 namespace ICE {
 class ICEEngine {
    public:
-    ICEEngine(void* window, RendererAPI* api, Framebuffer* framebuffer);
+    ICEEngine();
 
     void initialize();
 
-    void loop(GUI* gui);
+    void loop();
 
     Eigen::Vector4i getPickingTextureAt(int x, int y);
 
