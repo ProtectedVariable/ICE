@@ -1,4 +1,4 @@
-#include <Platform/dialog.h>
+#include "dialog.h"
 #import <Cocoa/Cocoa.h>
 
 const std::string open_native_dialog(std::string const& filter) {
