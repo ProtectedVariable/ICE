@@ -10,14 +10,12 @@ target_sources(${PROJECT_NAME} PRIVATE
     src/ForwardRenderer.cpp
     src/Material.cpp
     src/Mesh.cpp
-    src/Skybox.cpp
-)
+    src/Skybox.cpp)
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
     assets
     math
-    graphics_api
     entity
     scene
 )

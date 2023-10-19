@@ -6,7 +6,7 @@
 #define ICE_OPENGLRENDERERAPI_H
 
 #include <GL/gl3w.h>
-#include <GraphicsAPI.h>
+#include "GraphicsAPI.h"
 
 namespace ICE {
     class OpenGLRendererAPI : public RendererAPI {

@@ -5,67 +5,68 @@
 #ifndef ICE_ICEENGINE_H
 #define ICE_ICEENGINE_H
 
-#include <GL/gl3w.h>
-#include <vector>
 #include <AssetBank.h>
-#include <Project.h>
-#include <System.h>
 #include <EngineConfig.h>
-#include <RenderSystem.h>
+#include <GL/gl3w.h>
+#include <GraphicsAPI.h>
+#include <Project.h>
 #include <Registry.h>
+#include <RenderSystem.h>
+#include <System.h>
+
+#include <vector>
 
 namespace ICE {
-    class ICEEngine {
-    public:
-        ICEEngine(void* window, RendererAPI* api, Framebuffer* framebuffer);
+class ICEEngine {
+   public:
+    ICEEngine(void* window, RendererAPI* api, Framebuffer* framebuffer);
 
-        void initialize();
+    void initialize();
 
-        void loop(GUI* gui);
+    void loop(GUI* gui);
 
-        Eigen::Vector4i getPickingTextureAt(int x, int y);
+    Eigen::Vector4i getPickingTextureAt(int x, int y);
 
-        Camera *getCamera();
+    Camera* getCamera();
 
-        AssetBank* getAssetBank();
+    AssetBank* getAssetBank();
 
-        Scene* getScene();
+    Scene* getScene();
 
-        Entity *getSelected() const;
+    Entity* getSelected() const;
 
-        RendererAPI *getApi() const;
+    RendererAPI* getApi() const;
 
-        Project *getProject() const;
+    Project* getProject() const;
 
-        void setProject(Project *project);
+    void setProject(Project* project);
 
-        void setSelected(Entity *selected);
+    void setSelected(Entity* selected);
 
-        EngineConfig &getConfig();
+    EngineConfig& getConfig();
 
-        void importMesh();
+    void importMesh();
 
-        void importTexture(bool cubeMap);
+    void importTexture(bool cubeMap);
 
-        void setCurrentScene(Scene *currentScene);
+    void setCurrentScene(Scene* currentScene);
 
-    private:
-        std::vector<System*> systems;
+   private:
+    std::vector<System*> systems;
 
-        Context* ctx;
-        RendererAPI* api;
-        void* window;
-        Framebuffer* internalFB;
+    Context* ctx;
+    RendererAPI* api;
+    void* window;
+    Framebuffer* internalFB;
 
-        Scene* currentScene;
-        Camera camera;
-        Entity* selected;
-        Project* project = nullptr;
-        EngineConfig config;
-        RenderSystem* renderSystem;
-        Registry registry;
-    };
-}
+    Scene* currentScene;
+    Camera camera;
+    Entity* selected;
+    Project* project = nullptr;
+    EngineConfig config;
+    RenderSystem* renderSystem;
+    Registry registry;
+};
+}  // namespace ICE
 
-
-#endif //ICE_ICEENGINE_H
+#endif  //ICE_ICEENGINE_H

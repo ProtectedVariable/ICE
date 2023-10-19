@@ -12,6 +12,7 @@
 #include "Framebuffer.h"
 #include "Skybox.h"
 #include <vector>
+#include <GraphicsAPI.h>
 
 namespace ICE {
     class ForwardRenderer : public Renderer {
