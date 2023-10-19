@@ -2,7 +2,7 @@
 // Created by Thomas Ibanez on 29.07.21.
 //
 
-#include <Graphics/Texture.h>
+#include <Texture.h>
 #include "TextureLoader.h"
 
 namespace ICE {

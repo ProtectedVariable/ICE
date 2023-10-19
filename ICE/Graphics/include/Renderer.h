@@ -7,13 +7,13 @@
 
 #include <GL/gl3w.h>
 #include <GLFW/glfw3.h>
-#include <Graphics/API/GraphicsAPI.h>
+#include <GraphicsAPI.h>
 #include "Context.h"
 #include "RendererConfig.h"
 #include "Camera.h"
 #include "Framebuffer.h"
-#include <ECS/Entity.h>
-#include <Assets/AssetBank.h>
+#include <Entity.h>
+#include <AssetBank.h>
 
 namespace ICE {
     class Scene;

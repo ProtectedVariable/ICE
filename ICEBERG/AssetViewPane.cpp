@@ -5,7 +5,7 @@
 #include "AssetViewPane.h"
 #include <ImGUI/imgui.h>
 #include <Math/ICEMath.h>
-#include <Graphics/Shader.h>
+#include <Shader.h>
 #include <Core/ICEEngine.h>
 #include <cstring>
 

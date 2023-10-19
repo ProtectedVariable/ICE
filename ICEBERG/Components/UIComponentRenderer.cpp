@@ -3,10 +3,10 @@
 //
 
 #include <ImGUI/imgui.h>
-#include <Util/Logger.h>
+#include <Logger.h>
 #include "UIComponentRenderer.h"
-#include <Core/ICEEngine.h>
-#include <Util/BufferUtils.h>
+#include <ICEEngine.h>
+#include <BufferUtils.h>
 
 namespace ICE {
 

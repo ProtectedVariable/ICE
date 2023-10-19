@@ -1,7 +1,7 @@
 #ifndef ICE_SCENETEST_H
 #define ICE_SCENETEST_H
 #include <gtest/gtest.h>
-#include <Scene/Scene.h>
+#include <Scene.h>
 
 TEST(SceneTest, SceneCreated)
 {

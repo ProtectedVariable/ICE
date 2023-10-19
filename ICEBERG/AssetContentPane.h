@@ -7,8 +7,8 @@
 
 
 #include "ICEPane.h"
-#include <Graphics/Framebuffer.h>
-#include <Graphics/Camera.h>
+#include <Framebuffer.h>
+#include <Camera.h>
 #include "NewMaterialPane.h"
 
 #define ICE_THUMBNAIL_SIZE (64)

@@ -7,7 +7,7 @@
 
 #include <GL/gl3w.h>
 #include <GLFW/glfw3.h>
-#include <Graphics/Shader.h>
+#include <Shader.h>
 #include <unordered_map>
 #include <string>
 

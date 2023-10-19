@@ -6,17 +6,17 @@
 #define TINYOBJLOADER_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
 #include "ICEEngine.h"
-#include <IO/EngineConfig.h>
+#include <EngineConfig.h>
 // About Desktop OpenGL function loaders:
 //  Modern desktop OpenGL doesn't have a standard portable header file to load OpenGL function pointers.
 //  Helper libraries are often used for this purpose! Here we are supporting a few common ones (gl3w, glew, glad).
 //  You may use another loader/header of your choice (glext, glLoadGen, etc.), or chose to manually implement your own.
 
-#include <Util/Logger.h>
-#include <Graphics/ForwardRenderer.h>
-#include <Util/OBJLoader.h>
-#include <ECS/TransformComponent.h>
-#include <Platform/FileUtils.h>
+#include <Logger.h>
+#include <ForwardRenderer.h>
+#include <OBJLoader.h>
+#include <TransformComponent.h>
+#include <FileUtils.h>
 #include <GLFW/glfw3.h>
 #include <ImGUI/imgui.h>
 #include <ImGUI/imgui_internal.h>

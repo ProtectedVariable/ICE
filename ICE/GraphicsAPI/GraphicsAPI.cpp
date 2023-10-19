@@ -3,18 +3,18 @@
 //
 #include "GraphicsAPI.h"
 #include <GLFW/glfw3.h>
-#include <Graphics/API/OpenGL/OpenGLRendererAPI.h>
-#include <Graphics/API/OpenGL/OpenGLBuffers.h>
-#include <Graphics/Context.h>
-#include <Graphics/API/OpenGL/OpenGLContext.h>
-#include <Graphics/Framebuffer.h>
-#include <Graphics/Shader.h>
-#include <Graphics/API/OpenGL/OpenGLShader.h>
-#include <Graphics/API/OpenGL/OpenGLVertexArray.h>
-#include <Graphics/API/OpenGL/OpenGLFramebuffer.h>
-#include <Graphics/Texture.h>
-#include <Graphics/API/OpenGL/OpenGLTexture.h>
-#include <Graphics/API/None/NoneGraphics.h>
+#include <OpenGLRendererAPI.h>
+#include <OpenGLBuffers.h>
+#include <Context.h>
+#include <OpenGLContext.h>
+#include <Framebuffer.h>
+#include <Shader.h>
+#include <OpenGLShader.h>
+#include <OpenGLVertexArray.h>
+#include <OpenGLFramebuffer.h>
+#include <Texture.h>
+#include <OpenGLTexture.h>
+#include <NoneGraphics.h>
 
 namespace ICE {
 

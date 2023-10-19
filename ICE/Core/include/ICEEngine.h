@@ -7,14 +7,12 @@
 
 #include <GL/gl3w.h>
 #include <vector>
-#include <GUI/ICEGUI.h>
-#include <Assets/AssetBank.h>
-#include <IO/Project.h>
-#include <ECS/System.h>
-#include <IO/EngineConfig.h>
-#include <ECS/RenderSystem.h>
-#include <ECS/Registry.h>
-#include <Core/GUI.h>
+#include <AssetBank.h>
+#include <Project.h>
+#include <System.h>
+#include <EngineConfig.h>
+#include <RenderSystem.h>
+#include <Registry.h>
 
 namespace ICE {
     class ICEEngine {

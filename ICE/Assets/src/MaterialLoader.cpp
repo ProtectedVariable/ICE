@@ -2,11 +2,11 @@
 // Created by Thomas Ibanez on 01.08.21.
 //
 
-#include <Graphics/Material.h>
+#include <Material.h>
 #include "MaterialLoader.h"
 #include <json/json.h>
 #include <fstream>
-#include <Filesystem/JsonParser.h>
+#include <JsonParser.h>
 
 using json = nlohmann::json;
 

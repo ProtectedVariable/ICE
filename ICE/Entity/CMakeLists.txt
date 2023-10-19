@@ -5,7 +5,9 @@ message(STATUS "Building ${PROJECT_NAME} module")
 
 add_library(${PROJECT_NAME} INTERFACE)
 
-#target_link_libraries(${PROJECT_NAME})
+target_link_libraries(${PROJECT_NAME}
+    INTERFACE components
+)
 
 target_include_directories(${PROJECT_NAME} INTERFACE
         $<INSTALL_INTERFACE:include>

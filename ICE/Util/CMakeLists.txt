@@ -12,7 +12,10 @@ target_sources(${PROJECT_NAME} PRIVATE
 	src/OBJLoader.cpp
 )
 
-#target_link_libraries(${PROJECT_NAME})
+target_link_libraries(${PROJECT_NAME}
+	PUBLIC
+	graphics
+)
 
 target_include_directories(${PROJECT_NAME} PUBLIC
         $<INSTALL_INTERFACE:include>

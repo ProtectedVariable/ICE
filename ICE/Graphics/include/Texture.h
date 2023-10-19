@@ -8,7 +8,7 @@
 #include <cstdint>
 #include <string>
 #include <stb/stb_image.h>
-#include <Assets/Asset.h>
+#include <Asset.h>
 
 
 namespace ICE {

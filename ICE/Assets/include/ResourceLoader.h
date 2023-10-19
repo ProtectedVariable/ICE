@@ -9,7 +9,7 @@
 #include "IResourceLoader.h"
 #include <unordered_map>
 #include <typeindex>
-#include <Util/ICEException.h>
+#include <ICEException.h>
 
 namespace ICE {
     class ResourceLoader {

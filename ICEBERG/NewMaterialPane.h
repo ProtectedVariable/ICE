@@ -7,10 +7,10 @@
 
 
 #include "ICEPane.h"
-#include <Graphics/Material.h>
-#include <Graphics/Framebuffer.h>
-#include <Graphics/Camera.h>
-#include <Graphics/ForwardRenderer.h>
+#include <Material.h>
+#include <Framebuffer.h>
+#include <Camera.h>
+#include <ForwardRenderer.h>
 
 namespace ICE {
     class ICEEngine;

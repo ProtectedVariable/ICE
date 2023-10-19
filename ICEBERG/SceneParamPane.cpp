@@ -5,8 +5,8 @@
 #include <ImGUI/imgui.h>
 #include "SceneParamPane.h"
 #include <vector>
-#include <Core/ICEEngine.h>
-#include <Util/BufferUtils.h>
+#include <ICEEngine.h>
+#include <BufferUtils.h>
 
 namespace ICE {
 

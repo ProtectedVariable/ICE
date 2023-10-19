@@ -14,7 +14,6 @@ if(NOT EXISTS "${GLFW_LIB_PATH}")
 endif()
 add_subdirectory(libs/glfw/)
 
-
 if(APPLE)
 	find_library(COCOA_LIBRARY Cocoa REQUIRED)
 	find_library(OPENGL_LIBRARY OpenGL REQUIRED)
@@ -23,10 +22,8 @@ elseif(UNIX)
 	link_libraries(-lstdc++fs)
 endif()
 include_directories(includes)
-include_directories(ICE/src)
-
 		
 file(COPY ICE/Assets DESTINATION ${CMAKE_BINARY_DIR})
 
 add_subdirectory(ICE)
-add_subdirectory(ICEBERG)
+#add_subdirectory(ICEBERG)

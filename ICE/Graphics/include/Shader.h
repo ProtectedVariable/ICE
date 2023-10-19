@@ -7,7 +7,7 @@
 
 #include <string>
 #include <Eigen/Dense>
-#include <Assets/Asset.h>
+#include <Asset.h>
 
 namespace ICE {
     class Shader : public Asset {

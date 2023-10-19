@@ -12,6 +12,7 @@ target_sources(${PROJECT_NAME} PRIVATE
 target_link_libraries(${PROJECT_NAME} PUBLIC 
     entity
     graphics
+    system
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC

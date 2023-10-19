@@ -13,7 +13,12 @@ target_sources(${PROJECT_NAME} PRIVATE
         src/MaterialLoader.cpp
 		src/AssetPath.cpp)
 
-target_link_libraries(${PROJECT_NAME} PUBLIC graphics util)
+target_link_libraries(${PROJECT_NAME} 
+    PUBLIC 
+    graphics 
+    util
+    storage
+)
 
 target_include_directories(${PROJECT_NAME} PUBLIC
         $<INSTALL_INTERFACE:include>

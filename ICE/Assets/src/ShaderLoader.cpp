@@ -2,7 +2,7 @@
 // Created by Thomas Ibanez on 31.07.21.
 //
 
-#include <Graphics/Shader.h>
+#include <Shader.h>
 #include "ShaderLoader.h"
 
 namespace ICE {

@@ -1,10 +1,10 @@
 //
 // Created by Thomas Ibanez on 29.12.20.
 //
-#include <Util/Logger.h>
+#include <Logger.h>
 #include "OpenGLTexture.h"
 #include <Eigen/Dense>
-#include <Math/ICEMath.h>
+#include <ICEMath.h>
 
 namespace ICE {
 

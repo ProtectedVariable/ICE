@@ -5,8 +5,8 @@
 #include "ImGUI/imgui.h"
 #include <ImGUI/imgui_internal.h>
 #include "ProjectSelectorWindow.h"
-#include <Core/ICEEngine.h>
-#include <Platform/FileUtils.h>
+#include <ICEEngine.h>
+#include <FileUtils.h>
 
 namespace ICE {
     ProjectSelectorWindow::ProjectSelectorWindow() {}

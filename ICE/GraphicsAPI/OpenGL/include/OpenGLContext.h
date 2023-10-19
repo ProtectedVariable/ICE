@@ -7,7 +7,7 @@
 
 #include <GL/gl3w.h>
 #include <GLFW/glfw3.h>
-#include <Graphics/Context.h>
+#include <Context.h>
 
 namespace ICE {
     class OpenGLContext : public Context {

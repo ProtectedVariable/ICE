@@ -9,7 +9,7 @@
 #include <typeindex>
 #include <vector>
 #include <memory>
-#include <ECS/Entity.h>
+#include <Entity.h>
 
 namespace ICE {
     class Scene;

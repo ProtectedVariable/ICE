@@ -5,9 +5,9 @@
 #ifndef ICE_ASSETVIEWPANE_H
 #define ICE_ASSETVIEWPANE_H
 
-#include <Graphics/Framebuffer.h>
-#include <Graphics/Camera.h>
-#include <Graphics/ForwardRenderer.h>
+#include <Framebuffer.h>
+#include <Camera.h>
+#include <ForwardRenderer.h>
 #include "ICEPane.h"
 
 namespace ICE {

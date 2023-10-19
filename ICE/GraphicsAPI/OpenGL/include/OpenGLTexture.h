@@ -6,7 +6,7 @@
 #define ICE_OPENGLTEXTURE_H
 
 
-#include <Graphics/Texture.h>
+#include <Texture.h>
 #include <string>
 #include <GL/gl3w.h>
 

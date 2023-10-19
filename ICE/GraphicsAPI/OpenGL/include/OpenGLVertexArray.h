@@ -7,7 +7,7 @@
 
 #include <GL/gl3w.h>
 #include <GLFW/glfw3.h>
-#include <Graphics/VertexArray.h>
+#include <VertexArray.h>
 #include <vector>
 #include <unordered_map>
 

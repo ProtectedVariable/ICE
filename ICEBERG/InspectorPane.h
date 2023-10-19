@@ -5,7 +5,7 @@
 #ifndef ICE_INSPECTORPANE_H
 #define ICE_INSPECTORPANE_H
 
-#include <GUI/Components/UIComponentRenderer.h>
+#include <Components/UIComponentRenderer.h>
 #include "ICEPane.h"
 
 namespace ICE {

@@ -2,10 +2,10 @@
 // Created by Thomas Ibanez on 03.08.21.
 //
 
-#include <Graphics/Texture.h>
-#include <Graphics/Mesh.h>
-#include <Graphics/Material.h>
-#include <Graphics/Shader.h>
+#include <Texture.h>
+#include <Mesh.h>
+#include <Material.h>
+#include <Shader.h>
 #include "AssetPath.h"
 
 namespace ICE {

@@ -3,7 +3,7 @@
 //
 
 #include "MeshLoader.h"
-#include <Util/OBJLoader.h>
+#include <OBJLoader.h>
 
 namespace ICE {
     Resource* MeshLoader::load(const std::vector<std::string> &file) {

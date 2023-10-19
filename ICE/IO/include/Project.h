@@ -15,10 +15,10 @@ error "Missing the <filesystem> header."
 #endif
 #include <string>
 #include <vector>
-#include <Scene/Scene.h>
-#include <Assets/AssetBank.h>
+#include <Scene.h>
+#include <AssetBank.h>
 #include <json/json.h>
-#include <Graphics/Camera.h>
+#include <Camera.h>
 
 using json = nlohmann::json;
 

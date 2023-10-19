@@ -4,7 +4,7 @@
 
 #include "OpenGLTexture.h"
 #include <GL/gl3w.h>
-#include <Util/ICEException.h>
+#include <ICEException.h>
 
 namespace ICE {
 

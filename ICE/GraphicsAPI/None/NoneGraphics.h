@@ -5,7 +5,7 @@
 #ifndef ICE_NONEGRAPHICS_H
 #define ICE_NONEGRAPHICS_H
 
-#include <Graphics/Buffers.h>
+#include <Buffers.h>
 #include <Eigen/Dense>
 
 namespace ICE {

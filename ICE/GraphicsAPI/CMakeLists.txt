@@ -12,7 +12,12 @@ target_sources(${PROJECT_NAME} PRIVATE
     GraphicsAPI.cpp
 )
 
-#target_link_libraries(${PROJECT_NAME})
+target_link_libraries(${PROJECT_NAME}
+    PUBLIC
+    graphics
+    graphics_api_OpenGL
+    graphics_api_None
+)
 
 target_include_directories(${PROJECT_NAME} PUBLIC
         $<INSTALL_INTERFACE:include>

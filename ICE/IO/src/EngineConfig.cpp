@@ -6,7 +6,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
-#include <Util/Logger.h>
+#include <Logger.h>
 
 namespace ICE {
 

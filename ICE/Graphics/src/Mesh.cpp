@@ -3,8 +3,8 @@
 //
 
 #include "Mesh.h"
-#include <Graphics/VertexArray.h>
-#include <Util/BufferUtils.h>
+#include <VertexArray.h>
+#include <BufferUtils.h>
 #include <iostream>
 
 namespace ICE {

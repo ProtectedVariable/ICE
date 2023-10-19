@@ -5,7 +5,7 @@
 #ifndef ICE_CAMERACOMPONENT_H
 #define ICE_CAMERACOMPONENT_H
 
-#include <Graphics/Camera.h>
+#include <Camera.h>
 
 namespace ICE {
     struct CameraComponent {

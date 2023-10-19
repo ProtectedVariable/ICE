@@ -5,8 +5,8 @@
 #ifndef ICE_ICEGUI_H
 #define ICE_ICEGUI_H
 
-#include <Graphics/Framebuffer.h>
-#include <Scene/Scene.h>
+#include <Framebuffer.h>
+#include <Scene.h>
 #include <Core/ICEEngine.h>
 #include "ICEPane.h"
 #include "HierarchyPane.h"

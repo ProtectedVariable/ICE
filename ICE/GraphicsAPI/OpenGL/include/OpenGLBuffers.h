@@ -6,7 +6,7 @@
 #define ICE_OPENGLBUFFERS_H
 
 #include <GL/gl3w.h>
-#include <Graphics/Buffers.h>
+#include <Buffers.h>
 
 namespace ICE {
 

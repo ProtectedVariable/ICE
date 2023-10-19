@@ -7,7 +7,7 @@
 
 #include <GL/gl3w.h>
 #include <GLFW/glfw3.h>
-#include <Graphics/Framebuffer.h>
+#include <Framebuffer.h>
 #include <Eigen/src/Core/Matrix.h>
 
 namespace ICE {

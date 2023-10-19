@@ -5,7 +5,7 @@
 #include "OpenGLShader.h"
 #include <GL/gl3w.h>
 #include <fstream>
-#include <Util/Logger.h>
+#include <Logger.h>
 
 namespace ICE {
     void OpenGLShader::bind() const {

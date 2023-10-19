@@ -7,6 +7,8 @@
 
 #define NO_ASSET_ID ((unsigned long long)0)
 
+#include <string>
+
 namespace ICE {
 
     typedef unsigned long long AssetUID;

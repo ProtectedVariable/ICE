@@ -7,8 +7,8 @@
 
 #include <Eigen/Dense>
 #include <vector>
-#include <Math/AABB.h>
-#include <Assets/Asset.h>
+#include <AABB.h>
+#include <Asset.h>
 #include "VertexArray.h"
 
 namespace ICE {

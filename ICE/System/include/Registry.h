@@ -5,15 +5,15 @@
 #ifndef ICE_REGISTRY_H
 #define ICE_REGISTRY_H
 
-#include <ECS/Entity.h>
-#include <ECS/Component.h>
+#include <Entity.h>
+#include <Component.h>
 #include <vector>
-#include <ECS/CameraComponent.h>
-#include <ECS/TransformComponent.h>
-#include <ECS/RenderComponent.h>
-#include <ECS/LightComponent.h>
-#include <ECS/System.h>
-#include <ECS/RenderSystem.h>
+#include <CameraComponent.h>
+#include <TransformComponent.h>
+#include <RenderComponent.h>
+#include <LightComponent.h>
+#include <System.h>
+#include <RenderSystem.h>
 
 namespace ICE {
     class Registry

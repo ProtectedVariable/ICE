@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.19)
-project(IO)
+project(io)
 
 message(STATUS "Building ${PROJECT_NAME} module")
 
@@ -10,7 +10,10 @@ target_sources(${PROJECT_NAME} PRIVATE
     src/Project.cpp
 )
 
-#target_link_libraries(${PROJECT_NAME})
+target_link_libraries(${PROJECT_NAME}
+    PUBLIC
+    scene
+)
 
 target_include_directories(${PROJECT_NAME} PUBLIC
         $<INSTALL_INTERFACE:include>

@@ -4,7 +4,7 @@
 
 #include "OpenGLRendererAPI.h"
 #include <GL/gl3w.h>
-#include <Util/Logger.h>
+#include <Logger.h>
 
 namespace ICE {
 

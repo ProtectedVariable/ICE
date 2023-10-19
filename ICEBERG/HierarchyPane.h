@@ -5,7 +5,7 @@
 #ifndef ICE_HIERARCHYPANE_H
 #define ICE_HIERARCHYPANE_H
 
-#include <Scene/Scene.h>
+#include <Scene.h>
 #include "ICEPane.h"
 
 namespace ICE {

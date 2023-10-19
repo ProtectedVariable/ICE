@@ -8,7 +8,21 @@ add_library(${PROJECT_NAME} STATIC)
 target_sources(${PROJECT_NAME} PRIVATE
         src/ICEEngine.cpp)
 
-#target_link_libraries(${PROJECT_NAME})
+target_link_libraries(${PROJECT_NAME}
+    PUBLIC
+    assets
+    components
+    entity
+    graphics
+    graphics_api
+    io
+    math
+    platform
+    scene
+    storage
+    system
+    util
+)
 
 target_include_directories(${PROJECT_NAME} PUBLIC
         $<INSTALL_INTERFACE:include>

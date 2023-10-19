@@ -5,7 +5,7 @@
 #ifndef ICE_OBJLOADER_H
 #define ICE_OBJLOADER_H
 #include <OBJLoader/tiny_obj_loader.h>
-#include <Graphics/Mesh.h>
+#include <Mesh.h>
 
 namespace ICE {
     class OBJLoader {

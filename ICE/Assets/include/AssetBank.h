@@ -6,9 +6,9 @@
 #define ICE_ASSETBANK_H
 
 #include <unordered_map>
-#include <Graphics/Mesh.h>
-#include <Graphics/Material.h>
-#include <Graphics/Texture.h>
+#include <Mesh.h>
+#include <Material.h>
+#include <Texture.h>
 #include "Asset.h"
 #include "Resource.h"
 #include "ResourceLoader.h"

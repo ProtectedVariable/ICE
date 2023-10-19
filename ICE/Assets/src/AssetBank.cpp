@@ -7,8 +7,8 @@
 #include "MeshLoader.h"
 #include "ShaderLoader.h"
 #include "MaterialLoader.h"
-#include <Util/OBJLoader.h>
-#include <Util/ICEException.h>
+#include <OBJLoader.h>
+#include <ICEException.h>
 
 namespace ICE {
 

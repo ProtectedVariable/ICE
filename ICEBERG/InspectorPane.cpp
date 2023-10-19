@@ -5,7 +5,7 @@
 #include <ImGUI/imgui.h>
 #include "InspectorPane.h"
 #include <Core/ICEEngine.h>
-#include <ECS/LightComponent.h>
+#include <LightComponent.h>
 
 #define ICE_UID_MAX_SIZE 256
 namespace ICE {

@@ -2,7 +2,7 @@
 // Created by Thomas Ibanez on 09.12.20.
 //
 
-#include <Util/Logger.h>
+#include <Logger.h>
 #include "FileUtils.h"
 #include "dialog.h"
 

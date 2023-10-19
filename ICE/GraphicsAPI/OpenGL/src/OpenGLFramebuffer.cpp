@@ -3,7 +3,7 @@
 //
 
 #include "OpenGLFramebuffer.h"
-#include <Util/Logger.h>
+#include <Logger.h>
 #include <Eigen/src/Core/Matrix.h>
 #include <Eigen/Dense>
 

@@ -1,10 +1,10 @@
 //
 // Created by Thomas Ibanez on 27.11.20.
 //
-#include <Util/Logger.h>
-#include <Core/ICEEngine.h>
-#include <Platform/FileUtils.h>
-#include <Util/OBJLoader.h>
+#include <Logger.h>
+#include <ICEEngine.h>
+#include <FileUtils.h>
+#include <OBJLoader.h>
 #include "ICEGUI.h"
 #include "HierarchyPane.h"
 #include "InspectorPane.h"
@@ -18,7 +18,7 @@
 #include <ImGUI/imgui_impl_glfw.h>
 #include <ImGUI/imgui_impl_opengl3.h>
 #include <ImGUI/ImGuizmo.h>
-#include <IO/Project.h>
+#include <Project.h>
 
 #include <string>
 #include <iostream>

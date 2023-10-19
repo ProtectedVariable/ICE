@@ -3,7 +3,7 @@
 //
 #define IMGUI_IMPL_OPENGL_LOADER_GL3W
 
-#include <Util/Logger.h>
+#include <Logger.h>
 #include <gtest/gtest.h>
 
 using namespace ICE;

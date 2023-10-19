@@ -5,9 +5,9 @@
 #ifndef ICE_UICOMPONENTRENDERER_H
 #define ICE_UICOMPONENTRENDERER_H
 #define FLOAT_MAX_DIGITS 128
-#include <ECS/TransformComponent.h>
-#include <ECS/RenderComponent.h>
-#include <ECS/LightComponent.h>
+#include <TransformComponent.h>
+#include <RenderComponent.h>
+#include <LightComponent.h>
 #include <unordered_map>
 
 namespace ICE {

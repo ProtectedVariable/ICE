@@ -1,9 +1,9 @@
 #ifndef ICE_ECSTEST_H
 #define ICE_ECSTEST_H
 #include <gtest/gtest.h>
-#include <ECS/Registry.h>
-#include <ECS/TransformComponent.h>
-#include <ECS/RenderComponent.h>
+#include <Registry.h>
+#include <TransformComponent.h>
+#include <RenderComponent.h>
 
 TEST(ECSTest, FirstEntityIs1)
 {

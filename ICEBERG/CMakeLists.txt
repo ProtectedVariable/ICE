@@ -29,4 +29,8 @@ set(ICE_GUI_SRC
 )
 
 add_executable(${PROJECT_NAME} ${ICE_GUI_SRC})
-target_link_libraries(ICE)
+target_include_directories(${PROJECT_NAME} PUBLIC
+        $<INSTALL_INTERFACE:include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+        ${CMAKE_SOURCE_DIR})
+target_link_libraries(${PROJECT_NAME} PUBLIC ICE)
