@@ -23,25 +23,25 @@ class ICEEngine {
 
     void initialize();
 
-    void loop();
+    void step();
 
     Eigen::Vector4i getPickingTextureAt(int x, int y);
 
-    Camera* getCamera();
+    std::shared_ptr<Camera> getCamera();
 
-    AssetBank* getAssetBank();
+    std::shared_ptr<AssetBank> getAssetBank();
 
-    Scene* getScene();
+    std::shared_ptr<Scene> getScene();
 
-    Entity* getSelected() const;
+    Entity getSelected() const;
 
-    RendererAPI* getApi() const;
+    std::shared_ptr<RendererAPI> getApi() const;
 
-    Project* getProject() const;
+    std::shared_ptr<Project> getProject() const;
 
-    void setProject(Project* project);
+    void setProject(const std::shared_ptr<Project>& project);
 
-    void setSelected(Entity* selected);
+    void setSelected(Entity selected);
 
     EngineConfig& getConfig();
 
@@ -49,22 +49,22 @@ class ICEEngine {
 
     void importTexture(bool cubeMap);
 
-    void setCurrentScene(Scene* currentScene);
+    void setCurrentScene(const std::shared_ptr<Scene>& scene);
 
    private:
-    std::vector<System*> systems;
-
-    Context* ctx;
-    RendererAPI* api;
     void* window;
-    Framebuffer* internalFB;
 
-    Scene* currentScene;
-    Camera camera;
-    Entity* selected;
-    Project* project = nullptr;
+    std::vector<std::shared_ptr<System>> systems;
+
+    std::shared_ptr<Context> ctx;
+    std::shared_ptr<RendererAPI> api;
+    std::shared_ptr<Framebuffer> internalFB;
+
+    std::shared_ptr<Scene> currentScene;
+    std::shared_ptr<Camera> camera;
+    std::shared_ptr<Project> project = nullptr;
+    Entity selected;
     EngineConfig config;
-    RenderSystem* renderSystem;
     Registry registry;
 };
 }  // namespace ICE
