@@ -68,6 +68,10 @@ namespace ICE {
         void loadFloat3(const std::string &name, Eigen::Vector3f vec) override {}
         void loadFloat4(const std::string &name, Eigen::Vector4f vec) override {}
         void loadMat4(const std::string &name, Eigen::Matrix4f mat) override {}
+        virtual AssetType getType() const override { return AssetType::EShader; }
+        virtual std::string getTypeName() const override { return "Shader"; }
+        virtual void load() override {}
+        virtual void unload() override {}
     };
 
     class NoneTexture2D : public Texture2D {
@@ -79,7 +83,10 @@ namespace ICE {
         TextureWrap getWrap() const override { return {}; }
         void setData(void *data, uint32_t size) override {}
         void *getTexture() const override { return nullptr; }
-        TextureType getType() const override { return TextureType::Tex2D; }
+        TextureType getTextureType() const override { return TextureType::Tex2D; }
+
+        virtual void load() override {}
+        virtual void unload() override {}
     };
 
     class NoneTextureCube : public TextureCube {
@@ -91,7 +98,10 @@ namespace ICE {
         TextureWrap getWrap() const override { return {}; }
         void setData(void *data, uint32_t size) override {}
         void *getTexture() const override { return nullptr; }
-        TextureType getType() const override { return TextureType::CubeMap; }
+        TextureType getTextureType() const override { return TextureType::CubeMap; }
+
+        virtual void load() override {}
+        virtual void unload() override {}
     };
 
     class NoneVertexArray : public VertexArray {

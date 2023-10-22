@@ -24,10 +24,10 @@ namespace ICE {
     }
 
     void Skybox::Initialize() {
-        shader = Shader::Create("Assets/Shaders/skybox.vs","Assets/Shaders/skybox.fs");
+        /* shader = Shader::Create("Assets/Shaders/skybox.vs", "Assets/Shaders/skybox.fs");
         vao = VertexArray::Create();
         static VertexBuffer* vbo = VertexBuffer::Create();
         vbo->putData(skyboxVertices, 3 * 36 * sizeof(float));
-        vao->pushVertexBuffer(vbo, 3);
+        vao->pushVertexBuffer(vbo, 3);*/
     }
 }

@@ -36,5 +36,5 @@ else()
 	target_link_libraries(ICE glfw ${GTK3_LIBRARIES} ${OPENGL_LIBRARIES} stdc++fs)
 endif()
 
-add_executable(TEST_EXE dummy.cpp)
+add_executable(TEST_EXE dummy.cpp "GraphicsAPI/None/NoneGraphicsFactory.h")
 target_link_libraries(TEST_EXE PUBLIC ${PROJECT_NAME})

@@ -24,9 +24,6 @@ namespace ICE {
 
         virtual void loadMat4(const std::string &name, Eigen::Matrix4f mat) = 0;
 
-        static Shader* Create(const std::string &vertexFile, const std::string &fragmentFile);
-        static Shader* Create(const std::string &vertexFile, const std::string &geometryFile, const std::string &fragmentFile);
-
         std::string getTypeName() {
             return "Shader";
         };

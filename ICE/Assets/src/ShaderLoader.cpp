@@ -2,11 +2,14 @@
 // Created by Thomas Ibanez on 31.07.21.
 //
 
-#include <Shader.h>
 #include "ShaderLoader.h"
 
+#include <Shader.h>
+
 namespace ICE {
-    Resource *ShaderLoader::load(const std::vector<std::string> &files) {
-        return new Resource(Shader::Create(files[0], files[1]), files);
-    }
+std::shared_ptr<Shader> ShaderLoader::load(const std::vector<std::filesystem::path> &files) {
+    auto shader = graphics_factory->createShader(files[0].string(), files[1].string());
+    shader->setSources(files);
+    return shader;
 }
+}  // namespace ICE

@@ -3,10 +3,13 @@
 //
 
 #include "MeshLoader.h"
+
 #include <OBJLoader.h>
 
 namespace ICE {
-    Resource* MeshLoader::load(const std::vector<std::string> &file) {
-        return new Resource(OBJLoader::loadFromOBJ(file[0]), file);
-    }
+std::shared_ptr<Mesh> MeshLoader::load(const std::vector<std::filesystem::path> &file) {
+    auto mesh = std::shared_ptr<Mesh>(OBJLoader::loadFromOBJ(file[0].string()));
+    mesh->setSources(file);
+    return mesh;
 }
+}  // namespace ICE

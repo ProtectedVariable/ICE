@@ -11,13 +11,13 @@
 using json = nlohmann::json;
 
 namespace ICE {
-    Resource *MaterialLoader::load(const std::vector<std::string> &files) {
+std::shared_ptr<Material> MaterialLoader::load(const std::vector<std::filesystem::path> &files) {
         json j;
         std::ifstream infile = std::ifstream(files[0]);
         infile >> j;
         infile.close();
 
-        Material* mtl = new Material();
+        auto mtl = std::make_shared<Material>();
         if(j["type"] == "phong") {
             mtl->setAlbedo(JsonParser::parseVec3(j["albedo"]));
             mtl->setSpecular(JsonParser::parseVec3(j["specular"]));
@@ -36,6 +36,7 @@ namespace ICE {
                 mtl->setNormalMap((j["normalMap"]));
             }
         }
-        return new Resource(mtl, files);
+        mtl->setSources(files);
+        return mtl;
     }
 }

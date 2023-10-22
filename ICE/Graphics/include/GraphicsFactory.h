@@ -10,10 +10,10 @@
 #include "Shader.h"
 #include "Texture.h"
 #include "VertexArray.h"
-#include "RendererAPI.h"
 
 namespace ICE {
 class GraphicsFactory {
+   public:
     virtual std::shared_ptr<Context> createContext(void* windowHandle) = 0;
 
     virtual std::shared_ptr<Framebuffer> createFramebuffer(const FrameBufferFormat& format) = 0;

@@ -70,7 +70,7 @@ namespace ICE {
         return static_cast<char*>(0)+id;
     }
 
-    TextureType OpenGLTexture2D::getType() const {
+    TextureType OpenGLTexture2D::getTextureType() const {
         return TextureType::Tex2D;
     }
 }

@@ -2,20 +2,20 @@
 // Created by Thomas Ibanez on 29.07.21.
 //
 
-#ifndef ICE_RESOURCE_H
-#define ICE_RESOURCE_H
+#pragma once
 
-#include "Asset.h"
-#include <vector>
+#include <filesystem>
 #include <string>
+#include <vector>
+
 namespace ICE {
-    class Resource {
-    public:
-        Asset* asset;
-        const std::vector<std::string> source;
+class Resource {
+   public:
+    Resource(const std::vector<std::filesystem::path> &source) : source(source) {}
+    std::vector<std::filesystem::path> getSources() const { return source; }
+    void setSources(const std::vector<std::filesystem::path> &sources) { source = sources; }
 
-        Resource(Asset *asset, const std::vector<std::string> &source) : asset(asset), source(source) {}
-    };
-}
-
-#endif //ICE_RESOURCE_H
+   private:
+    std::vector<std::filesystem::path> source;
+};
+}  // namespace ICE

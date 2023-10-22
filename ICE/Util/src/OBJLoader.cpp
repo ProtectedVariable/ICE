@@ -1,6 +1,7 @@
 //
 // Created by Thomas Ibanez on 16.11.20.
 //
+#define TINYOBJLOADER_IMPLEMENTATION
 
 #include <iostream>
 #include "OBJLoader.h"

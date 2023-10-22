@@ -29,7 +29,10 @@ namespace ICE {
 
         const AABB &getBoundingBox() const;
 
-        std::string getTypeName() override;
+        std::string getTypeName() const override;
+        AssetType getType() const override;
+        void load() override;
+        void unload() override;
 
     private:
         std::vector<Eigen::Vector3f> vertices, normals;

@@ -2,20 +2,18 @@
 // Created by Thomas Ibanez on 31.07.21.
 //
 
-#ifndef ICE_SHADERLOADER_H
-#define ICE_SHADERLOADER_H
+#pragma once
 
 #include <string>
-#include "IResourceLoader.h"
+
+#include "IAssetLoader.h"
 #include "Resource.h"
+#include "Shader.h"
 
 namespace ICE {
-    class ShaderLoader : public IResourceLoader {
-    public:
-        Resource *load(const std::vector<std::string> &file) override;
-
-    };
-}
-
-
-#endif //ICE_SHADERLOADER_H
+class ShaderLoader : public IAssetLoader<Shader> {
+   public:
+    ShaderLoader(const std::shared_ptr<GraphicsFactory> &factory) : IAssetLoader<Shader>(factory) {}
+    std::shared_ptr<Shader> load(const std::vector<std::filesystem::path> &file) override;
+};
+}  // namespace ICE

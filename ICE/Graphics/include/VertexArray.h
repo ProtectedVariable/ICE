@@ -22,8 +22,6 @@ namespace ICE {
         virtual IndexBuffer* getIndexBuffer() const = 0;
         virtual int getIndexCount() const = 0;
         virtual uint32_t getID() const = 0;
-
-        static VertexArray* Create();
     };
 }
 

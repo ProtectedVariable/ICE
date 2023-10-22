@@ -60,7 +60,7 @@ namespace ICE {
         return static_cast<char*>(0)+id;
     }
 
-    TextureType OpenGLTextureCube::getType() const {
+    TextureType OpenGLTextureCube::getTextureType() const {
         return TextureType::CubeMap;
     }
 }

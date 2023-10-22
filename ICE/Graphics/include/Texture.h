@@ -5,72 +5,61 @@
 #ifndef ICE_TEXTURE_H
 #define ICE_TEXTURE_H
 
+#include <Asset.h>
+#include <stb/stb_image.h>
+
 #include <cstdint>
 #include <string>
-#include <stb/stb_image.h>
-#include <Asset.h>
-
 
 namespace ICE {
-    enum class TextureFormat
-    {
-        None = 0,
-        RGB = 1,
-        RGBA = 2,
-        Float16 = 3
-    };
+enum class TextureFormat { None = 0, RGB = 1, RGBA = 2, Float16 = 3 };
 
-    enum class TextureWrap
-    {
-        None = 0,
-        Clamp = 1,
-        Repeat = 2
-    };
+enum class TextureWrap { None = 0, Clamp = 1, Repeat = 2 };
 
-    enum class TextureType {
-        Tex2D = 0,
-        CubeMap = 1
-    };
+enum class TextureType { Tex2D = 0, CubeMap = 1 };
 
-    class Texture : public Asset {
-    public:
-        virtual void bind(uint32_t slot = 0) const = 0;
-        virtual void setData(void* data, uint32_t size) = 0;
+class Texture : public Asset {
+   public:
+    virtual void bind(uint32_t slot = 0) const = 0;
+    virtual void setData(void* data, uint32_t size) = 0;
 
-        virtual TextureFormat getFormat() const = 0;
+    virtual TextureFormat getFormat() const = 0;
 
-        virtual uint32_t getWidth() const = 0;
-        virtual uint32_t getHeight() const = 0;
+    virtual uint32_t getWidth() const = 0;
+    virtual uint32_t getHeight() const = 0;
 
-        virtual void* getTexture() const = 0;
+    virtual void* getTexture() const = 0;
 
-        virtual TextureType getType() const = 0;
+    virtual TextureType getTextureType() const = 0;
 
-        static void* getDataFromFile(const std::string file, int* width, int* height, int* channels, int force = STBI_default) {
-            stbi_set_flip_vertically_on_load(1);
-            stbi_uc* data = stbi_load(file.c_str(), width, height, channels, force);
-            return data;
-        }
+    static void* getDataFromFile(const std::string file, int* width, int* height, int* channels, int force = STBI_default) {
+        stbi_set_flip_vertically_on_load(1);
+        stbi_uc* data = stbi_load(file.c_str(), width, height, channels, force);
+        return data;
+    }
+};
 
-        std::string getTypeName() override {
-            return "Texture";
-        }
-    };
+class Texture2D : public Texture {
+   public:
+    virtual TextureWrap getWrap() const = 0;
+    virtual TextureType getTextureType() const = 0;
 
-    class Texture2D : public Texture {
-    public:
-        virtual TextureWrap getWrap() const = 0;
-        virtual TextureType getType() const = 0;
-        static Texture2D* Create(const std::string& file);
-    };
+    virtual AssetType getType() const override { return AssetType::ETex2D; }
+    virtual std::string getTypeName() const override { return "Texture2D"; }
+    virtual void load() = 0;
+    virtual void unload() = 0;
+};
 
-    class TextureCube : public Texture {
-    public:
-        virtual TextureWrap getWrap() const = 0;
-        virtual TextureType getType() const = 0;
-        static TextureCube* Create(const std::string& file);
-    };
-}
+class TextureCube : public Texture {
+   public:
+    virtual TextureWrap getWrap() const = 0;
+    virtual TextureType getTextureType() const = 0;
 
+    virtual AssetType getType() const override { return AssetType::ETexCube; }
+    virtual std::string getTypeName() const override { return "TextureCube"; }
+    virtual void load() = 0;
+    virtual void unload() = 0;
+};
+}  // namespace ICE
 
-#endif //ICE_TEXTURE_H
+#endif  //ICE_TEXTURE_H

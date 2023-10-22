@@ -2,20 +2,18 @@
 // Created by Thomas Ibanez on 31.07.21.
 //
 
-#ifndef ICE_MESHLOADER_H
-#define ICE_MESHLOADER_H
-
+#pragma once
 
 #include <string>
-#include "IResourceLoader.h"
-#include "Resource.h"
+
+#include "Asset.h"
+#include "IAssetLoader.h"
+#include "Mesh.h"
 
 namespace ICE {
-    class MeshLoader: public IResourceLoader {
-    public:
-        Resource *load(const std::vector<std::string> &file) override;
-    };
-}
-
-
-#endif //ICE_MESHLOADER_H
+class MeshLoader : public IAssetLoader<Mesh> {
+   public:
+    MeshLoader(const std::shared_ptr<GraphicsFactory> &factory) : IAssetLoader<Mesh>(factory) {}
+    std::shared_ptr<Mesh> load(const std::vector<std::filesystem::path> &file) override;
+};
+}  // namespace ICE
