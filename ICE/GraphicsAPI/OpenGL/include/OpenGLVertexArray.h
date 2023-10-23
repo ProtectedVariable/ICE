@@ -20,24 +20,24 @@ namespace ICE {
 
         void unbind() const override;
 
-        void pushVertexBuffer(VertexBuffer* buffer, int size) override;
+        void pushVertexBuffer(const std::shared_ptr<VertexBuffer>& buffer, int size) override;
 
-        void pushVertexBuffer(VertexBuffer* buffer, int position, int size) override;
+        void pushVertexBuffer(const std::shared_ptr<VertexBuffer>& buffer, int position, int size) override;
 
-        void setIndexBuffer(IndexBuffer* buffer) override;
+        void setIndexBuffer(const std::shared_ptr<IndexBuffer>& buffer) override;
 
         int getIndexCount() const override;
 
         uint32_t getID() const override;
 
-        IndexBuffer *getIndexBuffer() const override;
+        std::shared_ptr<IndexBuffer> getIndexBuffer() const override;
 
     private:
         GLuint vaoID;
         int cnt = 0;
-        GLuint indexCount;
-        std::unordered_map<GLuint, VertexBuffer*> buffers;
-        IndexBuffer* indexBuffer;
+        GLuint indexCount = 0;
+        std::unordered_map<GLuint, std::shared_ptr<VertexBuffer>> buffers;
+        std::shared_ptr<IndexBuffer> indexBuffer;
     };
 }
 

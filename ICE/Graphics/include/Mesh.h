@@ -25,7 +25,8 @@ namespace ICE {
 
         const std::vector<Eigen::Vector3i> &getIndices() const;
 
-        const VertexArray* getVertexArray() const;
+        const std::shared_ptr<VertexArray> getVertexArray() const;
+        void setVertexArray(const std::shared_ptr<VertexArray> &vao);
 
         const AABB &getBoundingBox() const;
 
@@ -38,7 +39,7 @@ namespace ICE {
         std::vector<Eigen::Vector3f> vertices, normals;
         std::vector<Eigen::Vector2f> uvCoords;
         std::vector<Eigen::Vector3i> indices;
-        VertexArray* vertexArray;
+        std::shared_ptr<VertexArray> vertexArray;
         AABB boundingBox;
     };
 }
