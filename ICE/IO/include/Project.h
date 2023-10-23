@@ -69,7 +69,7 @@ namespace ICE {
                 AssetPath assetPath = AssetPath(m.value().begin().key());
                 for(auto file : files) {
                     if(file.substr(0,file.find_last_of(".")) == assetPath.getName()) {
-                        assetBank.addResourceWithSpecificUID<T>(m.value().begin().key(), {(basepath+typeFolder+file)}, m.value().begin().value());
+                        assetBank.addAssetWithSpecificUID<T>(m.value().begin().key(), {(basepath+typeFolder+file)}, m.value().begin().value());
                         break;
                     }
                 }

@@ -30,7 +30,7 @@
 namespace ICE {
     Project::Project(const std::string &baseDirectory, const std::string &name) : baseDirectory(baseDirectory),
                                                                                   name(name), scenes(std::vector<Scene>()),
-                                                                                  assetBank(AssetBank()) {
+                                                                                  assetBank(AssetBank(nullptr)) {
 		cameraPosition.setZero();
 		cameraRotation.setZero();
 	}

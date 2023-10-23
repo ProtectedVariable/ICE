@@ -32,7 +32,7 @@ void ICEEngine::step() {
     api->setClearColor(0, 0, 0, 1);
     api->clear();
     for (auto s : systems) {
-        s->update(currentScene, 0.f);
+        //s->update(currentScene, 0.f);
     }
 
     int display_w, display_h;
@@ -47,7 +47,8 @@ std::shared_ptr<Camera> ICEEngine::getCamera() {
 }
 
 std::shared_ptr<AssetBank> ICEEngine::getAssetBank() {
-    return project->getAssetBank();
+    //return project->getAssetBank();
+    return nullptr;
 }
 
 std::shared_ptr<Scene> ICEEngine::getScene() {
@@ -97,13 +98,13 @@ std::shared_ptr<Project> ICEEngine::getProject() const {
 
 void ICEEngine::setProject(const std::shared_ptr<Project> &project) {
     this->project = project;
-    this->currentScene = project->getScenes().at(0);
+    //this->currentScene = project->getScenes().at(0);
     this->camera->getPosition() = project->getCameraPosition();
     this->camera->getRotation() = project->getCameraRotation();
     std::shared_ptr<Renderer> renderer = std::make_shared<ForwardRenderer>();
     renderer->initialize(RendererConfig(), project->getAssetBank());
-    this->renderSystem = std::make_shared<RenderSystem>();
-    systems.push_back(renderSystem);
+    //this->renderSystem = std::make_shared<RenderSystem>();
+    //systems.push_back(renderSystem);
     Skybox::Initialize();
     //this->gui.initializeEditorUI();
 }
@@ -117,7 +118,7 @@ void ICEEngine::importMesh() {
     const std::string file = FileUtils::openFileDialog("obj");
     if (file != "") {
         std::string aname = "imported_mesh_" + std::to_string(import_cnt++);
-        getAssetBank()->addResource<Mesh>(aname, {file});
+        getAssetBank()->addAsset<Mesh>(aname, {file});
         project->copyAssetFile("Meshes", aname, file);
     }
 }
@@ -127,15 +128,15 @@ void ICEEngine::importTexture(bool cubeMap) {
     if (file != "") {
         std::string aname = "imported_texture_" + std::to_string(import_cnt++);
         if (cubeMap) {
-            getAssetBank()->addResource<TextureCube>(aname, {file});
+            getAssetBank()->addAsset<TextureCube>(aname, {file});
         } else {
-            getAssetBank()->addResource<Texture2D>(aname, {file});
+            getAssetBank()->addAsset<Texture2D>(aname, {file});
         }
         project->copyAssetFile("Textures", aname, file);
     }
 }
 
-void ICEEngine::setCurrentScene(const std::shared_ptr<Scene> currentScene) {
+void ICEEngine::setCurrentScene(const std::shared_ptr<Scene> &currentScene) {
     ICEEngine::currentScene = currentScene;
 }
 }  // namespace ICE

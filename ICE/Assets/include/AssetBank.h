@@ -77,7 +77,7 @@ class AssetBank {
     bool addAssetWithSpecificUID(const AssetPath& name, const std::vector<std::filesystem::path>& sources, AssetUID id) {
         if (resources.find(id) == resources.end() && nameMapping.find(name) == nameMapping.end()) {
             auto res = loader.LoadResource<T>(sources);
-            resources[id] = res;
+            resources[id] = AssetBankEntry(name, res);
             nameMapping[name] = id;
             nextUID = nextUID > id ? nextUID : id + 1;
             return true;
@@ -114,7 +114,7 @@ class AssetBank {
     std::unordered_map<AssetUID, std::shared_ptr<T>> getAll() {
         std::unordered_map<AssetUID, std::shared_ptr<T>> all;
         for (const auto& [uid, entry] : resources) {
-            auto asset = static_cast<std::shared_ptr<T>>(entry.asset);
+            auto asset = dynamic_pointer_cast<T>(entry.asset);
             if (asset != nullptr) {
                 all.try_emplace(uid, asset);
             }
