@@ -50,7 +50,7 @@ class AssetBank {
     }
 
     std::shared_ptr<Asset> getAsset(AssetUID uid) {
-        if (uid == NO_ASSET_ID)
+        if (uid == NO_ASSET_ID || !resources.contains(uid))
             return nullptr;
         return resources[uid].asset;
     }

@@ -41,7 +41,7 @@ TEST(AssetBankTest, AssetsCanBeRenamed) {
     ASSERT_EQ(ab.getAsset<Material>("a_ice_test_mtl"), mtl);
     ASSERT_EQ(ab.getAsset<Material>("lol"), nullptr);
 
-    ab.renameAsset(AssetPath("Material/a_ice_test_mtl"), AssetPath("Material/lol"));
+    ab.renameAsset(AssetPath("Materials/a_ice_test_mtl"), AssetPath("Materials/lol"));
     ASSERT_EQ(ab.getAsset<Material>("lol"), mtl);
     ASSERT_EQ(ab.getAsset<Material>("a_ice_test_mtl"), nullptr);
 }
@@ -50,7 +50,7 @@ TEST(AssetBankTest, GetNameReturnsCorrectName) {
     AssetBank ab(std::make_shared<NoneGraphicsFactory>());
     auto mtl = std::make_shared<Material>();
     ab.addAsset<Material>("a_ice_test_mtl", mtl);
-    ASSERT_EQ(AssetPath("Material/a_ice_test_mtl"), ab.getName(ab.getUID(AssetPath("Material/a_ice_test_mtl"))));
+    ASSERT_EQ(AssetPath("Materials/a_ice_test_mtl"), ab.getName(ab.getUID(AssetPath("Materials/a_ice_test_mtl"))));
     ASSERT_EQ(AssetPath(""), ab.getName(0));
 }
 
