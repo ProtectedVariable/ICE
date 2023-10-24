@@ -4,8 +4,8 @@
 
 #include "AssetContentPane.h"
 #include <ImGUI/imgui.h>
-#include <Math/ICEMath.h>
-#include <Core/ICEEngine.h>
+#include <ICEMath.h>
+#include <ICEEngine.h>
 
 namespace ICE {
 

@@ -35,4 +35,4 @@ include_directories(includes)
 file(COPY ICE/Assets DESTINATION ${CMAKE_BINARY_DIR})
 
 add_subdirectory(ICE)
-#add_subdirectory(ICEBERG)
+add_subdirectory(ICEBERG)

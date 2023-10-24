@@ -4,7 +4,7 @@
 
 #include <ImGUI/imgui.h>
 #include "InspectorPane.h"
-#include <Core/ICEEngine.h>
+#include <ICEEngine.h>
 #include <LightComponent.h>
 
 #define ICE_UID_MAX_SIZE 256
@@ -17,7 +17,7 @@ namespace ICE {
             ImGui::SetWindowFocus();
             init++;
         }
-        if(engine->getSelected() != nullptr) {
+        if(engine->getSelected() != NO_ASSET_ID) {
             ImGui::Text("Entity's unique ID:");
             static char buffer[ICE_UID_MAX_SIZE];
 			/*std::string oldName = engine->getScene()->idByEntity(engine->getSelected());
