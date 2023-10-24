@@ -18,11 +18,6 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
-if(NOT EXISTS "${GLFW_LIB_PATH}")
-	execute_process(COMMAND git clone https://github.com/glfw/glfw.git "${GLFW_LIB_PATH}")
-endif()
-add_subdirectory(libs/glfw/)
-
 if(APPLE)
 	find_library(COCOA_LIBRARY Cocoa REQUIRED)
 	find_library(OPENGL_LIBRARY OpenGL REQUIRED)
@@ -33,6 +28,8 @@ endif()
 include_directories(includes)
 		
 file(COPY ICE/Assets DESTINATION ${CMAKE_BINARY_DIR})
+
+add_subdirectory(includes/DearImXML)
 
 add_subdirectory(ICE)
 add_subdirectory(ICEBERG)
