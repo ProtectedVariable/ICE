@@ -3,7 +3,7 @@ project(ICEBERG)
 
 message(STATUS "Building ${PROJECT_NAME}")
 
-add_executable(${PROJECT_NAME} Iceberg.cpp)
+add_executable(${PROJECT_NAME} Iceberg.cpp "UI/ProjectSelectionWindow.h" "UI/UIElement.h")
 
 target_include_directories(${PROJECT_NAME} PUBLIC
         $<INSTALL_INTERFACE:include>
@@ -13,4 +13,4 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 
 target_link_libraries(${PROJECT_NAME} INTERFACE ICE PUBLIC glfw DearImXML)
 
-file(COPY XML DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY "XML" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
