@@ -19,7 +19,10 @@ class Handler : public ImXML::XMLEventHandler {
     virtual void onNodeEnd(ImXML::XMLNode& node) override {
         if (node.args["id"].starts_with("pr")) {
             if (ImGui::IsItemHovered()) {
-                ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, ImGui::GetColorU32(ImVec4(1, 1, 1, 1)));
+                ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, ImGui::GetColorU32(ImVec4(0.2, 0.2, 0.2, 1)));
+            }
+            if (ImGui::IsItemClicked()) {
+                //TODO Load project and go to editor
             }
         }
     }

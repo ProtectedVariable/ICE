@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <begin id="window" name="ICE Project Selection" flags="ImGuiWindowFlags_NoCollapse|ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoResize">
-	<table name="layout0" columns="2" flags="ImGuiTableFlags_Borders|ImGuiTableFlags_Resizable">
+	<table name="layout0" columns="2" flags="ImGuiTableFlags_BordersInnerV|ImGuiTableFlags_Resizable">
 		<row>
 			<column>
-				<table name="layout_create" columns="2" flags="ImGuiTableFlags_Borders">
+				<table name="layout_create" columns="3" flags="ImGuiTableFlags_BordersInnerH">
 					<row>
 						<column>
 							<text label="Create a new project"/>
@@ -13,7 +13,9 @@
 					<row>
 						<column>
 							<text label="Project name"/>
-							<inputtext label="Project name" dynamic="project_name"/>
+						</column>
+						<column>
+							<inputtext label="##Project name" dynamic="project_name"/>
 						</column>
 						<column>
 							<button id="btn_create" label="Create"/>
@@ -23,17 +25,21 @@
 			</column>
 			<column>
 				<text label="Load existing project"/>
-				<table name="projects_table" columns="1" flags="ImGuiTableFlags_Borders">
+				<table name="projects_table" columns="1" flags="ImGuiTableFlags_BordersH">
 					<row>
 						<column id="pr0">
-							<text label="Project0"/>
-							<text label="Last modified: 25.10.23"/>
+							<group>
+								<text label="Project0"/>
+								<text label="Last modified: 25.10.23"/>
+							</group>
 						</column>
 					</row>
 					<row>
 						<column id="pr1">
-							<text label="Project1"/>
-							<text label="Last modified: 26.10.23"/>
+							<group>
+								<text label="Project1"/>
+								<text label="Last modified: 26.10.23"/>
+							</group>
 						</column>
 					</row>
 				</table>
