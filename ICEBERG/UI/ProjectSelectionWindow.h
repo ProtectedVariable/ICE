@@ -4,8 +4,16 @@
 #include <XMLRenderer.h>
 #include <XMLTree.h>
 
+#include "UIElement.h"
+
 class Handler : public ImXML::XMLEventHandler {
-    virtual void onNodeBegin(ImXML::XMLNode& node) override {}
+    virtual void onNodeBegin(ImXML::XMLNode& node) override {
+        if (node.args["id"] == "window") {
+            ImGuiViewport* viewport = ImGui::GetMainViewport();
+            ImGui::SetNextWindowPos(viewport->Pos);
+            ImGui::SetNextWindowSize(viewport->Size);
+        }
+    }
 
     virtual void onNodeEnd(ImXML::XMLNode& node) override {}
 
@@ -16,16 +24,16 @@ class Handler : public ImXML::XMLEventHandler {
     }
 };
 
-class ProjectSelectionWindow {
-    ProjectSelectionWindow() {
-        ImXML::XMLReader reader = ImXML::XMLReader();
-        ImXML::XMLTree tree = reader.read("XML/ProjectSelection.xml");
-        ImXML::XMLRenderer renderer;
-        float float0;
-        char buf[512] = {0};
-        float color0[3] = {0};
-        float color1[4] = {0};
-        renderer.addDynamicBind(std::string("str0"), {.ptr = buf, .size = 512});
-        Handler handler;
-    }
+class ProjectSelectionWindow : public UIElement {
+   public:
+    ProjectSelectionWindow() { renderer.addDynamicBind("project_name", {project_name, 512, ImXML::XMLDynamicBindType::Chars}); }
+
+    void render() override { renderer.render(tree, handler); }
+
+   private:
+    ImXML::XMLReader reader;
+    ImXML::XMLTree tree = reader.read("XML/ProjectSelection.xml");
+    ImXML::XMLRenderer renderer;
+    char project_name[512] = {0};
+    Handler handler;
 };

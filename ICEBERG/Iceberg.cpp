@@ -1,9 +1,7 @@
 
-#include <GL/gl3w.h>  // Initialize with gl3wInit()
-// Include glfw3.h after our OpenGL definitions
+#include <GL/gl3w.h>
 #include <GLFW/glfw3.h>
 #include <ImGUI/imgui.h>
-#include <ImGUI/ImGuizmo.h>
 #include <ImGUI/imgui_impl_glfw.h>
 #include <ImGUI/imgui_impl_opengl3.h>
 #include <ImGUI/imgui_internal.h>
@@ -11,6 +9,8 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+
+#include "UI/ProjectSelectionWindow.h"
 
 int main(int argc, char const* argv[]) {
     if (!glfwInit())
@@ -48,6 +48,8 @@ int main(int argc, char const* argv[]) {
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
+    ProjectSelectionWindow current_ui;
+
     while (!glfwWindowShouldClose(window)) {
         IM_ASSERT(ImGui::GetCurrentContext() != NULL && "Missing dear imgui context. Refer to examples app!");
         glfwPollEvents();
@@ -57,8 +59,7 @@ int main(int argc, char const* argv[]) {
         ImGui::NewFrame();
         glClear(GL_COLOR_BUFFER_BIT);
 
-        renderer.render(tree, handler);
-
+        current_ui.render();
         ImGui::Render();
 
         int display_w, display_h;

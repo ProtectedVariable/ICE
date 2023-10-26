@@ -1,20 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<begin name="Title window" flags="ImGuiWindowFlags_NoCollapse|ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoResize">
-	<columns count="2"/>
-	<column>
-		<text label="Create a new project"/>
-		<separator/>
-		<sameline>
-			<inputtext label="Project name" dynamic="str0"/>
-			<button id="btn0" label="Create"/>
-		</sameline>
-	</column>
-	<column>
-		<text label="Load existing project"/>
-		<group>
-			<text label="Project0"/>
-			<text label="Last modified: 25.10.23"/>
-		</group>
-	</column>
+<begin id="window" name="ICE Project Selection" flags="ImGuiWindowFlags_NoCollapse|ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoResize">
+	<table name="layout0" columns="2">
+		<row>
+			<column>
+				<table name="layout_create" columns="2">
+					<row>
+						<column>
+							<text label="Create a new project"/>
+						</column>
+					</row>
+					<row>
+						<column>
+							<inputtext label="Project name" dynamic="project_name"/>
+						</column>
+						<column>
+							<button id="btn_create" label="Create"/>
+						</column>
+					</row>
+				</table>
+			</column>
+			<column>
+				<text label="Load existing project"/>
+				<group>
+					<text label="Project0"/>
+					<text label="Last modified: 25.10.23"/>
+				</group>
+			</column>
+		</row>
+	</table>
 </begin>
