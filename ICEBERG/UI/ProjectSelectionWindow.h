@@ -7,6 +7,7 @@
 #include "UIElement.h"
 
 class Handler : public ImXML::XMLEventHandler {
+   public:
     virtual void onNodeBegin(ImXML::XMLNode& node) override {
         if (node.args["id"] == "window") {
             ImGuiViewport* viewport = ImGui::GetMainViewport();
@@ -15,13 +16,22 @@ class Handler : public ImXML::XMLEventHandler {
         }
     }
 
-    virtual void onNodeEnd(ImXML::XMLNode& node) override {}
+    virtual void onNodeEnd(ImXML::XMLNode& node) override {
+        if (node.args["id"].starts_with("pr")) {
+            if (ImGui::IsItemHovered()) {
+                ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, ImGui::GetColorU32(ImVec4(1, 1, 1, 1)));
+            }
+        }
+    }
 
     virtual void onEvent(ImXML::XMLNode& node) override {
         if (node.args["id"] == "btn0") {
             //Open file dialog
         }
     }
+
+   private:
+    std::string hovered_id = "__NO_ID";
 };
 
 class ProjectSelectionWindow : public UIElement {
