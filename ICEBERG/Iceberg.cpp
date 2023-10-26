@@ -60,6 +60,7 @@ int main(int argc, char const* argv[]) {
         glClear(GL_COLOR_BUFFER_BIT);
 
         current_ui.render();
+        ImGui::ShowDemoWindow();
         ImGui::Render();
 
         int display_w, display_h;

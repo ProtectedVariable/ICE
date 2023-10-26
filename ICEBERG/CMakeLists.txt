@@ -3,7 +3,7 @@ project(ICEBERG)
 
 message(STATUS "Building ${PROJECT_NAME}")
 
-add_executable(${PROJECT_NAME} Iceberg.cpp "UI/ProjectSelectionWindow.h" "UI/UIElement.h")
+add_executable(${PROJECT_NAME} Iceberg.cpp imgui_demo.cpp)
 
 target_include_directories(${PROJECT_NAME} PUBLIC
         $<INSTALL_INTERFACE:include>
