@@ -2,21 +2,13 @@ cmake_minimum_required(VERSION 3.19)
 project(ICE_ROOT)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20")
 set(CMAKE_CXX_STANDARD 20)
-set(GLFW_LIB_PATH "${CMAKE_CURRENT_SOURCE_DIR}/libs/glfw/")
+
+include(cmake/fetch_dependencies.cmake)
 
 set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-
-include(FetchContent)
-FetchContent_Declare(
-  googletest
-  URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
-)
-# For Windows: Prevent overriding the parent project's compiler/linker settings
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(googletest)
 
 if(APPLE)
 	find_library(COCOA_LIBRARY Cocoa REQUIRED)
@@ -29,7 +21,19 @@ include_directories(includes)
 		
 file(COPY ICE/Assets DESTINATION ${CMAKE_BINARY_DIR})
 
-add_subdirectory(includes/DearImXML)
+set(IMGUI_SRC 
+	${CMAKE_SOURCE_DIR}/includes/ImGUI/imgui_impl_glfw.cpp
+	${CMAKE_SOURCE_DIR}/includes/ImGUI/imgui_impl_opengl3.cpp
+	${CMAKE_SOURCE_DIR}/includes/ImGUI/imgui.cpp
+	${CMAKE_SOURCE_DIR}/includes/ImGUI/imgui_widgets.cpp
+	${CMAKE_SOURCE_DIR}/includes/ImGUI/imgui_draw.cpp
+	${CMAKE_SOURCE_DIR}/includes/ImGUI/imgui_tables.cpp
+)
+
+set(GL3W_SRC 
+	${CMAKE_SOURCE_DIR}/includes/GL/gl3w.c
+)
+
 
 add_subdirectory(ICE)
 add_subdirectory(ICEBERG)
