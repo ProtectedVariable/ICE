@@ -10,7 +10,7 @@
 #include <iostream>
 #include <string>
 
-#include "UI/ProjectSelectionWindow.h"
+#include "ProjectSelection.h"
 
 int main(int argc, char const* argv[]) {
     if (!glfwInit())
@@ -48,7 +48,7 @@ int main(int argc, char const* argv[]) {
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
-    ProjectSelectionWindow current_ui;
+    ProjectSelection current_ui;
 
     while (!glfwWindowShouldClose(window)) {
         IM_ASSERT(ImGui::GetCurrentContext() != NULL && "Missing dear imgui context. Refer to examples app!");
@@ -59,7 +59,7 @@ int main(int argc, char const* argv[]) {
         ImGui::NewFrame();
         glClear(GL_COLOR_BUFFER_BIT);
 
-        current_ui.render();
+        current_ui.update();
         ImGui::ShowDemoWindow();
         ImGui::Render();
 
