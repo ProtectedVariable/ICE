@@ -13,7 +13,7 @@
 namespace ICE {
 
     void ForwardRenderer::initialize(RendererConfig config, AssetBank* assetBank) {
-        this->api = RendererAPI::Create();
+        //this->api = RendererAPI::Create();
         this->config = config;
         this->assetBank = assetBank;
     }

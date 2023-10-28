@@ -3,7 +3,11 @@ project(ICEBERG)
 
 message(STATUS "Building ${PROJECT_NAME}")
 
-add_executable(${PROJECT_NAME} src/Iceberg.cpp imgui_demo.cpp ${IMGUI_SRC} ${GL3W_SRC} "src/ProjectSelection.cpp")
+add_executable(${PROJECT_NAME} imgui_demo.cpp ${IMGUI_SRC} ${GL3W_SRC} 
+    src/Iceberg.cpp
+    src/ProjectSelection.cpp
+    src/Editor.cpp
+)
 
 target_include_directories(${PROJECT_NAME} PUBLIC
         $<INSTALL_INTERFACE:include>
@@ -12,7 +16,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         ${CMAKE_SOURCE_DIR}
 )
 
-target_link_libraries(${PROJECT_NAME} INTERFACE ICE PUBLIC glfw)
+target_link_libraries(${PROJECT_NAME} PUBLIC ICE glfw)
 
 add_custom_command(
         TARGET ${PROJECT_NAME} POST_BUILD

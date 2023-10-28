@@ -27,6 +27,11 @@ class ProjectSelectionWidget : public Widget {
         ImGui::End();
     }
 
+    
+    int getSelectedProject() const { return m_selected_project; }
+
+    const char* getProjectName() const { return m_project_name; }
+
    private:
     void renderNewProjects() {
         ImGui::BeginTable("layout_create", 3);
@@ -46,6 +51,8 @@ class ProjectSelectionWidget : public Widget {
 
     void renderExistingProjects() {
         ImGui::BeginTable("layout_projects", 1, ImGuiTableFlags_BordersH);
+        ImGui::TableNextColumn();
+        ImGui::Text("Load existing project");
         for (int i = 0; i < m_projects.size(); i++) {
             const auto& p = m_projects[i];
             ImGui::TableNextColumn();
@@ -55,7 +62,7 @@ class ProjectSelectionWidget : public Widget {
             ImGui::Text(p.modified_date.c_str());
             ImGui::EndGroup();
             if (ImGui::IsItemHovered()) {
-                ImGui::GetWindowDrawList()->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), IM_COL32(0.2, 0.2, 0.2, 1));
+                ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, ImGui::GetColorU32(ImVec4(0.2, 0.2, 0.2, 1)));
             }
             if (ImGui::IsItemClicked()) {
                 m_selected_project = i;

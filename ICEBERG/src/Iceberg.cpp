@@ -1,6 +1,7 @@
 
 #include <GL/gl3w.h>
 #include <GLFW/glfw3.h>
+#include <ICEEngine.h>
 #include <ImGUI/imgui.h>
 #include <ImGUI/imgui_impl_glfw.h>
 #include <ImGUI/imgui_impl_opengl3.h>
@@ -10,7 +11,49 @@
 #include <iostream>
 #include <string>
 
+#include "Editor.h"
 #include "ProjectSelection.h"
+
+enum class UIState { PROJECT_SELECTION, EDITOR };
+
+class Iceberg {
+   public:
+    Iceberg(GLFWwindow* window) : m_window(window), m_controller(std::make_unique<ProjectSelection>(m_engine)) { m_engine->initialize();
+    }
+
+    void loop() {
+        while (!glfwWindowShouldClose(m_window)) {
+            IM_ASSERT(ImGui::GetCurrentContext() != NULL && "Missing dear imgui context. Refer to examples app!");
+            glfwPollEvents();
+
+            ImGui_ImplOpenGL3_NewFrame();
+            ImGui_ImplGlfw_NewFrame();
+            ImGui::NewFrame();
+            glClear(GL_COLOR_BUFFER_BIT);
+
+            if (m_controller->update()) {
+                if (m_state == UIState::PROJECT_SELECTION) {
+                    m_controller = std::make_unique<Editor>(m_engine);
+                    m_state = UIState::EDITOR;
+                }
+            }
+            ImGui::ShowDemoWindow();
+            ImGui::Render();
+
+            int display_w, display_h;
+            glfwGetFramebufferSize(m_window, &display_w, &display_h);
+            glViewport(0, 0, display_w, display_h);
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+            glfwSwapBuffers(m_window);
+        }
+    }
+
+   private:
+    GLFWwindow* m_window;
+    std::shared_ptr<ICE::ICEEngine> m_engine = std::make_shared<ICE::ICEEngine>();
+    std::unique_ptr<Controller> m_controller;
+    UIState m_state = UIState::PROJECT_SELECTION;
+};
 
 int main(int argc, char const* argv[]) {
     if (!glfwInit())
@@ -48,27 +91,9 @@ int main(int argc, char const* argv[]) {
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
-    ProjectSelection current_ui;
+    Iceberg iceberg(window);
 
-    while (!glfwWindowShouldClose(window)) {
-        IM_ASSERT(ImGui::GetCurrentContext() != NULL && "Missing dear imgui context. Refer to examples app!");
-        glfwPollEvents();
-
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        current_ui.update();
-        ImGui::ShowDemoWindow();
-        ImGui::Render();
-
-        int display_w, display_h;
-        glfwGetFramebufferSize(window, &display_w, &display_h);
-        glViewport(0, 0, display_w, display_h);
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-        glfwSwapBuffers(window);
-    }
+    iceberg.loop();
 
     return 0;
 }

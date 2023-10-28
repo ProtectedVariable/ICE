@@ -15,7 +15,7 @@ namespace ICE {
         auto config = EngineConfig();
         std::string line;
         std::ifstream configFile;
-        configFile.open(ICE_CONFIG_FILE);
+        configFile.open(ICE_CONFIG_FILE, std::ios_base::in | std::ios_base::out);
 
         if(!configFile.is_open()) {
             Logger::Log(Logger::FATAL, "IO", "Couldn't open config file");

@@ -30,7 +30,6 @@ class RendererAPI {
     virtual void checkAndLogErrors() const = 0;
 
     static GraphicsAPI GetAPI() { return api; }
-    static RendererAPI* Create();
     static void SetAPI(GraphicsAPI _api) { api = _api; }
 
    private:
