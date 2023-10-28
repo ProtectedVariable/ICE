@@ -24,9 +24,14 @@ namespace ICE {
 
         virtual void loadMat4(const std::string &name, Eigen::Matrix4f mat) = 0;
 
-        std::string getTypeName() {
+        std::string getTypeName() const override {
             return "Shader";
         };
+
+        AssetType getType() const override {
+            return AssetType::EShader;
+        };
+
     };
 }
 

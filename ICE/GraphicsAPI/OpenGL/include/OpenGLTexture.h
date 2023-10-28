@@ -29,6 +29,8 @@ namespace ICE {
         void *getTexture() const override;
 
         TextureType getTextureType() const override;
+        void load() override {}
+        void unload() override {}
 
     private:
         std::string file;
@@ -58,7 +60,8 @@ namespace ICE {
         void *getTexture() const override;
 
         TextureType getTextureType() const override;
-
+        void load() override {}
+        void unload() override {}
     private:
         std::string file;
         uint32_t id;
