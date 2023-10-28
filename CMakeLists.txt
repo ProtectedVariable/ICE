@@ -19,8 +19,6 @@ elseif(UNIX)
 endif()
 include_directories(includes)
 		
-file(COPY ICE/Assets DESTINATION ${CMAKE_BINARY_DIR})
-
 set(IMGUI_SRC 
 	${CMAKE_SOURCE_DIR}/includes/ImGUI/imgui_impl_glfw.cpp
 	${CMAKE_SOURCE_DIR}/includes/ImGUI/imgui_impl_opengl3.cpp
