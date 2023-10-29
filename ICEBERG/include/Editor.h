@@ -1,7 +1,7 @@
 #pragma once
 
 #include <ICEEngine.h>
-#include <UI/ProjectSelectionWidget.h>
+#include <UI/EditorWidget.h>
 
 #include "Controller.h"
 
@@ -13,4 +13,5 @@ class Editor : public Controller {
    private:
     std::shared_ptr<ICE::ICEEngine> m_engine;
     bool m_done = false;
+    EditorWidget ui;
 };

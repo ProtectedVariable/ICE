@@ -1,0 +1,55 @@
+#pragma once
+#include <ImGUI/imgui.h>
+#include <ImGUI/imgui_internal.h>
+
+#include "Widget.h"
+
+class EditorWidget : public Widget {
+   public:
+    EditorWidget() { ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable; }
+
+    void render() override {
+        static int initialized = 0;
+        ImGuiWindowFlags flags = ImGuiWindowFlags_MenuBar;
+        flags |= ImGuiWindowFlags_NoDocking;
+        ImGuiViewport* viewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(viewport->Pos);
+        ImGui::SetNextWindowSize(viewport->Size);
+        ImGui::SetNextWindowViewport(viewport->ID);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+        flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+        flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+        ImGui::Begin("ICE Editor", 0, flags);
+        ImGui::PopStyleVar();
+
+        ImGuiIO& io = ImGui::GetIO();
+        ImGuiID dockspace_id = ImGui::GetID("MyDockspace");
+
+        if (initialized == 0) {
+            initialized = 1;
+            ImGui::DockBuilderRemoveNode(dockspace_id);  // Clear out existing layout
+            ImGui::DockBuilderAddNode(dockspace_id);     // Add empty node
+
+            ImGuiID dock_main_id = dockspace_id;  // This variable will track the document node, however we are not using it here as we aren't docking anything into it.
+            ImGuiID dock_id_prop = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Left, 0.20f, NULL, &dock_main_id);
+            ImGuiID dock_id_bottom = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Down, 0.20f, NULL, &dock_main_id);
+
+            ImGui::DockBuilderDockWindow("Log", dock_id_bottom);
+            ImGui::DockBuilderDockWindow("Properties", dock_id_prop);
+            ImGui::DockBuilderFinish(dockspace_id);
+        }
+
+        ImGui::DockSpace(dockspace_id);
+        ImGui::Begin("Properties");
+        ImGui::End();
+
+        ImGui::Begin("Log");
+        ImGui::End();
+
+        ImGui::End();
+        ImGui::PopStyleVar();
+    }
+
+   private:
+};
