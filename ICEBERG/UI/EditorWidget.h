@@ -32,24 +32,21 @@ class EditorWidget : public Widget {
             ImGui::DockBuilderAddNode(dockspace_id);     // Add empty node
 
             ImGuiID dock_main_id = dockspace_id;  // This variable will track the document node, however we are not using it here as we aren't docking anything into it.
-            ImGuiID dock_top = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Up, 0.20f, NULL, &dock_main_id);
+            ImGuiID dock_top = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Up, 0.80f, NULL, &dock_main_id);
             ImGuiID dock_id_bottom = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Down, 0.20f, NULL, &dock_main_id);
 
             ImGuiID dock_id_left = ImGui::DockBuilderSplitNode(dock_top, ImGuiDir_Left, 0.20f, NULL, &dock_top);
             ImGuiID dock_id_right = ImGui::DockBuilderSplitNode(dock_top, ImGuiDir_Right, 0.20f, NULL, &dock_top);
-            ImGuiID dock_id_center = ImGui::DockBuilderSplitNode(dock_top, ImGuiDir_Left, 0.20f, NULL, &dock_top);
+            ImGuiID dock_id_center = ImGui::DockBuilderSplitNode(dock_top, ImGuiDir_Left, 0.60f, NULL, &dock_top);
 
             ImGui::DockBuilderDockWindow("Assets", dock_id_bottom);
             ImGui::DockBuilderDockWindow("Hierarchy", dock_id_left);
             ImGui::DockBuilderDockWindow("Inspector", dock_id_right);
-            ImGui::DockBuilderDockWindow("Log", dock_id_center);
+            ImGui::DockBuilderDockWindow("Viewport", dock_id_center);
             ImGui::DockBuilderFinish(dockspace_id);
         }
 
         ImGui::DockSpace(dockspace_id);
-
-        ImGui::Begin("Log");
-        ImGui::End();
 
         ImGui::End();
         ImGui::PopStyleVar();

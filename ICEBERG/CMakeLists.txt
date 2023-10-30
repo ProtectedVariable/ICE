@@ -10,6 +10,7 @@ add_executable(${PROJECT_NAME} imgui_demo.cpp ${IMGUI_SRC} ${GL3W_SRC}
     src/Hierarchy.cpp
     src/Inspector.cpp
     src/Assets.cpp
+    src/Viewport.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC
