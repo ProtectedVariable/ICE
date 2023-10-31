@@ -13,6 +13,10 @@ AssetUID Material::getShader() const {
     return m_shader;
 }
 
+void Material::setShader(AssetUID shader_id) {
+    m_shader = shader_id;
+}
+
 std::unordered_map<std::string, UniformValue> Material::getAllUniforms() const {
     return m_uniforms;
 }

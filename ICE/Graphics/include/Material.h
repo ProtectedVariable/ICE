@@ -20,7 +20,11 @@ class Material : public Asset {
 
     template<typename T>
     void setUniform(const std::string& name, const T& value) {
-        m_uniforms[name] = value;
+        if(!m_uniforms.contains(name)) {
+            m_uniforms.try_emplace(name, value);
+        } else {
+            m_uniforms[name] = value;
+        }
     }
 
     template<typename T>
@@ -34,6 +38,7 @@ class Material : public Asset {
 
     std::unordered_map<std::string, UniformValue> getAllUniforms() const;
     AssetUID getShader() const;
+    void setShader(AssetUID shader_id);
 
     //Asset interface
     std::string getTypeName() const override;
@@ -42,7 +47,7 @@ class Material : public Asset {
     void unload() override;
 
    private:
-    AssetUID m_shader;
+    AssetUID m_shader = NO_ASSET_ID;
     std::unordered_map<std::string, UniformValue> m_uniforms;
 };
 }  // namespace ICE

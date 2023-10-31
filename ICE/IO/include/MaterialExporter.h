@@ -6,6 +6,7 @@
 
 namespace ICE {
 class MaterialExporter : public AssetExporter<Material> {
+public:
     void writeToJson(const std::filesystem::path &path, const Material &object) override;
     void writeToBin(const std::filesystem::path &path, const Material &object) override;
 };
