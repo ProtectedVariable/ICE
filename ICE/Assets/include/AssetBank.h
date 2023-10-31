@@ -122,6 +122,14 @@ class AssetBank {
         return all;
     }
 
+    std::vector<AssetBankEntry> getAllEntries() {
+        std::vector<AssetBankEntry> all;
+        for (const auto& [uid, entry] : resources) {
+            all.push_back(entry);
+        }
+        return all;
+    }
+
     AssetPath getName(AssetUID uid) {
         for (const auto& [path, id] : nameMapping) {
             if (id == uid) {

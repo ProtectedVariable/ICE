@@ -46,8 +46,7 @@ std::shared_ptr<Camera> ICEEngine::getCamera() {
 }
 
 std::shared_ptr<AssetBank> ICEEngine::getAssetBank() {
-    //return project->getAssetBank();
-    return nullptr;
+    return project->getAssetBank();
 }
 
 std::shared_ptr<Scene> ICEEngine::getScene() {
@@ -101,7 +100,7 @@ void ICEEngine::setProject(const std::shared_ptr<Project> &project) {
     this->camera->getPosition() = project->getCameraPosition();
     this->camera->getRotation() = project->getCameraRotation();
     std::shared_ptr<Renderer> renderer = std::make_shared<ForwardRenderer>();
-    renderer->initialize(RendererConfig(), project->getAssetBank());
+    renderer->initialize(RendererConfig(), project->getAssetBank().get());
     //this->renderSystem = std::make_shared<RenderSystem>();
     //systems.push_back(renderSystem);
     Skybox::Initialize();

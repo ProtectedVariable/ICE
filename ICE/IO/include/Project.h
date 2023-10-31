@@ -41,8 +41,8 @@ namespace ICE {
         std::vector<Scene> &getScenes();
         void setScenes(const std::vector<Scene> &scenes);
 
-        AssetBank* getAssetBank();
-        void setAssetBank(const AssetBank &assetBank);
+        std::shared_ptr<AssetBank> getAssetBank();
+        void setAssetBank(const std::shared_ptr<AssetBank>& assetBank);
 
         void addScene(Scene& scene);
 
@@ -69,7 +69,7 @@ namespace ICE {
                 AssetPath assetPath = AssetPath(m.value().begin().key());
                 for(auto file : files) {
                     if(file.substr(0,file.find_last_of(".")) == assetPath.getName()) {
-                        assetBank.addAssetWithSpecificUID<T>(m.value().begin().key(), {(basepath+typeFolder+file)}, m.value().begin().value());
+                        assetBank->addAssetWithSpecificUID<T>(m.value().begin().key(), {(basepath+typeFolder+file)}, m.value().begin().value());
                         break;
                     }
                 }
@@ -91,7 +91,7 @@ namespace ICE {
         std::string baseDirectory;
         std::string name;
         std::vector<Scene> scenes;
-        AssetBank assetBank;
+        std::shared_ptr<AssetBank> assetBank;
         Eigen::Vector3f cameraPosition, cameraRotation;
 
     };

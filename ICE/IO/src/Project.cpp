@@ -32,7 +32,7 @@ Project::Project(const std::string &baseDirectory, const std::string &name)
     : baseDirectory(baseDirectory),
       name(name),
       scenes(std::vector<Scene>()),
-      assetBank(AssetBank(std::make_shared<OpenGLFactory>())) {
+      assetBank(std::make_shared<AssetBank>(std::make_shared<OpenGLFactory>())) {
     cameraPosition.setZero();
     cameraRotation.setZero();
 }
@@ -46,7 +46,7 @@ bool Project::CreateDirectories() {
     fs::create_directories(baseDirectory + FSEP + name + ICE_ASSET_SCRIPTS_FOLDER);
     fs::create_directories(baseDirectory + FSEP + name + ICE_SCENES_FOLDER);
     scenes.push_back(Scene("MainScene", new Registry()));
-    assetBank.fillWithDefaults();
+    assetBank->fillWithDefaults();
     return true;
 }
 
@@ -73,51 +73,51 @@ void Project::writeToFile(Camera *editorCamera) {
     j["scenes"] = vec;
     vec.clear();
 
-    for (auto m : assetBank.getAll<Mesh>()) {
-        if (assetBank.getName(m.first).getName().find(ICE_ASSET_PREFIX) == std::string::npos) {
+    for (auto m : assetBank->getAll<Mesh>()) {
+        if (assetBank->getName(m.first).getName().find(ICE_ASSET_PREFIX) == std::string::npos) {
             json tmp;
-            tmp[assetBank.getName(m.first).toString()] = m.first;
+            tmp[assetBank->getName(m.first).toString()] = m.first;
             vec.push_back(tmp);
         }
     }
     j["meshes"] = vec;
     vec.clear();
 
-    for (auto m : assetBank.getAll<Material>()) {
-        if (assetBank.getName(m.first).getName().find(ICE_ASSET_PREFIX) == std::string::npos) {
+    for (auto m : assetBank->getAll<Material>()) {
+        if (assetBank->getName(m.first).getName().find(ICE_ASSET_PREFIX) == std::string::npos) {
             json tmp;
-            tmp[assetBank.getName(m.first).toString()] = m.first;
+            tmp[assetBank->getName(m.first).toString()] = m.first;
             vec.push_back(tmp);
-            writeMaterialFile(assetBank.getName(m.first).getName(), *m.second);
+            writeMaterialFile(assetBank->getName(m.first).getName(), *m.second);
         }
     }
     j["materials"] = vec;
     vec.clear();
 
-    for (auto m : assetBank.getAll<Shader>()) {
-        if (assetBank.getName(m.first).getName().find(ICE_ASSET_PREFIX) == std::string::npos) {
+    for (auto m : assetBank->getAll<Shader>()) {
+        if (assetBank->getName(m.first).getName().find(ICE_ASSET_PREFIX) == std::string::npos) {
             json tmp;
-            tmp[assetBank.getName(m.first).toString()] = m.first;
+            tmp[assetBank->getName(m.first).toString()] = m.first;
             vec.push_back(tmp);
         }
     }
     j["shaders"] = vec;
     vec.clear();
 
-    for (auto m : assetBank.getAll<Texture2D>()) {
-        if (assetBank.getName(m.first).getName().find("__ice__") == std::string::npos) {
+    for (auto m : assetBank->getAll<Texture2D>()) {
+        if (assetBank->getName(m.first).getName().find("__ice__") == std::string::npos) {
             json tmp;
-            tmp[assetBank.getName(m.first).toString()] = m.first;
+            tmp[assetBank->getName(m.first).toString()] = m.first;
             vec.push_back(tmp);
         }
     }
     j["textures2D"] = vec;
     vec.clear();
 
-    for (auto m : assetBank.getAll<TextureCube>()) {
-        if (assetBank.getName(m.first).getName().find("__ice__") == std::string::npos) {
+    for (auto m : assetBank->getAll<TextureCube>()) {
+        if (assetBank->getName(m.first).getName().find("__ice__") == std::string::npos) {
             json tmp;
-            tmp[assetBank.getName(m.first).toString()] = m.first;
+            tmp[assetBank->getName(m.first).toString()] = m.first;
             vec.push_back(tmp);
         }
     }
@@ -169,7 +169,7 @@ void Project::writeToFile(Camera *editorCamera) {
 }
 
 void Project::loadFromFile() {
-    assetBank.fillWithDefaults();
+    assetBank->fillWithDefaults();
     std::ifstream infile = std::ifstream(baseDirectory + "/" + name + "/" + name + ".ice");
     json j;
     infile >> j;
@@ -263,7 +263,7 @@ bool Project::renameAsset(const AssetPath &oldName, const AssetPath &newName) {
     if (newName.getName() == "" || newName.prefix() != oldName.prefix()) {
         return false;
     }
-    if (assetBank.renameAsset(oldName, newName)) {
+    if (assetBank->renameAsset(oldName, newName)) {
         std::string path = baseDirectory + "/" + name + "/Assets/";
         for (auto file : getFilesInDir(path + oldName.prefix())) {
             if (file.substr(0, file.find_last_of(".")) == oldName.getName()) {
@@ -294,11 +294,11 @@ void Project::setScenes(const std::vector<Scene> &scenes) {
     Project::scenes = scenes;
 }
 
-AssetBank *Project::getAssetBank() {
-    return &assetBank;
+std::shared_ptr<AssetBank> Project::getAssetBank() {
+    return assetBank;
 }
 
-void Project::setAssetBank(const AssetBank &assetBank) {
+void Project::setAssetBank(const std::shared_ptr<AssetBank> &assetBank) {
     Project::assetBank = assetBank;
 }
 
