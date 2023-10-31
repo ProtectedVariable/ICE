@@ -2,62 +2,47 @@
 // Created by Thomas Ibanez on 16.11.20.
 //
 
-#ifndef ICE_MATERIAL_H
-#define ICE_MATERIAL_H
+#pragma once
+
+#include <Eigen/Dense>
+#include <variant>
 
 #include "Shader.h"
 #include "Texture.h"
 
 namespace ICE {
+
+using UniformValue = std::variant<AssetUID, int, float, Eigen::Vector3f, Eigen::Vector4f, Eigen::Matrix4f>;
+
 class Material : public Asset {
    public:
     Material();
 
-    Material(const Eigen::Vector3f &albedo, const Eigen::Vector3f &specular, const Eigen::Vector3f &ambient, float alpha);
+    template<typename T>
+    void setUniform(const std::string& name, const T& value) {
+        m_uniforms[name] = value;
+    }
 
-    Material(const Eigen::Vector3f &albedo, const Eigen::Vector3f &specular, const Eigen::Vector3f &ambient, float alpha, AssetUID diffuseMap, AssetUID specularMap,
-             AssetUID ambientMap);
+    template<typename T>
+    T getUniform(const std::string& name) const {
+        if (m_uniforms.contains(name)) {
+            return std::get<T>(m_uniforms.at(name));
+        } else {
+            throw std::runtime_error("Uniform not found: " + name);
+        }
+    }
 
-    Material(const Eigen::Vector3f &albedo, const Eigen::Vector3f &specular, const Eigen::Vector3f &ambient, float alpha, AssetUID diffuseMap, AssetUID specularMap,
-             AssetUID ambientMap, AssetUID normalMap);
+    std::unordered_map<std::string, UniformValue> getAllUniforms() const;
+    AssetUID getShader() const;
 
-    const Eigen::Vector3f &getAlbedo() const;
-    void setAlbedo(const Eigen::Vector3f &albedo);
-
-    const Eigen::Vector3f &getSpecular() const;
-    void setSpecular(const Eigen::Vector3f &specular);
-
-    const Eigen::Vector3f &getAmbient() const;
-    void setAmbient(const Eigen::Vector3f &ambient);
-
-    float getAlpha() const;
-    void setAlpha(float alpha);
-
-    AssetUID getDiffuseMap() const;
-    void setDiffuseMap(AssetUID diffuseMap);
-
-    AssetUID getSpecularMap() const;
-    void setSpecularMap(AssetUID specularMap);
-
-    AssetUID getAmbientMap() const;
-    void setAmbientMap(AssetUID ambientMap);
-
-    AssetUID getNormalMap() const;
-    void setNormalMap(AssetUID normalMap);
-
+    //Asset interface
     std::string getTypeName() const override;
     AssetType getType() const override;
     void load() override;
     void unload() override;
 
    private:
-    Eigen::Vector3f albedo, specular, ambient;
-    float alpha;
-    AssetUID diffuseMap;
-    AssetUID specularMap;
-    AssetUID ambientMap;
-    AssetUID normalMap;
+    AssetUID m_shader;
+    std::unordered_map<std::string, UniformValue> m_uniforms;
 };
 }  // namespace ICE
-
-#endif  //ICE_MATERIAL_H

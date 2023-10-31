@@ -50,15 +50,15 @@ bool Project::CreateDirectories() {
     return true;
 }
 
-const std::string &Project::getBaseDirectory() const {
+std::string Project::getBaseDirectory() const {
     return baseDirectory;
 }
 
-const std::string &Project::getName() const {
+std::string Project::getName() const {
     return name;
 }
 
-void Project::writeToFile(Camera *editorCamera) {
+void Project::writeToFile(const std::shared_ptr<Camera> &editorCamera) {
     std::ofstream outstream;
     outstream.open(baseDirectory + FSEP + name + FSEP + name + ICE_PROJECT_EXT);
     json j;
@@ -235,15 +235,7 @@ void Project::loadFromFile() {
 void Project::writeMaterialFile(const std::string &mtlName, const Material &mtl) {
     std::ofstream infile = std::ofstream(baseDirectory + "/" + name + "/Assets/Materials/" + mtlName + ".icm");
     json j;
-    j["type"] = "phong";
-    j["albedo"] = dumpVec3(mtl.getAlbedo());
-    j["specular"] = dumpVec3(mtl.getSpecular());
-    j["ambient"] = dumpVec3(mtl.getAmbient());
-    j["alpha"] = mtl.getAlpha();
-    j["diffuseMap"] = mtl.getDiffuseMap();
-    j["specularMap"] = mtl.getSpecularMap();
-    j["ambientMap"] = mtl.getAmbientMap();
-    j["normalMap"] = mtl.getNormalMap();
+    //TODO
     infile << j.dump(4);
     infile.close();
 }

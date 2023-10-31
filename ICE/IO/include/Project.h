@@ -32,7 +32,7 @@ namespace ICE {
         std::string getBaseDirectory() const;
         std::string getName() const;
 
-        void writeToFile(std::shared_ptr<Camera> editorCamera);
+        void writeToFile(const std::shared_ptr<Camera> &editorCamera);
         void loadFromFile();
         void writeMaterialFile(const std::string& mtlName, const Material& mtl);
         void copyAssetFile(const std::string& folder, const std::string& assetName, const std::string& src);

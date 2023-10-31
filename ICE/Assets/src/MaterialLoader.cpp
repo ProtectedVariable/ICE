@@ -18,24 +18,7 @@ std::shared_ptr<Material> MaterialLoader::load(const std::vector<std::filesystem
         infile.close();
 
         auto mtl = std::make_shared<Material>();
-        if(j["type"] == "phong") {
-            mtl->setAlbedo(JsonParser::parseVec3(j["albedo"]));
-            mtl->setSpecular(JsonParser::parseVec3(j["specular"]));
-            mtl->setAmbient(JsonParser::parseVec3(j["ambient"]));
-            mtl->setAlpha(j["alpha"]);
-            if(j["diffuseMap"] != "null") {
-                mtl->setDiffuseMap((j["diffuseMap"]));
-            }
-            if(j["specularMap"] != "null") {
-                mtl->setSpecularMap((j["specularMap"]));
-            }
-            if(j["ambientMap"] != "null") {
-                mtl->setAmbientMap((j["ambientMap"]));
-            }
-            if(j["normalMap"] != "null") {
-                mtl->setNormalMap((j["normalMap"]));
-            }
-        }
+        //TODO
         mtl->setSources(files);
         return mtl;
     }

@@ -29,7 +29,8 @@ void AssetBank::fillWithDefaults() {
     addAsset<Shader>("__ice__normal_shader", {"Assets/Shaders/normal.vs", "Assets/Shaders/normal.fs"});
     addAsset<Shader>("__ice__picking_shader", {"Assets/Shaders/picking.vs", "Assets/Shaders/picking.fs"});
     addAsset<TextureCube>("__ice__skybox", {"Assets/Textures/skybox.png"});
-    addAsset<Material>("__ice__base_material", std::make_shared<Material>(Eigen::Vector3f(0.8f, 0.8f, 0.8f), Eigen::Vector3f(1, 1, 1), Eigen::Vector3f(1, 1, 1), 16.0f));
+    //TODO: Load from file
+    addAsset<Material>("__ice__base_material", std::make_shared<Material>());
 }
 
 bool AssetBank::nameInUse(const AssetPath &name) {
