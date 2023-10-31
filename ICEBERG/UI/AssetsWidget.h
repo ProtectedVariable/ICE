@@ -72,11 +72,10 @@ class AssetsWidget : public Widget {
         ImGui::PopStyleVar();
     }
 
-    void addAssets(const AssetView& assets) {
-        auto ptr = std::make_shared<AssetView>(assets);
-        m_assets.push_back(ptr);
+    void addAssets(const std::shared_ptr<AssetView> &assets) {
+        m_assets.push_back(assets);
         if (m_current_view == nullptr) {
-            m_current_view = ptr;
+            m_current_view = assets;
         }
     }
 
