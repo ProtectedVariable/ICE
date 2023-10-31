@@ -38,7 +38,25 @@ class HierarchyWidget : public Widget {
    private:
     void renderTree(const SceneTreeView& tree) {
         auto flags = tree.children.empty() ? ImGuiTreeNodeFlags_Leaf : 0;
-        if (ImGui::TreeNodeEx(tree.entity_name.c_str(), flags)) {
+        auto name = tree.entity_name;
+        if (ImGui::TreeNodeEx(name.c_str(), flags)) {
+            if (tree.type != EntityType::Scene) {
+                auto src_flags = ImGuiDragDropFlags_SourceNoDisableHover;
+                if (ImGui::BeginDragDropSource(src_flags)) {
+                    ImGui::SetDragDropPayload("DND_ENTITY_TREE", name.c_str(), name.size() + 1);
+                    ImGui::Text("%s", name.c_str());
+                    ImGui::EndDragDropSource();
+                }
+            }
+            if (ImGui::BeginDragDropTarget()) {
+                ImGuiDragDropFlags target_flags = 0;
+                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DND_ENTITY_TREE", target_flags)) {
+                    std::string move_from = (char*) payload->Data;
+                    callback("hierarchy_changed");
+                }
+                ImGui::EndDragDropTarget();
+            }
+
             for (const auto& c : tree.children) {
                 renderTree(*c);
             }
