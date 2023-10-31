@@ -52,7 +52,7 @@ class HierarchyWidget : public Widget {
                 ImGuiDragDropFlags target_flags = 0;
                 if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DND_ENTITY_TREE", target_flags)) {
                     std::string move_from = (char*) payload->Data;
-                    call("hierarchy_changed", move_from, name);
+                    callback("hierarchy_changed", move_from, name);
                 }
                 ImGui::EndDragDropTarget();
             }
