@@ -8,7 +8,7 @@ add_library(${PROJECT_NAME} STATIC)
 target_sources(${PROJECT_NAME} PRIVATE
     src/EngineConfig.cpp
     src/Project.cpp
-)
+ "include/MaterialWriter.h" "include/AssetExporter.h")
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
