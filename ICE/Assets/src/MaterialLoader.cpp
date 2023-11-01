@@ -18,7 +18,16 @@ std::shared_ptr<Material> MaterialLoader::load(const std::vector<std::filesystem
         infile.close();
 
         auto mtl = std::make_shared<Material>();
-        //TODO
+        mtl->setShader(j["shader_id"]);
+
+        for (const auto& data : j["uniforms"]) {
+            if (data["type"] == "int") {
+                mtl->setUniform<int>(data["name"], data["value"]);
+            } else if (data["type"] == "float") {
+                mtl->setUniform<float>(data["name"], data["value"]);
+            }
+        }
+
         mtl->setSources(files);
         return mtl;
     }
