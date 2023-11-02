@@ -27,10 +27,11 @@ class ProjectSelectionWidget : public Widget {
         ImGui::End();
     }
 
-    
     int getSelectedProject() const { return m_selected_project; }
 
     const char* getProjectName() const { return m_project_name; }
+
+    void setProjects(const std::vector<ProjectView>& projects) { m_projects = projects; }
 
    private:
     void renderNewProjects() {
@@ -66,7 +67,7 @@ class ProjectSelectionWidget : public Widget {
             }
             if (ImGui::IsItemClicked()) {
                 m_selected_project = i;
-                callback("project_selected");
+                callback("project_selected", i);
             }
         }
         ImGui::EndTable();
@@ -74,6 +75,6 @@ class ProjectSelectionWidget : public Widget {
 
    private:
     char m_project_name[512] = {0};
-    std::vector<ProjectView> m_projects = {{"P0", "C:/P0", "25.10.23"}, {"P1", "C:/P1", "27.10.23"}};
+    std::vector<ProjectView> m_projects;
     int m_selected_project = -1;
 };

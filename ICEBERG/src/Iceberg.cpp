@@ -46,7 +46,9 @@ class Iceberg {
             glfwSwapBuffers(m_window);
         }
         if (m_engine->getProject()) {
+            m_engine->getConfig().getLocalProjects()->push_back(*m_engine->getProject());
             m_engine->getProject()->writeToFile(m_engine->getCamera());
+            m_engine->getConfig().save();
         }
     }
 

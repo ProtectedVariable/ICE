@@ -10,17 +10,14 @@
 #define ICE_CONFIG_FILE ".ice_config"
 
 namespace ICE {
-    enum EngineConfigState {
-        PROJECT_LIST, END
-    };
-
     class EngineConfig {
     public:
+        EngineConfig();
+
         static EngineConfig LoadFromFile();
         std::vector<Project>* getLocalProjects();
         Project* getProjectAt(int id);
 
-        EngineConfig();
         void save();
 
     private:
