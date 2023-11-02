@@ -18,8 +18,7 @@ enum class UIState { PROJECT_SELECTION, EDITOR };
 
 class Iceberg {
    public:
-    Iceberg(GLFWwindow* window) : m_window(window), m_controller(std::make_unique<ProjectSelection>(m_engine)) { m_engine->initialize();
-    }
+    Iceberg(GLFWwindow* window) : m_window(window), m_controller(std::make_unique<ProjectSelection>(m_engine)) { m_engine->initialize(); }
 
     void loop() {
         while (!glfwWindowShouldClose(m_window)) {
@@ -45,6 +44,9 @@ class Iceberg {
             glViewport(0, 0, display_w, display_h);
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
             glfwSwapBuffers(m_window);
+        }
+        if (m_engine->getProject()) {
+            m_engine->getProject()->writeToFile(m_engine->getCamera());
         }
     }
 

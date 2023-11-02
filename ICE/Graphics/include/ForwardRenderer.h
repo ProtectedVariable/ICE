@@ -40,7 +40,7 @@ namespace ICE {
         RendererAPI* api;
         RendererConfig config;
         Framebuffer* target;
-        Skybox* skybox;
+        const Skybox* skybox;
         AssetBank* assetBank;
     };
 }

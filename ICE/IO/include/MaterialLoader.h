@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <Material.h>
+
 #include "IAssetLoader.h"
 
 namespace ICE {

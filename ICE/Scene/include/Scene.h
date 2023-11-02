@@ -94,10 +94,10 @@ namespace ICE {
         const std::string &getName() const;
         void setName(const std::string &name);
 
-        Skybox* getSkybox();
+        const Skybox* getSkybox() const;
         void setSkybox(const Skybox &skybox);
 
-        Registry* getRegistry();
+        Registry* getRegistry() const;
         Entity createEntity();
         void removeEntity(Entity e);
     private:

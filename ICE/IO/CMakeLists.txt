@@ -9,6 +9,10 @@ target_sources(${PROJECT_NAME} PRIVATE
     src/EngineConfig.cpp
     src/Project.cpp
     src/MaterialExporter.cpp
+    src/TextureLoader.cpp
+	src/MeshLoader.cpp
+    src/ShaderLoader.cpp
+    src/MaterialLoader.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}

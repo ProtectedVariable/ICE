@@ -22,17 +22,6 @@ AssetBank::AssetBank(const std::shared_ptr<GraphicsFactory> &factory) : graphics
     loader.AddLoader<Material>(std::make_shared<MaterialLoader>());
 }
 
-void AssetBank::fillWithDefaults() {
-    addAsset<Mesh>("__ice__cube", {"Assets/Meshes/cube.obj"});
-    addAsset<Mesh>("__ice__sphere", {"Assets/Meshes/sphere.obj"});
-    addAsset<Shader>("__ice__phong_shader", {"Assets/Shaders/phong.vs", "Assets/Shaders/phong.fs"});
-    addAsset<Shader>("__ice__normal_shader", {"Assets/Shaders/normal.vs", "Assets/Shaders/normal.fs"});
-    addAsset<Shader>("__ice__picking_shader", {"Assets/Shaders/picking.vs", "Assets/Shaders/picking.fs"});
-    addAsset<TextureCube>("__ice__skybox", {"Assets/Textures/skybox.png"});
-    //TODO: Load from file
-    addAsset<Material>("__ice__base_material", std::make_shared<Material>());
-}
-
 bool AssetBank::nameInUse(const AssetPath &name) {
     return !(nameMapping.find(name) == nameMapping.end());
 }

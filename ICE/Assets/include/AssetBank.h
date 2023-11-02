@@ -32,8 +32,6 @@ class AssetBank {
    public:
     AssetBank(const std::shared_ptr<GraphicsFactory>& factory);
 
-    void fillWithDefaults();
-
     template<typename T>
     std::shared_ptr<T> getAsset(AssetUID uid) {
         return dynamic_pointer_cast<T>(getAsset(uid));

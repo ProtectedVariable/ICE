@@ -6,6 +6,7 @@ include(CTest)
 
 add_executable(MaterialsTestSuite
         MaterialExporterTest.cpp
+        MaterialLoaderTest.cpp
 )
 
 add_test(NAME MaterialsTestSuite

@@ -7,16 +7,13 @@ add_library(${PROJECT_NAME} STATIC)
 
 target_sources(${PROJECT_NAME} PRIVATE
         src/AssetBank.cpp
-		src/TextureLoader.cpp
-		src/MeshLoader.cpp
-        src/ShaderLoader.cpp 
-        src/MaterialLoader.cpp
 		src/AssetPath.cpp)
 
 target_link_libraries(${PROJECT_NAME} 
     PUBLIC 
     graphics 
     util
+    io
     storage
 )
 
