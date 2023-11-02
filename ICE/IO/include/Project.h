@@ -54,6 +54,8 @@ class Project {
     const Eigen::Vector3f& getCameraRotation() const;
 
    private:
+    json dumpAsset(AssetUID uid, const std::shared_ptr<Asset>& asset);
+
     std::vector<std::string> getFilesInDir(const fs::path& folder);
 
     template<typename T>

@@ -90,49 +90,37 @@ void Project::writeToFile(const std::shared_ptr<Camera> &editorCamera) {
     vec.clear();
 
     for (const auto &[asset_id, mesh] : assetBank->getAll<Mesh>()) {
-        auto asset_path = assetBank->getName(asset_id);
-        json tmp;
-        tmp[asset_path.toString()] = asset_id;
-        vec.push_back(tmp);
+        vec.push_back(dumpAsset(asset_id, mesh));
     }
     j["meshes"] = vec;
     vec.clear();
 
     for (const auto &[asset_id, material] : assetBank->getAll<Material>()) {
-        auto asset_path = assetBank->getName(asset_id);
-        json tmp;
-        tmp[asset_path.toString()] = asset_id;
-        vec.push_back(tmp);
-        auto mtlName = assetBank->getName(asset_id).getName();
+        auto &mtlName = assetBank->getName(asset_id).getName();
         fs::path path = m_materials_directory / (mtlName + ".icm");
         MaterialExporter().writeToJson(path, *material);
+
+        material->setSources({path});
+
+        vec.push_back(dumpAsset(asset_id, material));
     }
     j["materials"] = vec;
     vec.clear();
 
     for (const auto &[asset_id, shader] : assetBank->getAll<Shader>()) {
-        auto asset_path = assetBank->getName(asset_id);
-        json tmp;
-        tmp[asset_path.toString()] = asset_id;
-        vec.push_back(tmp);
+        vec.push_back(dumpAsset(asset_id, shader));
     }
     j["shaders"] = vec;
     vec.clear();
 
     for (const auto &[asset_id, texture] : assetBank->getAll<Texture2D>()) {
-        auto asset_path = assetBank->getName(asset_id);
-        json tmp;
-        tmp[asset_path.toString()] = asset_id;
-        vec.push_back(tmp);
+        vec.push_back(dumpAsset(asset_id, texture));
     }
     j["textures2D"] = vec;
     vec.clear();
 
     for (const auto &[asset_id, texture] : assetBank->getAll<TextureCube>()) {
-        auto asset_path = assetBank->getName(asset_id);
-        json tmp;
-        tmp[asset_path.toString()] = asset_id;
-        vec.push_back(tmp);
+        vec.push_back(dumpAsset(asset_id, texture));
     }
     j["cubeMaps"] = vec;
 
@@ -180,6 +168,21 @@ void Project::writeToFile(const std::shared_ptr<Camera> &editorCamera) {
         outstream << j.dump(4);
         outstream.close();
     }
+}
+
+json Project::dumpAsset(AssetUID uid, const std::shared_ptr<Asset> &asset) {
+    auto asset_path = assetBank->getName(uid);
+    json tmp;
+    auto paths = asset->getSources();
+    std::vector<std::string> sources(paths.size());
+    std::transform(paths.begin(), paths.end(), sources.begin(), [this](const fs::path &path) {
+        auto relative = path.lexically_relative(m_base_directory);
+        return relative.string();
+    });
+    tmp["bank_path"] = asset_path.toString();
+    tmp["uid"] = uid;
+    tmp["sources"] = sources;
+    return tmp;
 }
 
 void Project::loadFromFile() {
