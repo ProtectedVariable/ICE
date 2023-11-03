@@ -17,6 +17,8 @@
 namespace ICE {
     class ForwardRenderer : public Renderer {
     public:
+        ForwardRenderer(RendererAPI* api);
+
         void initialize(RendererConfig config, AssetBank* assetBank) override;
 
         void submitScene(Scene *scene) override;

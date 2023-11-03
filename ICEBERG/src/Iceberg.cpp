@@ -6,6 +6,7 @@
 #include <ImGUI/imgui_impl_glfw.h>
 #include <ImGUI/imgui_impl_opengl3.h>
 #include <ImGUI/imgui_internal.h>
+#include <OpenGLFactory.h>
 
 #include <fstream>
 #include <iostream>
@@ -18,7 +19,9 @@ enum class UIState { PROJECT_SELECTION, EDITOR };
 
 class Iceberg {
    public:
-    Iceberg(GLFWwindow* window) : m_window(window), m_controller(std::make_unique<ProjectSelection>(m_engine)) { m_engine->initialize(); }
+    Iceberg(GLFWwindow* window) : m_window(window), m_controller(std::make_unique<ProjectSelection>(m_engine)) {
+        m_engine->initialize(std::make_shared<ICE::OpenGLFactory>(), (void*) window);
+    }
 
     void loop() {
         while (!glfwWindowShouldClose(m_window)) {
@@ -35,6 +38,10 @@ class Iceberg {
                     m_controller = std::make_unique<Editor>(m_engine);
                     m_state = UIState::EDITOR;
                 }
+            }
+
+            if (m_state == UIState::EDITOR) {
+                m_engine->step(m_engine->getProject()->getCurrentScene());
             }
             ImGui::ShowDemoWindow();
             ImGui::Render();

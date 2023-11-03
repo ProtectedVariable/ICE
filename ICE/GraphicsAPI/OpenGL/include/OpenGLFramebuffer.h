@@ -29,7 +29,6 @@ namespace ICE {
         GLuint uid;
         GLuint texture;
         GLuint depth;
-        FrameBufferFormat fmt;
     };
 }
 

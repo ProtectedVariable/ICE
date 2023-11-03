@@ -5,31 +5,31 @@
 #include "RenderSystem.h"
 
 namespace ICE {
-    void RenderSystem::update(Scene* scene, double delta) {
-        renderer->submitScene(scene);
-        renderer->prepareFrame(*camera);
-        renderer->render();
-        renderer->endFrame();
-    }
-
-    Renderer *RenderSystem::getRenderer() const {
-        return renderer;
-    }
-
-    void RenderSystem::setRenderer(Renderer *renderer) {
-        RenderSystem::renderer = renderer;
-    }
-
-    Camera* RenderSystem::getCamera() const {
-        return camera;
-    }
-
-    void RenderSystem::setCamera(Camera *camera) {
-        RenderSystem::camera = camera;
-    }
-
-    void RenderSystem::setTarget(Framebuffer *fb, int width, int height) {
-        renderer->setTarget(fb);
-        renderer->resize(width, height);
-    }
+void RenderSystem::update(const std::shared_ptr<Scene> &scene, double delta) {
+    renderer->submitScene(scene.get());
+    renderer->prepareFrame(*camera);
+    renderer->render();
+    renderer->endFrame();
 }
+
+Renderer *RenderSystem::getRenderer() const {
+    return renderer;
+}
+
+void RenderSystem::setRenderer(Renderer *renderer) {
+    RenderSystem::renderer = renderer;
+}
+
+Camera *RenderSystem::getCamera() const {
+    return camera;
+}
+
+void RenderSystem::setCamera(Camera *camera) {
+    RenderSystem::camera = camera;
+}
+
+void RenderSystem::setTarget(Framebuffer *fb, int width, int height) {
+    renderer->setTarget(fb);
+    renderer->resize(width, height);
+}
+}  // namespace ICE

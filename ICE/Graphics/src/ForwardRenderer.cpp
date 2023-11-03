@@ -2,58 +2,61 @@
 // Created by Thomas Ibanez on 20.11.20.
 //
 
-#include <GL/gl3w.h>
 #include "ForwardRenderer.h"
-#include <TransformComponent.h>
+
+#include <GL/gl3w.h>
 #include <LightComponent.h>
-#include <RenderComponent.h>
 #include <Logger.h>
+#include <RenderComponent.h>
 #include <Scene.h>
+#include <TransformComponent.h>
 
 namespace ICE {
 
-    void ForwardRenderer::initialize(RendererConfig config, AssetBank* assetBank) {
-        //this->api = RendererAPI::Create();
-        this->config = config;
-        this->assetBank = assetBank;
-    }
+ForwardRenderer::ForwardRenderer(RendererAPI* _api) : api(_api) {
+}
 
-    void ForwardRenderer::submitScene(Scene *scene) {
-        skybox = scene->getSkybox();
-        for(auto e : scene->getRegistry()->getEntities()) {
-            submit(e);
-        }
-    }
+void ForwardRenderer::initialize(RendererConfig config, AssetBank* assetBank) {
+    this->config = config;
+    this->assetBank = assetBank;
+}
 
-    void ForwardRenderer::submit(Entity e) {
-        
-        /*if(e->hasComponent<RenderComponent>() && e->hasComponent<TransformComponent>()) {
+void ForwardRenderer::submitScene(Scene* scene) {
+    skybox = scene->getSkybox();
+    for (auto e : scene->getRegistry()->getEntities()) {
+        submit(e);
+    }
+}
+
+void ForwardRenderer::submit(Entity e) {
+
+    /*if(e->hasComponent<RenderComponent>() && e->hasComponent<TransformComponent>()) {
             renderableEntities.push_back(e);
         }
         if(e->hasComponent<LightComponent>() && e->hasComponent<TransformComponent>()) {
             lightEntities.push_back(e);
         }*/
-    }
+}
 
-    void ForwardRenderer::prepareFrame(Camera& camera) {
-        if(this->target != nullptr)
-            this->target->bind();
-        else
-            api->bindDefaultFramebuffer();
-        //TODO: Sort entities, make shader list, batch, make instances, set uniforms, etc..
-        api->clear();
-        if(skybox != nullptr) {
-            Skybox::getShader()->bind();
-            Skybox::getShader()->loadMat4("projection", camera.getProjection());
-            Eigen::Matrix4f view = camera.lookThrough();
-            view(0, 3) = 0;
-            view(1, 3) = 0;
-            view(2, 3) = 0;
-            Skybox::getShader()->loadMat4("view", view);
-            Skybox::getShader()->loadInt("skybox", 0);
-        }
-        for(auto e : renderableEntities) {
-            /*auto rc = e->getComponent<RenderComponent>();
+void ForwardRenderer::prepareFrame(Camera& camera) {
+    if (this->target != nullptr)
+        this->target->bind();
+    else
+        api->bindDefaultFramebuffer();
+    //TODO: Sort entities, make shader list, batch, make instances, set uniforms, etc..
+    api->clear();
+    if (skybox->getTexture() != 0) {
+        Skybox::getShader()->bind();
+        Skybox::getShader()->loadMat4("projection", camera.getProjection());
+        Eigen::Matrix4f view = camera.lookThrough();
+        view(0, 3) = 0;
+        view(1, 3) = 0;
+        view(2, 3) = 0;
+        Skybox::getShader()->loadMat4("view", view);
+        Skybox::getShader()->loadInt("skybox", 0);
+    }
+    for (auto e : renderableEntities) {
+        /*auto rc = e->getComponent<RenderComponent>();
             Shader* shader = assetBank->getAsset<Shader>(e->getComponent<RenderComponent>()->getShader());
             shader->bind();
             shader->loadMat4("projection", camera.getProjection());
@@ -70,20 +73,20 @@ namespace ICE {
             }
             shader->loadInt("light_count", i);
             */
-        }
     }
+}
 
-    void ForwardRenderer::render() {
-        if(skybox->getTexture() != NO_ASSET_ID) {
-            api->setDepthMask(false);
-            Skybox::getShader()->bind();
-            skybox->getVAO()->bind();
-            assetBank->getAsset<TextureCube>(skybox->getTexture())->bind(0);
-            glDrawArrays(GL_TRIANGLES, 0, 36);
-        }
-        api->setDepthMask(true);
-        for(auto e : renderableEntities) {
-            /*auto rc = e->getComponent<RenderComponent>();
+void ForwardRenderer::render() {
+    if (skybox->getTexture() != NO_ASSET_ID) {
+        api->setDepthMask(false);
+        Skybox::getShader()->bind();
+        skybox->getVAO()->bind();
+        assetBank->getAsset<TextureCube>(skybox->getTexture())->bind(0);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+    }
+    api->setDepthMask(true);
+    for (auto e : renderableEntities) {
+        /*auto rc = e->getComponent<RenderComponent>();
             const Material* mat = assetBank->getAsset<Material>(e->getComponent<RenderComponent>()->getMaterial());
             Shader* shader = assetBank->getAsset<Shader>(e->getComponent<RenderComponent>()->getShader());
             shader->bind();
@@ -114,29 +117,29 @@ namespace ICE {
             shader->loadInt("material.normal_map", 3);
             api->renderVertexArray(assetBank->getAsset<Mesh>(e->getComponent<RenderComponent>()->getMesh())->getVertexArray());
             */
-        }
-    }
-
-    void ForwardRenderer::endFrame() {
-        api->checkAndLogErrors();
-        renderableEntities.clear();
-        lightEntities.clear();
-        //TODO: Cleanup and restore state
-        if(this->target != nullptr)
-            this->target->unbind();
-    }
-
-    void ForwardRenderer::setTarget(Framebuffer* target) {
-        this->target = target;
-    }
-
-    void ForwardRenderer::resize(uint32_t width, uint32_t height) {
-        this->target->bind();
-        this->target->resize(width, height);
-        this->api->setViewport(0, 0, width, height);
-    }
-
-    void ForwardRenderer::setClearColor(Eigen::Vector4f clearColor) {
-        this->api->setClearColor(clearColor.x(), clearColor.y(), clearColor.z(), clearColor.w());
     }
 }
+
+void ForwardRenderer::endFrame() {
+    api->checkAndLogErrors();
+    renderableEntities.clear();
+    lightEntities.clear();
+    //TODO: Cleanup and restore state
+    if (this->target != nullptr)
+        this->target->unbind();
+}
+
+void ForwardRenderer::setTarget(Framebuffer* target) {
+    this->target = target;
+}
+
+void ForwardRenderer::resize(uint32_t width, uint32_t height) {
+    this->target->bind();
+    this->target->resize(width, height);
+    this->api->setViewport(0, 0, width, height);
+}
+
+void ForwardRenderer::setClearColor(Eigen::Vector4f clearColor) {
+    this->api->setClearColor(clearColor.x(), clearColor.y(), clearColor.z(), clearColor.w());
+}
+}  // namespace ICE

@@ -11,34 +11,26 @@
 
 namespace ICE {
 ICEEngine::ICEEngine() : camera(std::make_shared<Camera>(CameraParameters{{60, 16.f / 9.f, 0.1f, 100000}, Perspective})), config(EngineConfig::LoadFromFile()) {
-    selected = 0;
 }
 
-void ICEEngine::initialize() {
+void ICEEngine::initialize(const std::shared_ptr<GraphicsFactory> &graphics_factory, void *window) {
     Logger::Log(Logger::INFO, "Core", "Engine starting up...");
+
+    ctx = graphics_factory->createContext(window);
+    api = graphics_factory->createRendererAPI();
+    internalFB = graphics_factory->createFramebuffer({512, 512, 1});
 }
 
-void ICEEngine::step() {
-
-    api->bindDefaultFramebuffer();
-    glfwPollEvents();
-    api->setClearColor(0, 0, 0, 1);
-    api->clear();
+void ICEEngine::step(const std::shared_ptr<Scene> &scene) {
 
     auto fmt = internalFB->getFormat();
-    //renderSystem->setTarget(internalFB, fmt.width, fmt.height);
+    m_rendersystem->setTarget(internalFB.get(), fmt.width, fmt.height);
     camera->setParameters({60, (float) fmt.width / (float) fmt.height, 0.01f, 1000});
-    api->setClearColor(0, 0, 0, 1);
-    api->clear();
-    for (auto s : systems) {
-        //s->update(currentScene, 0.f);
+
+    for (const auto &s : systems) {
+        s->update(scene, 0.f);
     }
 
-    int display_w, display_h;
-    glfwGetFramebufferSize(static_cast<GLFWwindow *>(window), &display_w, &display_h);
-    api->setViewport(0, 0, display_w, display_h);
-
-    glfwSwapBuffers(static_cast<GLFWwindow *>(window));
 }
 
 std::shared_ptr<Camera> ICEEngine::getCamera() {
@@ -47,18 +39,6 @@ std::shared_ptr<Camera> ICEEngine::getCamera() {
 
 std::shared_ptr<AssetBank> ICEEngine::getAssetBank() {
     return project->getAssetBank();
-}
-
-std::shared_ptr<Scene> ICEEngine::getScene() {
-    return currentScene;
-}
-
-Entity ICEEngine::getSelected() const {
-    return selected;
-}
-
-void ICEEngine::setSelected(Entity selected) {
-    ICEEngine::selected = selected;
 }
 
 Eigen::Vector4i ICEEngine::getPickingTextureAt(int x, int y) {
@@ -94,17 +74,23 @@ std::shared_ptr<Project> ICEEngine::getProject() const {
     return project;
 }
 
+std::shared_ptr<Framebuffer> ICEEngine::getInternalFramebuffer() const {
+    return internalFB;
+}
+
 void ICEEngine::setProject(const std::shared_ptr<Project> &project) {
     this->project = project;
-    //this->currentScene = project->getScenes().at(0);
     this->camera->getPosition() = project->getCameraPosition();
     this->camera->getRotation() = project->getCameraRotation();
-    std::shared_ptr<Renderer> renderer = std::make_shared<ForwardRenderer>();
+    auto renderer = new ForwardRenderer(api.get());
     renderer->initialize(RendererConfig(), project->getAssetBank().get());
-    //this->renderSystem = std::make_shared<RenderSystem>();
-    //systems.push_back(renderSystem);
+    m_rendersystem = std::make_shared<RenderSystem>();
+    m_rendersystem->setCamera(camera.get());
+    m_rendersystem->setRenderer(renderer);
+    auto fmt = internalFB->getFormat();
+    m_rendersystem->setTarget(internalFB.get(), fmt.width, fmt.height);
+    systems.push_back(m_rendersystem);
     Skybox::Initialize();
-    //this->gui.initializeEditorUI();
 }
 
 EngineConfig &ICEEngine::getConfig() {

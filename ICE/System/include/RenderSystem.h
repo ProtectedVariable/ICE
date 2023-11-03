@@ -17,7 +17,7 @@ namespace ICE {
     public:
         RenderSystem() {};
 
-        void update(Scene* scene, double delta) override;
+        void update(const std::shared_ptr<Scene> &scene, double delta) override;
 
         Renderer *getRenderer() const;
         void setRenderer(Renderer *renderer);

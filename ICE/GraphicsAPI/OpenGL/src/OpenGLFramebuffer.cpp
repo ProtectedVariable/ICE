@@ -19,8 +19,8 @@ namespace ICE {
     void OpenGLFramebuffer::resize(int width, int height) {
         if(width <= 0) width = 1;
         if(height<= 0) height = 1;
-        fmt.width = width;
-        fmt.height = height;
+        format.width = width;
+        format.height = height;
         glBindTexture(GL_TEXTURE_2D, texture);
 
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
@@ -41,7 +41,7 @@ namespace ICE {
         return static_cast<char*>(0)+texture;
     }
 
-    OpenGLFramebuffer::OpenGLFramebuffer(FrameBufferFormat fmt): fmt(fmt) {
+    OpenGLFramebuffer::OpenGLFramebuffer(FrameBufferFormat fmt) : Framebuffer(fmt) {
         glGenFramebuffers(1, &uid);
         glBindFramebuffer(GL_FRAMEBUFFER, uid);
         glGenTextures(1, &texture);
@@ -66,7 +66,7 @@ namespace ICE {
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
             Logger::Log(Logger::FATAL, "Graphics", "Couldn't create framebuffer object ! (%d)", status);
         }
-
+        unbind();
     }
 
     Eigen::Vector4i OpenGLFramebuffer::readPixel(int x, int y) {
@@ -74,7 +74,7 @@ namespace ICE {
         glFinish();
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         auto pixels = Eigen::Vector4i();
-        glReadPixels(x, fmt.height-y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
+        glReadPixels(x, format.height-y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
         return pixels;
     }
 }
