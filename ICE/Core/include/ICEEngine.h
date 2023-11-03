@@ -48,9 +48,6 @@ class ICEEngine {
     void importMesh();
 
     void importTexture(bool cubeMap);
-
-    void setCurrentScene(const std::shared_ptr<Scene>& scene);
-
    private:
     void* window;
 

@@ -38,13 +38,15 @@ class Project {
     void copyAssetFile(const fs::path& folder, const std::string& assetName, const fs::path& src);
     bool renameAsset(const AssetPath& oldName, const AssetPath& newName);
 
-    std::vector<Scene>& getScenes();
-    void setScenes(const std::vector<Scene>& scenes);
+    std::vector<std::shared_ptr<Scene>> getScenes();
+    void setScenes(const std::vector<std::shared_ptr<Scene>>& scenes);
 
     std::shared_ptr<AssetBank> getAssetBank();
     void setAssetBank(const std::shared_ptr<AssetBank>& assetBank);
 
-    void addScene(Scene& scene);
+    void addScene(const Scene& scene);
+    void setCurrentScene(const std::shared_ptr<Scene>& scene);
+    std::shared_ptr<Scene> getCurrentScene() const;
 
     static json dumpVec3(const Eigen::Vector3f& v);
     static json dumpVec4(const Eigen::Vector4f& v);
@@ -86,8 +88,12 @@ class Project {
     fs::path m_textures_directory;
     fs::path m_cubemaps_directory;
     std::string name;
-    std::vector<Scene> scenes;
+
+    std::vector<std::shared_ptr<Scene>> scenes;
+    std::shared_ptr<Scene> m_current_scene;
+
     std::shared_ptr<AssetBank> assetBank;
+
     Eigen::Vector3f cameraPosition, cameraRotation;
 };
 }  // namespace ICE

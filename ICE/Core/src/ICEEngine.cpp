@@ -133,8 +133,4 @@ void ICEEngine::importTexture(bool cubeMap) {
         project->copyAssetFile("Textures", aname, file);
     }
 }
-
-void ICEEngine::setCurrentScene(const std::shared_ptr<Scene> &currentScene) {
-    ICEEngine::currentScene = currentScene;
-}
 }  // namespace ICE

@@ -3,6 +3,8 @@
 #include <gtest/gtest.h>
 #include <Scene.h>
 
+using namespace ICE;
+
 TEST(SceneTest, SceneCreated)
 {
 	Scene scene = Scene("test", new Registry());

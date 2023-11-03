@@ -11,7 +11,7 @@
 enum class EntityType { LightSource, Renderable, Camera, Scene, None };
 
 struct SceneTreeView {
-    //ICE::Entity id; Ideally not needed, tbd
+    ICE::Entity id;
     std::string entity_name;
     EntityType type = EntityType::None;
     std::vector<std::shared_ptr<SceneTreeView>> children;
@@ -31,6 +31,13 @@ class HierarchyWidget : public Widget {
 
         renderTree(m_view);
 
+        if (ImGui::BeginPopupContextWindow("hierarchy_popup")) {
+            if (ImGui::Button("Create new entity")) {
+                callback("create_entity_clicked");
+            }
+            ImGui::EndPopup();
+        }
+
         ImGui::End();
         ImGui::PopStyleVar();
     }
@@ -43,7 +50,7 @@ class HierarchyWidget : public Widget {
             if (tree.type != EntityType::Scene) {
                 auto src_flags = ImGuiDragDropFlags_SourceNoDisableHover;
                 if (ImGui::BeginDragDropSource(src_flags)) {
-                    ImGui::SetDragDropPayload("DND_ENTITY_TREE", name.c_str(), name.size() + 1);
+                    ImGui::SetDragDropPayload("DND_ENTITY_TREE", &tree.id, sizeof(ICE::Entity*));
                     ImGui::Text("%s", name.c_str());
                     ImGui::EndDragDropSource();
                 }
@@ -51,8 +58,8 @@ class HierarchyWidget : public Widget {
             if (ImGui::BeginDragDropTarget()) {
                 ImGuiDragDropFlags target_flags = 0;
                 if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DND_ENTITY_TREE", target_flags)) {
-                    std::string move_from = (char*) payload->Data;
-                    callback("hierarchy_changed", move_from, name);
+                    auto move_from = (ICE::Entity*) payload->Data;
+                    callback("hierarchy_changed", *move_from, tree.id);
                 }
                 ImGui::EndDragDropTarget();
             }

@@ -60,8 +60,8 @@ bool Project::CreateDirectories() {
     assetBank->addAsset<TextureCube>("skybox", {m_cubemaps_directory / "skybox.png"});
     assetBank->addAsset<Material>("base_mat", {m_materials_directory / "base_mat.icm"});
 
-    scenes.push_back(Scene("MainScene", new Registry()));
-
+    scenes.push_back(std::make_shared<Scene>("MainScene", new Registry()));
+    setCurrentScene(getScenes()[0]);
     return true;
 }
 
@@ -83,7 +83,7 @@ void Project::writeToFile(const std::shared_ptr<Camera> &editorCamera) {
 
     std::vector<json> vec;
     for (const auto &s : scenes) {
-        vec.push_back(s.getName());
+        vec.push_back(s->getName());
     }
     j["scenes"] = vec;
     vec.clear();
@@ -127,34 +127,34 @@ void Project::writeToFile(const std::shared_ptr<Camera> &editorCamera) {
     outstream.close();
 
     for (const auto &s : scenes) {
-        outstream.open(m_scenes_directory / (s.getName() + ".ics"));
+        outstream.open(m_scenes_directory / (s->getName() + ".ics"));
         j.clear();
 
-        j["name"] = s.getName();
+        j["name"] = s->getName();
         json entities = json::array();
-        for (auto e : s.getRegistry()->getEntities()) {
+        for (auto e : s->getRegistry()->getEntities()) {
             json entity;
             entity["name"] = e;
             //entity["parent"] = s.getParent(e);
 
-            if (s.getRegistry()->entityHasComponent<RenderComponent>(e)) {
-                RenderComponent rc = *s.getRegistry()->getComponent<RenderComponent>(e);
+            if (s->getRegistry()->entityHasComponent<RenderComponent>(e)) {
+                RenderComponent rc = *s->getRegistry()->getComponent<RenderComponent>(e);
                 json renderjson;
                 renderjson["mesh"] = rc.mesh;
                 renderjson["material"] = rc.material;
                 renderjson["shader"] = rc.shader;
                 entity["renderComponent"] = renderjson;
             }
-            if (s.getRegistry()->entityHasComponent<TransformComponent>(e)) {
-                TransformComponent tc = *s.getRegistry()->getComponent<TransformComponent>(e);
+            if (s->getRegistry()->entityHasComponent<TransformComponent>(e)) {
+                TransformComponent tc = *s->getRegistry()->getComponent<TransformComponent>(e);
                 json transformjson;
                 transformjson["position"] = dumpVec3(tc.position);
                 transformjson["rotation"] = dumpVec3(tc.rotation);
                 transformjson["scale"] = dumpVec3(tc.scale);
                 entity["transformComponent"] = transformjson;
             }
-            if (s.getRegistry()->entityHasComponent<LightComponent>(e)) {
-                LightComponent lc = *s.getRegistry()->getComponent<LightComponent>(e);
+            if (s->getRegistry()->entityHasComponent<LightComponent>(e)) {
+                LightComponent lc = *s->getRegistry()->getComponent<LightComponent>(e);
                 json lightjson;
                 lightjson["color"] = dumpVec3(lc.color);
                 lightjson["type"] = lc.type;
@@ -163,7 +163,7 @@ void Project::writeToFile(const std::shared_ptr<Camera> &editorCamera) {
             entities.push_back(entity);
         }
         j["entities"] = entities;
-        j["skybox"] = s.getSkybox()->getTexture();
+        j["skybox"] = s->getSkybox()->getTexture();
         outstream << j.dump(4);
         outstream.close();
     }
@@ -241,7 +241,9 @@ void Project::loadFromFile() {
         for (json jentity : scenejson["entities"]) {
             //scene.setParent(jentity["name"], jentity["parent"]);
         }
-        scenes.push_back(scene);
+        addScene(scene);
+        //TODO: it would be better to save the current scene index
+        setCurrentScene(getScenes()[0]);
     }
 }
 
@@ -288,11 +290,11 @@ std::vector<std::string> Project::getFilesInDir(const fs::path &folder) {
     return files;
 }
 
-std::vector<Scene> &Project::getScenes() {
+std::vector<std::shared_ptr<Scene>> Project::getScenes() {
     return scenes;
 }
 
-void Project::setScenes(const std::vector<Scene> &scenes) {
+void Project::setScenes(const std::vector<std::shared_ptr<Scene>> &scenes) {
     Project::scenes = scenes;
 }
 
@@ -304,8 +306,15 @@ void Project::setAssetBank(const std::shared_ptr<AssetBank> &assetBank) {
     Project::assetBank = assetBank;
 }
 
-void Project::addScene(Scene &scene) {
-    scenes.push_back(scene);
+void Project::addScene(const Scene &scene) {
+    scenes.push_back(std::make_shared<Scene>(scene));
+}
+
+void Project::setCurrentScene(const std::shared_ptr<Scene> &scene) {
+    m_current_scene = scene;
+}
+std::shared_ptr<Scene> Project::getCurrentScene() const {
+    return m_current_scene;
 }
 
 json Project::dumpVec3(const Eigen::Vector3f &v) {

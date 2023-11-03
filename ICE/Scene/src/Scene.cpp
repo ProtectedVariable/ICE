@@ -9,14 +9,15 @@
 #include <utility>
 
 namespace ICE {
-Scene::Scene(const std::string &name, Registry *registry) : name(name), graph(SceneGraph()), skybox(Skybox(NO_ASSET_ID)), registry(registry) {
+Scene::Scene(const std::string &name, Registry *registry) : name(name), m_graph(std::make_shared<SceneGraph>()), skybox(Skybox(NO_ASSET_ID)), registry(registry) {
+    aliases.try_emplace(0, "Scene");
 }
 
-SceneGraph Scene::getGraph() {
-    return graph;
+std::shared_ptr<SceneGraph> Scene::getGraph() const {
+    return m_graph;
 }
 
-const std::string &Scene::getName() const {
+std::string Scene::getName() const {
     return name;
 }
 
@@ -47,7 +48,7 @@ Registry *Scene::getRegistry() const {
 
 Entity Scene::createEntity() {
     Entity e = registry->createEntity();
-    graph.addEntity(e);
+    m_graph->addEntity(e);
     aliases.insert({e, "entity_" + std::to_string(e)});
     return e;
 }
@@ -55,6 +56,6 @@ Entity Scene::createEntity() {
 void Scene::removeEntity(Entity e) {
     registry->removeEntity(e);
     aliases.erase(e);
-    graph.removeEntity(e);
+    m_graph->removeEntity(e);
 }
 }  // namespace ICE
