@@ -7,8 +7,8 @@ Assets::Assets(const std::shared_ptr<ICE::ICEEngine>& engine) : m_engine(engine)
     std::unordered_map<std::string, std::shared_ptr<AssetView>> asset_roots;
 
     for (const auto& entry : entries) {
-        auto& root = entry.path.getPath().front();
-        if (!asset_roots.contains(entry.path.getPath().front())) {
+        auto root = entry.path.getPath()[0];
+        if (!asset_roots.contains(root)) {
             asset_roots.try_emplace(root, std::make_shared<AssetView>(AssetView{root, {}, {}}));
         }
         std::shared_ptr<AssetView> parent = asset_roots[root];

@@ -50,7 +50,7 @@ bool Project::CreateDirectories() {
     copyAssetFile("Shaders", "picking", "Assets/Shaders/picking.vs");
     copyAssetFile("Shaders", "picking", "Assets/Shaders/picking.fs");
     copyAssetFile("Cubemaps", "skybox", "Assets/Textures/skybox.png");
-    //copyAssetFile("Materials", "phong_mat.icm", "Assets/Shaders/phong_mat.icm");
+    copyAssetFile("Materials", "base_mat", "Assets/Materials/base_mat.icm");
 
     assetBank->addAsset<Mesh>("cube", {m_meshes_directory / "cube.obj"});
     assetBank->addAsset<Mesh>("sphere", {m_meshes_directory / "sphere.obj"});
@@ -58,8 +58,7 @@ bool Project::CreateDirectories() {
     assetBank->addAsset<Shader>("normal", {m_shaders_directory / "normal.vs", m_shaders_directory / "normal.fs"});
     assetBank->addAsset<Shader>("__ice__picking_shader", {m_shaders_directory / "picking.vs", m_shaders_directory / "picking.fs"});
     assetBank->addAsset<TextureCube>("skybox", {m_cubemaps_directory / "skybox.png"});
-    //TODO: Load from file
-    assetBank->addAsset<Material>("phong", std::make_shared<Material>());
+    assetBank->addAsset<Material>("base_mat", {m_materials_directory / "base_mat.icm"});
 
     scenes.push_back(Scene("MainScene", new Registry()));
 
@@ -96,7 +95,7 @@ void Project::writeToFile(const std::shared_ptr<Camera> &editorCamera) {
     vec.clear();
 
     for (const auto &[asset_id, material] : assetBank->getAll<Material>()) {
-        auto &mtlName = assetBank->getName(asset_id).getName();
+        auto mtlName = assetBank->getName(asset_id).getName();
         fs::path path = m_materials_directory / (mtlName + ".icm");
         MaterialExporter().writeToJson(path, *material);
 
@@ -192,24 +191,22 @@ void Project::loadFromFile() {
     infile.close();
 
     std::vector<std::string> sceneNames = j["scenes"];
-    json meshesNames = j["meshes"];
-    json materialNames = j["materials"];
-    json shaderNames = j["shaders"];
-    json textureNames = j["textures2D"];
-    json cubeMapNames = j["cubeMaps"];
+    json meshes = j["meshes"];
+    json material = j["materials"];
+    json shader = j["shaders"];
+    json texture = j["textures2D"];
+    json cubeMap = j["cubeMaps"];
 
     cameraPosition = JsonParser::parseVec3(j["camera_position"]);
     cameraRotation = JsonParser::parseVec3(j["camera_rotation"]);
 
-    auto path = m_base_directory / "Assets";
+    loadAssetsOfType<Texture2D>(texture);
+    loadAssetsOfType<TextureCube>(cubeMap);
+    loadAssetsOfType<Mesh>(meshes);
+    loadAssetsOfType<Material>(material);
+    loadAssetsOfType<Shader>(shader);
 
-    loadAssetsOfType<Texture2D>(path, textureNames);
-    loadAssetsOfType<TextureCube>(path, cubeMapNames);
-    loadAssetsOfType<Mesh>(path, meshesNames);
-    loadAssetsOfType<Material>(path, materialNames);
-    loadAssetsOfType<Shader>(path, shaderNames);
-
-    for (auto s : sceneNames) {
+    for (const auto &s : sceneNames) {
         infile = std::ifstream(m_scenes_directory / (s + ".ics"));
         json scenejson;
         infile >> scenejson;

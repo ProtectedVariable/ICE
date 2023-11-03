@@ -59,21 +59,16 @@ class Project {
     std::vector<std::string> getFilesInDir(const fs::path& folder);
 
     template<typename T>
-    void loadAssetsOfType(const fs::path& basepath, json names) {
-        std::vector<std::string> files;
-        std::string typeFolder = AssetPath::WithTypePrefix<T>("").toString();
-        for (const auto& entry : fs::directory_iterator(basepath / typeFolder)) {
-            std::string sp = entry.path().string();
-            files.push_back(sp.substr(sp.find_last_of("/") + 1));
-        }
-        for (auto m : names.items()) {
-            AssetPath assetPath = AssetPath(m.value().begin().key());
-            for (auto file : files) {
-                if (file.substr(0, file.find_last_of(".")) == assetPath.getName()) {
-                    assetBank->addAssetWithSpecificUID<T>(m.value().begin().key(), {(basepath / typeFolder / file)}, m.value().begin().value());
-                    break;
-                }
+    void loadAssetsOfType(const json& assets) {
+        for (const auto& asset : assets) {
+            AssetUID uid = asset["uid"];
+            std::string asset_path = asset["bank_path"];
+            std::vector<fs::path> sources;
+            for (const auto& entry : asset["sources"]) {
+                std::string source = entry;
+                sources.push_back(m_base_directory / source);
             }
+            assetBank->addAssetWithSpecificUID<T>(asset_path, sources, uid);
         }
     }
 

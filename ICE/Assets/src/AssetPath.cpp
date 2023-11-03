@@ -33,11 +33,11 @@ namespace ICE {
         return (prefix() + name);
     }
 
-    const std::vector<std::string> &AssetPath::getPath() const {
+    std::vector<std::string> AssetPath::getPath() const {
         return path;
     }
 
-    const std::string &AssetPath::getName() const {
+    std::string AssetPath::getName() const {
         return name;
     }
 
