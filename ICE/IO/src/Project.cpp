@@ -134,8 +134,9 @@ void Project::writeToFile(const std::shared_ptr<Camera> &editorCamera) {
         json entities = json::array();
         for (auto e : s->getRegistry()->getEntities()) {
             json entity;
-            entity["name"] = e;
-            //entity["parent"] = s.getParent(e);
+            entity["id"] = e;
+            entity["name"] = s->getAlias(e);
+            entity["parent"] = s->getGraph()->getParentID(e);
 
             if (s->getRegistry()->entityHasComponent<RenderComponent>(e)) {
                 RenderComponent rc = *s->getRegistry()->getComponent<RenderComponent>(e);
@@ -163,7 +164,6 @@ void Project::writeToFile(const std::shared_ptr<Camera> &editorCamera) {
             entities.push_back(entity);
         }
         j["entities"] = entities;
-        j["skybox"] = s->getSkybox()->getTexture();
         outstream << j.dump(4);
         outstream.close();
     }
@@ -214,32 +214,35 @@ void Project::loadFromFile() {
 
         Scene scene = Scene(scenejson["name"], new Registry());
 
-        if (scenejson["skybox"] != "null") {
-            scene.setSkybox(Skybox((AssetUID) scenejson["skybox"]));
-        }
         for (json jentity : scenejson["entities"]) {
-            //Entity e = scene.addEntity();
+            Entity e = jentity["id"];
+            Entity parent = jentity["parent"];
+            std::string alias = jentity["name"];
+
+            scene.addEntity(e, alias, 0);
+
             if (!jentity["transformComponent"].is_null()) {
                 json tj = jentity["transformComponent"];
                 TransformComponent tc = {.position = JsonParser::parseVec3(tj["position"]),
                                          .rotation = JsonParser::parseVec3(tj["rotation"]),
                                          .scale = JsonParser::parseVec3(tj["scale"])};
-                //scene.addComponent(tc);
+                scene.getRegistry()->addComponent(e, tc);
             }
             if (!jentity["renderComponent"].is_null()) {
                 json rj = jentity["renderComponent"];
-                //RenderComponent* rc = new RenderComponent((AssetUID)rj["mesh"], (AssetUID)rj["material"], (AssetUID)rj["shader"]);
-                //e->addComponent(rc);
+                RenderComponent rc = {.mesh = (AssetUID) rj["mesh"], .material = (AssetUID) rj["material"], .shader = (AssetUID) rj["shader"]};
+                scene.getRegistry()->addComponent(e, rc);
             }
             if (!jentity["lightComponent"].is_null()) {
                 json lj = jentity["lightComponent"];
-                //LightComponent* lc = new LightComponent(PointLight, JsonParser::parseVec3(lj["color"]));
-                //e->addComponent(lc);
+                LightComponent lc = {.type = PointLight, .color = JsonParser::parseVec3(lj["color"])};
+                scene.getRegistry()->addComponent(e, lc);
             }
-            //scene.addEntity(jentity["name"], e);
         }
         for (json jentity : scenejson["entities"]) {
-            //scene.setParent(jentity["name"], jentity["parent"]);
+            Entity e = jentity["id"];
+            Entity parent = jentity["parent"];
+            scene.getGraph()->setParent(e, parent, true);
         }
         addScene(scene);
         //TODO: it would be better to save the current scene index

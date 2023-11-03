@@ -47,6 +47,20 @@ class SceneGraph {
         }
     }
 
+    Entity getParentID(Entity e) {
+        auto it = std::find(root->children.begin(), root->children.end(), idToNode[e]);
+        if (it != root->children.end()) {
+            return root->entity;
+        }
+        for (size_t i = 0; i < root->children.size(); i++) {
+            auto subtreeSearch = findParent(e, root->children[i]);
+            if (subtreeSearch != nullptr) {
+                return subtreeSearch->entity;
+            }
+        }
+        return 0;
+    }
+
     std::shared_ptr<SceneNode> root;
 
    private:

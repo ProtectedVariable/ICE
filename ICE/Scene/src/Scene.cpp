@@ -53,6 +53,12 @@ Entity Scene::createEntity() {
     return e;
 }
 
+void Scene::addEntity(Entity e, const std::string &alias, Entity parent) {
+    m_graph->addEntity(e);
+    m_graph->setParent(e, parent, false);
+    aliases.try_emplace(e, alias);
+}
+
 void Scene::removeEntity(Entity e) {
     registry->removeEntity(e);
     aliases.erase(e);

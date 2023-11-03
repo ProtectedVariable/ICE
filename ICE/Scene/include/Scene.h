@@ -32,6 +32,7 @@ class Scene {
 
     Registry* getRegistry() const;
     Entity createEntity();
+    void addEntity(Entity e, const std::string& alias, Entity parent);
     void removeEntity(Entity e);
 
    private:
