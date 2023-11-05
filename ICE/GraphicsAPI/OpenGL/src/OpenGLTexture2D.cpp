@@ -40,7 +40,7 @@ namespace ICE {
     void OpenGLTexture2D::setData(void *data, uint32_t size) {
             uint32_t bpp = (format == TextureFormat::RGBA) ? 4 : 3;
             if(size != bpp * width * height) {
-                throw ICEException();
+                throw ICEException("Texture size corrupted");
             }
             glTextureSubImage2D(id, 0,0,0, width, height, dataFormat, GL_UNSIGNED_BYTE, data);
     }

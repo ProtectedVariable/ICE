@@ -35,3 +35,4 @@ set(GL3W_SRC
 
 add_subdirectory(ICE)
 add_subdirectory(ICEBERG)
+add_subdirectory(ICEFIELD)

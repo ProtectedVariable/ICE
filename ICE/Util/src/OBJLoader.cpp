@@ -30,7 +30,7 @@ std::shared_ptr<Mesh> OBJLoader::loadFromOBJ(const std::string &path) {
     }
     if (!ret) {
         Logger::Log(Logger::ERROR, "Util", "Couldn't load model");
-        throw ICEException();
+        throw ICEException("Model not loaded");
     }
     auto vertices = std::vector<Eigen::Vector3f>();
     auto normals = std::vector<Eigen::Vector3f>();

@@ -23,7 +23,7 @@ class AssetLoader {
             auto loader = std::get<std::shared_ptr<IAssetLoader<T>>>(variant);
             return loader->load(files);
         }
-        throw ICEException();
+        throw ICEException("No matching loader for resource");
     }
 
     template<typename T>

@@ -37,6 +37,7 @@ class NoneContext : public Context {
 
 class NoneFramebuffer : public Framebuffer {
    public:
+    NoneFramebuffer() : Framebuffer({0,0,0}) {}
     void bind() override {}
     void unbind() override {}
     void resize(int width, int height) override {}
