@@ -21,7 +21,7 @@ class ICEEngine {
    public:
     ICEEngine();
 
-    void initialize(const std::shared_ptr<GraphicsFactory>& graphics_factor, void* window);
+    void initialize(const std::shared_ptr<GraphicsFactory>& graphics_factor, const std::shared_ptr<Window> &window);
 
     void step(const std::shared_ptr<Scene> &scene);
 

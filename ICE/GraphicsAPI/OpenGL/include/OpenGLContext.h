@@ -8,6 +8,8 @@
 #include <GL/gl3w.h>
 #include <GLFW/glfw3.h>
 #include <Context.h>
+#include <Window.h>
+#include <memory>
 
 namespace ICE {
     class OpenGLContext : public Context {
@@ -20,10 +22,10 @@ namespace ICE {
 
         void initialize() override;
 
-        OpenGLContext(GLFWwindow *glfwWindow);
+        OpenGLContext(const std::shared_ptr<Window> &window);
 
     private:
-        GLFWwindow* glfwWindow;
+        std::shared_ptr<Window> m_window;
     };
 }
 

@@ -14,7 +14,7 @@
 namespace ICE {
 class NoneGraphicsFactory : public GraphicsFactory {
    public:
-    std::shared_ptr<Context> createContext(void* windowHandle) { return std::make_shared<NoneContext>(); }
+    std::shared_ptr<Context> createContext(const std::shared_ptr<Window> &window) { return std::make_shared<NoneContext>(); }
 
     std::shared_ptr<Framebuffer> createFramebuffer(const FrameBufferFormat& format) { return std::make_shared<NoneFramebuffer>(); }
 

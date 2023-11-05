@@ -6,6 +6,7 @@
 #define ICE_ICEEXCEPTION_H
 
 #include <stdexcept>
+#include <string>
 
 namespace ICE {
     class ICEException : public std::runtime_error {

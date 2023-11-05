@@ -13,7 +13,7 @@ namespace ICE {
 ICEEngine::ICEEngine() : camera(std::make_shared<Camera>(CameraParameters{{60, 16.f / 9.f, 0.1f, 100000}, Perspective})), config(EngineConfig::LoadFromFile()) {
 }
 
-void ICEEngine::initialize(const std::shared_ptr<GraphicsFactory> &graphics_factory, void *window) {
+void ICEEngine::initialize(const std::shared_ptr<GraphicsFactory> &graphics_factory, const std::shared_ptr<Window> &window) {
     Logger::Log(Logger::INFO, "Core", "Engine starting up...");
 
     ctx = graphics_factory->createContext(window);

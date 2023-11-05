@@ -5,21 +5,30 @@
 #include "OpenGLContext.h"
 #include <GLFW/glfw3.h>
 #include <GL/gl3w.h>
+#include <ICEException.h>
 
-ICE::OpenGLContext::OpenGLContext(GLFWwindow *glfwWindow) : glfwWindow(glfwWindow) {}
+namespace ICE {
 
-void ICE::OpenGLContext::swapBuffers() {
-    glfwSwapBuffers(glfwWindow);
+OpenGLContext::OpenGLContext(const std::shared_ptr<Window> &window) : m_window(window) {}
+
+void OpenGLContext::swapBuffers() {
+    m_window->swapBuffers();
 }
 
-void ICE::OpenGLContext::wireframeMode() {
+void OpenGLContext::wireframeMode() {
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }
 
-void ICE::OpenGLContext::fillMode() {
+void OpenGLContext::fillMode() {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
-void ICE::OpenGLContext::initialize() {
-    glfwMakeContextCurrent(glfwWindow);
+void OpenGLContext::initialize() {
+    m_window->makeContextCurrent();
+    bool err = gl3wInit();
+    if(err) {
+        throw ICEException("Couldn't load OpenGL");
+    }
+}
+
 }
