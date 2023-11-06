@@ -60,7 +60,7 @@ bool Project::CreateDirectories() {
     assetBank->addAsset<TextureCube>("skybox", {m_cubemaps_directory / "skybox.png"});
     assetBank->addAsset<Material>("base_mat", {m_materials_directory / "base_mat.icm"});
 
-    scenes.push_back(std::make_shared<Scene>("MainScene", new Registry()));
+    scenes.push_back(std::make_shared<Scene>("MainScene"));
     setCurrentScene(getScenes()[0]);
     return true;
 }
@@ -132,30 +132,30 @@ void Project::writeToFile(const std::shared_ptr<Camera> &editorCamera) {
 
         j["name"] = s->getName();
         json entities = json::array();
-        for (auto e : s->getRegistry()->getEntities()) {
+        for (auto e : s->getRegistry().getEntities()) {
             json entity;
             entity["id"] = e;
             entity["name"] = s->getAlias(e);
             entity["parent"] = s->getGraph()->getParentID(e);
 
-            if (s->getRegistry()->entityHasComponent<RenderComponent>(e)) {
-                RenderComponent rc = *s->getRegistry()->getComponent<RenderComponent>(e);
+            if (s->getRegistry().entityHasComponent<RenderComponent>(e)) {
+                RenderComponent rc = *s->getRegistry().getComponent<RenderComponent>(e);
                 json renderjson;
                 renderjson["mesh"] = rc.mesh;
                 renderjson["material"] = rc.material;
                 renderjson["shader"] = rc.shader;
                 entity["renderComponent"] = renderjson;
             }
-            if (s->getRegistry()->entityHasComponent<TransformComponent>(e)) {
-                TransformComponent tc = *s->getRegistry()->getComponent<TransformComponent>(e);
+            if (s->getRegistry().entityHasComponent<TransformComponent>(e)) {
+                TransformComponent tc = *s->getRegistry().getComponent<TransformComponent>(e);
                 json transformjson;
                 transformjson["position"] = dumpVec3(tc.position);
                 transformjson["rotation"] = dumpVec3(tc.rotation);
                 transformjson["scale"] = dumpVec3(tc.scale);
                 entity["transformComponent"] = transformjson;
             }
-            if (s->getRegistry()->entityHasComponent<LightComponent>(e)) {
-                LightComponent lc = *s->getRegistry()->getComponent<LightComponent>(e);
+            if (s->getRegistry().entityHasComponent<LightComponent>(e)) {
+                LightComponent lc = *s->getRegistry().getComponent<LightComponent>(e);
                 json lightjson;
                 lightjson["color"] = dumpVec3(lc.color);
                 lightjson["type"] = lc.type;
@@ -212,7 +212,7 @@ void Project::loadFromFile() {
         infile >> scenejson;
         infile.close();
 
-        Scene scene = Scene(scenejson["name"], new Registry());
+        Scene scene = Scene(scenejson["name"]);
 
         for (json jentity : scenejson["entities"]) {
             Entity e = jentity["id"];
@@ -226,17 +226,17 @@ void Project::loadFromFile() {
                 TransformComponent tc = {.position = JsonParser::parseVec3(tj["position"]),
                                          .rotation = JsonParser::parseVec3(tj["rotation"]),
                                          .scale = JsonParser::parseVec3(tj["scale"])};
-                scene.getRegistry()->addComponent(e, tc);
+                scene.getRegistry().addComponent(e, tc);
             }
             if (!jentity["renderComponent"].is_null()) {
                 json rj = jentity["renderComponent"];
                 RenderComponent rc = {.mesh = (AssetUID) rj["mesh"], .material = (AssetUID) rj["material"], .shader = (AssetUID) rj["shader"]};
-                scene.getRegistry()->addComponent(e, rc);
+                scene.getRegistry().addComponent(e, rc);
             }
             if (!jentity["lightComponent"].is_null()) {
                 json lj = jentity["lightComponent"];
                 LightComponent lc = {.type = PointLight, .color = JsonParser::parseVec3(lj["color"])};
-                scene.getRegistry()->addComponent(e, lc);
+                scene.getRegistry().addComponent(e, lc);
             }
         }
         for (json jentity : scenejson["entities"]) {
