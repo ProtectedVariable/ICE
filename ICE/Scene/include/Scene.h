@@ -17,7 +17,7 @@ class Renderer;
 
 class Scene {
    public:
-    Scene(const std::string& name, Registry* registry);
+    Scene(const std::string& name);
 
     bool setAlias(Entity entity, const std::string& newName);
     std::string getAlias(Entity e);
@@ -30,7 +30,7 @@ class Scene {
     const Skybox* getSkybox() const;
     void setSkybox(const Skybox& skybox);
 
-    Registry* getRegistry() const;
+    Registry getRegistry() const;
     Entity createEntity();
     void addEntity(Entity e, const std::string& alias, Entity parent);
     void removeEntity(Entity e);
@@ -40,6 +40,6 @@ class Scene {
     Skybox skybox;
     std::shared_ptr<SceneGraph> m_graph;
     std::unordered_map<Entity, std::string> aliases;
-    Registry* registry;
+    Registry registry;
 };
 }  // namespace ICE

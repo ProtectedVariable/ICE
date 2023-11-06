@@ -13,6 +13,10 @@ int main(void) {
 	context->initialize();
 	window->setSwapInterval(1);
 	engine.initialize(g_factory, window);
+    engine.setProject(std::make_shared<ICE::Project>(".", "IceField"));
+    engine.getProject()->addScene(ICE::Scene("TestScene"));
+
+
 
 	while(!window->shouldClose()) {
 		window->pollEvents();
