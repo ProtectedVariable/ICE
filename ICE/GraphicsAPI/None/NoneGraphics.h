@@ -51,7 +51,7 @@ class NoneRendererAPI : public RendererAPI {
     void setViewport(int x, int y, int width, int height) const override {}
     void setClearColor(float r, float g, float b, float a) const override {}
     void clear() const override {}
-    void renderVertexArray(const VertexArray *va) const override {}
+    void renderVertexArray(const std::shared_ptr<VertexArray> &va) const override {}
     void flush() const override {}
     void finish() const override {}
     void bindDefaultFramebuffer() const override {}

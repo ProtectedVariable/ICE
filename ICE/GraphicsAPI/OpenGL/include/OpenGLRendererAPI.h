@@ -19,7 +19,7 @@ namespace ICE {
 
         void clear() const override;
 
-        void renderVertexArray(const VertexArray* va) const override;
+        void renderVertexArray(const std::shared_ptr<VertexArray> &va) const override;
 
         void flush() const override;
 

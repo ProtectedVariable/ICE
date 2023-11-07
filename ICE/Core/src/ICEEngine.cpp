@@ -7,10 +7,11 @@
 #include <GLFW/glfw3.h>
 #include <Logger.h>
 #include <OBJLoader.h>
+#include <PerspectiveCamera.h>
 #include <TransformComponent.h>
 
 namespace ICE {
-ICEEngine::ICEEngine() : camera(std::make_shared<Camera>(CameraParameters{{60, 16.f / 9.f, 0.1f, 100000}, Perspective})), config(EngineConfig::LoadFromFile()) {
+ICEEngine::ICEEngine() : camera(std::make_shared<PerspectiveCamera>(60, 16.f / 9.f, 0.1f, 100000)), config(EngineConfig::LoadFromFile()) {
 }
 
 void ICEEngine::initialize(const std::shared_ptr<GraphicsFactory> &graphics_factory, const std::shared_ptr<Window> &window) {
@@ -25,12 +26,11 @@ void ICEEngine::step(const std::shared_ptr<Scene> &scene) {
 
     auto fmt = internalFB->getFormat();
     m_rendersystem->setTarget(internalFB.get(), fmt.width, fmt.height);
-    camera->setParameters({60, (float) fmt.width / (float) fmt.height, 0.01f, 1000});
+    //camera->setParameters({60, (float) fmt.width / (float) fmt.height, 0.01f, 1000});
 
     for (const auto &s : systems) {
         s->update(scene, 0.f);
     }
-
 }
 
 std::shared_ptr<Camera> ICEEngine::getCamera() {

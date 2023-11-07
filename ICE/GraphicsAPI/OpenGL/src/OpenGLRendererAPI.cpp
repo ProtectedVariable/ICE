@@ -20,7 +20,7 @@ namespace ICE {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
 
-    void OpenGLRendererAPI::renderVertexArray(const VertexArray *va) const {
+    void OpenGLRendererAPI::renderVertexArray(const std::shared_ptr<VertexArray> &va) const {
         va->bind();
         va->getIndexBuffer()->bind();
         //glDrawArrays(GL_TRIANGLES, 0, va->getIndexCount()*3);

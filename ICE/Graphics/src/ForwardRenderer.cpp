@@ -23,7 +23,7 @@ void ForwardRenderer::initialize(RendererConfig config, AssetBank* assetBank) {
 
 void ForwardRenderer::submitScene(Scene* scene) {
     skybox = scene->getSkybox();
-    for (auto e : scene->getRegistry().getEntities()) {
+    for (auto e : scene->getRegistry()->getEntities()) {
         submit(e);
     }
 }

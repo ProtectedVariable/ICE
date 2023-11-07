@@ -6,7 +6,7 @@ message(STATUS "Building ${PROJECT_NAME} module")
 add_library(${PROJECT_NAME} STATIC)
 
 target_sources(${PROJECT_NAME} PRIVATE
-    src/Camera.cpp
+    src/PerspectiveCamera.cpp
     src/ForwardRenderer.cpp
     src/Material.cpp
     src/Mesh.cpp

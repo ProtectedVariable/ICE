@@ -2,54 +2,33 @@
 // Created by Thomas Ibanez on 21.11.20.
 //
 
-#ifndef ICE_CAMERA_H
-#define ICE_CAMERA_H
+#pragma once
 
 #include <Eigen/Dense>
 
-//Projection parameters
-#define ICE_CAMERA_FOV      0x0
-#define ICE_CAMERA_AR       0x1
-//Common parameters
-#define ICE_CAMERA_NEAR     0x2
-#define ICE_CAMERA_FAR      0x3
-//Orthographic parameters
-#define ICE_CAMERA_TOP      0x0
-#define ICE_CAMERA_BOTTOM   0x1
-#define ICE_CAMERA_LEFT     0x4
-#define ICE_CAMERA_RIGHT    0x5
-
 namespace ICE {
-    enum ProjectionType { Perspective, Orthographic };
+enum ProjectionType { Perspective, Orthographic };
 
-    struct CameraParameters {
-        float intrinsic[6];
-        ProjectionType type;
-    };
+class Camera {
+   public:
+    virtual Eigen::Matrix4f lookThrough() = 0;
 
-    class Camera {
-    public:
-        Camera(const CameraParameters &parameters);
+    virtual void forward(float delta) = 0;
+    virtual void backward(float delta) = 0;
+    virtual void left(float delta) = 0;
+    virtual void right(float delta) = 0;
+    virtual void up(float delta) = 0;
+    virtual void down(float delta) = 0;
 
-        Eigen::Matrix4f lookThrough();
+    virtual void pitch(float delta) = 0;
+    virtual void yaw(float delta) = 0;
+    virtual void roll(float delta) = 0;
 
-        void forward(float delta);
-        void backward(float delta);
-        void left(float delta);
-        void right(float delta);
-        const Eigen::Matrix4f &getProjection() const;
-        Eigen::Vector3f &getPosition();
-        Eigen::Vector3f &getRotation();
-        void setParameters(CameraParameters parameters);
+    virtual Eigen::Matrix4f getProjection() const = 0;
+    virtual Eigen::Vector3f getPosition() const = 0;
+    virtual Eigen::Vector3f getRotation() const = 0;
 
-    private:
-        CameraParameters cparameters;
-        float zoom;
-        Eigen::Matrix4f projection;
-        Eigen::Vector3f position;
-        Eigen::Vector3f rotation;
-    };
-}
-
-
-#endif //ICE_CAMERA_H
+   private:
+    float m_zoom;
+};
+}  // namespace ICE
