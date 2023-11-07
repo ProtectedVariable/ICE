@@ -13,10 +13,21 @@ int main(void) {
 	context->initialize();
 	window->setSwapInterval(1);
 	engine.initialize(g_factory, window);
-    engine.setProject(std::make_shared<ICE::Project>(".", "IceField"));
-    engine.getProject()->addScene(ICE::Scene("TestScene"));
+    engine.setProject(std::make_shared<Project>(".", "IceField"));
+    engine.getProject()->addScene(Scene("TestScene"));
 
+	engine.getAssetBank()->addAsset<Mesh>("cube", {"cube.obj"});
 
+	engine.getAssetBank()->addAsset<Shader>("solid", {"solid.vs", "solid.fs"});
+	auto shader_id = engine.getAssetBank()->getUID("Shaders/solid");
+
+	auto mat = std::make_shared<Material>();
+	mat->setShader(shader_id);
+	mat->setUniform("uAlbedo", Eigen::Vector3f(0.2, 0.5, 1));
+	engine.getAssetBank()->addAsset<Material>("mat", mat);
+
+	auto entity = engine.getProject()->getCurrentScene()->createEntity();
+	engine.getProject()->getCurrentScene()->getRegistry().addComponent<TransformComponent>(e, TransformComponent)
 
 	while(!window->shouldClose()) {
 		window->pollEvents();

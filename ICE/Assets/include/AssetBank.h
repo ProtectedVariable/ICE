@@ -137,7 +137,7 @@ class AssetBank {
         return AssetPath("");
     }
 
-    AssetUID getUID(AssetPath name) {
+    AssetUID getUID(const AssetPath &name) {
         if (nameMapping.find(name) != nameMapping.end())
             return nameMapping[name];
         return NO_ASSET_ID;

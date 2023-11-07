@@ -31,8 +31,6 @@ class ICEEngine {
 
     std::shared_ptr<AssetBank> getAssetBank();
 
-    std::shared_ptr<Scene> getScene();
-
     Entity getSelected() const;
 
     std::shared_ptr<RendererAPI> getApi() const;
