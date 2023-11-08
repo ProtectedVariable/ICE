@@ -6,15 +6,16 @@
 #define ICE_RENDERCOMPONENT_H
 
 #include <Component.h>
-#include <Mesh.h>
 #include <Material.h>
+#include <Mesh.h>
 
 namespace ICE {
-    struct RenderComponent : public Component {
-        AssetUID mesh;
-        AssetUID material;
-        AssetUID shader;
-    };
-}
+struct RenderComponent : public Component {
+    RenderComponent(AssetUID mesh_id, AssetUID material_id, AssetUID shader_id) : mesh(mesh_id), material(material_id), shader(shader_id) {}
+    AssetUID mesh;
+    AssetUID material;
+    AssetUID shader;
+};
+}  // namespace ICE
 
-#endif //ICE_RENDERCOMPONENT_H
+#endif  //ICE_RENDERCOMPONENT_H

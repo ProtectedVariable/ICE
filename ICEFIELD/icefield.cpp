@@ -30,14 +30,14 @@ int main(void) {
     mat->setUniform("uAlbedo", Eigen::Vector3f(0.2, 0.5, 1));
     engine.getAssetBank()->addAsset<Material>("mat", mat);
 
+    auto mesh_id = engine.getAssetBank()->getUID(std::string("Meshes/cube"));
+    auto material_id = engine.getAssetBank()->getUID(std::string("Materials/mat"));
+
     auto entity = scene->createEntity();
     scene->getRegistry()->addComponent<TransformComponent>(entity, TransformComponent(Eigen::Vector3f(), Eigen::Vector3f(), Eigen::Vector3f(1, 1, 1)));
+    scene->getRegistry()->addComponent<RenderComponent>(entity, RenderComponent(mesh_id, material_id, shader_id));
 
     auto api = g_factory->createRendererAPI();
-
-    auto cube = engine.getAssetBank()->getAsset<Mesh>("cube");
-    auto material = engine.getAssetBank()->getAsset<Material>("mat");
-    auto shader = engine.getAssetBank()->getAsset<Shader>(material->getShader());
 
     auto camera = std::make_shared<PerspectiveCamera>(60.0, 16.0 / 9.0, 0.01, 10000.0);
     camera->backward(2);
@@ -54,15 +54,27 @@ int main(void) {
         api->bindDefaultFramebuffer();
         api->setViewport(0, 0, 1280, 720);
 
-        shader->bind();
+        for (const auto e : scene->getRegistry()->getEntities()) {
+            if (scene->getRegistry()->entityHasComponent<TransformComponent>(e) && scene->getRegistry()->entityHasComponent<RenderComponent>(e)) {
+                auto rc = scene->getRegistry()->getComponent<RenderComponent>(e);
+                auto tc = scene->getRegistry()->getComponent<TransformComponent>(e);
 
-        shader->loadMat4("projection", camera->getProjection());
-        shader->loadMat4("view", camera->lookThrough());
-        shader->loadMat4("model", model);
+                auto shader = engine.getAssetBank()->getAsset<Shader>(rc->shader);
+                auto material = engine.getAssetBank()->getAsset<Material>(rc->material);
+                auto mesh = engine.getAssetBank()->getAsset<Mesh>(rc->mesh);
+                shader->bind();
 
-        //Per entity
-        shader->loadFloat3("uAlbedo", material->getUniform<Eigen::Vector3f>("uAlbedo"));
-        api->renderVertexArray(cube->getVertexArray());
+                shader->loadMat4("projection", camera->getProjection());
+                shader->loadMat4("view", camera->lookThrough());
+                shader->loadMat4("model", model);
+
+                //Per entity
+                shader->loadFloat3("uAlbedo", material->getUniform<Eigen::Vector3f>("uAlbedo"));
+                api->renderVertexArray(mesh->getVertexArray());
+            }
+        }
+
+        
 
         //Render system duty
         window->swapBuffers();
