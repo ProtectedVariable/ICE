@@ -18,7 +18,7 @@ class Scene;
 class System {
    public:
     std::set<Entity> entities;
-    virtual void update(const std::shared_ptr<Scene>& scene, double delta) = 0;
+    virtual void update(double delta) = 0;
 };
 
 class SystemManager {

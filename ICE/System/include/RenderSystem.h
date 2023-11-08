@@ -1,36 +1,31 @@
 //
 // Created by Thomas Ibanez on 19.11.20.
 //
+#pragma once
 
-#ifndef ICE_RENDERSYSTEM_H
-#define ICE_RENDERSYSTEM_H
-
-#include <System.h>
-#include <Renderer.h>
 #include <Camera.h>
 #include <Framebuffer.h>
+#include <Renderer.h>
+#include <System.h>
 
 namespace ICE {
-    class Scene;
+class Scene;
 
-    class RenderSystem : public System {
-    public:
-        RenderSystem() {};
+class RenderSystem : public System {
+   public:
+    RenderSystem(){};
 
-        void update(const std::shared_ptr<Scene> &scene, double delta) override;
+    void update(double delta) override;
 
-        Renderer *getRenderer() const;
-        void setRenderer(Renderer *renderer);
-        Camera *getCamera() const;
-        void setCamera(Camera *camera);
+    std::shared_ptr<Renderer> getRenderer() const;
+    void setRenderer(const std::shared_ptr<Renderer> &renderer);
+    std::shared_ptr<Camera> getCamera() const;
+    void setCamera(const std::shared_ptr<Camera> &camera);
 
-        void setTarget(Framebuffer* fb, int width, int height);
+    void setTarget(Framebuffer *fb, int width, int height);
 
-    private:
-        Renderer* renderer;
-        Camera* camera;
-    };
-}
-
-
-#endif //ICE_RENDERSYSTEM_H
+   private:
+    std::shared_ptr<Renderer> m_renderer;
+    std::shared_ptr<Camera> m_camera;
+};
+}  // namespace ICE

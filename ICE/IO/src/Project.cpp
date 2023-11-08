@@ -143,7 +143,6 @@ void Project::writeToFile(const std::shared_ptr<Camera> &editorCamera) {
                 json renderjson;
                 renderjson["mesh"] = rc.mesh;
                 renderjson["material"] = rc.material;
-                renderjson["shader"] = rc.shader;
                 entity["renderComponent"] = renderjson;
             }
             if (s->getRegistry()->entityHasComponent<TransformComponent>(e)) {
@@ -228,7 +227,7 @@ void Project::loadFromFile() {
             }
             if (!jentity["renderComponent"].is_null()) {
                 json rj = jentity["renderComponent"];
-                RenderComponent rc = {.mesh = (AssetUID) rj["mesh"], .material = (AssetUID) rj["material"], .shader = (AssetUID) rj["shader"]};
+                RenderComponent rc(rj["mesh"], rj["material"]);
                 scene.getRegistry()->addComponent(e, rc);
             }
             if (!jentity["lightComponent"].is_null()) {

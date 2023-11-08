@@ -11,10 +11,9 @@
 
 namespace ICE {
 struct RenderComponent : public Component {
-    RenderComponent(AssetUID mesh_id, AssetUID material_id, AssetUID shader_id) : mesh(mesh_id), material(material_id), shader(shader_id) {}
+    RenderComponent(AssetUID mesh_id, AssetUID material_id) : mesh(mesh_id), material(material_id) {}
     AssetUID mesh;
     AssetUID material;
-    AssetUID shader;
 };
 }  // namespace ICE
 

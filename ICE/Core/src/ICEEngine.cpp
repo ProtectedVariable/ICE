@@ -24,12 +24,12 @@ void ICEEngine::initialize(const std::shared_ptr<GraphicsFactory> &graphics_fact
 
 void ICEEngine::step(const std::shared_ptr<Scene> &scene) {
 
-    auto fmt = internalFB->getFormat();
-    m_rendersystem->setTarget(internalFB.get(), fmt.width, fmt.height);
+    //auto fmt = internalFB->getFormat();
+    //m_rendersystem->setTarget(internalFB.get(), fmt.width, fmt.height);
     //camera->setParameters({60, (float) fmt.width / (float) fmt.height, 0.01f, 1000});
 
     for (const auto &s : systems) {
-        s->update(scene, 0.f);
+        s->update(0.f);
     }
 }
 
@@ -82,14 +82,15 @@ void ICEEngine::setProject(const std::shared_ptr<Project> &project) {
     this->project = project;
     this->camera->getPosition() = project->getCameraPosition();
     this->camera->getRotation() = project->getCameraRotation();
-    auto renderer = new ForwardRenderer(api.get());
-    renderer->initialize(RendererConfig(), project->getAssetBank().get());
+
+    auto renderer = std::make_shared<ForwardRenderer>(api, project->getCurrentScene()->getRegistry(), project->getAssetBank());
     m_rendersystem = std::make_shared<RenderSystem>();
-    m_rendersystem->setCamera(camera.get());
+    m_rendersystem->setCamera(camera);
     m_rendersystem->setRenderer(renderer);
     auto fmt = internalFB->getFormat();
     m_rendersystem->setTarget(internalFB.get(), fmt.width, fmt.height);
     systems.push_back(m_rendersystem);
+    project->getCurrentScene()->getRegistry()->
     Skybox::Initialize();
 }
 

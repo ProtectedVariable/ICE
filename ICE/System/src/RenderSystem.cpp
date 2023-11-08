@@ -5,31 +5,33 @@
 #include "RenderSystem.h"
 
 namespace ICE {
-void RenderSystem::update(const std::shared_ptr<Scene> &scene, double delta) {
-    renderer->submitScene(scene.get());
-    renderer->prepareFrame(*camera);
-    renderer->render();
-    renderer->endFrame();
+void RenderSystem::update(double delta) {
+    for (auto e : entities) {
+        m_renderer->submit(e);
+    }
+    m_renderer->prepareFrame(*m_camera);
+    m_renderer->render();
+    m_renderer->endFrame();
 }
 
-Renderer *RenderSystem::getRenderer() const {
-    return renderer;
+std::shared_ptr<Renderer> RenderSystem::getRenderer() const {
+    return m_renderer;
 }
 
-void RenderSystem::setRenderer(Renderer *renderer) {
-    RenderSystem::renderer = renderer;
+void RenderSystem::setRenderer(const std::shared_ptr<Renderer> &renderer) {
+    m_renderer = renderer;
 }
 
-Camera *RenderSystem::getCamera() const {
-    return camera;
+std::shared_ptr<Camera> RenderSystem::getCamera() const {
+    return m_camera;
 }
 
-void RenderSystem::setCamera(Camera *camera) {
-    RenderSystem::camera = camera;
+void RenderSystem::setCamera(const std::shared_ptr<Camera> &camera) {
+    m_camera = camera;
 }
 
 void RenderSystem::setTarget(Framebuffer *fb, int width, int height) {
-    renderer->setTarget(fb);
-    renderer->resize(width, height);
+    m_renderer->setTarget(fb);
+    m_renderer->resize(width, height);
 }
 }  // namespace ICE

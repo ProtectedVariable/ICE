@@ -15,10 +15,13 @@ int main(void) {
     context->initialize();
     window->setSwapInterval(1);
     engine.initialize(g_factory, window);
-    engine.setProject(std::make_shared<Project>(".", "IceField"));
-    engine.getProject()->addScene(Scene("TestScene"));
-    auto scene = engine.getProject()->getScenes().front();
-    engine.getProject()->setCurrentScene(scene);
+
+    auto project = std::make_shared<Project>(".", "IceField");
+    project->addScene(Scene("TestScene"));
+    auto scene = project->getScenes().front();
+    project->setCurrentScene(scene);
+    
+    engine.setProject(project);
 
     engine.getAssetBank()->addAsset<Mesh>("cube", {"Assets/cube.obj"});
 
@@ -35,7 +38,7 @@ int main(void) {
 
     auto entity = scene->createEntity();
     scene->getRegistry()->addComponent<TransformComponent>(entity, TransformComponent(Eigen::Vector3f(), Eigen::Vector3f(), Eigen::Vector3f(1, 1, 1)));
-    scene->getRegistry()->addComponent<RenderComponent>(entity, RenderComponent(mesh_id, material_id, shader_id));
+    scene->getRegistry()->addComponent<RenderComponent>(entity, RenderComponent(mesh_id, material_id));
 
     auto api = g_factory->createRendererAPI();
 
@@ -49,38 +52,11 @@ int main(void) {
     while (!window->shouldClose()) {
         window->pollEvents();
 
-        //renderer duty
-        api->clear();
-        api->bindDefaultFramebuffer();
-        api->setViewport(0, 0, 1280, 720);
-
-        for (const auto e : scene->getRegistry()->getEntities()) {
-            if (scene->getRegistry()->entityHasComponent<TransformComponent>(e) && scene->getRegistry()->entityHasComponent<RenderComponent>(e)) {
-                auto rc = scene->getRegistry()->getComponent<RenderComponent>(e);
-                auto tc = scene->getRegistry()->getComponent<TransformComponent>(e);
-
-                auto shader = engine.getAssetBank()->getAsset<Shader>(rc->shader);
-                auto material = engine.getAssetBank()->getAsset<Material>(rc->material);
-                auto mesh = engine.getAssetBank()->getAsset<Mesh>(rc->mesh);
-                shader->bind();
-
-                shader->loadMat4("projection", camera->getProjection());
-                shader->loadMat4("view", camera->lookThrough());
-                shader->loadMat4("model", model);
-
-                //Per entity
-                shader->loadFloat3("uAlbedo", material->getUniform<Eigen::Vector3f>("uAlbedo"));
-                api->renderVertexArray(mesh->getVertexArray());
-            }
-        }
-
-        
+        engine.step(scene);
 
         //Render system duty
         window->swapBuffers();
-
-        i++;
-        model = Eigen::Matrix4f::Identity() * rotationMatrix({0, (float) i, 0});
+      
     }
 
     return 0;

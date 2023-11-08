@@ -2,50 +2,50 @@
 // Created by Thomas Ibanez on 20.11.20.
 //
 
-#ifndef ICE_FORWARDRENDERER_H
-#define ICE_FORWARDRENDERER_H
+#pragma once
 
-#include "Renderer.h"
+#include <AssetBank.h>
 #include <Entity.h>
-#include "RendererConfig.h"
+#include <GraphicsAPI.h>
+#include <Registry.h>
+
+#include <vector>
+
 #include "Camera.h"
 #include "Framebuffer.h"
+#include "Renderer.h"
+#include "RendererConfig.h"
 #include "Skybox.h"
-#include <vector>
-#include <GraphicsAPI.h>
 
 namespace ICE {
-    class ForwardRenderer : public Renderer {
-    public:
-        ForwardRenderer(RendererAPI* api);
+class ForwardRenderer : public Renderer {
+   public:
+    ForwardRenderer(const std::shared_ptr<RendererAPI> &api, const std::shared_ptr<Registry>& registry, const std::shared_ptr<AssetBank>& assetBank);
 
-        void initialize(RendererConfig config, AssetBank* assetBank) override;
+    void submit(Entity e) override;
 
-        void submitScene(Scene *scene) override;
+    void prepareFrame(Camera& camera) override;
 
-        void submit(Entity e) override;
+    void render() override;
 
-        void prepareFrame(Camera& camera) override;
+    void endFrame() override;
 
-        void render() override;
+    void setTarget(Framebuffer* target) override;
 
-        void endFrame() override;
+    void resize(uint32_t width, uint32_t height) override;
 
-        void setTarget(Framebuffer *target) override;
+    void setClearColor(Eigen::Vector4f clearColor) override;
 
-        void resize(uint32_t width, uint32_t height) override;
+   private:
+    std::shared_ptr<RendererAPI> m_api;
+    std::shared_ptr<Registry> m_registry;
+    std::shared_ptr<AssetBank> m_asset_bank;
 
-        void setClearColor(Eigen::Vector4f clearColor) override;
-    private:
-        std::vector<Entity*> renderableEntities;
-        std::vector<Entity*> lightEntities;
-        RendererAPI* api;
-        RendererConfig config;
-        Framebuffer* target;
-        const Skybox* skybox;
-        AssetBank* assetBank;
-    };
-}
+    std::vector<std::function<void(void)>> m_render_commands;
+    std::vector<std::pair<RenderComponent, TransformComponent>> m_render_queue;
 
-
-#endif //ICE_FORWARDRENDERER_H
+    RendererConfig config;
+    Framebuffer* target;
+    const Skybox* skybox;
+};
+}  // namespace ICE
