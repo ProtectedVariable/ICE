@@ -48,15 +48,20 @@ int main(void) {
     camera->pitch(-30);
     Eigen::Matrix4f model = Eigen::Matrix4f::Identity();
 
+	scene->getRegistry()->getSystem<RenderSystem>()->setCamera(camera);
+
     int i = 0;
     while (!window->shouldClose()) {
         window->pollEvents();
 
         engine.step(scene);
+    	
+		mat->setUniform("uAlbedo", Eigen::Vector3f(sin(i / 100.0), 0.5, 1));
+    	scene->getRegistry()->getComponent<TransformComponent>(entity)->rotation.y() = i;
 
         //Render system duty
         window->swapBuffers();
-      
+		i++;
     }
 
     return 0;

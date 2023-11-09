@@ -28,9 +28,7 @@ void ICEEngine::step(const std::shared_ptr<Scene> &scene) {
     //m_rendersystem->setTarget(internalFB.get(), fmt.width, fmt.height);
     //camera->setParameters({60, (float) fmt.width / (float) fmt.height, 0.01f, 1000});
 
-    for (const auto &s : systems) {
-        s->update(0.f);
-    }
+    project->getCurrentScene()->getRegistry()->updateSystems(0.0);
 }
 
 std::shared_ptr<Camera> ICEEngine::getCamera() {
@@ -87,10 +85,8 @@ void ICEEngine::setProject(const std::shared_ptr<Project> &project) {
     m_rendersystem = std::make_shared<RenderSystem>();
     m_rendersystem->setCamera(camera);
     m_rendersystem->setRenderer(renderer);
-    auto fmt = internalFB->getFormat();
-    m_rendersystem->setTarget(internalFB.get(), fmt.width, fmt.height);
     systems.push_back(m_rendersystem);
-    project->getCurrentScene()->getRegistry()->
+    project->getCurrentScene()->getRegistry()->addSystem(m_rendersystem);
     //Skybox::Initialize();
 }
 

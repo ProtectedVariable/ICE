@@ -80,6 +80,21 @@ class Registry {
         systemManager.entitySignatureChanged(e, signature);
     }
 
+    template<typename T>
+    void addSystem(const std::shared_ptr<T> &system) {
+        systemManager.addSystem(system);
+    }
+
+    template<typename T>
+    std::shared_ptr<T> getSystem() {
+        return systemManager.getSystem<T>();
+    }
+    
+
+    void updateSystems(double delta) {
+        systemManager.updateSystems(delta);
+    }
+
    private:
     EntityManager entityManager;
     ComponentManager componentManager;

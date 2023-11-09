@@ -24,19 +24,14 @@ class System {
 class SystemManager {
    public:
     template<typename T>
-    std::shared_ptr<T> registerSystem() {
+    void registerSystem() {
         assert(systems.find(typeid(T)) == systems.end() && "Registering system more than once.");
-
-        // Create a pointer to the system and return it so it can be used externally
-        auto system = std::make_shared<T>();
-        systems.insert({typeid(T), system});
         signatures.insert({typeid(T), std::vector<Signature>()});
-        return system;
     }
 
     template<typename T>
     void addSignature(Signature signature) {
-        assert(systems.find(typeid(T)) != systems.end() && "System used before registered.");
+        assert(signatures.find(typeid(T)) != signatures.end() && "System used before registered.");
 
         // Set the signature for this system
         signatures[typeid(T)].push_back(signature);
@@ -72,6 +67,22 @@ class SystemManager {
                 system->entities.erase(entity);
             }
         }
+    }
+
+    void updateSystems(double delta) {
+        for (auto const& [signature, system] : systems) {
+            system->update(delta);
+        }
+    }
+
+    template <typename T>
+    void addSystem(const std::shared_ptr<T> &system) {
+        systems.try_emplace(typeid(T), system);
+    }
+
+    template<typename T>
+    std::shared_ptr<T> getSystem() {
+        return std::static_pointer_cast<T>(systems.at(typeid(T)));
     }
 
    private:
