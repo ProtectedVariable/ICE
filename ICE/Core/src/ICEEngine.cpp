@@ -91,7 +91,7 @@ void ICEEngine::setProject(const std::shared_ptr<Project> &project) {
     m_rendersystem->setTarget(internalFB.get(), fmt.width, fmt.height);
     systems.push_back(m_rendersystem);
     project->getCurrentScene()->getRegistry()->
-    Skybox::Initialize();
+    //Skybox::Initialize();
 }
 
 EngineConfig &ICEEngine::getConfig() {

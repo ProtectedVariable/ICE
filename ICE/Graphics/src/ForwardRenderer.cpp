@@ -55,7 +55,7 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
         shader->loadMat4("projection", camera.getProjection());
         shader->loadMat4("view", view_mat);
 
-        m_render_commands.push_back([this, rc, tc] {
+        m_render_commands.push_back([this, rc=rc, tc=tc] {
             auto material = m_asset_bank->getAsset<Material>(rc.material);
             auto shader = m_asset_bank->getAsset<Shader>(material->getShader());
             auto mesh = m_asset_bank->getAsset<Mesh>(rc.mesh);
