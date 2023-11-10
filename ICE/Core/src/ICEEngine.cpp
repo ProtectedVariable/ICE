@@ -18,7 +18,9 @@ void ICEEngine::initialize(const std::shared_ptr<GraphicsFactory> &graphics_fact
     Logger::Log(Logger::INFO, "Core", "Engine starting up...");
 
     ctx = graphics_factory->createContext(window);
+    ctx->initialize();
     api = graphics_factory->createRendererAPI();
+    window->setSwapInterval(1);
     api->initialize();
 }
 

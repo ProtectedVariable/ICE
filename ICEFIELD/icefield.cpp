@@ -11,9 +11,7 @@ int main(void) {
     WindowFactory win_factory;
     auto window = win_factory.createWindow(WindowBackend::GLFW, 1280, 720, "IceField");
     auto g_factory = std::make_shared<OpenGLFactory>();
-    auto context = g_factory->createContext(window);
-    context->initialize();
-    window->setSwapInterval(1);
+    
     engine.initialize(g_factory, window);
 
     auto project = std::make_shared<Project>(".", "IceField");
@@ -40,16 +38,11 @@ int main(void) {
     scene->getRegistry()->addComponent<TransformComponent>(entity, TransformComponent(Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero(), Eigen::Vector3f(1, 1, 1)));
     scene->getRegistry()->addComponent<RenderComponent>(entity, RenderComponent(mesh_id, material_id));
 
-    auto api = g_factory->createRendererAPI();
-
     auto camera = std::make_shared<PerspectiveCamera>(60.0, 16.0 / 9.0, 0.01, 10000.0);
     camera->backward(2);
     camera->up(1);
     camera->pitch(-30);
-    Eigen::Matrix4f model = Eigen::Matrix4f::Identity();
-
 	scene->getRegistry()->getSystem<RenderSystem>()->setCamera(camera);
-    
 
     int i = 0;
     while (!window->shouldClose()) {
