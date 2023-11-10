@@ -10,7 +10,11 @@
 
 namespace ICE {
 
-PerspectiveCamera::PerspectiveCamera(double fov_degrees, double aspect_ratio, double near, double far) {
+PerspectiveCamera::PerspectiveCamera(double fov_degrees, double aspect_ratio, double near, double far)
+    : m_fov(fov_degrees),
+      m_aspect_ratio(aspect_ratio),
+      m_near(near),
+      m_far(far) {
     this->position = Eigen::Vector3f();
     this->rotation = Eigen::Vector3f();
     this->position.setZero();

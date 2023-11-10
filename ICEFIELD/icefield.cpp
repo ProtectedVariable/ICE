@@ -37,7 +37,7 @@ int main(void) {
     auto material_id = engine.getAssetBank()->getUID(std::string("Materials/mat"));
 
     auto entity = scene->createEntity();
-    scene->getRegistry()->addComponent<TransformComponent>(entity, TransformComponent(Eigen::Vector3f(), Eigen::Vector3f(), Eigen::Vector3f(1, 1, 1)));
+    scene->getRegistry()->addComponent<TransformComponent>(entity, TransformComponent(Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero(), Eigen::Vector3f(1, 1, 1)));
     scene->getRegistry()->addComponent<RenderComponent>(entity, RenderComponent(mesh_id, material_id));
 
     auto api = g_factory->createRendererAPI();
@@ -49,6 +49,7 @@ int main(void) {
     Eigen::Matrix4f model = Eigen::Matrix4f::Identity();
 
 	scene->getRegistry()->getSystem<RenderSystem>()->setCamera(camera);
+    
 
     int i = 0;
     while (!window->shouldClose()) {
@@ -56,8 +57,8 @@ int main(void) {
 
         engine.step(scene);
     	
-		mat->setUniform("uAlbedo", Eigen::Vector3f(sin(i / 100.0), 0.5, 1));
-    	scene->getRegistry()->getComponent<TransformComponent>(entity)->rotation.y() = i;
+		mat->setUniform("uAlbedo", Eigen::Vector3f(abs(sin(i / 100.0)), 0.5, 1));
+        scene->getRegistry()->getComponent<TransformComponent>(entity)->rotation.y() = i;
 
         //Render system duty
         window->swapBuffers();

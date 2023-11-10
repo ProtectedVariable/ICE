@@ -45,7 +45,7 @@ class ForwardRenderer : public Renderer {
     std::vector<std::pair<RenderComponent, TransformComponent>> m_render_queue;
 
     RendererConfig config;
-    Framebuffer* target;
+    Framebuffer* target = nullptr;
     const Skybox* skybox;
 };
 }  // namespace ICE

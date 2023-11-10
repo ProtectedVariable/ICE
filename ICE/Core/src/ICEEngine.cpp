@@ -19,7 +19,7 @@ void ICEEngine::initialize(const std::shared_ptr<GraphicsFactory> &graphics_fact
 
     ctx = graphics_factory->createContext(window);
     api = graphics_factory->createRendererAPI();
-    internalFB = graphics_factory->createFramebuffer({512, 512, 1});
+    api->initialize();
 }
 
 void ICEEngine::step(const std::shared_ptr<Scene> &scene) {
