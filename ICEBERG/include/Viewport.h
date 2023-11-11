@@ -14,4 +14,5 @@ class Viewport : public Controller {
     std::shared_ptr<ICE::ICEEngine> m_engine;
     bool m_done = false;
     ViewportWidget ui;
+    const double camera_delta = 0.1;
 };

@@ -22,13 +22,11 @@ void ICEEngine::initialize(const std::shared_ptr<GraphicsFactory> &graphics_fact
     api = graphics_factory->createRendererAPI();
     window->setSwapInterval(1);
     api->initialize();
+    internalFB = graphics_factory->createFramebuffer({720, 720, 1});
 }
 
 void ICEEngine::step(const std::shared_ptr<Scene> &scene) {
-
-    //auto fmt = internalFB->getFormat();
-    //m_rendersystem->setTarget(internalFB.get(), fmt.width, fmt.height);
-    //camera->setParameters({60, (float) fmt.width / (float) fmt.height, 0.01f, 1000});
+    project->getCurrentScene()->getRegistry()->getSystem<RenderSystem>()->setTarget(m_target_fb);
 
     project->getCurrentScene()->getRegistry()->updateSystems(0.0);
 }
@@ -76,6 +74,14 @@ std::shared_ptr<Project> ICEEngine::getProject() const {
 
 std::shared_ptr<Framebuffer> ICEEngine::getInternalFramebuffer() const {
     return internalFB;
+}
+
+void ICEEngine::setRenderFramebufferInternal(bool use_internal) {
+    if (use_internal) {
+        m_target_fb = internalFB;
+    } else {
+        m_target_fb = nullptr;
+    }
 }
 
 void ICEEngine::setProject(const std::shared_ptr<Project> &project) {

@@ -43,6 +43,11 @@ class Registry {
         return e;
     }
 
+    void addEntity(Entity e) {
+        entityManager.createEntity(e);
+        entities.push_back(e);
+    }
+
     void removeEntity(Entity e) {
         auto it = std::find(entities.begin(), entities.end(), e);
         entities.erase(it);
@@ -58,7 +63,7 @@ class Registry {
     }
 
     template<typename T>
-    T* getComponent(Entity e) {
+    T *getComponent(Entity e) {
         return componentManager.getComponent<T>(e);
     }
 
@@ -83,17 +88,17 @@ class Registry {
     template<typename T>
     void addSystem(const std::shared_ptr<T> &system) {
         systemManager.addSystem(system);
+        for (const auto e : entities) {
+            systemManager.entitySignatureChanged(e, entityManager.getSignature(e));
+        }
     }
 
     template<typename T>
     std::shared_ptr<T> getSystem() {
         return systemManager.getSystem<T>();
     }
-    
 
-    void updateSystems(double delta) {
-        systemManager.updateSystems(delta);
-    }
+    void updateSystems(double delta) { systemManager.updateSystems(delta); }
 
    private:
     EntityManager entityManager;

@@ -17,6 +17,34 @@ class ViewportWidget : public Widget {
         const float window_height = ImGui::GetContentRegionAvail().y;
 
         ImGui::GetWindowDrawList()->AddImage((void *) texture_ptr, ImVec2(pos.x, pos.y), ImVec2(pos.x + window_width, pos.y + window_height), ImVec2(0, 1), ImVec2(1, 0));
+
+        auto drag = ImGui::GetMouseDragDelta(0);
+        if (ImGui::IsWindowHovered()) {
+            if (ImGui::IsMouseDragging(0)) {
+                callback("mouse_dragged", drag.x, drag.y);
+                ImGui::ResetMouseDragDelta(0);
+            }
+        }
+
+        if (ImGui::IsWindowFocused()) {
+            if (ImGui::IsKeyDown(ImGuiKey_W)) {
+                callback("w_pressed");
+            } else if (ImGui::IsKeyDown(ImGuiKey_S)) {
+                callback("s_pressed");
+            }
+            if (ImGui::IsKeyDown(ImGuiKey_A)) {
+                callback("a_pressed");
+            } else if (ImGui::IsKeyDown(ImGuiKey_D)) {
+                callback("d_pressed");
+            }
+            if (ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
+                callback("ls_pressed");
+            } else if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl)) {
+                callback("lc_pressed");
+            }
+        }
+        ImVec2 view = ImGui::GetContentRegionAvail();
+        callback("resize", view.x, view.y);
         ImGui::End();
     }
 

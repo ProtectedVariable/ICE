@@ -76,6 +76,13 @@ void PerspectiveCamera::roll(float delta) {
     rotation.z() += delta;
 }
 
+void PerspectiveCamera::resize(float width, float height) {
+    float fov = DEG_TO_RAD(m_fov);
+    float ys = 1.0f / (tanf(fov / 2.0f));
+    float xs = ys / (width / height);
+    projection(0, 0) = xs;
+}
+
 Eigen::Vector3f PerspectiveCamera::getPosition() const {
     return position;
 }

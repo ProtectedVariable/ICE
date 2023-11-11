@@ -30,8 +30,7 @@ void RenderSystem::setCamera(const std::shared_ptr<Camera> &camera) {
     m_camera = camera;
 }
 
-void RenderSystem::setTarget(Framebuffer *fb, int width, int height) {
+void RenderSystem::setTarget(const std::shared_ptr<Framebuffer> &fb) {
     m_renderer->setTarget(fb);
-    m_renderer->resize(width, height);
 }
 }  // namespace ICE

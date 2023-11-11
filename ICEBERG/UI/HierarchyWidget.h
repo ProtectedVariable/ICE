@@ -31,13 +31,6 @@ class HierarchyWidget : public Widget {
 
         renderTree(m_view);
 
-        if (ImGui::BeginPopupContextWindow("hierarchy_popup")) {
-            if (ImGui::Button("Create new entity")) {
-                callback("create_entity_clicked");
-            }
-            ImGui::EndPopup();
-        }
-
         ImGui::End();
         ImGui::PopStyleVar();
     }
@@ -62,6 +55,13 @@ class HierarchyWidget : public Widget {
                     callback("hierarchy_changed", *move_from, tree.id);
                 }
                 ImGui::EndDragDropTarget();
+            }
+            if (ImGui::BeginPopupContextWindow("hierarchy_popup")) {
+                if (ImGui::Button("Create new entity")) {
+                    callback("create_entity_clicked", tree.id);
+                    ImGui::CloseCurrentPopup();
+                }
+                ImGui::EndPopup();
             }
 
             for (const auto& c : tree.children) {

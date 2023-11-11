@@ -24,6 +24,8 @@ class Camera {
     virtual void yaw(float delta) = 0;
     virtual void roll(float delta) = 0;
 
+    virtual void resize(float width, float height) = 0;
+
     virtual Eigen::Matrix4f getProjection() const = 0;
     virtual Eigen::Vector3f getPosition() const = 0;
     virtual Eigen::Vector3f getRotation() const = 0;

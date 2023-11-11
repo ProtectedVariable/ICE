@@ -20,7 +20,7 @@
 namespace ICE {
 class ForwardRenderer : public Renderer {
    public:
-    ForwardRenderer(const std::shared_ptr<RendererAPI> &api, const std::shared_ptr<Registry>& registry, const std::shared_ptr<AssetBank>& assetBank);
+    ForwardRenderer(const std::shared_ptr<RendererAPI>& api, const std::shared_ptr<Registry>& registry, const std::shared_ptr<AssetBank>& assetBank);
 
     void submit(Entity e) override;
 
@@ -30,7 +30,7 @@ class ForwardRenderer : public Renderer {
 
     void endFrame() override;
 
-    void setTarget(Framebuffer* target) override;
+    void setTarget(const std::shared_ptr<Framebuffer>& fb) override;
 
     void resize(uint32_t width, uint32_t height) override;
 
@@ -41,11 +41,11 @@ class ForwardRenderer : public Renderer {
     std::shared_ptr<Registry> m_registry;
     std::shared_ptr<AssetBank> m_asset_bank;
 
+    std::shared_ptr<Framebuffer> target = nullptr;
     std::vector<std::function<void(void)>> m_render_commands;
     std::vector<std::pair<RenderComponent, TransformComponent>> m_render_queue;
 
     RendererConfig config;
-    Framebuffer* target = nullptr;
     const Skybox* skybox;
 };
 }  // namespace ICE

@@ -28,11 +28,12 @@ void ForwardRenderer::submit(Entity e) {
 }
 
 void ForwardRenderer::prepareFrame(Camera& camera) {
-    if (this->target != nullptr)
+    if (this->target != nullptr) {
         this->target->bind();
-    else
+        m_api->setViewport(0, 0, target->getFormat().width, target->getFormat().height);
+    } else {
         m_api->bindDefaultFramebuffer();
-
+    }
     //TODO: Sort entities, make shader list, batch, make instances, set uniforms, etc..
     m_api->clear();
     /* if (skybox->getTexture() != 0) {
@@ -55,7 +56,7 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
         shader->loadMat4("projection", camera.getProjection());
         shader->loadMat4("view", view_mat);
 
-        m_render_commands.push_back([this, rc=rc, tc=tc] {
+        m_render_commands.push_back([this, rc = rc, tc = tc] {
             auto material = m_asset_bank->getAsset<Material>(rc.material);
             auto shader = m_asset_bank->getAsset<Shader>(material->getShader());
             auto mesh = m_asset_bank->getAsset<Mesh>(rc.mesh);
@@ -128,13 +129,15 @@ void ForwardRenderer::endFrame() {
         this->target->unbind();
 }
 
-void ForwardRenderer::setTarget(Framebuffer* target) {
-    this->target = target;
+void ForwardRenderer::setTarget(const std::shared_ptr<Framebuffer>& fb) {
+    this->target = fb;
 }
 
 void ForwardRenderer::resize(uint32_t width, uint32_t height) {
-    target->bind();
-    target->resize(width, height);
+    if (target) {
+        target->bind();
+        target->resize(width, height);
+    }
     m_api->setViewport(0, 0, width, height);
 }
 

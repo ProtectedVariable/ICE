@@ -17,13 +17,14 @@ ProjectSelection::ProjectSelection(const std::shared_ptr<ICE::ICEEngine> &engine
     ui.registerCallback("create_clicked", [this]() {
         auto folder = open_native_folder_dialog();
         m_done = true;
-        m_engine->setProject(std::make_shared<ICE::Project>(folder, ui.getProjectName()));
-        m_engine->getProject()->CreateDirectories();
+        auto project = std::make_shared<ICE::Project>(folder, ui.getProjectName());
+        project->CreateDirectories();
+        m_engine->setProject(project);
     });
     ui.registerCallback("project_selected", [this](int index) {
         auto project = m_engine->getConfig().getProjectAt(index);
+        project->loadFromFile();
         m_engine->setProject(std::make_shared<ICE::Project>(*project));
-        m_engine->getProject()->loadFromFile();
         m_done = true;
     });
 }

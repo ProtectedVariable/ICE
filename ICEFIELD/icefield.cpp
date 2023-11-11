@@ -4,6 +4,8 @@
 #include <PerspectiveCamera.h>
 #include <WindowFactory.h>
 
+#include <MaterialExporter.h>
+
 using namespace ICE;
 
 int main(void) {
@@ -54,9 +56,14 @@ int main(void) {
         scene->getRegistry()->getComponent<TransformComponent>(entity)->rotation.y() = i;
 
         //Render system duty
+        int display_w, display_h;
+        window->getFramebufferSize(&display_w, &display_h);
+        engine.getApi()->setViewport(0, 0, display_w, display_h);
         window->swapBuffers();
 		i++;
     }
+
+    MaterialExporter().writeToJson("base_mat.icm", *mat);
 
     return 0;
 }

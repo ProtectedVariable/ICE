@@ -45,6 +45,8 @@ bool Project::CreateDirectories() {
     copyAssetFile("Meshes", "sphere", "Assets/Meshes/sphere.obj");
     copyAssetFile("Shaders", "phong", "Assets/Shaders/phong.vs");
     copyAssetFile("Shaders", "phong", "Assets/Shaders/phong.fs");
+    copyAssetFile("Shaders", "solid", "Assets/Shaders/solid.vs");
+    copyAssetFile("Shaders", "solid", "Assets/Shaders/solid.fs");
     copyAssetFile("Shaders", "normal", "Assets/Shaders/normal.vs");
     copyAssetFile("Shaders", "normal", "Assets/Shaders/normal.fs");
     copyAssetFile("Shaders", "picking", "Assets/Shaders/picking.vs");
@@ -54,6 +56,7 @@ bool Project::CreateDirectories() {
 
     assetBank->addAsset<Mesh>("cube", {m_meshes_directory / "cube.obj"});
     assetBank->addAsset<Mesh>("sphere", {m_meshes_directory / "sphere.obj"});
+    assetBank->addAsset<Shader>("solid", {m_shaders_directory / "solid.vs", m_shaders_directory / "solid.fs"});
     assetBank->addAsset<Shader>("phong", {m_shaders_directory / "phong.vs", m_shaders_directory / "phong.fs"});
     assetBank->addAsset<Shader>("normal", {m_shaders_directory / "normal.vs", m_shaders_directory / "normal.fs"});
     assetBank->addAsset<Shader>("__ice__picking_shader", {m_shaders_directory / "picking.vs", m_shaders_directory / "picking.fs"});

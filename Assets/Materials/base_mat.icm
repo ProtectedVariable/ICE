@@ -1,4 +1,14 @@
 {
-    "shader_id": 0,
-    "uniforms": []
+    "shader_id": 3,
+    "uniforms": [
+        {
+            "name": "uAlbedo",
+            "type": "vec3",
+            "value": [
+                0.4706258773803711,
+                0.5,
+                1.0
+            ]
+        }
+    ]
 }

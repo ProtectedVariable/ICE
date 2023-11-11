@@ -44,6 +44,7 @@ class ICEEngine {
     EngineConfig& getConfig();
 
     std::shared_ptr<Framebuffer> getInternalFramebuffer() const;
+    void setRenderFramebufferInternal(bool use_internal) ;
 
     void importMesh();
 
@@ -57,6 +58,7 @@ class ICEEngine {
     std::shared_ptr<Context> ctx;
     std::shared_ptr<RendererAPI> api;
     std::shared_ptr<Framebuffer> internalFB;
+    std::shared_ptr<Framebuffer> m_target_fb = nullptr;
 
     std::shared_ptr<Camera> camera;
     std::shared_ptr<Project> project = nullptr;

@@ -26,6 +26,8 @@ class PerspectiveCamera : public Camera {
     void yaw(float delta) override;
     void roll(float delta) override;
 
+    void resize(float width, float height) override;
+
     Eigen::Matrix4f getProjection() const override;
     Eigen::Vector3f getPosition() const override;
     Eigen::Vector3f getRotation() const override;

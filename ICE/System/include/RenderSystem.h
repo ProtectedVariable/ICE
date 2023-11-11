@@ -22,7 +22,7 @@ class RenderSystem : public System {
     std::shared_ptr<Camera> getCamera() const;
     void setCamera(const std::shared_ptr<Camera> &camera);
 
-    void setTarget(Framebuffer *fb, int width, int height);
+    void setTarget(const std::shared_ptr<Framebuffer> &fb);
 
    private:
     std::shared_ptr<Renderer> m_renderer;

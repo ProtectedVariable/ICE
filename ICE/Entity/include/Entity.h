@@ -5,52 +5,50 @@
 #ifndef ICE_ENTITY_H
 #define ICE_ENTITY_H
 
-#include <cstdlib>
-#include <unordered_map>
-#include <typeindex>
 #include <bitset>
+#include <cstdlib>
 #include <queue>
+#include <typeindex>
+#include <unordered_map>
 
 namespace ICE {
-    using Entity = std::uint32_t;
-    using Signature = std::bitset<32>;
+using Entity = std::uint32_t;
+using Signature = std::bitset<32>;
 
-    class EntityManager {
-	public:
-		EntityManager(): entityCount(0) {}
+class EntityManager {
+   public:
+    EntityManager() : entityCount(0) {}
 
-		Entity createEntity() {
-			Entity e = entityCount+1;
-			//Reuse free ids before using the next
-			if(releasedEntities.size() > 0) {
-				e = releasedEntities.front();
-				releasedEntities.pop();
-			} 
-			entityCount++;
-			
-			signatures.insert_or_assign(e, Signature(0));
-			return e;
-		}
+    Entity createEntity(Entity e = 0) {
+        if (e == 0) {
+            e = entityCount + 1;
+            //Reuse free ids before using the next
+            if (releasedEntities.size() > 0) {
+                e = releasedEntities.front();
+                releasedEntities.pop();
+            }
+        }
+        entityCount++;
 
-		void releaseEntity(Entity e) {
-			signatures[e].reset();
-			releasedEntities.push(e);
-			entityCount--;
-		}
+        signatures.insert_or_assign(e, Signature(0));
+        return e;
+    }
 
-		void setSignature(Entity e, Signature s) {
-			signatures[e] = s; 
-		}
+    void releaseEntity(Entity e) {
+        signatures[e].reset();
+        releasedEntities.push(e);
+        entityCount--;
+    }
 
-		Signature getSignature(Entity e) const {
-			return signatures.at(e);
-		}
+    void setSignature(Entity e, Signature s) { signatures[e] = s; }
 
-	private:
-		std::queue<Entity> releasedEntities{};
-		std::unordered_map<Entity, Signature> signatures{};
-		std::uint32_t entityCount;
-	};
-}
+    Signature getSignature(Entity e) const { return signatures.at(e); }
 
-#endif //ICE_ENTITY_H
+   private:
+    std::queue<Entity> releasedEntities{};
+    std::unordered_map<Entity, Signature> signatures{};
+    std::uint32_t entityCount;
+};
+}  // namespace ICE
+
+#endif  //ICE_ENTITY_H
