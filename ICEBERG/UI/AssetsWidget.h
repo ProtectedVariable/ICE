@@ -9,7 +9,7 @@
 
 struct AssetView {
     std::string folder_name;
-    std::vector<std::string> assets_names;
+    std::vector<std::pair<std::string, void*>> assets;
     std::vector<std::shared_ptr<AssetView>> subfolders;
 };
 
@@ -54,10 +54,14 @@ class AssetsWidget : public Widget {
                     }
                 }
 
-                for (int i = 0; i < m_current_view->assets_names.size(); i++) {
-                    const auto& name = m_current_view->assets_names[i];
+                for (int i = 0; i < m_current_view->assets.size(); i++) {
+                    const auto& name = m_current_view->assets[i].first;
+                    const auto& texture = m_current_view->assets[i].second;
                     ImGui::TableNextColumn();
+                    ImGui::BeginGroup();
+                    ImGui::Image(texture, {50, 50});
                     ImGui::Text(name.c_str());
+                    ImGui::EndGroup();
                 }
                 ImGui::EndTable();
             }

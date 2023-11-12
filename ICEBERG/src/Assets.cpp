@@ -1,8 +1,10 @@
 #include "Assets.h"
 
-Assets::Assets(const std::shared_ptr<ICE::ICEEngine>& engine) : m_engine(engine) {
-    auto entries = engine->getAssetBank()->getAllEntries();
+#include <ForwardRenderer.h>
+#include <PerspectiveCamera.h>
 
+Assets::Assets(const std::shared_ptr<ICE::ICEEngine>& engine, const std::shared_ptr<ICE::GraphicsFactory>& g_factory) : m_engine(engine), m_g_factory(g_factory) {
+    auto entries = engine->getAssetBank()->getAllEntries();
     //Fill asset browser
     std::unordered_map<std::string, std::shared_ptr<AssetView>> asset_roots;
 
@@ -29,12 +31,53 @@ Assets::Assets(const std::shared_ptr<ICE::ICEEngine>& engine) : m_engine(engine)
             }
         }
 
-        parent->assets_names.push_back(entry.path.getName());
+        parent->assets.emplace_back(entry.path.getName(), createThumbnail(entry));
     }
 
     for (const auto& [name, assetview] : asset_roots) {
         ui.addAssets(assetview);
     }
+}
+
+void* Assets::createThumbnail(const ICE::AssetBankEntry& entry) {
+    auto& asset = entry.asset;
+    if (auto m = std::dynamic_pointer_cast<ICE::Texture2D>(asset); m) {
+        return m->getTexture();
+    }
+    auto preview_framebuffer = m_g_factory->createFramebuffer({256, 256, 1});
+    ICE::Scene s("preview_scene");
+
+    auto render_system = std::make_shared<ICE::RenderSystem>();
+    render_system->setRenderer(std::make_shared<ICE::ForwardRenderer>(m_engine->getApi(), s.getRegistry(), m_engine->getAssetBank()));
+
+    auto camera = std::make_shared<ICE::PerspectiveCamera>(60.0, 1.0, 0.01, 10000.0);
+    camera->backward(2);
+    camera->up(1);
+    camera->pitch(-30);
+    render_system->setCamera(camera);
+
+    s.getRegistry()->addSystem(render_system);
+
+    auto entity = s.createEntity();
+    auto mesh_uid = m_engine->getAssetBank()->getUID(ICE::AssetPath("Meshes/sphere"));
+    auto material_uid = m_engine->getAssetBank()->getUID(ICE::AssetPath("Materials/base_mat"));
+
+    auto self_uid = m_engine->getAssetBank()->getUID(entry.path);
+    if (auto m = std::dynamic_pointer_cast<ICE::Mesh>(asset); m) {
+        mesh_uid = self_uid;
+    } else if (auto m = std::dynamic_pointer_cast<ICE::Material>(asset); m) {
+        material_uid = self_uid;
+    } else {
+        //TODO return default icons
+        return nullptr;
+    }
+
+    s.getRegistry()->addComponent<ICE::RenderComponent>(entity, ICE::RenderComponent(mesh_uid, material_uid));
+    s.getRegistry()->addComponent<ICE::TransformComponent>(entity, ICE::TransformComponent({0, 0, 0}, {0, 45, 0}, {1, 1, 1}));
+    render_system->setTarget(preview_framebuffer);
+    render_system->update(1.0f);
+
+    return preview_framebuffer->getTexture();
 }
 
 bool Assets::update() {

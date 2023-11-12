@@ -10,7 +10,7 @@
 
 class Editor : public Controller {
    public:
-    Editor(const std::shared_ptr<ICE::ICEEngine> &engine);
+    Editor(const std::shared_ptr<ICE::ICEEngine> &engine, const std::shared_ptr<ICE::GraphicsFactory> &g_factory);
     bool update() override;
 
    private:

@@ -36,7 +36,7 @@ class Iceberg {
 
             if (m_controller->update()) {
                 if (m_state == UIState::PROJECT_SELECTION) {
-                    m_controller = std::make_unique<Editor>(m_engine);
+                    m_controller = std::make_unique<Editor>(m_engine, std::make_shared<ICE::OpenGLFactory>());
                     m_state = UIState::EDITOR;
                 }
             }
