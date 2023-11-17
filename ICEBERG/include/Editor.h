@@ -18,4 +18,5 @@ class Editor : public Controller {
     bool m_done = false;
     EditorWidget ui;
     std::vector<std::unique_ptr<Controller>> m_subpannels;
+    ICE::Entity m_selected_entity;
 };

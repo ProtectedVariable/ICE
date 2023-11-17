@@ -42,7 +42,12 @@ class EntityManager {
 
     void setSignature(Entity e, Signature s) { signatures[e] = s; }
 
-    Signature getSignature(Entity e) const { return signatures.at(e); }
+    Signature getSignature(Entity e) const {
+        if (e == 0) {
+            return 0;
+        }
+        return signatures.at(e);
+    }
 
    private:
     std::queue<Entity> releasedEntities{};

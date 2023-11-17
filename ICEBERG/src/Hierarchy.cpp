@@ -20,6 +20,7 @@ Hierarchy::Hierarchy(const std::shared_ptr<ICE::ICEEngine> &engine) : m_engine(e
         scene->getGraph()->setParent(entity, parent, false);
         m_need_rebuild_tree = true;
     });
+    ui.registerCallback("selected_entity_changed", [this](ICE::Entity selected) { m_selected = selected; });
 }
 
 SceneTreeView getSubTree(const std::shared_ptr<ICE::Scene> &scene, const std::shared_ptr<ICE::SceneGraph::SceneNode> &node) {
@@ -36,6 +37,10 @@ SceneTreeView getSubTree(const std::shared_ptr<ICE::Scene> &scene, const std::sh
 SceneTreeView Hierarchy::getTreeView(const std::shared_ptr<ICE::Scene> &scene) const {
     auto graph = scene->getGraph();
     return getSubTree(scene, graph->root);
+}
+
+ICE::Entity Hierarchy::getSelectedEntity() const {
+    return m_selected;
 }
 
 bool Hierarchy::update() {

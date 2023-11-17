@@ -38,6 +38,7 @@ class HierarchyWidget : public Widget {
    private:
     void renderTree(const SceneTreeView& tree) {
         auto flags = tree.children.empty() ? ImGuiTreeNodeFlags_Leaf : 0;
+        flags |= tree.id == selected_id ? ImGuiTreeNodeFlags_Selected : 0;
         auto name = tree.entity_name;
         if (ImGui::TreeNodeEx(name.c_str(), flags)) {
             if (tree.type != EntityType::Scene) {
@@ -63,6 +64,10 @@ class HierarchyWidget : public Widget {
                 }
                 ImGui::EndPopup();
             }
+            if (ImGui::IsItemClicked(0)) {
+                selected_id = tree.id;
+                callback("selected_entity_changed", selected_id);
+            }
 
             for (const auto& c : tree.children) {
                 renderTree(*c);
@@ -73,4 +78,5 @@ class HierarchyWidget : public Widget {
 
    private:
     SceneTreeView m_view;
+    ICE::Entity selected_id = 0;
 };

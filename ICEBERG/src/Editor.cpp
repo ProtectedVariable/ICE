@@ -16,6 +16,11 @@ bool Editor::update() {
     ui.render();
     for (const auto& pannel : m_subpannels) {
         pannel->update();
+        if (typeid(*pannel) == typeid(Hierarchy)) {
+            m_selected_entity = static_cast<Hierarchy*>(pannel.get())->getSelectedEntity();
+        } else if (typeid(*pannel) == typeid(Inspector)) {
+            static_cast<Inspector*>(pannel.get())->setSelectedEntity(m_selected_entity);
+        }
     }
     return m_done;
 }

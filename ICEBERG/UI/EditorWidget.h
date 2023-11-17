@@ -18,10 +18,21 @@ class EditorWidget : public Widget {
         ImGui::SetNextWindowViewport(viewport->ID);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
         flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
-        flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+        flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus | ImGuiWindowFlags_MenuBar;
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
         ImGui::Begin("ICE Editor", 0, flags);
         ImGui::PopStyleVar();
+
+        if (ImGui::BeginMainMenuBar()) {
+            if (ImGui::BeginMenu("File")) {
+                if (ImGui::MenuItem("Create")) {}
+                if (ImGui::MenuItem("Open", "Ctrl+O")) {}
+                if (ImGui::MenuItem("Save", "Ctrl+S")) {}
+                if (ImGui::MenuItem("Save as..")) {}
+                ImGui::EndMenu();
+            }
+            ImGui::EndMainMenuBar();
+        }
 
         ImGuiIO& io = ImGui::GetIO();
         ImGuiID dockspace_id = ImGui::GetID("MyDockspace");
