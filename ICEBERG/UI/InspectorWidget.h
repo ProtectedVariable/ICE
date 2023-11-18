@@ -17,9 +17,9 @@ class InspectorWidget : public Widget {
         if (m_tc) {
             ImGui::SeparatorText("Transform");
             ImGui::BeginGroup();
-            renderVector3Input(m_tc->position);
-            renderVector3Input(m_tc->rotation);
-            renderVector3Input(m_tc->scale);
+            renderVector3Input(m_tc->position, "position");
+            renderVector3Input(m_tc->rotation, "rotation");
+            renderVector3Input(m_tc->scale, "scale");
             ImGui::EndGroup();
         }
 
@@ -30,7 +30,8 @@ class InspectorWidget : public Widget {
     void setTransformComponent(ICE::TransformComponent* tc) { m_tc = tc; }
 
    private:
-    void renderVector3Input(Eigen::Vector3f &input) {
+    void renderVector3Input(Eigen::Vector3f &input, const char* id) {
+        ImGui::PushID(id);
         ImGui::PushItemWidth(60);
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
         renderLabel("X", 0x990000FF);
@@ -43,6 +44,7 @@ class InspectorWidget : public Widget {
         ImGui::InputFloat("##Z", &input.z());
         ImGui::PopStyleVar();
         ImGui::PopItemWidth();
+        ImGui::PopID();
     }
 
      void renderLabel(const char *text, uint32_t backgroundColor) {
