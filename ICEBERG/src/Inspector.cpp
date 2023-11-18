@@ -13,5 +13,6 @@ void Inspector::setSelectedEntity(ICE::Entity e) {
     auto registry = m_engine->getProject()->getCurrentScene()->getRegistry();
     if (registry->entityHasComponent<ICE::TransformComponent>(e)) {
         auto tc = registry->getComponent<ICE::TransformComponent>(e);
+        ui.setTransformComponent(tc);
     }
 }

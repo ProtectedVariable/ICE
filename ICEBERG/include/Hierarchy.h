@@ -19,5 +19,5 @@ class Hierarchy : public Controller {
     bool m_done = false;
     bool m_need_rebuild_tree = true;
     HierarchyWidget ui;
-    ICE::Entity m_selected;
+    ICE::Entity m_selected = 0;
 };
