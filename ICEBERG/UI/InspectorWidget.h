@@ -17,9 +17,9 @@ class InspectorWidget : public Widget {
         if (m_tc) {
             ImGui::SeparatorText("Transform");
             ImGui::BeginGroup();
-            renderVector3Input(m_tc->position, "position");
-            renderVector3Input(m_tc->rotation, "rotation");
-            renderVector3Input(m_tc->scale, "scale");
+            renderVector3Input(m_tc->position, "Position");
+            renderVector3Input(m_tc->rotation, "Rotation");
+            renderVector3Input(m_tc->scale, "Scale");
             ImGui::EndGroup();
         }
 
@@ -32,6 +32,7 @@ class InspectorWidget : public Widget {
    private:
     void renderVector3Input(Eigen::Vector3f &input, const char* id) {
         ImGui::PushID(id);
+        ImGui::Text("%s", id);
         ImGui::PushItemWidth(60);
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
         renderLabel("X", 0x990000FF);

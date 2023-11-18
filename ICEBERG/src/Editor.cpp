@@ -10,6 +10,9 @@ Editor::Editor(const std::shared_ptr<ICE::ICEEngine>& engine, const std::shared_
     m_subpannels.push_back(std::make_unique<Hierarchy>(engine));
     m_subpannels.push_back(std::make_unique<Inspector>(engine));
     m_subpannels.push_back(std::make_unique<Assets>(engine, g_factory));
+    ui.registerCallback("new_material_clicked", [this] {
+        m_material_popup.open();
+    });
 }
 
 bool Editor::update() {
@@ -22,5 +25,6 @@ bool Editor::update() {
             static_cast<Inspector*>(pannel.get())->setSelectedEntity(m_selected_entity);
         }
     }
+    m_material_popup.render();
     return m_done;
 }

@@ -2,6 +2,7 @@
 
 #include <ICEEngine.h>
 #include <UI/EditorWidget.h>
+#include <UI/NewMaterialWidget.h>
 
 #include <memory>
 #include <vector>
@@ -19,4 +20,7 @@ class Editor : public Controller {
     EditorWidget ui;
     std::vector<std::unique_ptr<Controller>> m_subpannels;
     ICE::Entity m_selected_entity;
+
+    //Popups
+    NewMaterialWidget m_material_popup;
 };
