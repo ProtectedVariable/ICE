@@ -11,6 +11,13 @@ Editor::Editor(const std::shared_ptr<ICE::ICEEngine>& engine, const std::shared_
     m_subpannels.push_back(std::make_unique<Inspector>(engine));
     m_subpannels.push_back(std::make_unique<Assets>(engine, g_factory));
     ui.registerCallback("new_material_clicked", [this] {
+        m_material_popup.setName("New material");
+        auto shaders = m_engine->getAssetBank()->getAll<ICE::Shader>();
+        std::vector<std::string> shader_names;
+        for (const auto &[id, shader] : shaders) {
+            shader_names.push_back(m_engine->getAssetBank()->getName(id).toString());
+        }
+        m_material_popup.setShaders(shader_names);
         m_material_popup.open();
     });
 }
