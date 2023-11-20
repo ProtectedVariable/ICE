@@ -20,7 +20,7 @@ BreakBeforeBinaryOperators: NonAssignment
 BreakBeforeTernaryOperators: true
 BreakConstructorInitializers: BeforeColon
 BreakInheritanceList: BeforeColon
-ColumnLimit: 180
+ColumnLimit: 150
 CompactNamespaces: false
 ContinuationIndentWidth: 4
 IndentCaseLabels: true
