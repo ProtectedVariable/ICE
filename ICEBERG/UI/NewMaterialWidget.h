@@ -120,7 +120,7 @@ class NewMaterialWidget : public Widget {
             shader_names.push_back(m_engine->getAssetBank()->getName(id).toString());
         }
         m_shaders_combo.setValues(shader_names);
-        auto name = m_engine->getAssetBank()->getName(id).toString();
+        auto name = m_engine->getAssetBank()->getName(id).getName();
         memcpy(m_name, name.c_str(), name.size() + 1);
 
         m_material = m_engine->getAssetBank()->getAsset<ICE::Material>(id);

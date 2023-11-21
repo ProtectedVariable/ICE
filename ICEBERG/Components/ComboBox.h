@@ -12,6 +12,9 @@ class ComboBox {
 
     void onSelectionChanged(const std::function<void(const std::string &, int)> &f) { m_callback_edit = f; }
     void render() {
+        if (m_values.empty()) {
+            return;
+        }
         if (ImGui::BeginCombo(m_label.c_str(), m_values[m_selected_index].c_str())) {
             for (int i = 0; i < m_values.size(); i++) {
                 bool is_selected = (m_selected_index == i);

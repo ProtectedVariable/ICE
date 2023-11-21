@@ -7,11 +7,13 @@
 #include <string>
 #include <variant>
 
+#include "ComboBox.h"
+
 class UniformInputs {
    public:
-    UniformInputs(const std::string &label, const ICE::UniformValue &value) : m_label(label), m_value(value) {}
+    UniformInputs(const std::string &label, const ICE::UniformValue &value) : m_label(label), m_value(value), m_asset_combo(m_label+"_asset_combo", {}) {}
     void render() {
-        std::visit([this](auto &&v) { render(v); }, m_value);
+        std::visit([this](auto &v) { render(v); }, m_value);
     }
 
     void setValue(const ICE::UniformValue &value) { m_value = value; }
@@ -20,13 +22,19 @@ class UniformInputs {
     void onValueChanged(const std::function<void(const ICE::UniformValue &)> &f) { m_callback = f; }
     std::string getLabel() const { return m_label; }
 
+    void setAssetComboList(const std::vector<std::string> &paths, const std::vector<ICE::AssetUID> &ids) {
+        m_asset_combo.setValues(paths);
+        m_assets_ids = ids;
+        m_asset_combo.onSelectionChanged([this](const std::string &, int index) { m_callback(m_assets_ids[index]); });
+    }
+
    private:
     void render(int &i) {
         if (ImGui::InputInt(m_label.c_str(), &i)) {
             m_callback(i);
         }
     }
-    void render(ICE::AssetUID id) {}
+    void render(ICE::AssetUID id) { m_asset_combo.render(); }
     void render(float &f) {
         if (ImGui::InputFloat(m_label.c_str(), &f)) {
             m_callback(f);
@@ -105,4 +113,7 @@ class UniformInputs {
     ICE::UniformValue m_value;
     std::function<void(const ICE::UniformValue &)> m_callback = [](const ICE::UniformValue &) {
     };
+    //Used when it's an asset input
+    ComboBox m_asset_combo;
+    std::vector<ICE::AssetUID> m_assets_ids;
 };

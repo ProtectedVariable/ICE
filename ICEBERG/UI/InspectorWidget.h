@@ -24,6 +24,15 @@ class InspectorWidget : public Widget {
             }
             ImGui::EndGroup();
         }
+        if (m_rc) {
+            ImGui::SeparatorText("Render");
+            ImGui::BeginGroup();
+            for (auto& input : m_rc_inputs) {
+                ImGui::Text("%s", input.getLabel().c_str());
+                input.render();
+            }
+            ImGui::EndGroup();
+        }
 
         ImGui::End();
         ImGui::PopStyleVar();
@@ -40,7 +49,22 @@ class InspectorWidget : public Widget {
         m_tc_inputs.back().onValueChanged([this](const ICE::UniformValue& v) { m_tc->scale = std::get<Eigen::Vector3f>(v); });
     }
 
+    void setRenderComponent(ICE::RenderComponent* rc, const std::vector<std::string>& meshes_paths, const std::vector<ICE::AssetUID>& meshes_ids,
+                            const std::vector<std::string>& materials_paths, const std::vector<ICE::AssetUID>& materials_ids) {
+        m_rc = rc;
+        m_rc_inputs.clear();
+        m_rc_inputs.emplace_back("Mesh", rc->mesh);
+        m_rc_inputs.back().setAssetComboList(meshes_paths, meshes_ids);
+        m_rc_inputs.back().onValueChanged([this](const ICE::UniformValue& v) { m_rc->mesh = std::get<ICE::AssetUID>(v); });
+        m_rc_inputs.emplace_back("Material", rc->material);
+        m_rc_inputs.back().setAssetComboList(materials_paths, materials_ids);
+        m_rc_inputs.back().onValueChanged([this](const ICE::UniformValue& v) { m_rc->material = std::get<ICE::AssetUID>(v); });
+    }
+
    private:
     ICE::TransformComponent* m_tc = nullptr;
     std::vector<UniformInputs> m_tc_inputs;
+
+    ICE::RenderComponent* m_rc = nullptr;
+    std::vector<UniformInputs> m_rc_inputs;
 };
