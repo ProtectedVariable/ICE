@@ -25,7 +25,7 @@ class UniformInputs {
     void setAssetComboList(const std::vector<std::string> &paths, const std::vector<ICE::AssetUID> &ids) {
         m_asset_combo.setValues(paths);
         m_assets_ids = ids;
-        m_asset_combo.onSelectionChanged([this](const std::string &, int index) { m_callback(m_assets_ids[index]); });
+        m_asset_combo.onSelectionChanged([cb=this->m_callback, id_list=this->m_assets_ids](const std::string &, int index) { cb(id_list[index]); });
     }
 
    private:
