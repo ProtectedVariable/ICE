@@ -17,6 +17,7 @@ ICEEngine::ICEEngine() : camera(std::make_shared<PerspectiveCamera>(60, 16.f / 9
 void ICEEngine::initialize(const std::shared_ptr<GraphicsFactory> &graphics_factory, const std::shared_ptr<Window> &window) {
     Logger::Log(Logger::INFO, "Core", "Engine starting up...");
 
+    m_graphics_factory = graphics_factory;
     ctx = graphics_factory->createContext(window);
     ctx->initialize();
     api = graphics_factory->createRendererAPI();
@@ -100,6 +101,10 @@ void ICEEngine::setProject(const std::shared_ptr<Project> &project) {
 
 EngineConfig &ICEEngine::getConfig() {
     return config;
+}
+
+std::shared_ptr<GraphicsFactory> ICEEngine::getGraphicsFactory() const {
+    return m_graphics_factory;
 }
 
 int import_cnt = 0;

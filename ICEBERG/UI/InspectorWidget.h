@@ -2,6 +2,7 @@
 #include <ImGUI/imgui.h>
 #include <TransformComponent.h>
 
+#include "Components/UniformInputs.h"
 #include "Widget.h"
 
 class InspectorWidget : public Widget {
@@ -17,9 +18,10 @@ class InspectorWidget : public Widget {
         if (m_tc) {
             ImGui::SeparatorText("Transform");
             ImGui::BeginGroup();
-            renderVector3Input(m_tc->position, "Position");
-            renderVector3Input(m_tc->rotation, "Rotation");
-            renderVector3Input(m_tc->scale, "Scale");
+            for (auto& input : m_tc_inputs) {
+                ImGui::Text("%s", input.getLabel().c_str());
+                input.render();
+            }
             ImGui::EndGroup();
         }
 
@@ -27,43 +29,18 @@ class InspectorWidget : public Widget {
         ImGui::PopStyleVar();
     }
 
-    void setTransformComponent(ICE::TransformComponent* tc) { m_tc = tc; }
+    void setTransformComponent(ICE::TransformComponent* tc) {
+        m_tc = tc;
+        m_tc_inputs.clear();
+        m_tc_inputs.emplace_back("Position", tc->position);
+        m_tc_inputs.back().onValueChanged([this](const ICE::UniformValue& v) { m_tc->position = std::get<Eigen::Vector3f>(v); });
+        m_tc_inputs.emplace_back("Rotation", tc->rotation);
+        m_tc_inputs.back().onValueChanged([this](const ICE::UniformValue& v) { m_tc->rotation = std::get<Eigen::Vector3f>(v); });
+        m_tc_inputs.emplace_back("Scale", tc->scale);
+        m_tc_inputs.back().onValueChanged([this](const ICE::UniformValue& v) { m_tc->scale = std::get<Eigen::Vector3f>(v); });
+    }
 
    private:
-    void renderVector3Input(Eigen::Vector3f &input, const char* id) {
-        ImGui::PushID(id);
-        ImGui::Text("%s", id);
-        ImGui::PushItemWidth(60);
-        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
-        renderLabel("X", 0x990000FF);
-        ImGui::InputFloat("##X", &input.x());
-        ImGui::SameLine();
-        renderLabel("Y", 0x9900FF00);
-        ImGui::InputFloat("##Y", &input.y());
-        ImGui::SameLine();
-        renderLabel("Z", 0x99FF0000);
-        ImGui::InputFloat("##Z", &input.z());
-        ImGui::PopStyleVar();
-        ImGui::PopItemWidth();
-        ImGui::PopID();
-    }
-
-     void renderLabel(const char *text, uint32_t backgroundColor) {
-        auto dl = ImGui::GetWindowDrawList();
-        ImVec2 rectSize = ImGui::CalcTextSize(text);
-        rectSize.x = rectSize.y;
-        ImVec2 wpos = ImGui::GetWindowPos();
-        ImVec2 cpos = ImGui::GetCursorPos();
-        ImVec2 pad = ImGui::GetStyle().FramePadding;
-        ImVec2 cursor = ImVec2(wpos.x + cpos.x, wpos.y + cpos.y);
-        ImVec2 max = ImVec2(cursor.x + rectSize.x + pad.x * 2, cursor.y + rectSize.y + pad.y * 2);
-        dl->AddRectFilled(cursor, max, backgroundColor, 0.0f);
-        ImGui::SetCursorPosY(cpos.y + pad.y);
-        ImGui::SetCursorPosX(cpos.x + pad.x);
-        ImGui::Text("%s", text);
-        ImGui::SameLine(0, pad.x);
-        ImGui::SetCursorPosY(cpos.y);
-    }
-
     ICE::TransformComponent* m_tc = nullptr;
+    std::vector<UniformInputs> m_tc_inputs;
 };
