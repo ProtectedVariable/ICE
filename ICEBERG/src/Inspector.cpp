@@ -1,7 +1,7 @@
 #include "Inspector.h"
 
 Inspector::Inspector(const std::shared_ptr<ICE::ICEEngine>& engine) : m_engine(engine) {
-    ui.registerCallback("entity_name_changed", [this](const std::string& text) {
+    ui.registerCallback("entity_name_changed", [this](std::string text) {
         m_engine->getProject()->getCurrentScene()->setAlias(m_selected_entity, text);
         m_entity_has_changed++;
     });

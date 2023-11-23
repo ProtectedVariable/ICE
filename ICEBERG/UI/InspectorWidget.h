@@ -9,10 +9,10 @@
 class InspectorWidget : public Widget {
    public:
     InspectorWidget() {
-        m_input_entity_name.onEdit([this](std::string text) { callback("entity_name_changed", text); });
     }
 
     void render() override {
+        m_input_entity_name.onEdit([this](const std::string &text) { callback("entity_name_changed", text); });
         int flags = ImGuiWindowFlags_NoCollapse;
         flags |= ImGuiWindowFlags_NoNavFocus;
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
