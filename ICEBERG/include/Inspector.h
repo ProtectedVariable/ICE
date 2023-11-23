@@ -17,5 +17,5 @@ class Inspector : public Controller {
     std::shared_ptr<ICE::ICEEngine> m_engine;
     bool m_done = false;
     InspectorWidget ui;
-    ICE::Entity m_selected_entity;
+    ICE::Entity m_selected_entity = 0;
 };

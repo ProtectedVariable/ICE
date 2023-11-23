@@ -39,6 +39,7 @@ class HierarchyWidget : public Widget {
     void renderTree(const SceneTreeView& tree) {
         auto flags = tree.children.empty() ? ImGuiTreeNodeFlags_Leaf : 0;
         flags |= tree.id == selected_id ? ImGuiTreeNodeFlags_Selected : 0;
+        flags |= ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_OpenOnArrow;
         auto name = tree.entity_name;
         if (ImGui::TreeNodeEx(name.c_str(), flags)) {
             if (tree.type != EntityType::Scene) {

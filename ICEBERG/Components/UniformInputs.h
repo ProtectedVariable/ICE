@@ -11,7 +11,10 @@
 
 class UniformInputs {
    public:
-    UniformInputs(const std::string &label, const ICE::UniformValue &value) : m_label(label), m_value(value), m_asset_combo(m_label+"_asset_combo", {}) {}
+    UniformInputs(const std::string &label, const ICE::UniformValue &value)
+        : m_label(label),
+          m_value(value),
+          m_asset_combo("##" + m_label + "_asset_combo", {}) {}
     void render() {
         std::visit([this](auto &v) { render(v); }, m_value);
     }
@@ -25,6 +28,8 @@ class UniformInputs {
     void setAssetComboList(const std::vector<std::string> &paths, const std::vector<ICE::AssetUID> &ids) {
         m_asset_combo.setValues(paths);
         m_assets_ids = ids;
+        auto it = std::find(ids.begin(), ids.end(), std::get<ICE::AssetUID>(m_value));
+        m_asset_combo.setSelected(std::distance(ids.begin(), it));
         m_asset_combo.onSelectionChanged([this](const std::string &, int index) { m_callback(m_assets_ids[index]); });
     }
 
