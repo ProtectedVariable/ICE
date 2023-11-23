@@ -24,9 +24,9 @@ class AssetsWidget : public Widget {
         ImGui::Begin("Assets", 0, flags);
 
         if (ImGui::BeginTable("asset_layout", 3, ImGuiTableFlags_Resizable)) {
-            ImGui::TableSetupColumn("Folders", ImGuiTableColumnFlags_WidthStretch, 0.15);  
-            ImGui::TableSetupColumn("Content", ImGuiTableColumnFlags_WidthStretch, 0.6);  
-            ImGui::TableSetupColumn("Preview", ImGuiTableColumnFlags_WidthStretch, 0.25);       
+            ImGui::TableSetupColumn("Folders", ImGuiTableColumnFlags_WidthStretch, 0.15);
+            ImGui::TableSetupColumn("Content", ImGuiTableColumnFlags_WidthStretch, 0.6);
+            ImGui::TableSetupColumn("Preview", ImGuiTableColumnFlags_WidthStretch, 0.25);
             ImGui::TableHeadersRow();
             ImGui::TableNextColumn();
             //Left hand side: Assets folders
@@ -76,11 +76,17 @@ class AssetsWidget : public Widget {
         ImGui::PopStyleVar();
     }
 
-    void addAssets(const std::shared_ptr<AssetView> &assets) {
+    void addAssets(const std::shared_ptr<AssetView>& assets) {
         m_assets.push_back(assets);
         if (m_current_view == nullptr) {
             m_current_view = assets;
         }
+    }
+
+    void reset() {
+        m_assets.clear();
+        m_current_view = nullptr;
+        m_selected_index = 0;
     }
 
    private:

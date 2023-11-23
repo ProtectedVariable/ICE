@@ -23,7 +23,9 @@ class Widget {
 
     template<typename... Args>
     void callback(const std::string &key, Args... arg) {
-        call(m_callbacks[key], arg...);
+        if (m_callbacks.contains(key)) {
+            call(m_callbacks[key], arg...);
+        }
     }
 
    private:

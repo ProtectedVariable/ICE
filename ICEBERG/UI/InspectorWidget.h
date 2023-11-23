@@ -2,18 +2,24 @@
 #include <ImGUI/imgui.h>
 #include <TransformComponent.h>
 
+#include "Components/InputText.h"
 #include "Components/UniformInputs.h"
 #include "Widget.h"
 
 class InspectorWidget : public Widget {
    public:
-    InspectorWidget() = default;
+    InspectorWidget() {
+        m_input_entity_name.onEdit([this](std::string text) { callback("entity_name_changed", text); });
+    }
 
     void render() override {
         int flags = ImGuiWindowFlags_NoCollapse;
         flags |= ImGuiWindowFlags_NoNavFocus;
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
         ImGui::Begin("Inspector", 0, flags);
+
+        ImGui::Text("Entity name");
+        m_input_entity_name.render();
 
         if (m_tc) {
             ImGui::SeparatorText("Transform");
@@ -37,6 +43,8 @@ class InspectorWidget : public Widget {
         ImGui::End();
         ImGui::PopStyleVar();
     }
+
+    void setEntityName(const std::string& name) { m_input_entity_name.setText(name); }
 
     void setTransformComponent(ICE::TransformComponent* tc) {
         m_tc = tc;
@@ -71,4 +79,6 @@ class InspectorWidget : public Widget {
 
     ICE::RenderComponent* m_rc = nullptr;
     std::vector<UniformInputs> m_rc_inputs;
+
+    InputText m_input_entity_name{"##inspector_entity_name", ""};
 };

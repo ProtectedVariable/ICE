@@ -90,6 +90,7 @@ class AssetBank {
         if (id != NO_ASSET_ID) {
             if (nameMapping.find(newName) == nameMapping.end()) {
                 nameMapping[newName] = id;
+                resources[id].path = newName;
                 nameMapping.erase(oldName);
                 return true;
             }
@@ -137,7 +138,7 @@ class AssetBank {
         return AssetPath("");
     }
 
-    AssetUID getUID(const AssetPath &name) {
+    AssetUID getUID(const AssetPath& name) {
         if (nameMapping.find(name) != nameMapping.end())
             return nameMapping[name];
         return NO_ASSET_ID;

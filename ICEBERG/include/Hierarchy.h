@@ -13,6 +13,7 @@ class Hierarchy : public Controller {
     SceneTreeView getTreeView(const std::shared_ptr<ICE::Scene> &scene) const;
 
     ICE::Entity getSelectedEntity() const;
+    void rebuildTree();
 
    private:
     std::shared_ptr<ICE::ICEEngine> m_engine;

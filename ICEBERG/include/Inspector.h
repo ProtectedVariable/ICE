@@ -12,10 +12,12 @@ class Inspector : public Controller {
     bool update() override;
 
     void setSelectedEntity(ICE::Entity e);
+    bool entityHasChanged();
 
    private:
     std::shared_ptr<ICE::ICEEngine> m_engine;
     bool m_done = false;
     InspectorWidget ui;
     ICE::Entity m_selected_entity = 0;
+    int m_entity_has_changed = 0;
 };

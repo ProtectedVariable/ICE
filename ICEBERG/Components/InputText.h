@@ -7,15 +7,19 @@
 
 class InputText {
    public:
-    InputText(const std::string &label, const std::string &default_text = "") : m_text(default_text), m_label(label) {
-        memcpy(buffer, default_text.c_str(), default_text.size() + 1);
-    }
+    InputText(const std::string &label, const std::string &default_text = "") : m_label(label) { setText(default_text); }
     void onEdit(const std::function<void(const std::string &)> &f) { m_callback_edit = f; }
     void render() {
-        ImGui::InputText(m_label.c_str(), buffer, 512);
+        if (ImGui::InputText(m_label.c_str(), buffer, 512)) {
+            m_callback_edit(std::string(buffer));
+        }
         m_text = buffer;
     }
-    std::string getText() { return m_text; }
+    std::string getText() const { return m_text; }
+    void setText(const std::string &text) {
+        m_text = text;
+        memcpy(buffer, m_text.c_str(), m_text.size() + 1);
+    }
 
    private:
     std::string m_text;

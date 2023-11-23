@@ -11,7 +11,8 @@ Hierarchy::Hierarchy(const std::shared_ptr<ICE::ICEEngine> &engine) : m_engine(e
     ui.registerCallback("create_entity_clicked", [this](ICE::Entity parent) {
         auto scene = m_engine->getProject()->getCurrentScene();
         auto entity = scene->createEntity();
-        scene->getRegistry()->addComponent<ICE::TransformComponent>(entity, ICE::TransformComponent(Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero(), Eigen::Vector3f(1, 1, 1)));
+        scene->getRegistry()->addComponent<ICE::TransformComponent>(
+            entity, ICE::TransformComponent(Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero(), Eigen::Vector3f(1, 1, 1)));
 
         auto cube_id = m_engine->getAssetBank()->getUID(ICE::AssetPath::WithTypePrefix<ICE::Mesh>("cube"));
         auto mat_id = m_engine->getAssetBank()->getUID(ICE::AssetPath::WithTypePrefix<ICE::Material>("base_mat"));
@@ -41,6 +42,10 @@ SceneTreeView Hierarchy::getTreeView(const std::shared_ptr<ICE::Scene> &scene) c
 
 ICE::Entity Hierarchy::getSelectedEntity() const {
     return m_selected;
+}
+
+void Hierarchy::rebuildTree() {
+    m_need_rebuild_tree = true;
 }
 
 bool Hierarchy::update() {

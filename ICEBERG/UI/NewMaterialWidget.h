@@ -93,14 +93,12 @@ class NewMaterialWidget : public Widget {
                 }
                 ImGui::SameLine();
                 if (ImGui::Button("Apply")) {
-                    auto material = std::make_shared<ICE::Material>();
-                    material->setShader(m_engine->getAssetBank()->getUID(m_shaders_combo.getSelectedItem()));
-                    for (int i = 0; i < m_uniform_names.size(); i++) {
-                        material->setUniform(m_uniform_names[i].getText(), m_uniform_inputs[i].getValue());
+                    auto rename_ok = m_engine->getAssetBank()->renameAsset(m_engine->getAssetBank()->getName(m_id),
+                                                                           ICE::AssetPath::WithTypePrefix<ICE::Material>(m_name));
+                    if (rename_ok) {
+                        m_accepted = true;
+                        ImGui::CloseCurrentPopup();
                     }
-                    m_engine->getAssetBank()->renameAsset(m_engine->getAssetBank()->getName(m_id),
-                                                          ICE::AssetPath::WithTypePrefix<ICE::Material>(m_name));
-                    ImGui::CloseCurrentPopup();
                 }
                 ImGui::TableNextColumn();
                 ImGui::Image(renderPreview(), {256, 256});
@@ -169,6 +167,14 @@ class NewMaterialWidget : public Widget {
         return preview_framebuffer->getTexture();
     }
 
+    bool accepted() {
+        if (m_accepted) {
+            m_accepted = false;
+            return true;
+        }
+        return false;
+    }
+
    private:
     bool m_open = false;
     char m_name[512] = {0};
@@ -179,6 +185,7 @@ class NewMaterialWidget : public Widget {
     std::vector<UniformInputs> m_uniform_inputs;
     const std::vector<std::string> uniform_types_names = {"Asset", "Int", "Float", "Vector3", "Vector4", "Matrix4"};
     int m_ctr = 0;
+    bool m_accepted = false;
     std::shared_ptr<ICE::ICEEngine> m_engine;
     std::shared_ptr<ICE::Material> m_material;
     ICE::AssetUID m_id;
