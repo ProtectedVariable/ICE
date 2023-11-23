@@ -53,12 +53,16 @@ class InspectorWidget : public Widget {
                             const std::vector<std::string>& materials_paths, const std::vector<ICE::AssetUID>& materials_ids) {
         m_rc = rc;
         m_rc_inputs.clear();
-        m_rc_inputs.emplace_back("Mesh", rc->mesh);
-        m_rc_inputs.back().setAssetComboList(meshes_paths, meshes_ids);
-        m_rc_inputs.back().onValueChanged([this](const ICE::UniformValue& v) { m_rc->mesh = std::get<ICE::AssetUID>(v); });
-        m_rc_inputs.emplace_back("Material", rc->material);
-        m_rc_inputs.back().setAssetComboList(materials_paths, materials_ids);
-        m_rc_inputs.back().onValueChanged([this](const ICE::UniformValue& v) { m_rc->material = std::get<ICE::AssetUID>(v); });
+        m_rc_inputs.reserve(2);
+        UniformInputs in_mesh("Mesh", rc->mesh);
+        in_mesh.onValueChanged([this](const ICE::UniformValue& v) { m_rc->mesh = std::get<ICE::AssetUID>(v); });
+        in_mesh.setAssetComboList(meshes_paths, meshes_ids);
+        m_rc_inputs.push_back(in_mesh);
+
+        UniformInputs in_mat("Material", rc->material);
+        in_mat.onValueChanged([this](const ICE::UniformValue& v) { m_rc->material = std::get<ICE::AssetUID>(v); });
+        in_mat.setAssetComboList(materials_paths, materials_ids);
+        m_rc_inputs.push_back(in_mat);
     }
 
    private:

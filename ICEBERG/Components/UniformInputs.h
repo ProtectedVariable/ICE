@@ -30,7 +30,8 @@ class UniformInputs {
         m_assets_ids = ids;
         auto it = std::find(ids.begin(), ids.end(), std::get<ICE::AssetUID>(m_value));
         m_asset_combo.setSelected(std::distance(ids.begin(), it));
-        m_asset_combo.onSelectionChanged([this](const std::string &, int index) { m_callback(m_assets_ids[index]); });
+        m_asset_combo.onSelectionChanged(
+            [cb = this->m_callback, id_list = this->m_assets_ids](const std::string &, int index) { cb(id_list[index]); });
     }
 
    private:
