@@ -5,9 +5,12 @@ Inspector::Inspector(const std::shared_ptr<ICE::ICEEngine>& engine) : m_engine(e
         m_engine->getProject()->getCurrentScene()->setAlias(m_selected_entity, text);
         m_entity_has_changed++;
     });
+    ui.registerCallback("add_component_clicked",
+                        [this] { m_add_component_popup.open(m_engine->getProject()->getCurrentScene()->getRegistry(), m_selected_entity); });
 }
 
 bool Inspector::update() {
+    m_add_component_popup.render();
     ui.render();
     return m_done;
 }
@@ -53,5 +56,9 @@ void Inspector::setSelectedEntity(ICE::Entity e) {
         }
 
         ui.setRenderComponent(rc, meshes_paths, meshes_ids, materials_paths, materials_ids);
+    }
+    if (registry->entityHasComponent<ICE::LightComponent>(e)) {
+        auto lc = registry->getComponent<ICE::LightComponent>(e);
+        ui.setLightComponent(lc);
     }
 }

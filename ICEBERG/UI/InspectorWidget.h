@@ -8,11 +8,10 @@
 
 class InspectorWidget : public Widget {
    public:
-    InspectorWidget() {
-    }
+    InspectorWidget() {}
 
     void render() override {
-        m_input_entity_name.onEdit([this](const std::string &text) { callback("entity_name_changed", text); });
+        m_input_entity_name.onEdit([this](const std::string& text) { callback("entity_name_changed", text); });
         int flags = ImGuiWindowFlags_NoCollapse;
         flags |= ImGuiWindowFlags_NoNavFocus;
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
@@ -38,6 +37,19 @@ class InspectorWidget : public Widget {
                 input.render();
             }
             ImGui::EndGroup();
+        }
+        if (m_lc) {
+            ImGui::SeparatorText("Light");
+            ImGui::BeginGroup();
+            for (auto& input : m_lc_inputs) {
+                ImGui::Text("%s", input.getLabel().c_str());
+                input.render();
+            }
+            ImGui::EndGroup();
+        }
+
+        if (ImGui::Button("Add Component...")) {
+            callback("add_component_clicked");
         }
 
         ImGui::End();
@@ -73,12 +85,22 @@ class InspectorWidget : public Widget {
         m_rc_inputs.push_back(in_mat);
     }
 
+    void setLightComponent(ICE::LightComponent* lc) {
+        m_lc = lc;
+        m_lc_inputs.clear();
+        m_lc_inputs.emplace_back("Color", m_lc->color);
+        m_lc_inputs.back().onValueChanged([this](const ICE::UniformValue& v) { m_lc->color = std::get<Eigen::Vector3f>(v); });
+    }
+
    private:
     ICE::TransformComponent* m_tc = nullptr;
     std::vector<UniformInputs> m_tc_inputs;
 
     ICE::RenderComponent* m_rc = nullptr;
     std::vector<UniformInputs> m_rc_inputs;
+
+    ICE::LightComponent* m_lc = nullptr;
+    std::vector<UniformInputs> m_lc_inputs;
 
     InputText m_input_entity_name{"##inspector_entity_name", ""};
 };

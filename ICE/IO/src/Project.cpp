@@ -225,7 +225,8 @@ void Project::loadFromFile() {
 
             if (!jentity["transformComponent"].is_null()) {
                 json tj = jentity["transformComponent"];
-                TransformComponent tc(JsonParser::parseVec3(tj["position"]), JsonParser::parseVec3(tj["rotation"]), JsonParser::parseVec3(tj["scale"]));
+                TransformComponent tc(JsonParser::parseVec3(tj["position"]), JsonParser::parseVec3(tj["rotation"]),
+                                      JsonParser::parseVec3(tj["scale"]));
                 scene.getRegistry()->addComponent(e, tc);
             }
             if (!jentity["renderComponent"].is_null()) {
@@ -235,7 +236,7 @@ void Project::loadFromFile() {
             }
             if (!jentity["lightComponent"].is_null()) {
                 json lj = jentity["lightComponent"];
-                LightComponent lc = {.type = PointLight, .color = JsonParser::parseVec3(lj["color"])};
+                LightComponent lc(PointLight, JsonParser::parseVec3(lj["color"]));
                 scene.getRegistry()->addComponent(e, lc);
             }
         }

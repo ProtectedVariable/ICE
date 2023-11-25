@@ -6,20 +6,17 @@
 #define ICE_LIGHTCOMPONENT_H
 
 #include <Eigen/Dense>
+
 #include "Component.h"
 
 namespace ICE {
-    enum LightType {
-        PointLight,
-        DirectionalLight,
-        SpotLight
-    };
+enum LightType { PointLight, DirectionalLight, SpotLight };
 
-    struct LightComponent : public Component {
-        LightType type;
-        Eigen::Vector3f color;
-    };
-}
+struct LightComponent : public Component {
+    LightComponent(LightType t, const Eigen::Vector3f &col) : type(t), color(col) {}
+    LightType type;
+    Eigen::Vector3f color;
+};
+}  // namespace ICE
 
-
-#endif //ICE_LIGHTCOMPONENT_H
+#endif  //ICE_LIGHTCOMPONENT_H

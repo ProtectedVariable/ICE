@@ -14,17 +14,22 @@
 
 namespace ICE {
 
-ForwardRenderer::ForwardRenderer(const std::shared_ptr<RendererAPI>& api, const std::shared_ptr<Registry>& registry, const std::shared_ptr<AssetBank>& assetBank)
+ForwardRenderer::ForwardRenderer(const std::shared_ptr<RendererAPI>& api, const std::shared_ptr<Registry>& registry,
+                                 const std::shared_ptr<AssetBank>& assetBank)
     : m_api(api),
       m_registry(registry),
       m_asset_bank(assetBank) {
 }
 
 void ForwardRenderer::submit(Entity e) {
-    auto rc = m_registry->getComponent<RenderComponent>(e);
-    auto tc = m_registry->getComponent<TransformComponent>(e);
-    m_render_queue.emplace_back(*rc, *tc);
-    //TODO light components, check for rc
+    if (m_registry->entityHasComponent<RenderComponent>(e)) {
+        auto rc = m_registry->getComponent<RenderComponent>(e);
+        auto tc = m_registry->getComponent<TransformComponent>(e);
+        m_render_queue.emplace_back(*rc, *tc);
+    } 
+    if (m_registry->entityHasComponent<LightComponent>(e)) {
+        m_lights.emplace_back(*m_registry->getComponent<LightComponent>(e), *m_registry->getComponent<TransformComponent>(e));
+    }
 }
 
 void ForwardRenderer::prepareFrame(Camera& camera) {
@@ -55,6 +60,17 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
 
         shader->loadMat4("projection", camera.getProjection());
         shader->loadMat4("view", view_mat);
+
+        shader->loadFloat3("ambient_light", Eigen::Vector3f(0.1f, 0.1f, 0.1f));
+        int i = 0;
+        for (const auto& [light, position] : m_lights) {
+            std::string light_name = (std::string("lights[") + std::to_string(i) + std::string("]."));
+            shader->loadFloat3((light_name + std::string("position")).c_str(), position.position);
+            shader->loadFloat3((light_name + std::string("rotation")).c_str(), position.rotation);
+            shader->loadFloat3((light_name + std::string("color")).c_str(), light.color);
+            i++;
+        }
+        shader->loadInt("light_count", i);
 
         m_render_commands.push_back([this, rc = rc, tc = tc] {
             auto material = m_asset_bank->getAsset<Material>(rc.material);
@@ -90,19 +106,6 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
             }
             m_api->renderVertexArray(mesh->getVertexArray());
         });
-
-        /* shader->loadFloat3("ambient_light", Eigen::Vector3f(0.1f, 0.1f, 0.1f));
-        int i = 0;
-        for (auto light : lightEntities) {
-            std::string light_name = (std::string("lights[") + std::to_string(i) + std::string("]."));
-            auto lc = light->getComponent<LightComponent>();
-            shader->loadFloat3((light_name + std::string("position")).c_str(), *light->getComponent<TransformComponent>()->getPosition());
-            shader->loadFloat3((light_name + std::string("rotation")).c_str(), *light->getComponent<TransformComponent>()->getRotation());
-            shader->loadFloat3((light_name + std::string("color")).c_str(), lc->getColor());
-            i++;
-        }
-        shader->loadInt("light_count", i);
-        */
     }
 }
 
@@ -125,6 +128,7 @@ void ForwardRenderer::endFrame() {
     //TODO: Cleanup and restore state
     m_render_commands.clear();
     m_render_queue.clear();
+    m_lights.clear();
     if (this->target != nullptr)
         this->target->unbind();
 }

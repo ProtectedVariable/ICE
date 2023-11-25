@@ -30,10 +30,10 @@ class Registry {
         signature.set(componentManager.getComponentType<TransformComponent>());
         systemManager.registerSystem<RenderSystem>();
         systemManager.addSignature<RenderSystem>(signature);
-        signature.set(componentManager.getComponentType<RenderComponent>(), false);
+        signature.reset();
+        signature.set(componentManager.getComponentType<TransformComponent>());
         signature.set(componentManager.getComponentType<LightComponent>());
         systemManager.addSignature<RenderSystem>(signature);
-        signature.reset();
     }
     ~Registry(){};
 

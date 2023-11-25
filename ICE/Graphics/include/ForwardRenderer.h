@@ -44,6 +44,7 @@ class ForwardRenderer : public Renderer {
     std::shared_ptr<Framebuffer> target = nullptr;
     std::vector<std::function<void(void)>> m_render_commands;
     std::vector<std::pair<RenderComponent, TransformComponent>> m_render_queue;
+    std::vector<std::pair<LightComponent, TransformComponent>> m_lights;
 
     RendererConfig config;
     const Skybox* skybox;
