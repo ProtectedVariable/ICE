@@ -1,5 +1,9 @@
 #include "Editor.h"
 
+#include <dialog.h>
+
+#include <filesystem>
+
 Editor::Editor(const std::shared_ptr<ICE::ICEEngine>& engine, const std::shared_ptr<ICE::GraphicsFactory>& g_factory)
     : m_engine(engine),
       m_material_popup(engine) {
@@ -12,6 +16,15 @@ Editor::Editor(const std::shared_ptr<ICE::ICEEngine>& engine, const std::shared_
         auto path = ICE::AssetPath::WithTypePrefix<ICE::Material>("New Material");
         m_engine->getAssetBank()->addAsset(path, material);
         m_material_popup.open(m_engine->getAssetBank()->getUID(path));
+    });
+    ui.registerCallback("new_mesh_clicked", [this] {
+        std::filesystem::path file = open_native_dialog(".obj");
+        if (!file.empty()) {
+            m_engine->getProject()->copyAssetFile("Meshes", "new_mesh", file);
+            m_engine->getAssetBank()->addAsset<ICE::Mesh>(
+                "new_mesh", {m_engine->getProject()->getBaseDirectory() / "Assets" / "Meshes" / ("new_mesh" + file.extension().string())});
+            m_assets->rebuildViewer();
+        }
     });
 }
 

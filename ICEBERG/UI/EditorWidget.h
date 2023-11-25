@@ -29,6 +29,9 @@ class EditorWidget : public Widget {
                     if (ImGui::MenuItem("Material")) {
                         callback("new_material_clicked");
                     }
+                    if (ImGui::MenuItem("Mesh")) {
+                        callback("new_mesh_clicked");
+                    }
                     ImGui::EndMenu();
                 }
                 if (ImGui::MenuItem("Open", "Ctrl+O")) {}
