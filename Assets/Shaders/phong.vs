@@ -14,7 +14,7 @@ out vec3 fview;
 out vec2 ftex_coords;
 
 void main() {
-    fview = -view[3].xyz;
+    fview = (inverse(view) * vec4(0, 0, 0, 1)).xyz;
     fnormal = normalize(mat3(transpose(inverse(model))) * normal);
     fposition = (model * vec4(vertex, 1.0)).xyz;
     ftex_coords = tex_coords;

@@ -78,20 +78,29 @@ class UniformInputs {
         ImGui::PushID(m_label.c_str());
         ImGui::PushItemWidth(60);
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
+
+        ImGui::BeginGroup();
         renderLabel("X", 0x990000FF);
         if (ImGui::InputFloat("##X", &v.x())) {
             m_callback(v);
         }
+        ImGui::EndGroup();
         ImGui::SameLine();
+
+        ImGui::BeginGroup();
         renderLabel("Y", 0x9900FF00);
         if (ImGui::InputFloat("##Y", &v.y())) {
             m_callback(v);
         }
+        ImGui::EndGroup();
         ImGui::SameLine();
+
+        ImGui::BeginGroup();
         renderLabel("Z", 0x99FF0000);
         if (ImGui::InputFloat("##Z", &v.z())) {
             m_callback(v);
         }
+        ImGui::EndGroup();
         ImGui::PopStyleVar();
         ImGui::PopItemWidth();
         ImGui::PopID();
@@ -100,7 +109,6 @@ class UniformInputs {
     void renderLabel(const char *text, uint32_t backgroundColor) {
         auto dl = ImGui::GetWindowDrawList();
         ImVec2 rectSize = ImGui::CalcTextSize(text);
-        rectSize.x = rectSize.y;
         ImVec2 wpos = ImGui::GetWindowPos();
         ImVec2 cpos = ImGui::GetCursorPos();
         ImVec2 pad = ImGui::GetStyle().FramePadding;

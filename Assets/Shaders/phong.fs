@@ -47,18 +47,19 @@ vec3 pointLight(Light light) {
     if(material.use_diffuse_map) {
         diffuse_color *= texture(material.diffuse_map, ftex_coords).xyz;
     }
-    rcolor += light.color * (diff * diffuse_color);
-
-    //specular
-    vec3 view_direction = normalize(fview - fposition);
-    vec3 reflection_direction = reflect(-light_direction, n);
-    float spec = pow(max(dot(view_direction, reflection_direction), 0.0), material.alpha);
-    vec3 specular_color = material.specular;
-    if(material.use_specular_map) {
-        specular_color *= texture(material.specular_map, ftex_coords).xyz;
-    }
-    rcolor += light.color * (spec * specular_color);
-
+	rcolor += light.color * (diff * diffuse_color);
+	
+	if(diff > 0) {
+		//specular
+		vec3 view_direction = normalize(fview - fposition);
+		vec3 reflection_direction = reflect(-light_direction, n);
+		float spec = pow(max(dot(view_direction, reflection_direction), 0.0), material.alpha);
+		vec3 specular_color = material.specular;
+		if(material.use_specular_map) {
+			specular_color *= texture(material.specular_map, ftex_coords).xyz;
+		}
+		rcolor += light.color * (spec * specular_color);
+	}
     return rcolor;
 }
 
