@@ -18,6 +18,7 @@ class NewMaterialWidget : public Widget {
     NewMaterialWidget(const std::shared_ptr<ICE::ICEEngine>& engine) : m_engine(engine) {}
 
     void render() override {
+        ImGui::PushID(m_id);
         if (m_open) {
             ImGui::OpenPopup("Material Editor");
             m_open = false;
@@ -52,40 +53,7 @@ class NewMaterialWidget : public Widget {
                 }
 
                 if (ImGui::Button("New Uniform")) {
-                    m_uniform_names.emplace_back("##uName_" + std::to_string(m_ctr), "uNew");
-                    m_uniform_combos.emplace_back("##uType_" + std::to_string(m_ctr), uniform_types_names);
-                    m_uniform_inputs.emplace_back("##uIn_" + std::to_string(m_ctr), 0);
-
-                    m_uniform_combos.back().onSelectionChanged([this, in = m_uniform_inputs.size() - 1](const std::string& selected, int i) {
-                        switch (i) {
-                            case 0:
-                                m_uniform_inputs[in].setValue(ICE::AssetUID(0));
-                                break;
-                            case 1:
-                                m_uniform_inputs[in].setValue(0);
-                                break;
-                            case 2:
-                                m_uniform_inputs[in].setValue(.0f);
-                                break;
-                            case 3:
-                                m_uniform_inputs[in].setValue(Eigen::Vector3f(0, 0, 0));
-                                break;
-                            case 4:
-                                m_uniform_inputs[in].setValue(Eigen::Vector4f(0, 0, 0, 0));
-                                break;
-                            case 5:
-                                m_uniform_inputs[in].setValue(Eigen::Matrix4f());
-                                break;
-                            default:
-                                throw std::invalid_argument("Out of bounds selection");
-                        }
-                    });
-
-                    m_uniform_inputs.back().onValueChanged([this, in = m_uniform_inputs.size() - 1](const ICE::UniformValue& v) {
-                        m_material->setUniform(m_uniform_names[in].getText(), v);
-                    });
-
-                    m_ctr++;
+                    addUniformInput("uNew", 0);
                 }
 
                 if (ImGui::Button("Cancel")) {
@@ -107,6 +75,7 @@ class NewMaterialWidget : public Widget {
             ImGui::EndPopup();
         }
         ImGui::PopStyleVar();
+        ImGui::PopID();
     }
 
     void open(ICE::AssetUID id) {
@@ -122,24 +91,51 @@ class NewMaterialWidget : public Widget {
         memcpy(m_name, name.c_str(), name.size() + 1);
 
         m_material = m_engine->getAssetBank()->getAsset<ICE::Material>(id);
-        m_material->setShader(shaders.begin()->first);
 
         m_shaders_combo.onSelectionChanged([this](const std::string& name, int) { m_material->setShader(m_engine->getAssetBank()->getUID(name)); });
-    }
 
-    /*
-    void setUniforms(const std::vector<std::tuple<std::string, ICE::UniformValue, std::string>>& uniforms) {
-        for (const auto& u : uniforms) {
-            const auto& name = std::get<0>(u);
-            const auto& val = std::get<1>(u);
-            const auto& type = std::get<2>(u);
-            m_uniform_names.emplace_back("##uName_" + std::to_string(m_ctr), name);
-            m_uniform_combos.emplace_back("##uType_" + std::to_string(m_ctr), uniform_types_names);
-            m_uniform_inputs.emplace_back("##uIn_" + std::to_string(m_ctr), val);
-            m_ctr++;
+        m_uniform_names.clear();
+        m_uniform_combos.clear();
+        m_uniform_inputs.clear();
+        for (const auto& [uname, uniform] : m_material->getAllUniforms()) {
+            addUniformInput(uname, uniform);
         }
     }
-    */
+
+    void addUniformInput(const std::string& uname, const ICE::UniformValue& value) {
+        m_uniform_names.emplace_back("##uName_" + std::to_string(m_ctr), uname);
+        m_uniform_combos.emplace_back("##uType_" + std::to_string(m_ctr), uniform_types_names);
+        m_uniform_inputs.emplace_back("##uIn_" + std::to_string(m_ctr), value);
+
+        m_uniform_combos.back().onSelectionChanged([this, in = m_uniform_inputs.size() - 1](const std::string& selected, int i) {
+            switch (i) {
+                case 0:
+                    m_uniform_inputs[in].setValue(ICE::AssetUID(0));
+                    break;
+                case 1:
+                    m_uniform_inputs[in].setValue(0);
+                    break;
+                case 2:
+                    m_uniform_inputs[in].setValue(.0f);
+                    break;
+                case 3:
+                    m_uniform_inputs[in].setValue(Eigen::Vector3f(0, 0, 0));
+                    break;
+                case 4:
+                    m_uniform_inputs[in].setValue(Eigen::Vector4f(0, 0, 0, 0));
+                    break;
+                case 5:
+                    m_uniform_inputs[in].setValue(Eigen::Matrix4f());
+                    break;
+                default:
+                    throw std::invalid_argument("Out of bounds selection");
+            }
+        });
+
+        m_uniform_inputs.back().onValueChanged(
+            [this, in = m_uniform_inputs.size() - 1](const ICE::UniformValue& v) { m_material->setUniform(m_uniform_names[in].getText(), v); });
+        m_ctr++;
+    }
 
     void* renderPreview() {
         auto preview_framebuffer = m_engine->getGraphicsFactory()->createFramebuffer({256, 256, 1});

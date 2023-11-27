@@ -5,8 +5,10 @@
 
 Assets::Assets(const std::shared_ptr<ICE::ICEEngine>& engine, const std::shared_ptr<ICE::GraphicsFactory>& g_factory)
     : m_engine(engine),
-      m_g_factory(g_factory) {
+      m_g_factory(g_factory),
+      m_material_widget(engine) {
     rebuildViewer();
+    ui.registerCallback("material_double_clicked", [this](std::string name) { m_material_widget.open(m_engine->getAssetBank()->getUID("Materials/"+name)); });
 }
 
 void* Assets::createThumbnail(const ICE::AssetBankEntry& entry) {
@@ -90,5 +92,9 @@ void Assets::rebuildViewer() {
 
 bool Assets::update() {
     ui.render();
+    m_material_widget.render();
+    if (m_material_widget.accepted()) {
+        rebuildViewer();
+    }
     return m_done;
 }

@@ -4,6 +4,7 @@
 
 #include "Controller.h"
 #include "UI/AssetsWidget.h"
+#include "UI/NewMaterialWidget.h"
 
 class Assets : public Controller {
    public:
@@ -19,4 +20,5 @@ class Assets : public Controller {
     std::shared_ptr<ICE::GraphicsFactory> m_g_factory;
     bool m_done = false;
     AssetsWidget ui;
+    NewMaterialWidget m_material_widget;
 };

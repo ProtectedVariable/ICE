@@ -62,6 +62,11 @@ class AssetsWidget : public Widget {
                     ImGui::Image(texture, {50, 50});
                     ImGui::Text(name.c_str());
                     ImGui::EndGroup();
+                    if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {
+                        if (m_assets[m_selected_index]->folder_name == "Materials") {
+                            callback("material_double_clicked", m_current_view->assets[i].first);
+                        }
+                    }
                 }
                 ImGui::EndTable();
             }

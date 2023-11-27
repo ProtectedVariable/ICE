@@ -84,6 +84,9 @@ class AssetBank {
     }
 
     bool renameAsset(const AssetPath& oldName, const AssetPath& newName) {
+        if (oldName.toString() == newName.toString()) {
+            return true;
+        }
         if (oldName.prefix() != newName.prefix())
             return false;
         AssetUID id = nameMapping.find(oldName) == nameMapping.end() ? NO_ASSET_ID : nameMapping[oldName];
