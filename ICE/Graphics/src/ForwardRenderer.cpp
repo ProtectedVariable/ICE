@@ -55,7 +55,13 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
     auto view_mat = camera.lookThrough();
     for (const auto& [rc, tc] : m_render_queue) {
         auto material = m_asset_bank->getAsset<Material>(rc.material);
+        if (!material) {
+            continue;
+        }
         auto shader = m_asset_bank->getAsset<Shader>(material->getShader());
+        if (!shader) {
+            continue;
+        }
         shader->bind();
 
         shader->loadMat4("projection", camera.getProjection());
@@ -76,6 +82,9 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
             auto material = m_asset_bank->getAsset<Material>(rc.material);
             auto shader = m_asset_bank->getAsset<Shader>(material->getShader());
             auto mesh = m_asset_bank->getAsset<Mesh>(rc.mesh);
+            if (!mesh) {
+                return;
+            }
             shader->bind();
 
             shader->loadMat4("model", transformationMatrix(tc.position, tc.rotation, tc.scale));

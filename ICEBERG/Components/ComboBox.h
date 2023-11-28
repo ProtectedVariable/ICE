@@ -15,6 +15,9 @@ class ComboBox {
         if (m_values.empty()) {
             return;
         }
+        if (m_selected_index >= m_values.size()) {
+            m_selected_index = 0;
+        }
         if (ImGui::BeginCombo(m_label.c_str(), m_values[m_selected_index].c_str())) {
             for (int i = 0; i < m_values.size(); i++) {
                 bool is_selected = (m_selected_index == i);

@@ -8,7 +8,18 @@ Assets::Assets(const std::shared_ptr<ICE::ICEEngine>& engine, const std::shared_
       m_g_factory(g_factory),
       m_material_widget(engine) {
     rebuildViewer();
-    ui.registerCallback("material_double_clicked", [this](std::string name) { m_material_widget.open(m_engine->getAssetBank()->getUID("Materials/"+name)); });
+    ui.registerCallback("material_edit", [this](std::string name) { m_material_widget.open(m_engine->getAssetBank()->getUID("Materials/" + name)); });
+    ui.registerCallback("material_duplicate", [this](std::string name) {
+        auto id = m_engine->getAssetBank()->getUID("Materials/" + name);
+        auto mat_copy = std::make_shared<ICE::Material>(*m_engine->getAssetBank()->getAsset<ICE::Material>(id));
+        mat_copy->setSources({});
+        m_engine->getAssetBank()->addAsset<ICE::Material>(name + " copy", mat_copy);
+        rebuildViewer();
+    });
+    ui.registerCallback("delete_asset", [this](std::string name) {
+        m_engine->getAssetBank()->removeAsset(name);
+        rebuildViewer();
+    });
 }
 
 void* Assets::createThumbnail(const ICE::AssetBankEntry& entry) {

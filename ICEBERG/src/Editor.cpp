@@ -13,16 +13,27 @@ Editor::Editor(const std::shared_ptr<ICE::ICEEngine>& engine, const std::shared_
     m_assets = std::make_unique<Assets>(engine, g_factory);
     ui.registerCallback("new_material_clicked", [this] {
         auto material = std::make_shared<ICE::Material>();
-        auto path = ICE::AssetPath::WithTypePrefix<ICE::Material>("New Material");
+        auto path = ICE::AssetPath::WithTypePrefix<ICE::Material>("");
+        auto import_name = "New Material";
+        int i = 0;
+        do {
+            path.setName(import_name + std::to_string(i++));
+        } while (m_engine->getAssetBank()->nameInUse(path));
         m_engine->getAssetBank()->addAsset(path, material);
         m_material_popup.open(m_engine->getAssetBank()->getUID(path));
     });
     ui.registerCallback("new_mesh_clicked", [this] {
         std::filesystem::path file = open_native_dialog(".obj");
         if (!file.empty()) {
-            m_engine->getProject()->copyAssetFile("Meshes", "new_mesh", file);
+            std::string import_name = "Imported Mesh";
+            int i = 0;
+            do {
+                import_name + std::to_string(++i);
+            } while (m_engine->getAssetBank()->nameInUse(ICE::AssetPath::WithTypePrefix<ICE::Mesh>(import_name + std::to_string(i))));
+            import_name = import_name + std::to_string(i);
+            m_engine->getProject()->copyAssetFile("Meshes", import_name, file);
             m_engine->getAssetBank()->addAsset<ICE::Mesh>(
-                "new_mesh", {m_engine->getProject()->getBaseDirectory() / "Assets" / "Meshes" / ("new_mesh" + file.extension().string())});
+                import_name, {m_engine->getProject()->getBaseDirectory() / "Assets" / "Meshes" / (import_name + file.extension().string())});
             m_assets->rebuildViewer();
         }
     });

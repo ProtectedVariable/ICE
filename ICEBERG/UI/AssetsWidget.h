@@ -44,7 +44,7 @@ class AssetsWidget : public Widget {
 
             //Middle: assets
             ImGui::TableNextColumn();
-            if (ImGui::BeginTable("assets_selection", 10)) {
+            if (ImGui::BeginTable("assets_selection", 10, ImGuiTableFlags_Borders)) {
                 for (int i = 0; i < m_current_view->subfolders.size(); i++) {
                     const auto& folder = m_current_view->subfolders[i];
                     ImGui::TableNextColumn();
@@ -62,10 +62,24 @@ class AssetsWidget : public Widget {
                     ImGui::Image(texture, {50, 50});
                     ImGui::Text(name.c_str());
                     ImGui::EndGroup();
-                    if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {
-                        if (m_assets[m_selected_index]->folder_name == "Materials") {
-                            callback("material_double_clicked", m_current_view->assets[i].first);
+                    if (m_assets[m_selected_index]->folder_name == "Materials") {
+                        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {
+                            callback("material_edit", name);
                         }
+                    }
+                    if (ImGui::BeginPopupContextItem((name + "_material_context").c_str())) {
+                        if (m_assets[m_selected_index]->folder_name == "Materials") {
+                            if (ImGui::Button("Duplicate")) {
+                                callback("material_duplicate", name);
+                            }
+                            if (ImGui::Button("Edit")) {
+                                callback("material_edit", name);
+                            }
+                        }
+                        if (ImGui::Button("Delete")) {
+                            callback("delete_asset", m_assets[m_selected_index]->folder_name + "/" + name);
+                        }
+                        ImGui::EndPopup();
                     }
                 }
                 ImGui::EndTable();
