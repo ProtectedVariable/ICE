@@ -58,6 +58,7 @@ class NewMaterialWidget : public Widget {
 
                 if (ImGui::Button("Cancel")) {
                     ImGui::CloseCurrentPopup();
+                    m_id = 0;
                 }
                 ImGui::SameLine();
                 if (ImGui::Button("Apply")) {
@@ -66,6 +67,7 @@ class NewMaterialWidget : public Widget {
                     if (rename_ok) {
                         m_accepted = true;
                         ImGui::CloseCurrentPopup();
+                        m_id = 0;
                     }
                 }
                 ImGui::TableNextColumn();
