@@ -22,10 +22,10 @@ Editor::Editor(const std::shared_ptr<ICE::ICEEngine>& engine, const std::shared_
         m_engine->getAssetBank()->addAsset(path, material);
         m_material_popup.open(m_engine->getAssetBank()->getUID(path));
     });
-    ui.registerCallback("new_mesh_clicked", [this] {
-        std::filesystem::path file = open_native_dialog(".obj");
+    ui.registerCallback("import_mesh_clicked", [this] {
+        std::filesystem::path file = open_native_dialog("*.obj");
         if (!file.empty()) {
-            std::string import_name = "Imported Mesh";
+            std::string import_name = "Imported Mesh ";
             int i = 0;
             do {
                 import_name + std::to_string(++i);
@@ -34,6 +34,21 @@ Editor::Editor(const std::shared_ptr<ICE::ICEEngine>& engine, const std::shared_
             m_engine->getProject()->copyAssetFile("Meshes", import_name, file);
             m_engine->getAssetBank()->addAsset<ICE::Mesh>(
                 import_name, {m_engine->getProject()->getBaseDirectory() / "Assets" / "Meshes" / (import_name + file.extension().string())});
+            m_assets->rebuildViewer();
+        }
+    });
+    ui.registerCallback("import_tex2d_clicked", [this] {
+        std::filesystem::path file = open_native_dialog("*.png");
+        if (!file.empty()) {
+            std::string import_name = "Imported Texture ";
+            int i = 0;
+            do {
+                import_name + std::to_string(++i);
+            } while (m_engine->getAssetBank()->nameInUse(ICE::AssetPath::WithTypePrefix<ICE::Texture2D>(import_name + std::to_string(i))));
+            import_name = import_name + std::to_string(i);
+            m_engine->getProject()->copyAssetFile("Textures", import_name, file);
+            m_engine->getAssetBank()->addAsset<ICE::Texture2D>(
+                import_name, {m_engine->getProject()->getBaseDirectory() / "Assets" / "Textures" / (import_name + file.extension().string())});
             m_assets->rebuildViewer();
         }
     });

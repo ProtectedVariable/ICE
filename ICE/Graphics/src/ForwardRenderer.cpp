@@ -26,7 +26,7 @@ void ForwardRenderer::submit(Entity e) {
         auto rc = m_registry->getComponent<RenderComponent>(e);
         auto tc = m_registry->getComponent<TransformComponent>(e);
         m_render_queue.emplace_back(*rc, *tc);
-    } 
+    }
     if (m_registry->entityHasComponent<LightComponent>(e)) {
         m_lights.emplace_back(*m_registry->getComponent<LightComponent>(e), *m_registry->getComponent<TransformComponent>(e));
     }
@@ -94,12 +94,15 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
                 if (std::holds_alternative<float>(value)) {
                     auto v = std::get<float>(value);
                     shader->loadFloat(name, v);
-                } else if (std::holds_alternative<int>(value)) {
+                } else if (!std::holds_alternative<AssetUID>(value) && std::holds_alternative<int>(value)) {
                     auto v = std::get<int>(value);
                     shader->loadInt(name, v);
                 } else if (std::holds_alternative<AssetUID>(value)) {
                     auto v = std::get<AssetUID>(value);
-                    shader->loadInt(name, v);
+                    if (auto tex = m_asset_bank->getAsset<Texture2D>(v); tex) {
+                        tex->bind(0);
+                        shader->loadInt(name, 0);
+                    }
                 } else if (std::holds_alternative<Eigen::Vector3f>(value)) {
                     auto& v = std::get<Eigen::Vector3f>(value);
                     shader->loadFloat3(name, v);

@@ -109,34 +109,47 @@ class NewMaterialWidget : public Widget {
         m_uniform_combos.emplace_back("##uType_" + std::to_string(m_ctr), uniform_types_names);
         m_uniform_inputs.emplace_back("##uIn_" + std::to_string(m_ctr), value);
 
-        m_uniform_combos.back().onSelectionChanged([this, in = m_uniform_inputs.size() - 1](const std::string& selected, int i) {
-            switch (i) {
-                case 0:
-                    m_uniform_inputs[in].setValue(ICE::AssetUID(0));
-                    break;
-                case 1:
-                    m_uniform_inputs[in].setValue(0);
-                    break;
-                case 2:
-                    m_uniform_inputs[in].setValue(.0f);
-                    break;
-                case 3:
-                    m_uniform_inputs[in].setValue(Eigen::Vector3f(0, 0, 0));
-                    break;
-                case 4:
-                    m_uniform_inputs[in].setValue(Eigen::Vector4f(0, 0, 0, 0));
-                    break;
-                case 5:
-                    m_uniform_inputs[in].setValue(Eigen::Matrix4f());
-                    break;
-                default:
-                    throw std::invalid_argument("Out of bounds selection");
+        m_uniform_inputs.back().onValueChanged(
+            [this, in = m_uniform_inputs.size() - 1](const ICE::UniformValue& v) { m_material->setUniform(m_uniform_names[in].getText(), v); });
+
+        m_uniform_combos.back().onSelectionChanged([this, in = m_uniform_inputs.size() - 1, value](const std::string& selected, int i) {
+            auto textures = m_engine->getAssetBank()->getAll<ICE::Texture2D>();
+            std::vector<ICE::AssetUID> uids;
+            std::vector<std::string> paths;
+            if (i == 0) {
+                for (const auto& [id, ptr] : textures) {
+                    uids.push_back(id);
+                    paths.push_back(m_engine->getAssetBank()->getName(id).toString());
+                }
+                m_uniform_inputs[in].setValue(value);
+                m_uniform_inputs[in].setAssetComboList(paths, uids);
+            } else {
+
+                m_uniform_inputs[in].setValue(value);
             }
         });
 
-        m_uniform_inputs.back().onValueChanged(
-            [this, in = m_uniform_inputs.size() - 1](const ICE::UniformValue& v) { m_material->setUniform(m_uniform_names[in].getText(), v); });
+        m_uniform_combos.back().setSelected(comboIDFromValue(value));
+
         m_ctr++;
+    }
+
+    int comboIDFromValue(const ICE::UniformValue& value) {
+        if (std::holds_alternative<float>(value)) {
+            return 2;
+        } else if (!std::holds_alternative<ICE::AssetUID>(value) && std::holds_alternative<int>(value)) {
+            return 1;
+        } else if (std::holds_alternative<ICE::AssetUID>(value)) {
+            return 0;
+        } else if (std::holds_alternative<Eigen::Vector3f>(value)) {
+            return 3;
+        } else if (std::holds_alternative<Eigen::Vector4f>(value)) {
+            return 4;
+        } else if (std::holds_alternative<Eigen::Matrix4f>(value)) {
+            return 5;
+        } else {
+            throw std::runtime_error("Uniform type not implemented");
+        }
     }
 
     void* renderPreview() {

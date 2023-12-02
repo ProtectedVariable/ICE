@@ -19,7 +19,10 @@ class UniformInputs {
         std::visit([this](auto &v) { render(v); }, m_value);
     }
 
-    void setValue(const ICE::UniformValue &value) { m_value = value; }
+    void setValue(const ICE::UniformValue &value) {
+        m_value = value;
+        m_callback(value);
+    }
     ICE::UniformValue getValue() const { return m_value; }
 
     void onValueChanged(const std::function<void(const ICE::UniformValue &)> &f) { m_callback = f; }
@@ -29,7 +32,9 @@ class UniformInputs {
         m_asset_combo.setValues(paths);
         m_assets_ids = ids;
         auto it = std::find(ids.begin(), ids.end(), std::get<ICE::AssetUID>(m_value));
-        m_asset_combo.setSelected(std::distance(ids.begin(), it));
+        if (it != ids.end()) {
+            m_asset_combo.setSelected(std::distance(ids.begin(), it));
+        }
         m_asset_combo.onSelectionChanged(
             [cb = this->m_callback, id_list = this->m_assets_ids](const std::string &, int index) { cb(id_list[index]); });
     }

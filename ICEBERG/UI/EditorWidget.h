@@ -26,17 +26,26 @@ class EditorWidget : public Widget {
         if (ImGui::BeginMainMenuBar()) {
             if (ImGui::BeginMenu("File")) {
                 if (ImGui::BeginMenu("New")) {
+                    if (ImGui::MenuItem("Scene")) {
+                        callback("new_scene_clicked");
+                    }
                     if (ImGui::MenuItem("Material")) {
                         callback("new_material_clicked");
                     }
+                    ImGui::EndMenu();
+                }
+                if (ImGui::BeginMenu("Import")) {
                     if (ImGui::MenuItem("Mesh")) {
-                        callback("new_mesh_clicked");
+                        callback("import_mesh_clicked");
+                    }
+                    if (ImGui::MenuItem("Texture2D")) {
+                        callback("import_tex2d_clicked");
                     }
                     ImGui::EndMenu();
                 }
-                if (ImGui::MenuItem("Open", "Ctrl+O")) {}
-                if (ImGui::MenuItem("Save", "Ctrl+S")) {}
-                if (ImGui::MenuItem("Save as..")) {}
+                //if (ImGui::MenuItem("Open", "Ctrl+O")) {}
+                //if (ImGui::MenuItem("Save", "Ctrl+S")) {}
+                //if (ImGui::MenuItem("Save as..")) {}
                 ImGui::EndMenu();
             }
             ImGui::EndMainMenuBar();

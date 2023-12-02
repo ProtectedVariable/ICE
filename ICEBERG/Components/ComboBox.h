@@ -34,7 +34,10 @@ class ComboBox {
     std::string getSelectedItem() const { return m_values[m_selected_index]; }
     int getSelectedIndex() const { return m_selected_index; }
     void setValues(const std::vector<std::string> &values) { m_values = values; }
-    void setSelected(int index) { m_selected_index = index; }
+    void setSelected(int index) {
+        m_selected_index = index;
+        m_callback_edit(m_values[m_selected_index], m_selected_index);
+    }
 
    private:
     std::vector<std::string> m_values;
