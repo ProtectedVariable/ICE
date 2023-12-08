@@ -1,6 +1,9 @@
 
+#define IMGUI_DEFINE_MATH_OPERATORS
+
 #include <GL/gl3w.h>
 #include <GLFW/glfw3.h>
+#include <GLFWWindow.h>
 #include <ICEEngine.h>
 #include <ImGUI/imgui.h>
 #include <ImGUI/imgui_impl_glfw.h>
@@ -14,13 +17,12 @@
 
 #include "Editor.h"
 #include "ProjectSelection.h"
-#include <GLFWWindow.h>
 
 enum class UIState { PROJECT_SELECTION, EDITOR };
 
 class Iceberg {
    public:
-    Iceberg(const std::shared_ptr<ICE::GLFWWindow> &window) : m_window(window), m_controller(std::make_unique<ProjectSelection>(m_engine)) {
+    Iceberg(const std::shared_ptr<ICE::GLFWWindow>& window) : m_window(window), m_controller(std::make_unique<ProjectSelection>(m_engine)) {
         m_engine->initialize(std::make_shared<ICE::OpenGLFactory>(), window);
     }
 
@@ -61,7 +63,7 @@ class Iceberg {
     }
 
    private:
-    std::shared_ptr<ICE::GLFWWindow>  m_window;
+    std::shared_ptr<ICE::GLFWWindow> m_window;
     std::shared_ptr<ICE::ICEEngine> m_engine = std::make_shared<ICE::ICEEngine>();
     std::unique_ptr<Controller> m_controller;
     UIState m_state = UIState::PROJECT_SELECTION;
@@ -72,7 +74,7 @@ int main(int argc, char const* argv[]) {
     ICE::OpenGLFactory g_factory;
     auto context = g_factory.createContext(window);
     context->initialize();
-	window->setSwapInterval(1);
+    window->setSwapInterval(1);
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();

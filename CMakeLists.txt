@@ -28,6 +28,10 @@ set(IMGUI_SRC
 	${CMAKE_SOURCE_DIR}/includes/ImGUI/imgui_tables.cpp
 )
 
+set(IMGUIZMO_SRC
+	${CMAKE_SOURCE_DIR}/includes/ImGUI/ImGuizmo.cpp
+)
+
 set(GL3W_SRC 
 	${CMAKE_SOURCE_DIR}/includes/GL/gl3w.c
 )

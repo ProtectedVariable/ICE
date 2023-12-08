@@ -1,8 +1,10 @@
 #include "Viewport.h"
 
+#include <ICEMath.h>
+
 #include <iostream>
 
-Viewport::Viewport(const std::shared_ptr<ICE::ICEEngine>& engine) : m_engine(engine) {
+Viewport::Viewport(const std::shared_ptr<ICE::ICEEngine> &engine) : m_engine(engine) {
     engine->setRenderFramebufferInternal(true);
 
     ui.registerCallback("w_pressed", [this]() { m_engine->getCamera()->forward(camera_delta); });
@@ -12,8 +14,10 @@ Viewport::Viewport(const std::shared_ptr<ICE::ICEEngine>& engine) : m_engine(eng
     ui.registerCallback("ls_pressed", [this]() { m_engine->getCamera()->up(camera_delta); });
     ui.registerCallback("lc_pressed", [this]() { m_engine->getCamera()->down(camera_delta); });
     ui.registerCallback("mouse_dragged", [this](float dx, float dy) {
-        m_engine->getCamera()->yaw(dx / 6.0);
-        m_engine->getCamera()->pitch(dy / 6.0);
+        if (!ImGuizmo::IsUsingAny()) {
+            m_engine->getCamera()->yaw(dx / 6.0);
+            m_engine->getCamera()->pitch(dy / 6.0);
+        }
     });
     ui.registerCallback("resize", [this](float width, float height) {
         m_engine->getInternalFramebuffer()->resize(width, height);
@@ -24,5 +28,31 @@ Viewport::Viewport(const std::shared_ptr<ICE::ICEEngine>& engine) : m_engine(eng
 bool Viewport::update() {
     ui.setTexture(m_engine->getInternalFramebuffer()->getTexture());
     ui.render();
+
+    //ImGuizmo test code, TODO: Move it according to VC pattern
+    ImGuizmo::Enable(true);
+    if (m_selected_entity != 0) {
+        auto tc = m_engine->getProject()->getCurrentScene()->getRegistry()->getComponent<ICE::TransformComponent>(m_selected_entity);
+        auto e = Eigen::Matrix4f();
+        e.setZero();
+        ImGuizmo::Manipulate(m_engine->getCamera()->lookThrough().transpose().data(), m_engine->getCamera()->getProjection().data(), m_guizmo_mode,
+                             ImGuizmo::WORLD, ICE::transformationMatrix(tc->position, tc->rotation, tc->scale).data(), e.data());
+        auto deltaT = Eigen::Vector3f(0, 0, 0);
+        auto deltaR = Eigen::Vector3f(0, 0, 0);
+        auto deltaS = Eigen::Vector3f(0, 0, 0);
+
+        ImGuizmo::DecomposeMatrixToComponents(e.data(), deltaT.data(), deltaR.data(), deltaS.data());
+        if (m_guizmo_mode == ImGuizmo::TRANSLATE) {
+            tc->position += deltaT;
+        } else if (m_guizmo_mode == ImGuizmo::ROTATE) {
+            tc->rotation += deltaR;
+        } else if (m_guizmo_mode == ImGuizmo::SCALE) {
+            tc->scale += (deltaS - Eigen::Vector3f(1, 1, 1));
+        }
+    }
     return m_done;
+}
+
+void Viewport::setSelectedEntity(ICE::Entity e) {
+    m_selected_entity = e;
 }

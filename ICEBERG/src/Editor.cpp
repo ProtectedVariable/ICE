@@ -67,6 +67,7 @@ bool Editor::update() {
     if (m_inspector->entityHasChanged()) {
         m_hierarchy->rebuildTree();
     }
+    m_viewport->setSelectedEntity(m_selected_entity);
 
     m_material_popup.render();
 
