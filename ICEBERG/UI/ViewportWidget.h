@@ -12,6 +12,19 @@ class ViewportWidget : public Widget {
         int flags = ImGuiWindowFlags_NoCollapse;
         flags |= ImGuiWindowFlags_NoNavFocus;
         ImGui::Begin("Viewport", 0, flags);
+
+        if (ImGui::Button("T")) {
+            callback("translate_clicked");
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("R")) {
+            callback("rotate_clicked");
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("S")) {
+            callback("scale_clicked");
+        }
+
         ImVec2 pos = ImGui::GetCursorScreenPos();
         const float window_width = ImGui::GetContentRegionAvail().x;
         const float window_height = ImGui::GetContentRegionAvail().y;

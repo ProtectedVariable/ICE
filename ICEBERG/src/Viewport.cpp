@@ -23,25 +23,27 @@ Viewport::Viewport(const std::shared_ptr<ICE::ICEEngine> &engine) : m_engine(eng
         m_engine->getInternalFramebuffer()->resize(width, height);
         m_engine->getCamera()->resize(width, height);
     });
+    ui.registerCallback("translate_clicked", [this] { m_guizmo_mode = ImGuizmo::OPERATION::TRANSLATE; });
+    ui.registerCallback("rotate_clicked", [this] { m_guizmo_mode = ImGuizmo::OPERATION::ROTATE; });
+    ui.registerCallback("scale_clicked", [this] { m_guizmo_mode = ImGuizmo::OPERATION::SCALE; });
 }
 
 bool Viewport::update() {
     ui.setTexture(m_engine->getInternalFramebuffer()->getTexture());
     ui.render();
 
-    //ImGuizmo test code, TODO: Move it according to VC pattern
     ImGuizmo::Enable(true);
     if (m_selected_entity != 0) {
         auto tc = m_engine->getProject()->getCurrentScene()->getRegistry()->getComponent<ICE::TransformComponent>(m_selected_entity);
-        auto e = Eigen::Matrix4f();
-        e.setZero();
+        Eigen::Matrix4f delta_matrix;
+        delta_matrix.setZero();
         ImGuizmo::Manipulate(m_engine->getCamera()->lookThrough().transpose().data(), m_engine->getCamera()->getProjection().data(), m_guizmo_mode,
-                             ImGuizmo::WORLD, ICE::transformationMatrix(tc->position, tc->rotation, tc->scale).data(), e.data());
+                             ImGuizmo::WORLD, ICE::transformationMatrix(tc->position, tc->rotation, tc->scale).data(), delta_matrix.data());
         auto deltaT = Eigen::Vector3f(0, 0, 0);
         auto deltaR = Eigen::Vector3f(0, 0, 0);
         auto deltaS = Eigen::Vector3f(0, 0, 0);
 
-        ImGuizmo::DecomposeMatrixToComponents(e.data(), deltaT.data(), deltaR.data(), deltaS.data());
+        ImGuizmo::DecomposeMatrixToComponents(delta_matrix.data(), deltaT.data(), deltaR.data(), deltaS.data());
         if (m_guizmo_mode == ImGuizmo::TRANSLATE) {
             tc->position += deltaT;
         } else if (m_guizmo_mode == ImGuizmo::ROTATE) {
