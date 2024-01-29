@@ -3,3 +3,6 @@
 libs/
 cmake-*
 build/
+
+.vscode/
+/.vs

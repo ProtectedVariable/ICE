@@ -1,0 +1,203 @@
+#pragma once
+#include <ForwardRenderer.h>
+#include <ImGUI/imgui.h>
+#include <Material.h>
+#include <PerspectiveCamera.h>
+#include <TransformComponent.h>
+
+#include <tuple>
+#include <vector>
+
+#include "Components/ComboBox.h"
+#include "Components/InputText.h"
+#include "Components/UniformInputs.h"
+#include "Widget.h"
+
+class NewMaterialWidget : public Widget {
+   public:
+    NewMaterialWidget(const std::shared_ptr<ICE::ICEEngine>& engine) : m_engine(engine) {}
+
+    void render() override {
+        ImGui::PushID(m_id);
+        if (m_open) {
+            ImGui::OpenPopup("Material Editor");
+            m_open = false;
+        }
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+        if (ImGui::BeginPopupModal("Material Editor", 0, 0)) {
+            if (ImGui::BeginTable("mat_editor_layout", 2, ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInnerV)) {
+                ImGui::TableNextColumn();
+                ImGui::Text("Name:");
+                ImGui::SameLine();
+                ImGui::InputText("##name", m_name, 512);
+                ImGui::Text("Shader:");
+                ImGui::SameLine();
+                m_shaders_combo.render();
+                ImGui::Text("Uniforms");
+                ImGui::SameLine();
+                if (ImGui::BeginTable("uniforms_table", 3)) {
+                    ImGui::TableSetupColumn("Name");
+                    ImGui::TableSetupColumn("Value");
+                    ImGui::TableSetupColumn("Type");
+                    ImGui::TableHeadersRow();
+                    for (int i = 0; i < m_uniform_names.size(); i++) {
+                        ImGui::TableNextColumn();
+                        m_uniform_names[i].render();
+                        ImGui::TableNextColumn();
+                        m_uniform_inputs[i].render();
+                        ImGui::TableNextColumn();
+                        m_uniform_combos[i].render();
+                    }
+                    ImGui::EndTable();
+                }
+
+                if (ImGui::Button("New Uniform")) {
+                    addUniformInput("uNew", 0);
+                }
+
+                if (ImGui::Button("Cancel")) {
+                    ImGui::CloseCurrentPopup();
+                    m_id = 0;
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Apply")) {
+                    auto rename_ok = m_engine->getAssetBank()->renameAsset(m_engine->getAssetBank()->getName(m_id),
+                                                                           ICE::AssetPath::WithTypePrefix<ICE::Material>(m_name));
+                    if (rename_ok) {
+                        m_accepted = true;
+                        ImGui::CloseCurrentPopup();
+                        m_id = 0;
+                    }
+                }
+                ImGui::TableNextColumn();
+                ImGui::Image(renderPreview(), {256, 256});
+                ImGui::EndTable();
+            }
+            ImGui::EndPopup();
+        }
+        ImGui::PopStyleVar();
+        ImGui::PopID();
+    }
+
+    void open(ICE::AssetUID id) {
+        m_id = id;
+        m_open = true;
+        auto shaders = m_engine->getAssetBank()->getAll<ICE::Shader>();
+        std::vector<std::string> shader_names;
+        for (const auto& [id, shader] : shaders) {
+            shader_names.push_back(m_engine->getAssetBank()->getName(id).toString());
+        }
+        m_shaders_combo.setValues(shader_names);
+        auto name = m_engine->getAssetBank()->getName(id).getName();
+        memcpy(m_name, name.c_str(), name.size() + 1);
+
+        m_material = m_engine->getAssetBank()->getAsset<ICE::Material>(id);
+
+        m_shaders_combo.onSelectionChanged([this](const std::string& name, int) { m_material->setShader(m_engine->getAssetBank()->getUID(name)); });
+
+        m_uniform_names.clear();
+        m_uniform_combos.clear();
+        m_uniform_inputs.clear();
+        for (const auto& [uname, uniform] : m_material->getAllUniforms()) {
+            addUniformInput(uname, uniform);
+        }
+    }
+
+    void addUniformInput(const std::string& uname, const ICE::UniformValue& value) {
+        m_uniform_names.emplace_back("##uName_" + std::to_string(m_ctr), uname);
+        m_uniform_combos.emplace_back("##uType_" + std::to_string(m_ctr), uniform_types_names);
+        m_uniform_inputs.emplace_back("##uIn_" + std::to_string(m_ctr), value);
+
+        m_uniform_inputs.back().onValueChanged(
+            [this, in = m_uniform_inputs.size() - 1](const ICE::UniformValue& v) { m_material->setUniform(m_uniform_names[in].getText(), v); });
+
+        m_uniform_combos.back().onSelectionChanged([this, in = m_uniform_inputs.size() - 1, value](const std::string& selected, int i) {
+            auto textures = m_engine->getAssetBank()->getAll<ICE::Texture2D>();
+            std::vector<ICE::AssetUID> uids;
+            std::vector<std::string> paths;
+            if (i == 0) {
+                for (const auto& [id, ptr] : textures) {
+                    uids.push_back(id);
+                    paths.push_back(m_engine->getAssetBank()->getName(id).toString());
+                }
+                m_uniform_inputs[in].setValue(value);
+                m_uniform_inputs[in].setAssetComboList(paths, uids);
+            } else {
+
+                m_uniform_inputs[in].setValue(value);
+            }
+        });
+
+        m_uniform_combos.back().setSelected(comboIDFromValue(value));
+
+        m_ctr++;
+    }
+
+    int comboIDFromValue(const ICE::UniformValue& value) {
+        if (std::holds_alternative<float>(value)) {
+            return 2;
+        } else if (!std::holds_alternative<ICE::AssetUID>(value) && std::holds_alternative<int>(value)) {
+            return 1;
+        } else if (std::holds_alternative<ICE::AssetUID>(value)) {
+            return 0;
+        } else if (std::holds_alternative<Eigen::Vector3f>(value)) {
+            return 3;
+        } else if (std::holds_alternative<Eigen::Vector4f>(value)) {
+            return 4;
+        } else if (std::holds_alternative<Eigen::Matrix4f>(value)) {
+            return 5;
+        } else {
+            throw std::runtime_error("Uniform type not implemented");
+        }
+    }
+
+    void* renderPreview() {
+        auto preview_framebuffer = m_engine->getGraphicsFactory()->createFramebuffer({256, 256, 1});
+        ICE::Scene s("preview_scene");
+
+        auto render_system = std::make_shared<ICE::RenderSystem>();
+        render_system->setRenderer(std::make_shared<ICE::ForwardRenderer>(m_engine->getApi(), s.getRegistry(), m_engine->getAssetBank()));
+
+        auto camera = std::make_shared<ICE::PerspectiveCamera>(60.0, 1.0, 0.01, 10000.0);
+        camera->backward(2);
+        camera->up(1);
+        camera->pitch(-30);
+        render_system->setCamera(camera);
+
+        s.getRegistry()->addSystem(render_system);
+
+        auto entity = s.createEntity();
+        auto mesh_uid = m_engine->getAssetBank()->getUID(ICE::AssetPath("Meshes/sphere"));
+
+        s.getRegistry()->addComponent<ICE::RenderComponent>(entity, ICE::RenderComponent(mesh_uid, m_id));
+        s.getRegistry()->addComponent<ICE::TransformComponent>(entity, ICE::TransformComponent({0, 0, 0}, {0, 45, 0}, {1, 1, 1}));
+        render_system->setTarget(preview_framebuffer);
+        render_system->update(1.0f);
+
+        return preview_framebuffer->getTexture();
+    }
+
+    bool accepted() {
+        if (m_accepted) {
+            m_accepted = false;
+            return true;
+        }
+        return false;
+    }
+
+   private:
+    bool m_open = false;
+    char m_name[512] = {0};
+    int m_shader_index = 0;
+    ComboBox m_shaders_combo{"##shader_combo", {}};
+    std::vector<InputText> m_uniform_names;
+    std::vector<ComboBox> m_uniform_combos;
+    std::vector<UniformInputs> m_uniform_inputs;
+    const std::vector<std::string> uniform_types_names = {"Asset", "Int", "Float", "Vector3", "Vector4", "Matrix4"};
+    int m_ctr = 0;
+    bool m_accepted = false;
+    std::shared_ptr<ICE::ICEEngine> m_engine;
+    std::shared_ptr<ICE::Material> m_material;
+    ICE::AssetUID m_id;
+};
