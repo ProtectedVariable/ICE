@@ -33,9 +33,9 @@
   * \endcode
   */
 
+// IWYU pragma: begin_exports
 #include "src/Geometry/OrthoMethods.h"
 #include "src/Geometry/EulerAngles.h"
-
 #include "src/Geometry/Homogeneous.h"
 #include "src/Geometry/RotationBase.h"
 #include "src/Geometry/Rotation2D.h"
@@ -49,14 +49,12 @@
 #include "src/Geometry/AlignedBox.h"
 #include "src/Geometry/Umeyama.h"
 
-// Use the SSE optimized version whenever possible. At the moment the
-// SSE version doesn't compile when AVX is enabled
-#if defined EIGEN_VECTORIZE_SSE && !defined EIGEN_VECTORIZE_AVX
-#include "src/Geometry/arch/Geometry_SSE.h"
+// Use the SSE optimized version whenever possible.
+#if (defined EIGEN_VECTORIZE_SSE) || (defined EIGEN_VECTORIZE_NEON)
+#include "src/Geometry/arch/Geometry_SIMD.h"
 #endif
+// IWYU pragma: end_exports
 
 #include "src/Core/util/ReenableStupidWarnings.h"
 
 #endif // EIGEN_GEOMETRY_MODULE_H
-/* vim: set filetype=cpp et sw=2 ts=2 ai: */
-

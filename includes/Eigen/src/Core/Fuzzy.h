@@ -11,6 +11,9 @@
 #ifndef EIGEN_FUZZY_H
 #define EIGEN_FUZZY_H
 
+// IWYU pragma: private
+#include "./InternalHeaderCheck.h"
+
 namespace Eigen { 
 
 namespace internal
@@ -24,7 +27,7 @@ struct isApprox_selector
   {
     typename internal::nested_eval<Derived,2>::type nested(x);
     typename internal::nested_eval<OtherDerived,2>::type otherNested(y);
-    return (nested - otherNested).cwiseAbs2().sum() <= prec * prec * numext::mini(nested.cwiseAbs2().sum(), otherNested.cwiseAbs2().sum());
+    return (nested.matrix() - otherNested.matrix()).cwiseAbs2().sum() <= prec * prec * numext::mini(nested.cwiseAbs2().sum(), otherNested.cwiseAbs2().sum());
   }
 };
 
@@ -100,7 +103,7 @@ struct isMuchSmallerThan_scalar_selector<Derived, true>
   */
 template<typename Derived>
 template<typename OtherDerived>
-bool DenseBase<Derived>::isApprox(
+EIGEN_DEVICE_FUNC bool DenseBase<Derived>::isApprox(
   const DenseBase<OtherDerived>& other,
   const RealScalar& prec
 ) const
@@ -122,7 +125,7 @@ bool DenseBase<Derived>::isApprox(
   * \sa isApprox(), isMuchSmallerThan(const DenseBase<OtherDerived>&, RealScalar) const
   */
 template<typename Derived>
-bool DenseBase<Derived>::isMuchSmallerThan(
+EIGEN_DEVICE_FUNC bool DenseBase<Derived>::isMuchSmallerThan(
   const typename NumTraits<Scalar>::Real& other,
   const RealScalar& prec
 ) const
@@ -142,7 +145,7 @@ bool DenseBase<Derived>::isMuchSmallerThan(
   */
 template<typename Derived>
 template<typename OtherDerived>
-bool DenseBase<Derived>::isMuchSmallerThan(
+EIGEN_DEVICE_FUNC bool DenseBase<Derived>::isMuchSmallerThan(
   const DenseBase<OtherDerived>& other,
   const RealScalar& prec
 ) const

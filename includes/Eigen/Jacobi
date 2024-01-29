@@ -24,10 +24,11 @@
   *  - MatrixBase::applyOnTheRight().
   */
 
+// IWYU pragma: begin_exports
 #include "src/Jacobi/Jacobi.h"
+// IWYU pragma: end_exports
 
 #include "src/Core/util/ReenableStupidWarnings.h"
 
 #endif // EIGEN_JACOBI_MODULE_H
-/* vim: set filetype=cpp et sw=2 ts=2 ai: */
 
