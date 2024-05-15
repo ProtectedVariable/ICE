@@ -14,7 +14,8 @@ target_sources(${PROJECT_NAME} PRIVATE
 		src/OpenGLFramebuffer.cpp
 		src/OpenGLTexture2D.cpp
 		src/OpenGLTextureCube.cpp
- "include/OpenGLFactory.h")
+		${GL3W_SRC}
+)
 
 target_link_libraries(${PROJECT_NAME}
 	PUBLIC
