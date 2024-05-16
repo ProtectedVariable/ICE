@@ -11,6 +11,7 @@
 #include <set>
 #include <typeindex>
 #include <vector>
+#include <cassert>
 
 namespace ICE {
 class Scene;
