@@ -28,6 +28,7 @@ class Camera {
 
     virtual Eigen::Matrix4f getProjection() const = 0;
     virtual Eigen::Vector3f getPosition() const = 0;
+    virtual void setPosition(const Eigen::Vector3f&) = 0;
     virtual Eigen::Vector3f getRotation() const = 0;
 
    private:
