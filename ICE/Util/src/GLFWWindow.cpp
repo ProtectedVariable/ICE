@@ -3,11 +3,14 @@
 #include <GLFW/glfw3.h>
 #include <ICEException.h>
 
+#include "GLFWKeyboardHandler.h"
+#include "GLFWMouseHandler.h"
+
 namespace ICE {
 
-GLFWWindow::GLFWWindow(int width, int height, const std::string &title) {
+GLFWWindow::GLFWWindow(int width, int height, const std::string& title) {
     if (!glfwInit())
-		throw ICEException("Couldn't init GLFW");
+        throw ICEException("Couldn't init GLFW");
 // Decide GL+GLSL versions
 #ifdef __APPLE__
     // GL 3.2 + GLSL 150
@@ -25,11 +28,20 @@ GLFWWindow::GLFWWindow(int width, int height, const std::string &title) {
     // Create window with graphics context
     m_handle = glfwCreateWindow(width, height, title.c_str(), NULL, NULL);
     if (m_handle == NULL)
-		throw ICEException("Couldn't create window");
+        throw ICEException("Couldn't create window");
+
+    m_mouse_handler = std::make_shared<GLFWMouseHandler>(*this);
+    m_keyboard_handler = std::make_shared<GLFWKeyboardHandler>(*this);
+
+    glfwSetWindowUserPointer(m_handle, this);
 }
 
-void* GLFWWindow::getHandle() {
-	return static_cast<void*>(m_handle);
+std::pair<std::shared_ptr<MouseHandler>, std::shared_ptr<KeyboardHandler>> GLFWWindow::getInputHandlers() const {
+    return {m_mouse_handler, m_keyboard_handler};
+}
+
+void* GLFWWindow::getHandle() const {
+    return static_cast<void*>(m_handle);
 }
 
 bool GLFWWindow::shouldClose() {
@@ -37,21 +49,21 @@ bool GLFWWindow::shouldClose() {
 }
 
 void GLFWWindow::pollEvents() {
-	glfwPollEvents();
+    glfwPollEvents();
 }
 void GLFWWindow::swapBuffers() {
-	glfwSwapBuffers(m_handle);
+    glfwSwapBuffers(m_handle);
 }
 
 void GLFWWindow::getFramebufferSize(int* width, int* height) {
-	glfwGetFramebufferSize(m_handle, width, height);
+    glfwGetFramebufferSize(m_handle, width, height);
 }
 
 void GLFWWindow::setSwapInterval(int interval) {
-	glfwSwapInterval(interval);
+    glfwSwapInterval(interval);
 }
 
 void GLFWWindow::makeContextCurrent() {
-	glfwMakeContextCurrent(m_handle);
+    glfwMakeContextCurrent(m_handle);
 }
 }  // namespace ICE

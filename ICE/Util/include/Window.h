@@ -1,16 +1,23 @@
 #pragma once
 
+#include <memory>
+#include <tuple>
+
+#include "KeyboardHandler.h"
+#include "MouseHandler.h"
+
 namespace ICE {
 class Window {
-public:
-	virtual ~Window() {}
+   public:
+    virtual ~Window() {}
 
-	virtual void* getHandle() = 0;
-	virtual bool shouldClose() = 0;
-	virtual void pollEvents() = 0;
-	virtual void swapBuffers() = 0;
-	virtual void getFramebufferSize(int* width, int* height) = 0;
-	virtual void setSwapInterval(int interval) = 0;
-	virtual void makeContextCurrent() = 0;
+    virtual void* getHandle() const = 0;
+    virtual bool shouldClose() = 0;
+    virtual std::pair<std::shared_ptr<MouseHandler>, std::shared_ptr<KeyboardHandler>> getInputHandlers() const = 0;
+    virtual void pollEvents() = 0;
+    virtual void swapBuffers() = 0;
+    virtual void getFramebufferSize(int* width, int* height) = 0;
+    virtual void setSwapInterval(int interval) = 0;
+    virtual void makeContextCurrent() = 0;
 };
-}
+}  // namespace ICE
