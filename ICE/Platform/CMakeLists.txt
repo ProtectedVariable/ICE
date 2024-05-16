@@ -12,6 +12,7 @@ elseif(WIN32)
 else()
 	link_libraries(-lstdc++fs)
 	set(EXTRA_SRC Linux/dialog.cpp)
+ 	set(EXTRA_INC ${GTK3_INCLUDE_DIRS})
 endif()
 
 target_sources(${PROJECT_NAME} PRIVATE
@@ -26,7 +27,9 @@ target_link_libraries(${PROJECT_NAME}
 
 target_include_directories(${PROJECT_NAME} PUBLIC
         $<INSTALL_INTERFACE:include>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+	${EXTRA_INC}
+ )
 
 enable_testing()
 #add_subdirectory(test)
