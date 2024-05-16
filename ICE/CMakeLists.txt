@@ -25,6 +25,7 @@ if(APPLE)
 elseif(WIN32)
 	target_link_libraries(${PROJECT_NAME} INTERFACE glfw ${ICE_LIBS})
 else()
+	find_package(GTK REQUIRED)
 	include_directories(${GTK3_INCLUDE_DIRS})
 	link_directories(${GTK3_LIBRARY_DIRS})
 
