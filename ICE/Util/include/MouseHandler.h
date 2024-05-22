@@ -9,6 +9,7 @@ class MouseHandler {
   virtual ~MouseHandler() = default;
 
   virtual void update() {}
+  virtual void setGrabMouse(bool grab) = 0;
   void addMouseMoveListener(const MouseEventCallback& callback) { m_mousemove_callbacks.push_back(callback); }
 
  protected:
