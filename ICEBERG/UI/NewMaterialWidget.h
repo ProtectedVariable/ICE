@@ -112,24 +112,33 @@ class NewMaterialWidget : public Widget {
         m_uniform_inputs.back().onValueChanged(
             [this, in = m_uniform_inputs.size() - 1](const ICE::UniformValue& v) { m_material->setUniform(m_uniform_names[in].getText(), v); });
 
-        m_uniform_combos.back().onSelectionChanged([this, in = m_uniform_inputs.size() - 1, value](const std::string& selected, int i) {
-            auto textures = m_engine->getAssetBank()->getAll<ICE::Texture2D>();
-            std::vector<ICE::AssetUID> uids;
-            std::vector<std::string> paths;
-            if (i == 0) {
-                for (const auto& [id, ptr] : textures) {
-                    uids.push_back(id);
-                    paths.push_back(m_engine->getAssetBank()->getName(id).toString());
-                }
-                m_uniform_inputs[in].setValue(value);
-                m_uniform_inputs[in].setAssetComboList(paths, uids);
-            } else {
-
-                m_uniform_inputs[in].setValue(value);
-            }
-        });
+        auto textures = m_engine->getAssetBank()->getAll<ICE::Texture2D>();
+        std::vector<ICE::AssetUID> uids;
+        std::vector<std::string> paths;
+        for (const auto& [id, ptr] : textures) {
+            uids.push_back(id);
+            paths.push_back(m_engine->getAssetBank()->getName(id).toString());
+        }
+        if (std::holds_alternative<ICE::AssetUID>(value)) {
+            m_uniform_inputs.back().setAssetComboList(paths, uids);
+        }
 
         m_uniform_combos.back().setSelected(comboIDFromValue(value));
+        m_uniform_combos.back().onSelectionChanged([this, in = m_uniform_inputs.size() - 1](const std::string& selected, int i) {
+            if (i == 0) {
+                m_uniform_inputs[in].setValue(ICE::AssetUID(0));
+            } else if (i == 1) {
+                m_uniform_inputs[in].setValue(0);
+            } else if (i == 2) {
+                m_uniform_inputs[in].setValue(0.0f);
+            } else if (i == 3) {
+                m_uniform_inputs[in].setValue(Eigen::Vector3f(0, 0, 0));
+            } else if (i == 4) {
+                m_uniform_inputs[in].setValue(Eigen::Vector4f(0, 0, 0, 0));
+            } else if (i == 4) {
+                m_uniform_inputs[in].setValue(Eigen::Matrix4f());
+            }
+        });
 
         m_ctr++;
     }
