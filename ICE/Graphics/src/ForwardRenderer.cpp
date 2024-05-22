@@ -89,6 +89,7 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
 
             shader->loadMat4("model", transformationMatrix(tc.position, tc.rotation, tc.scale));
 
+            int texture_count = 0;
             //TODO: Can we do better ?
             for (const auto& [name, value] : material->getAllUniforms()) {
                 if (std::holds_alternative<float>(value)) {
@@ -100,8 +101,9 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
                 } else if (std::holds_alternative<AssetUID>(value)) {
                     auto v = std::get<AssetUID>(value);
                     if (auto tex = m_asset_bank->getAsset<Texture2D>(v); tex) {
-                        tex->bind(0);
-                        shader->loadInt(name, 0);
+                        tex->bind(texture_count);
+                        shader->loadInt(name, texture_count);
+                        texture_count++;
                     }
                 } else if (std::holds_alternative<Eigen::Vector3f>(value)) {
                     auto& v = std::get<Eigen::Vector3f>(value);
