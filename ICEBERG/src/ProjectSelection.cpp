@@ -21,6 +21,15 @@ ProjectSelection::ProjectSelection(const std::shared_ptr<ICE::ICEEngine> &engine
         project->CreateDirectories();
         m_engine->setProject(project);
     });
+
+     ui.registerCallback("load_clicked", [this]() {
+        auto folder = std::filesystem::path(open_native_folder_dialog());
+        m_done = true;
+        auto project = std::make_shared<ICE::Project>(folder.parent_path(), folder.filename().string());
+        project->loadFromFile();
+        m_engine->setProject(project);
+    });
+
     ui.registerCallback("project_selected", [this](int index) {
         auto project = m_engine->getConfig().getProjectAt(index);
         project->loadFromFile();

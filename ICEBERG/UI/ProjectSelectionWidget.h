@@ -47,6 +47,10 @@ class ProjectSelectionWidget : public Widget {
         if (ImGui::Button("Create")) {
             callback("create_clicked");
         }
+        ImGui::TableNextColumn();
+        if (ImGui::Button("Load")) {
+            callback("load_clicked");
+        }
         ImGui::EndTable();
     }
 
