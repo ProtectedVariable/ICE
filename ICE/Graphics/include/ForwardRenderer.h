@@ -43,8 +43,13 @@ class ForwardRenderer : public Renderer {
 
     std::shared_ptr<Framebuffer> target = nullptr;
     std::vector<std::function<void(void)>> m_render_commands;
-    std::vector<std::pair<RenderComponent, TransformComponent>> m_render_queue;
-    std::vector<std::pair<LightComponent, TransformComponent>> m_lights;
+    std::vector<std::pair<RenderComponent*, TransformComponent*>> m_render_queue;
+    std::vector<std::pair<LightComponent*, TransformComponent*>> m_lights;
+
+    //State
+    AssetUID m_current_shader = 0;
+    AssetUID m_current_material = 0;
+    AssetUID m_current_mesh = 0;
 
     RendererConfig config;
     const Skybox* skybox;

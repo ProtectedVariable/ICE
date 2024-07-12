@@ -12,6 +12,8 @@
 #include <Scene.h>
 #include <TransformComponent.h>
 
+#include <unordered_set>
+
 namespace ICE {
 
 ForwardRenderer::ForwardRenderer(const std::shared_ptr<RendererAPI>& api, const std::shared_ptr<Registry>& registry,
@@ -25,10 +27,10 @@ void ForwardRenderer::submit(Entity e) {
     if (m_registry->entityHasComponent<RenderComponent>(e)) {
         auto rc = m_registry->getComponent<RenderComponent>(e);
         auto tc = m_registry->getComponent<TransformComponent>(e);
-        m_render_queue.emplace_back(*rc, *tc);
+        m_render_queue.emplace_back(rc, tc);
     }
     if (m_registry->entityHasComponent<LightComponent>(e)) {
-        m_lights.emplace_back(*m_registry->getComponent<LightComponent>(e), *m_registry->getComponent<TransformComponent>(e));
+        m_lights.emplace_back(m_registry->getComponent<LightComponent>(e), m_registry->getComponent<TransformComponent>(e));
     }
 }
 
@@ -52,9 +54,10 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
         Skybox::getShader()->loadInt("skybox", 0);
     }*/
 
+    std::unordered_set<AssetUID> prepared_shaders;
     auto view_mat = camera.lookThrough();
     for (const auto& [rc, tc] : m_render_queue) {
-        auto material = m_asset_bank->getAsset<Material>(rc.material);
+        auto material = m_asset_bank->getAsset<Material>(rc->material);
         if (!material) {
             continue;
         }
@@ -62,62 +65,83 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
         if (!shader) {
             continue;
         }
-        shader->bind();
 
-        shader->loadMat4("projection", camera.getProjection());
-        shader->loadMat4("view", view_mat);
+        if (!prepared_shaders.contains(material->getShader())) {
+            shader->bind();
 
-        shader->loadFloat3("ambient_light", Eigen::Vector3f(0.1f, 0.1f, 0.1f));
-        int i = 0;
-        for (const auto& [light, position] : m_lights) {
-            std::string light_name = (std::string("lights[") + std::to_string(i) + std::string("]."));
-            shader->loadFloat3((light_name + std::string("position")).c_str(), position.position);
-            shader->loadFloat3((light_name + std::string("rotation")).c_str(), position.rotation);
-            shader->loadFloat3((light_name + std::string("color")).c_str(), light.color);
-            i++;
+            shader->loadMat4("projection", camera.getProjection());
+            shader->loadMat4("view", view_mat);
+
+            shader->loadFloat3("ambient_light", Eigen::Vector3f(0.1f, 0.1f, 0.1f));
+            int i = 0;
+            for (const auto& [light, position] : m_lights) {
+                std::string light_name = (std::string("lights[") + std::to_string(i) + std::string("]."));
+                shader->loadFloat3((light_name + std::string("position")).c_str(), position->position);
+                shader->loadFloat3((light_name + std::string("rotation")).c_str(), position->rotation);
+                shader->loadFloat3((light_name + std::string("color")).c_str(), light->color);
+                i++;
+            }
+            shader->loadInt("light_count", i);
+            prepared_shaders.emplace(material->getShader());
         }
-        shader->loadInt("light_count", i);
-
         m_render_commands.push_back([this, rc = rc, tc = tc] {
-            auto material = m_asset_bank->getAsset<Material>(rc.material);
+            auto material = m_asset_bank->getAsset<Material>(rc->material);
             auto shader = m_asset_bank->getAsset<Shader>(material->getShader());
-            auto mesh = m_asset_bank->getAsset<Mesh>(rc.mesh);
+            auto mesh = m_asset_bank->getAsset<Mesh>(rc->mesh);
             if (!mesh) {
                 return;
             }
-            shader->bind();
 
-            shader->loadMat4("model", transformationMatrix(tc.position, tc.rotation, tc.scale));
+            if (material->getShader() != m_current_shader) {
+                shader->bind();
+                m_current_shader = material->getShader();
+            }
+
+            shader->loadMat4("model", transformationMatrix(tc->position, tc->rotation, tc->scale));
 
             int texture_count = 0;
-            //TODO: Can we do better ?
-            for (const auto& [name, value] : material->getAllUniforms()) {
-                if (std::holds_alternative<float>(value)) {
-                    auto v = std::get<float>(value);
-                    shader->loadFloat(name, v);
-                } else if (!std::holds_alternative<AssetUID>(value) && std::holds_alternative<int>(value)) {
-                    auto v = std::get<int>(value);
-                    shader->loadInt(name, v);
-                } else if (std::holds_alternative<AssetUID>(value)) {
-                    auto v = std::get<AssetUID>(value);
-                    if (auto tex = m_asset_bank->getAsset<Texture2D>(v); tex) {
-                        tex->bind(texture_count);
-                        shader->loadInt(name, texture_count);
-                        texture_count++;
+
+            if (rc->material != m_current_material) {
+
+                m_current_material = rc->material;
+
+                //TODO: Can we do better ?
+                for (const auto& [name, value] : material->getAllUniforms()) {
+                    if (std::holds_alternative<float>(value)) {
+                        auto v = std::get<float>(value);
+                        shader->loadFloat(name, v);
+                    } else if (!std::holds_alternative<AssetUID>(value) && std::holds_alternative<int>(value)) {
+                        auto v = std::get<int>(value);
+                        shader->loadInt(name, v);
+                    } else if (std::holds_alternative<AssetUID>(value)) {
+                        auto v = std::get<AssetUID>(value);
+                        if (auto tex = m_asset_bank->getAsset<Texture2D>(v); tex) {
+                            tex->bind(texture_count);
+                            shader->loadInt(name, texture_count);
+                            texture_count++;
+                        }
+                    } else if (std::holds_alternative<Eigen::Vector3f>(value)) {
+                        auto& v = std::get<Eigen::Vector3f>(value);
+                        shader->loadFloat3(name, v);
+                    } else if (std::holds_alternative<Eigen::Vector4f>(value)) {
+                        auto& v = std::get<Eigen::Vector4f>(value);
+                        shader->loadFloat4(name, v);
+                    } else if (std::holds_alternative<Eigen::Matrix4f>(value)) {
+                        auto& v = std::get<Eigen::Matrix4f>(value);
+                        shader->loadMat4(name, v);
+                    } else {
+                        throw std::runtime_error("Uniform type not implemented");
                     }
-                } else if (std::holds_alternative<Eigen::Vector3f>(value)) {
-                    auto& v = std::get<Eigen::Vector3f>(value);
-                    shader->loadFloat3(name, v);
-                } else if (std::holds_alternative<Eigen::Vector4f>(value)) {
-                    auto& v = std::get<Eigen::Vector4f>(value);
-                    shader->loadFloat4(name, v);
-                } else if (std::holds_alternative<Eigen::Matrix4f>(value)) {
-                    auto& v = std::get<Eigen::Matrix4f>(value);
-                    shader->loadMat4(name, v);
-                } else {
-                    throw std::runtime_error("Uniform type not implemented");
                 }
             }
+
+            if (m_current_mesh != rc->mesh) {
+                m_current_mesh = rc->mesh;
+                auto va = mesh->getVertexArray();
+                va->bind();
+                va->getIndexBuffer()->bind();
+            }
+
             m_api->renderVertexArray(mesh->getVertexArray());
         });
     }
@@ -143,6 +167,9 @@ void ForwardRenderer::endFrame() {
     m_render_commands.clear();
     m_render_queue.clear();
     m_lights.clear();
+    m_current_material = 0;
+    m_current_mesh = 0;
+    m_current_shader = 0;
     if (this->target != nullptr)
         this->target->unbind();
 }

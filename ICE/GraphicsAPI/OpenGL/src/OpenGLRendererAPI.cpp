@@ -21,9 +21,6 @@ namespace ICE {
     }
 
     void OpenGLRendererAPI::renderVertexArray(const std::shared_ptr<VertexArray> &va) const {
-        va->bind();
-        va->getIndexBuffer()->bind();
-        //glDrawArrays(GL_TRIANGLES, 0, va->getIndexCount()*3);
         glDrawElements(GL_TRIANGLES, va->getIndexCount(), GL_UNSIGNED_INT, 0);
     }
 
