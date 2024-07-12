@@ -38,18 +38,18 @@ bool Viewport::update() {
         Eigen::Matrix4f delta_matrix;
         delta_matrix.setZero();
         ImGuizmo::Manipulate(m_engine->getCamera()->lookThrough().transpose().data(), m_engine->getCamera()->getProjection().data(), m_guizmo_mode,
-                             ImGuizmo::WORLD, ICE::transformationMatrix(tc->position, tc->rotation, tc->scale).data(), delta_matrix.data());
+                             ImGuizmo::WORLD, tc->getModelMatrix().data(), delta_matrix.data());
         auto deltaT = Eigen::Vector3f(0, 0, 0);
         auto deltaR = Eigen::Vector3f(0, 0, 0);
         auto deltaS = Eigen::Vector3f(0, 0, 0);
 
         ImGuizmo::DecomposeMatrixToComponents(delta_matrix.data(), deltaT.data(), deltaR.data(), deltaS.data());
         if (m_guizmo_mode == ImGuizmo::TRANSLATE) {
-            tc->position += deltaT;
+            tc->position() += deltaT;
         } else if (m_guizmo_mode == ImGuizmo::ROTATE) {
-            tc->rotation += deltaR;
+            tc->rotation() += deltaR;
         } else if (m_guizmo_mode == ImGuizmo::SCALE) {
-            tc->scale += (deltaS - Eigen::Vector3f(1, 1, 1));
+            tc->scale() += (deltaS - Eigen::Vector3f(1, 1, 1));
         }
     }
     return m_done;

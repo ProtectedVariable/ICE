@@ -74,10 +74,10 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
 
             shader->loadFloat3("ambient_light", Eigen::Vector3f(0.1f, 0.1f, 0.1f));
             int i = 0;
-            for (const auto& [light, position] : m_lights) {
+            for (const auto& [light, transform] : m_lights) {
                 std::string light_name = (std::string("lights[") + std::to_string(i) + std::string("]."));
-                shader->loadFloat3((light_name + std::string("position")).c_str(), position->position);
-                shader->loadFloat3((light_name + std::string("rotation")).c_str(), position->rotation);
+                shader->loadFloat3((light_name + std::string("position")).c_str(), transform->getPosition());
+                shader->loadFloat3((light_name + std::string("rotation")).c_str(), transform->getRotation());
                 shader->loadFloat3((light_name + std::string("color")).c_str(), light->color);
                 i++;
             }
@@ -97,7 +97,7 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
                 m_current_shader = material->getShader();
             }
 
-            shader->loadMat4("model", transformationMatrix(tc->position, tc->rotation, tc->scale));
+            shader->loadMat4("model", tc->getModelMatrix());
 
             int texture_count = 0;
 

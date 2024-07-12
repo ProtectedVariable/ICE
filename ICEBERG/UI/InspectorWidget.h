@@ -68,12 +68,12 @@ class InspectorWidget : public Widget {
         m_tc = tc;
         m_tc_inputs.clear();
         if (tc) {
-            m_tc_inputs.emplace_back("Position", tc->position);
-            m_tc_inputs.back().onValueChanged([this](const ICE::UniformValue& v) { m_tc->position = std::get<Eigen::Vector3f>(v); });
-            m_tc_inputs.emplace_back("Rotation", tc->rotation);
-            m_tc_inputs.back().onValueChanged([this](const ICE::UniformValue& v) { m_tc->rotation = std::get<Eigen::Vector3f>(v); });
-            m_tc_inputs.emplace_back("Scale", tc->scale);
-            m_tc_inputs.back().onValueChanged([this](const ICE::UniformValue& v) { m_tc->scale = std::get<Eigen::Vector3f>(v); });
+            m_tc_inputs.emplace_back("Position", tc->getPosition());
+            m_tc_inputs.back().onValueChanged([this](const ICE::UniformValue& v) { m_tc->setPosition(std::get<Eigen::Vector3f>(v)); });
+            m_tc_inputs.emplace_back("Rotation", tc->getRotation());
+            m_tc_inputs.back().onValueChanged([this](const ICE::UniformValue& v) { m_tc->setRotation(std::get<Eigen::Vector3f>(v)); });
+            m_tc_inputs.emplace_back("Scale", tc->getScale());
+            m_tc_inputs.back().onValueChanged([this](const ICE::UniformValue& v) { m_tc->setScale(std::get<Eigen::Vector3f>(v)); });
         }
     }
 

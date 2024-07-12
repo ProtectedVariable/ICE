@@ -53,7 +53,7 @@ int main(void) {
         engine.step(scene);
     	
 		mat->setUniform("uAlbedo", Eigen::Vector3f(abs(sin(i / 100.0)), 0.5, 1));
-        scene->getRegistry()->getComponent<TransformComponent>(entity)->rotation.y() = i;
+        scene->getRegistry()->getComponent<TransformComponent>(entity)->rotation().y() = i;
 
         //Render system duty
         int display_w, display_h;

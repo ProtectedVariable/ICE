@@ -151,9 +151,9 @@ void Project::writeToFile(const std::shared_ptr<Camera> &editorCamera) {
             if (s->getRegistry()->entityHasComponent<TransformComponent>(e)) {
                 TransformComponent tc = *s->getRegistry()->getComponent<TransformComponent>(e);
                 json transformjson;
-                transformjson["position"] = dumpVec3(tc.position);
-                transformjson["rotation"] = dumpVec3(tc.rotation);
-                transformjson["scale"] = dumpVec3(tc.scale);
+                transformjson["position"] = dumpVec3(tc.getPosition());
+                transformjson["rotation"] = dumpVec3(tc.getRotation());
+                transformjson["scale"] = dumpVec3(tc.getScale());
                 entity["transformComponent"] = transformjson;
             }
             if (s->getRegistry()->entityHasComponent<LightComponent>(e)) {
