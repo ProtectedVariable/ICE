@@ -2,24 +2,29 @@
 // Created by Thomas Ibanez on 19.11.20.
 //
 
-#ifndef ICE_SYSTEM_H
-#define ICE_SYSTEM_H
+#pragma once
 
 #include <Entity.h>
 
-#include <memory>
-#include <set>
-#include <typeindex>
-#include <vector>
 #include <cassert>
+#include <memory>
+#include <typeindex>
+#include <unordered_set>
+#include <vector>
 
 namespace ICE {
 class Scene;
 
 class System {
    public:
-    std::set<Entity> entities;
     virtual void update(double delta) = 0;
+    virtual void onEntityAdded(Entity e) = 0; 
+    virtual void onEntityRemoved(Entity e) = 0;
+
+   protected:
+    std::unordered_set<Entity> entities;
+
+    friend class SystemManager;
 };
 
 class SystemManager {
@@ -45,6 +50,7 @@ class SystemManager {
             auto const& system = pair.second;
 
             system->entities.erase(entity);
+            system->onEntityRemoved(entity);
         }
     }
 
@@ -59,6 +65,7 @@ class SystemManager {
             for (const auto& s : systemSignature) {
                 if ((entitySignature & s) == s) {
                     system->entities.insert(entity);
+                    system->onEntityAdded(entity);
                     match = true;
                     break;
                 }
@@ -66,6 +73,7 @@ class SystemManager {
             // Entity signature does not match system signature - erase from set
             if (!match) {
                 system->entities.erase(entity);
+                system->onEntityRemoved(entity);
             }
         }
     }
@@ -76,8 +84,8 @@ class SystemManager {
         }
     }
 
-    template <typename T>
-    void addSystem(const std::shared_ptr<T> &system) {
+    template<typename T>
+    void addSystem(const std::shared_ptr<T>& system) {
         systems.try_emplace(typeid(T), system);
     }
 
@@ -94,5 +102,3 @@ class SystemManager {
     std::unordered_map<std::type_index, std::shared_ptr<System>> systems;
 };
 }  // namespace ICE
-
-#endif  //ICE_SYSTEM_H

@@ -20,6 +20,7 @@ class Scene;
 class Renderer {
    public:
     virtual void submit(Entity e) = 0;
+    virtual void remove(Entity e) = 0;
     virtual void prepareFrame(Camera &camera) = 0;
     virtual void render() = 0;
     virtual void endFrame() = 0;

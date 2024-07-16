@@ -25,12 +25,21 @@ ForwardRenderer::ForwardRenderer(const std::shared_ptr<RendererAPI>& api, const 
 
 void ForwardRenderer::submit(Entity e) {
     if (m_registry->entityHasComponent<RenderComponent>(e)) {
-        auto rc = m_registry->getComponent<RenderComponent>(e);
-        auto tc = m_registry->getComponent<TransformComponent>(e);
-        m_render_queue.emplace_back(rc, tc);
+        m_render_queue.emplace_back(e);
     }
     if (m_registry->entityHasComponent<LightComponent>(e)) {
-        m_lights.emplace_back(m_registry->getComponent<LightComponent>(e), m_registry->getComponent<TransformComponent>(e));
+        m_lights.emplace_back(e);
+    }
+}
+
+void ForwardRenderer::remove(Entity e) {
+    auto queue_pos = std::ranges::find(m_render_queue, e);
+    if (queue_pos != m_render_queue.end()) {
+        m_render_queue.erase(queue_pos);
+    }
+    auto light_pos = std::ranges::find(m_lights, e);
+    if (light_pos != m_lights.end()) {
+        m_lights.erase(light_pos);
     }
 }
 
@@ -56,7 +65,9 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
 
     std::unordered_set<AssetUID> prepared_shaders;
     auto view_mat = camera.lookThrough();
-    for (const auto& [rc, tc] : m_render_queue) {
+    for (const auto& e : m_render_queue) {
+        auto rc = m_registry->getComponent<RenderComponent>(e);
+        auto tc = m_registry->getComponent<TransformComponent>(e);
         auto material = m_asset_bank->getAsset<Material>(rc->material);
         if (!material) {
             continue;
@@ -74,7 +85,9 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
 
             shader->loadFloat3("ambient_light", Eigen::Vector3f(0.1f, 0.1f, 0.1f));
             int i = 0;
-            for (const auto& [light, transform] : m_lights) {
+            for (const auto& e : m_lights) {
+                auto light = m_registry->getComponent<LightComponent>(e);
+                auto transform = m_registry->getComponent<TransformComponent>(e);
                 std::string light_name = (std::string("lights[") + std::to_string(i) + std::string("]."));
                 shader->loadFloat3((light_name + std::string("position")).c_str(), transform->getPosition());
                 shader->loadFloat3((light_name + std::string("rotation")).c_str(), transform->getRotation());
@@ -165,8 +178,8 @@ void ForwardRenderer::endFrame() {
     m_api->checkAndLogErrors();
     //TODO: Cleanup and restore state
     m_render_commands.clear();
-    m_render_queue.clear();
-    m_lights.clear();
+    //m_render_queue.clear();
+    //m_lights.clear();
     m_current_material = 0;
     m_current_mesh = 0;
     m_current_shader = 0;

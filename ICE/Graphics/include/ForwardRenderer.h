@@ -23,6 +23,7 @@ class ForwardRenderer : public Renderer {
     ForwardRenderer(const std::shared_ptr<RendererAPI>& api, const std::shared_ptr<Registry>& registry, const std::shared_ptr<AssetBank>& assetBank);
 
     void submit(Entity e) override;
+    void remove(Entity e) override;
 
     void prepareFrame(Camera& camera) override;
 
@@ -43,8 +44,8 @@ class ForwardRenderer : public Renderer {
 
     std::shared_ptr<Framebuffer> target = nullptr;
     std::vector<std::function<void(void)>> m_render_commands;
-    std::vector<std::pair<RenderComponent*, TransformComponent*>> m_render_queue;
-    std::vector<std::pair<LightComponent*, TransformComponent*>> m_lights;
+    std::vector<Entity> m_render_queue;
+    std::vector<Entity> m_lights;
 
     //State
     AssetUID m_current_shader = 0;

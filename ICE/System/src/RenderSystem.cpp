@@ -6,12 +6,21 @@
 
 namespace ICE {
 void RenderSystem::update(double delta) {
-    for (auto e : entities) {
-        m_renderer->submit(e);
-    }
     m_renderer->prepareFrame(*m_camera);
     m_renderer->render();
     m_renderer->endFrame();
+}
+
+void RenderSystem::onEntityAdded(Entity e) {
+    if (m_renderer) {
+        m_renderer->submit(e);
+    }
+}
+
+void RenderSystem::onEntityRemoved(Entity e) {
+    if (m_renderer) {
+        m_renderer->remove(e);
+    }
 }
 
 std::shared_ptr<Renderer> RenderSystem::getRenderer() const {
@@ -20,6 +29,9 @@ std::shared_ptr<Renderer> RenderSystem::getRenderer() const {
 
 void RenderSystem::setRenderer(const std::shared_ptr<Renderer> &renderer) {
     m_renderer = renderer;
+    for (const auto &e : entities) {
+        m_renderer->submit(e);
+    }
 }
 
 std::shared_ptr<Camera> RenderSystem::getCamera() const {

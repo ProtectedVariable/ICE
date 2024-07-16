@@ -15,6 +15,8 @@ class RenderSystem : public System {
    public:
     RenderSystem(){};
 
+    void onEntityAdded(Entity e) override;
+    void onEntityRemoved(Entity e) override;
     void update(double delta) override;
 
     std::shared_ptr<Renderer> getRenderer() const;
