@@ -178,8 +178,6 @@ void ForwardRenderer::endFrame() {
     m_api->checkAndLogErrors();
     //TODO: Cleanup and restore state
     m_render_commands.clear();
-    //m_render_queue.clear();
-    //m_lights.clear();
     m_current_material = 0;
     m_current_mesh = 0;
     m_current_shader = 0;
