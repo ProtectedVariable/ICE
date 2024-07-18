@@ -30,6 +30,7 @@ class Camera {
     virtual Eigen::Vector3f getPosition() const = 0;
     virtual void setPosition(const Eigen::Vector3f&) = 0;
     virtual Eigen::Vector3f getRotation() const = 0;
+    virtual void setRotation(const Eigen::Vector3f &) = 0;
 
    private:
     float m_zoom;

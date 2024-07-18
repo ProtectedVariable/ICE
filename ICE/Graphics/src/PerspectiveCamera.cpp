@@ -94,6 +94,10 @@ Eigen::Vector3f PerspectiveCamera::getRotation() const {
     return rotation;
 }
 
+void PerspectiveCamera::setRotation(const Eigen::Vector3f &rot) {
+    rotation = rot;
+}
+
 Eigen::Matrix4f PerspectiveCamera::getProjection() const {
     return projection;
 }

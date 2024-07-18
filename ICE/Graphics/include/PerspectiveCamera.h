@@ -32,6 +32,7 @@ class PerspectiveCamera : public Camera {
     Eigen::Vector3f getPosition() const override;
     void setPosition(const Eigen::Vector3f &) override;
     Eigen::Vector3f getRotation() const override;
+    void setRotation(const Eigen::Vector3f &) override;
 
    private:
     double m_fov;

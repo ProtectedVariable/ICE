@@ -92,6 +92,10 @@ Eigen::Vector3f OrthographicCamera::getRotation() const {
     return rotation;
 }
 
+void OrthographicCamera::setRotation(const Eigen::Vector3f &rot) {
+    rotation = rot;
+}
+
 Eigen::Matrix4f OrthographicCamera::getProjection() const {
     return projection;
 }
