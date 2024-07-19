@@ -96,9 +96,9 @@ namespace ICE {
 
         if(!geoFile.empty()){
             GLint geoShader;
-            Logger::Log(Logger::VERBOSE, "Graphics", "Compiling geometric shader...");
+            Logger::Log(Logger::VERBOSE, "Graphics", "Compiling geometry shader...");
 			if (!compileShader(GL_GEOMETRY_SHADER, geoFile, &geoShader)) {
-				Logger::Log(Logger::FATAL, "Graphics", "Error while compiling geometric shader");
+				Logger::Log(Logger::FATAL, "Graphics", "Error while compiling geometry shader");
 			}
             glAttachShader(programID, geoShader);
         }
@@ -108,6 +108,12 @@ namespace ICE {
         glGetProgramiv(programID, GL_LINK_STATUS, &linkStatus);
         if(linkStatus == GL_FALSE) {
             Logger::Log(Logger::FATAL, "Graphics", "Error while linking shader");
+            GLint maxLength = 0;
+            glGetProgramiv(programID, GL_INFO_LOG_LENGTH, &maxLength);
+
+            std::vector<GLchar> errorLog(maxLength);
+            glGetProgramInfoLog(programID, maxLength, &maxLength, &errorLog[0]);
+            Logger::Log(Logger::FATAL, "Graphics", "Shader linking error: %s", errorLog.data());
         }
     }
 
