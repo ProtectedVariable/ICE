@@ -92,6 +92,7 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
                 shader->loadFloat3((light_name + std::string("position")).c_str(), transform->getPosition());
                 shader->loadFloat3((light_name + std::string("rotation")).c_str(), transform->getRotation());
                 shader->loadFloat3((light_name + std::string("color")).c_str(), light->color);
+                shader->loadInt((light_name + std::string("type")).c_str(), static_cast<int>(light->type));
                 i++;
             }
             shader->loadInt("light_count", i);

@@ -236,7 +236,7 @@ void Project::loadFromFile() {
             }
             if (!jentity["lightComponent"].is_null()) {
                 json lj = jentity["lightComponent"];
-                LightComponent lc(PointLight, JsonParser::parseVec3(lj["color"]));
+                LightComponent lc(static_cast<LightType>((int)lj["type"]), JsonParser::parseVec3(lj["color"]));
                 scene.getRegistry()->addComponent(e, lc);
             }
         }
