@@ -33,7 +33,7 @@ PerspectiveCamera::PerspectiveCamera(double fov_degrees, double aspect_ratio, do
 }
 
 Eigen::Matrix4f PerspectiveCamera::lookThrough() {
-    Eigen::Matrix4f viewMatrix = rotationMatrix(-rotation) * translationMatrix(-position);
+    Eigen::Matrix4f viewMatrix = rotationMatrix(-rotation, false) * translationMatrix(-position);
     return viewMatrix;
 }
 

@@ -21,7 +21,7 @@
 
 namespace ICE {
 
-Eigen::Matrix4f rotationMatrix(Eigen::Vector3f angles);
+Eigen::Matrix4f rotationMatrix(Eigen::Vector3f angles, bool yaw_first=true);
 Eigen::Matrix4f translationMatrix(Eigen::Vector3f translation);
 Eigen::Matrix4f scaleMatrix(Eigen::Vector3f scale);
 Eigen::Matrix4f transformationMatrix(const Eigen::Vector3f &translation, const Eigen::Vector3f &angles, const Eigen::Vector3f &scale);

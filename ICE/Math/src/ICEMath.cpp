@@ -4,7 +4,7 @@
 #include "ICEMath.h"
 
 namespace ICE {
-Eigen::Matrix4f rotationMatrix(Eigen::Vector3f angles) {
+Eigen::Matrix4f rotationMatrix(Eigen::Vector3f angles, bool yaw_first) {
     auto mx = Eigen::Matrix4f();
     mx.setIdentity();
     float rx = DEG_TO_RAD(angles.x());
@@ -29,7 +29,11 @@ Eigen::Matrix4f rotationMatrix(Eigen::Vector3f angles) {
     mz(1, 0) = sinf(rz);
     mz(1, 1) = cosf(rz);
 
-    return mx * my * mz;
+    if(yaw_first) {
+        return my * mx * mz;
+    } else {
+        return mx * my * mz;
+    }
 }
 
 Eigen::Matrix4f translationMatrix(Eigen::Vector3f translation) {
