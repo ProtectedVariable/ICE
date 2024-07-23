@@ -9,7 +9,7 @@
 #include <utility>
 
 namespace ICE {
-Scene::Scene(const std::string &name) : name(name), m_graph(std::make_shared<SceneGraph>()), skybox(Skybox(NO_ASSET_ID)), registry(std::make_shared<Registry>()) {
+Scene::Scene(const std::string &name) : name(name), m_graph(std::make_shared<SceneGraph>()), registry(std::make_shared<Registry>()) {
     aliases.try_emplace(0, "Scene");
 }
 
@@ -32,14 +32,6 @@ bool Scene::setAlias(Entity entity, const std::string &newName) {
 
 std::string Scene::getAlias(Entity e) {
     return aliases[e];
-}
-
-const Skybox *Scene::getSkybox() const {
-    return &skybox;
-}
-
-void Scene::setSkybox(const Skybox &skybox) {
-    Scene::skybox = skybox;
 }
 
 std::shared_ptr<Registry> Scene::getRegistry() const {

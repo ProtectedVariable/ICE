@@ -30,6 +30,9 @@ void ForwardRenderer::submit(Entity e) {
     if (m_registry->entityHasComponent<LightComponent>(e)) {
         m_lights.emplace_back(e);
     }
+    if (m_registry->entityHasComponent<SkyboxComponent>(e)) {
+        m_skybox = e;
+    }
 }
 
 void ForwardRenderer::remove(Entity e) {
@@ -40,6 +43,9 @@ void ForwardRenderer::remove(Entity e) {
     auto light_pos = std::ranges::find(m_lights, e);
     if (light_pos != m_lights.end()) {
         m_lights.erase(light_pos);
+    }
+    if (e == m_skybox) {
+        m_skybox = NO_ASSET_ID;
     }
 }
 
@@ -52,16 +58,18 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
     }
     //TODO: Sort entities, make shader list, batch, make instances, set uniforms, etc..
     m_api->clear();
-    /* if (skybox->getTexture() != 0) {
-        Skybox::getShader()->bind();
-        Skybox::getShader()->loadMat4("projection", camera.getProjection());
+
+    if (m_skybox != NO_ASSET_ID) {
+        auto shader = m_asset_bank->getAsset<Shader>("__ice_skybox_shader");
+        shader->bind();
+        shader->loadMat4("projection", camera.getProjection());
         Eigen::Matrix4f view = camera.lookThrough();
         view(0, 3) = 0;
         view(1, 3) = 0;
         view(2, 3) = 0;
-        Skybox::getShader()->loadMat4("view", view);
-        Skybox::getShader()->loadInt("skybox", 0);
-    }*/
+        shader->loadMat4("view", view);
+        shader->loadInt("skybox", 0);
+    }
 
     std::unordered_set<AssetUID> prepared_shaders;
     auto view_mat = camera.lookThrough();
@@ -111,9 +119,9 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
                 m_current_shader = material->getShader();
             }
 
-            shader->loadMat4("model", tc->getModelMatrix());
-
             int texture_count = 0;
+
+            shader->loadMat4("model", tc->getModelMatrix());
 
             if (rc->material != m_current_material) {
 
@@ -162,13 +170,17 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
 }
 
 void ForwardRenderer::render() {
-    /* if (skybox->getTexture() != NO_ASSET_ID) {
-        api->setDepthMask(false);
-        Skybox::getShader()->bind();
-        skybox->getVAO()->bind();
-        assetBank->getAsset<TextureCube>(skybox->getTexture())->bind(0);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-    }*/
+    if (m_skybox != NO_ASSET_ID) {
+        m_api->setDepthMask(false);
+        auto skybox = m_registry->getComponent<SkyboxComponent>(m_skybox);
+        auto shader = m_asset_bank->getAsset<Shader>("__ice_skybox_shader");
+        shader->bind();
+        m_asset_bank->getAsset<TextureCube>(skybox->texture)->bind(0);
+        auto vao = m_asset_bank->getAsset<Mesh>("cube")->getVertexArray();
+        vao->bind();
+        vao->getIndexBuffer()->bind();
+        m_api->renderVertexArray(vao);
+    }
     m_api->setDepthMask(true);
     for (const auto& cmd : m_render_commands) {
         cmd();

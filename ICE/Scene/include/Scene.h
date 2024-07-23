@@ -7,7 +7,6 @@
 #include <Entity.h>
 #include <Registry.h>
 #include <SceneGraph.h>
-#include <Skybox.h>
 
 #include <string>
 #include <vector>
@@ -27,9 +26,6 @@ class Scene {
     std::string getName() const;
     void setName(const std::string& name);
 
-    const Skybox* getSkybox() const;
-    void setSkybox(const Skybox& skybox);
-
     std::shared_ptr<Registry> getRegistry() const;
     Entity createEntity();
     void addEntity(Entity e, const std::string& alias, Entity parent);
@@ -37,7 +33,6 @@ class Scene {
 
    private:
     std::string name;
-    Skybox skybox;
     std::shared_ptr<SceneGraph> m_graph;
     std::unordered_map<Entity, std::string> aliases;
     std::shared_ptr<Registry> registry;

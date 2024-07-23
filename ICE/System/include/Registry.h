@@ -11,6 +11,7 @@
 #include <LightComponent.h>
 #include <RenderComponent.h>
 #include <RenderSystem.h>
+#include <SkyboxComponent.h>
 #include <System.h>
 #include <TransformComponent.h>
 
@@ -24,6 +25,7 @@ class Registry {
         componentManager.registerComponent<RenderComponent>();
         componentManager.registerComponent<LightComponent>();
         componentManager.registerComponent<CameraComponent>();
+        componentManager.registerComponent<SkyboxComponent>();
 
         Signature signature;
         signature.set(componentManager.getComponentType<RenderComponent>());
@@ -33,6 +35,9 @@ class Registry {
         signature.reset();
         signature.set(componentManager.getComponentType<TransformComponent>());
         signature.set(componentManager.getComponentType<LightComponent>());
+        systemManager.addSignature<RenderSystem>(signature);
+        signature.reset();
+        signature.set(componentManager.getComponentType<SkyboxComponent>());
         systemManager.addSignature<RenderSystem>(signature);
     }
     ~Registry(){};

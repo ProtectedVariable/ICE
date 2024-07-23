@@ -15,7 +15,6 @@
 #include "Framebuffer.h"
 #include "Renderer.h"
 #include "RendererConfig.h"
-#include "Skybox.h"
 
 namespace ICE {
 class ForwardRenderer : public Renderer {
@@ -46,6 +45,7 @@ class ForwardRenderer : public Renderer {
     std::vector<std::function<void(void)>> m_render_commands;
     std::vector<Entity> m_render_queue;
     std::vector<Entity> m_lights;
+    AssetUID m_skybox = NO_ASSET_ID;
 
     //State
     AssetUID m_current_shader = 0;
@@ -53,6 +53,5 @@ class ForwardRenderer : public Renderer {
     AssetUID m_current_mesh = 0;
 
     RendererConfig config;
-    const Skybox* skybox;
 };
 }  // namespace ICE
