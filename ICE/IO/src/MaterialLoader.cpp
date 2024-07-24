@@ -18,7 +18,12 @@ std::shared_ptr<Material> MaterialLoader::load(const std::vector<std::filesystem
     infile >> j;
     infile.close();
 
-    auto mtl = std::make_shared<Material>();
+    bool transparent = false;
+    if (j.contains("transparent")) {
+        transparent = j["transparent"];
+    }
+
+    auto mtl = std::make_shared<Material>(transparent);
     mtl->setShader(j["shader_id"]);
 
     for (const auto &data : j["uniforms"]) {

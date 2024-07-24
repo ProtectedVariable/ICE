@@ -16,11 +16,11 @@ using UniformValue = std::variant<AssetUID, int, float, Eigen::Vector3f, Eigen::
 
 class Material : public Asset {
    public:
-    Material();
+    Material(bool transparent = false);
 
     template<typename T>
     void setUniform(const std::string& name, const T& value) {
-        if(!m_uniforms.contains(name)) {
+        if (!m_uniforms.contains(name)) {
             m_uniforms.try_emplace(name, value);
         } else {
             m_uniforms[name] = value;
@@ -39,6 +39,7 @@ class Material : public Asset {
     std::unordered_map<std::string, UniformValue> getAllUniforms() const;
     AssetUID getShader() const;
     void setShader(AssetUID shader_id);
+    bool isTransparent() const;
 
     //Asset interface
     std::string getTypeName() const override;
@@ -49,5 +50,6 @@ class Material : public Asset {
    private:
     AssetUID m_shader = NO_ASSET_ID;
     std::unordered_map<std::string, UniformValue> m_uniforms;
+    bool m_transparent;
 };
 }  // namespace ICE

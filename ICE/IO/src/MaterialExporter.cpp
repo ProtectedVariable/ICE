@@ -14,6 +14,7 @@ void MaterialExporter::writeToJson(const std::filesystem::path &path, const Mate
 	outstream.open(path);
 	json j;
 	j["shader_id"] = material.getShader();
+    j["transparent"] = material.isTransparent();
 
 	std::vector<json> uniforms;
 	for(const auto &[name, value] : material.getAllUniforms()) {

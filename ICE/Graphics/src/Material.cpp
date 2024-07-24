@@ -6,7 +6,7 @@
 
 namespace ICE {
 
-Material::Material() {
+Material::Material(bool transparent) : m_transparent(transparent) {
 }
 
 AssetUID Material::getShader() const {
@@ -15,6 +15,10 @@ AssetUID Material::getShader() const {
 
 void Material::setShader(AssetUID shader_id) {
     m_shader = shader_id;
+}
+
+bool Material::isTransparent() const {
+    return m_transparent;
 }
 
 std::unordered_map<std::string, UniformValue> Material::getAllUniforms() const {

@@ -57,6 +57,20 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
         m_api->bindDefaultFramebuffer();
     }
     //TODO: Sort entities, make shader list, batch, make instances, set uniforms, etc..
+
+    std::sort(m_render_queue.begin(), m_render_queue.end(), [this](Entity a, Entity b) {
+        auto rc_a = m_registry->getComponent<RenderComponent>(a);
+        auto material_a = m_asset_bank->getAsset<Material>(rc_a->material);
+        auto rc_b = m_registry->getComponent<RenderComponent>(b);
+        auto material_b = m_asset_bank->getAsset<Material>(rc_b->material);
+
+        if (!material_a->isTransparent() && material_b->isTransparent()) {
+            return true;
+        } else {
+            return false;
+        }
+    });
+
     m_api->clear();
 
     if (m_skybox != NO_ASSET_ID) {
