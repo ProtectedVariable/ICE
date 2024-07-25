@@ -189,7 +189,9 @@ void ForwardRenderer::render() {
         auto skybox = m_registry->getComponent<SkyboxComponent>(m_skybox);
         auto shader = m_asset_bank->getAsset<Shader>("__ice_skybox_shader");
         shader->bind();
-        m_asset_bank->getAsset<TextureCube>(skybox->texture)->bind(0);
+        if (skybox->texture != NO_ASSET_ID) {
+            m_asset_bank->getAsset<TextureCube>(skybox->texture)->bind(0);
+        }
         auto vao = m_asset_bank->getAsset<Mesh>("cube")->getVertexArray();
         vao->bind();
         vao->getIndexBuffer()->bind();
