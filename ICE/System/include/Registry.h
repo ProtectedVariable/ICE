@@ -56,6 +56,7 @@ class Registry {
     void removeEntity(Entity e) {
         auto it = std::find(entities.begin(), entities.end(), e);
         entities.erase(it);
+        componentManager.entityDestroyed(e);
         entityManager.releaseEntity(e);
         systemManager.entityDestroyed(e);
     }

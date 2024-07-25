@@ -65,10 +65,13 @@ class AssetBank {
     }
 
     bool addAsset(const AssetPath& path, const std::shared_ptr<Asset>& asset) {
-        resources.try_emplace(nextUID, AssetBankEntry{path, asset});
-        nameMapping.try_emplace(path, nextUID);
-        nextUID++;
-        return true;
+        if (!nameMapping.contains(path) && !resources.contains(nextUID)) {
+            resources.try_emplace(nextUID, AssetBankEntry{path, asset});
+            nameMapping.try_emplace(path, nextUID);
+            nextUID++;
+            return true;
+        }
+        return false;
     }
 
     template<typename T>
