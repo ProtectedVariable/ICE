@@ -21,12 +21,15 @@ class EntityManager {
 
     Entity createEntity(Entity e = 0) {
         if (e == 0) {
-            e = entityCount + 1;
+            e = m_next_id;
             //Reuse free ids before using the next
             if (releasedEntities.size() > 0) {
                 e = releasedEntities.front();
                 releasedEntities.pop();
             }
+        }
+        if (e >= m_next_id) {
+            m_next_id = e + 1;
         }
         entityCount++;
 
@@ -53,6 +56,7 @@ class EntityManager {
     std::queue<Entity> releasedEntities{};
     std::unordered_map<Entity, Signature> signatures{};
     std::uint32_t entityCount;
+    std::uint32_t m_next_id = 1;
 };
 }  // namespace ICE
 

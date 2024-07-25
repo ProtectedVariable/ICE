@@ -7,9 +7,9 @@
 
 #include <Entity.h>
 
+#include <cassert>
 #include <memory>
 #include <typeindex>
-#include <cassert>
 
 namespace ICE {
 
@@ -33,7 +33,11 @@ class ComponentArray : public IComponentArray {
         size_t newIndex = size;
         entityToIndexMap[entity] = newIndex;
         indexToEntityMap[newIndex] = entity;
-        componentArray.push_back(component);
+        if (size < componentArray.size()) {
+            componentArray[newIndex] = component;
+        } else {
+            componentArray.push_back(component);
+        }
         size++;
     }
 
