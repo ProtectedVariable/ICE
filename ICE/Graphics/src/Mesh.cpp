@@ -18,7 +18,14 @@ Mesh::Mesh(const std::vector<Eigen::Vector3f> &vertices, const std::vector<Eigen
       indices(indices),
       boundingBox(vertices) {
 }
-
+Mesh::Mesh(std::vector<Eigen::Vector3f> &&vertices, std::vector<Eigen::Vector3f> &&normals, std::vector<Eigen::Vector2f> &&uvCoords,
+           std::vector<Eigen::Vector3i> &&indices)
+    : vertices(std::move(vertices)),
+      normals(std::move(normals)),
+      uvCoords(std::move(uvCoords)),
+      indices(std::move(indices)),
+      boundingBox(this->vertices) {
+}
 const std::vector<Eigen::Vector3f> &Mesh::getVertices() const {
     return vertices;
 }
