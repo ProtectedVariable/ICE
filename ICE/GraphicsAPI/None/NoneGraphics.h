@@ -67,6 +67,7 @@ class NoneShader : public Shader {
     void loadInt(const std::string &name, int v) override {}
     void loadInts(const std::string &name, int *array, uint32_t size) override {}
     void loadFloat(const std::string &name, float v) override {}
+    void loadFloat2(const std::string &name, Eigen::Vector2f vec) override {}
     void loadFloat3(const std::string &name, Eigen::Vector3f vec) override {}
     void loadFloat4(const std::string &name, Eigen::Vector4f vec) override {}
     void loadMat4(const std::string &name, Eigen::Matrix4f mat) override {}

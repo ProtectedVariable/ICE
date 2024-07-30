@@ -24,6 +24,8 @@ namespace ICE {
 
         void loadFloat(const std::string &name, float v) override;
 
+        void loadFloat2(const std::string &name, Eigen::Vector2f vec) override;
+
         void loadFloat3(const std::string &name, Eigen::Vector3f vec) override;
 
         void loadFloat4(const std::string &name, Eigen::Vector4f vec) override;

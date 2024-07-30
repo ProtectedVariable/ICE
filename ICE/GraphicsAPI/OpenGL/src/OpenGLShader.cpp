@@ -28,6 +28,10 @@ namespace ICE {
         glUniform1f(getLocation(name), v);
     }
 
+    void OpenGLShader::loadFloat2(const std::string &name, Eigen::Vector2f vec) {
+        glUniform2f(getLocation(name), vec.x(), vec.y());
+    }
+
     void OpenGLShader::loadFloat3(const std::string &name, Eigen::Vector3f vec) {
         glUniform3f(getLocation(name), vec.x(), vec.y(), vec.z());
     }

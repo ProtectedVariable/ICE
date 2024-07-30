@@ -156,6 +156,9 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
                             shader->loadInt(name, texture_count);
                             texture_count++;
                         }
+                    } else if (std::holds_alternative<Eigen::Vector2f>(value)) {
+                        auto& v = std::get<Eigen::Vector2f>(value);
+                        shader->loadFloat2(name, v);
                     } else if (std::holds_alternative<Eigen::Vector3f>(value)) {
                         auto& v = std::get<Eigen::Vector3f>(value);
                         shader->loadFloat3(name, v);

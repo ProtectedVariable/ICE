@@ -12,7 +12,7 @@
 
 namespace ICE {
 
-using UniformValue = std::variant<AssetUID, int, float, Eigen::Vector3f, Eigen::Vector4f, Eigen::Matrix4f>;
+using UniformValue = std::variant<AssetUID, int, float, Eigen::Vector2f, Eigen::Vector3f, Eigen::Vector4f, Eigen::Matrix4f>;
 
 class Material : public Asset {
    public:
