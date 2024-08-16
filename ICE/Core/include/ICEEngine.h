@@ -45,6 +45,8 @@ class ICEEngine {
 
     std::shared_ptr<GraphicsFactory> getGraphicsFactory() const;
 
+    std::shared_ptr<Context> getContext() const;
+
     std::shared_ptr<Framebuffer> getInternalFramebuffer() const;
     void setRenderFramebufferInternal(bool use_internal);
 

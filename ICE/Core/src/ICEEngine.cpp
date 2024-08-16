@@ -107,6 +107,10 @@ std::shared_ptr<GraphicsFactory> ICEEngine::getGraphicsFactory() const {
     return m_graphics_factory;
 }
 
+std::shared_ptr<Context> ICEEngine::getContext() const {
+    return ctx;
+}
+
 int import_cnt = 0;
 void ICEEngine::importMesh() {
     const std::string file = FileUtils::openFileDialog("obj");
