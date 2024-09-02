@@ -188,6 +188,7 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
 
 void ForwardRenderer::render() {
     if (m_skybox != NO_ASSET_ID) {
+        m_api->setBackfaceCulling(false);
         m_api->setDepthMask(false);
         auto skybox = m_registry->getComponent<SkyboxComponent>(m_skybox);
         auto shader = m_asset_bank->getAsset<Shader>("__ice_skybox_shader");
@@ -200,6 +201,7 @@ void ForwardRenderer::render() {
         vao->getIndexBuffer()->bind();
         m_api->renderVertexArray(vao);
     }
+    m_api->setBackfaceCulling(true);
     m_api->setDepthMask(true);
     for (const auto& cmd : m_render_commands) {
         cmd();

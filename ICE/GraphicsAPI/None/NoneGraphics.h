@@ -57,6 +57,7 @@ class NoneRendererAPI : public RendererAPI {
     void bindDefaultFramebuffer() const override {}
     void setDepthTest(bool enable) const override {}
     void setDepthMask(bool enable) const override {}
+    void setBackfaceCulling(bool enable) const override {}
     void checkAndLogErrors() const override {}
 };
 

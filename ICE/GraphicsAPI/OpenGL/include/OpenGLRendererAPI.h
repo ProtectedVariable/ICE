@@ -31,6 +31,8 @@ namespace ICE {
 
         void setDepthMask(bool enable) const override;
 
+        void setBackfaceCulling(bool enable) const override;
+
         void checkAndLogErrors() const override;
     };
 }
