@@ -11,7 +11,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     src/ForwardRenderer.cpp
     src/Material.cpp
     src/Mesh.cpp
-    )
+    src/GeometryPass.cpp)
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
