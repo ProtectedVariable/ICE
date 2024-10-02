@@ -16,18 +16,20 @@ ICEEngine::ICEEngine() : camera(std::make_shared<PerspectiveCamera>(60, 16.f / 9
 
 void ICEEngine::initialize(const std::shared_ptr<GraphicsFactory> &graphics_factory, const std::shared_ptr<Window> &window) {
     Logger::Log(Logger::INFO, "Core", "Engine starting up...");
-
+    m_window = window;
     m_graphics_factory = graphics_factory;
-    ctx = graphics_factory->createContext(window);
+    ctx = graphics_factory->createContext(m_window);
     ctx->initialize();
     api = graphics_factory->createRendererAPI();
-    window->setSwapInterval(1);
+    m_window->setSwapInterval(1);
     api->initialize();
     internalFB = graphics_factory->createFramebuffer({720, 720, 1});
 }
 
 void ICEEngine::step(const std::shared_ptr<Scene> &scene) {
-    project->getCurrentScene()->getRegistry()->getSystem<RenderSystem>()->setTarget(m_target_fb);
+    auto render_system = project->getCurrentScene()->getRegistry()->getSystem<RenderSystem>();
+    render_system->setTarget(m_target_fb);
+    render_system->set
 
     project->getCurrentScene()->getRegistry()->updateSystems(0.0);
 }

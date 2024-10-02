@@ -13,6 +13,8 @@
 
 #include "Camera.h"
 #include "Framebuffer.h"
+#include "GeometryPass.h"
+#include "RenderCommand.h"
 #include "Renderer.h"
 #include "RendererConfig.h"
 
@@ -42,15 +44,12 @@ class ForwardRenderer : public Renderer {
     std::shared_ptr<AssetBank> m_asset_bank;
 
     std::shared_ptr<Framebuffer> target = nullptr;
-    std::vector<std::function<void(void)>> m_render_commands;
+    std::vector<RenderCommand> m_render_commands;
     std::vector<Entity> m_render_queue;
     std::vector<Entity> m_lights;
     AssetUID m_skybox = NO_ASSET_ID;
 
-    //State
-    AssetUID m_current_shader = 0;
-    AssetUID m_current_material = 0;
-    AssetUID m_current_mesh = 0;
+    GeometryPass m_geometry_pass;
 
     RendererConfig config;
 };

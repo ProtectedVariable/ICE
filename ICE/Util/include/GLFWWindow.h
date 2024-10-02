@@ -19,10 +19,14 @@ class GLFWWindow : public Window {
     void getFramebufferSize(int* width, int* height) override;
     void setSwapInterval(int interval) override;
     void makeContextCurrent() override;
+    void setResizeCallback(const WindowResizeCallback& callback) override;
+    void windowResized(int w, int h) const;
 
    private:
     GLFWwindow* m_handle;
     std::shared_ptr<MouseHandler> m_mouse_handler;
     std::shared_ptr<KeyboardHandler> m_keyboard_handler;
+    WindowResizeCallback m_resize_callback = [](int, int) {
+    };
 };
 }  // namespace ICE

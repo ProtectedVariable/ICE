@@ -20,7 +20,8 @@ ForwardRenderer::ForwardRenderer(const std::shared_ptr<RendererAPI>& api, const 
                                  const std::shared_ptr<AssetBank>& assetBank)
     : m_api(api),
       m_registry(registry),
-      m_asset_bank(assetBank) {
+      m_asset_bank(assetBank),
+      m_geometry_pass(api, {
 }
 
 void ForwardRenderer::submit(Entity e) {
@@ -50,14 +51,7 @@ void ForwardRenderer::remove(Entity e) {
 }
 
 void ForwardRenderer::prepareFrame(Camera& camera) {
-    if (this->target != nullptr) {
-        this->target->bind();
-        m_api->setViewport(0, 0, target->getFormat().width, target->getFormat().height);
-    } else {
-        m_api->bindDefaultFramebuffer();
-    }
     //TODO: Sort entities, make shader list, batch, make instances, set uniforms, etc..
-
     std::sort(m_render_queue.begin(), m_render_queue.end(), [this](Entity a, Entity b) {
         auto rc_a = m_registry->getComponent<RenderComponent>(a);
         auto material_a = m_asset_bank->getAsset<Material>(rc_a->material);
@@ -83,6 +77,16 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
         view(2, 3) = 0;
         shader->loadMat4("view", view);
         shader->loadInt("skybox", 0);
+
+        auto skybox = m_registry->getComponent<SkyboxComponent>(m_skybox);
+        auto mesh = m_asset_bank->getAsset<Mesh>("cube");
+        auto tex = m_asset_bank->getAsset<TextureCube>(skybox->texture);
+        m_render_commands.push_back(RenderCommand{.mesh = mesh,
+                                                  .material = nullptr,
+                                                  .shader = shader,
+                                                  .textures = {{skybox->texture, tex}},
+                                                  .faceCulling = false,
+                                                  .depthTest = false});
     }
 
     std::unordered_set<AssetUID> prepared_shaders;
@@ -120,101 +124,40 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
             shader->loadInt("light_count", i);
             prepared_shaders.emplace(material->getShader());
         }
-        m_render_commands.push_back([this, rc = rc, tc = tc] {
-            auto material = m_asset_bank->getAsset<Material>(rc->material);
-            auto shader = m_asset_bank->getAsset<Shader>(material->getShader());
-            auto mesh = m_asset_bank->getAsset<Mesh>(rc->mesh);
-            if (!mesh) {
-                return;
-            }
 
-            if (material->getShader() != m_current_shader) {
-                shader->bind();
-                m_current_shader = material->getShader();
-            }
+        auto mesh = m_asset_bank->getAsset<Mesh>(rc->mesh);
+        if (!mesh) {
+            return;
+        }
 
-            int texture_count = 0;
-
-            shader->loadMat4("model", tc->getModelMatrix());
-
-            if (rc->material != m_current_material) {
-
-                m_current_material = rc->material;
-
-                //TODO: Can we do better ?
-                for (const auto& [name, value] : material->getAllUniforms()) {
-                    if (std::holds_alternative<float>(value)) {
-                        auto v = std::get<float>(value);
-                        shader->loadFloat(name, v);
-                    } else if (!std::holds_alternative<AssetUID>(value) && std::holds_alternative<int>(value)) {
-                        auto v = std::get<int>(value);
-                        shader->loadInt(name, v);
-                    } else if (std::holds_alternative<AssetUID>(value)) {
-                        auto v = std::get<AssetUID>(value);
-                        if (auto tex = m_asset_bank->getAsset<Texture2D>(v); tex) {
-                            tex->bind(texture_count);
-                            shader->loadInt(name, texture_count);
-                            texture_count++;
-                        }
-                    } else if (std::holds_alternative<Eigen::Vector2f>(value)) {
-                        auto& v = std::get<Eigen::Vector2f>(value);
-                        shader->loadFloat2(name, v);
-                    } else if (std::holds_alternative<Eigen::Vector3f>(value)) {
-                        auto& v = std::get<Eigen::Vector3f>(value);
-                        shader->loadFloat3(name, v);
-                    } else if (std::holds_alternative<Eigen::Vector4f>(value)) {
-                        auto& v = std::get<Eigen::Vector4f>(value);
-                        shader->loadFloat4(name, v);
-                    } else if (std::holds_alternative<Eigen::Matrix4f>(value)) {
-                        auto& v = std::get<Eigen::Matrix4f>(value);
-                        shader->loadMat4(name, v);
-                    } else {
-                        throw std::runtime_error("Uniform type not implemented");
-                    }
+        std::unordered_map<AssetUID, std::shared_ptr<Texture>> texs;
+        for (const auto& [name, value] : material->getAllUniforms()) {
+            if (std::holds_alternative<AssetUID>(value)) {
+                auto v = std::get<AssetUID>(value);
+                if (auto tex = m_asset_bank->getAsset<Texture2D>(v); tex) {
+                    texs.try_emplace(v, tex);
                 }
             }
+        }
 
-            if (m_current_mesh != rc->mesh) {
-                m_current_mesh = rc->mesh;
-                auto va = mesh->getVertexArray();
-                va->bind();
-                va->getIndexBuffer()->bind();
-            }
-
-            m_api->renderVertexArray(mesh->getVertexArray());
-        });
+        m_render_commands.push_back(RenderCommand{.mesh = mesh,
+                                                  .material = material,
+                                                  .shader = shader,
+                                                  .textures = texs,
+                                                  .model_matrix = tc->getModelMatrix(),
+                                                  .faceCulling = true,
+                                                  .depthTest = true});
     }
 }
 
 void ForwardRenderer::render() {
-    if (m_skybox != NO_ASSET_ID) {
-        m_api->setBackfaceCulling(false);
-        m_api->setDepthMask(false);
-        auto skybox = m_registry->getComponent<SkyboxComponent>(m_skybox);
-        auto shader = m_asset_bank->getAsset<Shader>("__ice_skybox_shader");
-        shader->bind();
-        if (skybox->texture != NO_ASSET_ID) {
-            m_asset_bank->getAsset<TextureCube>(skybox->texture)->bind(0);
-        }
-        auto vao = m_asset_bank->getAsset<Mesh>("cube")->getVertexArray();
-        vao->bind();
-        vao->getIndexBuffer()->bind();
-        m_api->renderVertexArray(vao);
-    }
-    m_api->setBackfaceCulling(true);
-    m_api->setDepthMask(true);
-    for (const auto& cmd : m_render_commands) {
-        cmd();
-    }
+    
 }
 
 void ForwardRenderer::endFrame() {
     m_api->checkAndLogErrors();
     //TODO: Cleanup and restore state
-    m_render_commands.clear();
-    m_current_material = 0;
-    m_current_mesh = 0;
-    m_current_shader = 0;
+    m_render_commands.clear();;
     if (this->target != nullptr)
         this->target->unbind();
 }

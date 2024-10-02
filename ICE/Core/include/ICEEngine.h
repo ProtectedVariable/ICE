@@ -2,8 +2,7 @@
 // Created by Thomas Ibanez on 25.11.20.
 //
 
-#ifndef ICE_ICEENGINE_H
-#define ICE_ICEENGINE_H
+#pragma once
 
 #include <AssetBank.h>
 #include <EngineConfig.h>
@@ -63,6 +62,7 @@ class ICEEngine {
     std::shared_ptr<RendererAPI> api;
     std::shared_ptr<Framebuffer> internalFB;
     std::shared_ptr<Framebuffer> m_target_fb = nullptr;
+    std::shared_ptr<Window> m_window;
 
     std::shared_ptr<Camera> camera;
     std::shared_ptr<Project> project = nullptr;
@@ -71,5 +71,3 @@ class ICEEngine {
     Registry registry;
 };
 }  // namespace ICE
-
-#endif  //ICE_ICEENGINE_H

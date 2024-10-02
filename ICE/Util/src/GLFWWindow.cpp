@@ -34,6 +34,11 @@ GLFWWindow::GLFWWindow(int width, int height, const std::string& title) {
     m_keyboard_handler = std::make_shared<GLFWKeyboardHandler>(*this);
 
     glfwSetWindowUserPointer(m_handle, this);
+
+    glfwSetWindowSizeCallback(m_handle, [](GLFWwindow* w, int width, int height) {
+        GLFWWindow* self = (GLFWWindow*) glfwGetWindowUserPointer(w);
+        self->windowResized(width, height);
+    });
 }
 
 std::pair<std::shared_ptr<MouseHandler>, std::shared_ptr<KeyboardHandler>> GLFWWindow::getInputHandlers() const {
@@ -66,4 +71,13 @@ void GLFWWindow::setSwapInterval(int interval) {
 void GLFWWindow::makeContextCurrent() {
     glfwMakeContextCurrent(m_handle);
 }
+
+void GLFWWindow::setResizeCallback(const WindowResizeCallback& callback) {
+    m_resize_callback = callback;
+}
+
+void GLFWWindow::windowResized(int w, int h) const {
+    m_resize_callback(w, h);
+}
+
 }  // namespace ICE
