@@ -20,13 +20,18 @@ class GLFWWindow : public Window {
     void setSwapInterval(int interval) override;
     void makeContextCurrent() override;
     void setResizeCallback(const WindowResizeCallback& callback) override;
-    void windowResized(int w, int h) const;
+    std::pair<int, int> getSize() const override;
+
+    void windowResized(int w, int h);
 
    private:
     GLFWwindow* m_handle;
+    int m_width;
+    int m_height;
     std::shared_ptr<MouseHandler> m_mouse_handler;
     std::shared_ptr<KeyboardHandler> m_keyboard_handler;
     WindowResizeCallback m_resize_callback = [](int, int) {
     };
+
 };
 }  // namespace ICE

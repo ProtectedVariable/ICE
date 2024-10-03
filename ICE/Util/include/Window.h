@@ -22,5 +22,6 @@ class Window {
     virtual void setSwapInterval(int interval) = 0;
     virtual void makeContextCurrent() = 0;
     virtual void setResizeCallback(const WindowResizeCallback &callback) = 0;
+    virtual std::pair<int, int> getSize() const = 0;
 };
 }  // namespace ICE

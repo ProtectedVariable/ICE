@@ -1,16 +1,18 @@
 #include "GeometryPass.h"
 
 namespace ICE {
-GeometryPass::GeometryPass(const std::shared_ptr<RendererAPI> &api, const GraphicsFactory& factory, const FrameBufferFormat& format) : m_api(api) {
-    m_framebuffer = factory.createFramebuffer(format);
+GeometryPass::GeometryPass(const std::shared_ptr<RendererAPI>& api, const std::shared_ptr<GraphicsFactory>& factory, const FrameBufferFormat& format)
+    : m_api(api) {
+    m_framebuffer = factory->createFramebuffer(format);
 }
 
 void GeometryPass::execute() {
     m_framebuffer->bind();
+    m_api->clear();
     std::shared_ptr<Shader> current_shader;
     std::shared_ptr<Material> current_material;
     std::shared_ptr<Mesh> current_mesh;
-    for (const auto& command : m_render_queue.value()) {
+    for (const auto& command : *m_render_queue) {
         auto& shader = command.shader;
         auto& material = command.material;
         auto& mesh = command.mesh;
@@ -18,7 +20,7 @@ void GeometryPass::execute() {
         m_api->setBackfaceCulling(command.faceCulling);
         m_api->setDepthTest(command.depthTest);
 
-        if(shader != current_shader) {
+        if (shader != current_shader) {
             shader->bind();
             current_shader = shader;
         }
@@ -69,6 +71,14 @@ void GeometryPass::execute() {
         shader->loadMat4("model", command.model_matrix);
         m_api->renderVertexArray(mesh->getVertexArray());
     }
+}
+
+std::shared_ptr<Framebuffer> GeometryPass::getResult() const {
+    return m_framebuffer;
+}
+
+void GeometryPass::resize(int w, int h) {
+    m_framebuffer->resize(w, h);
 }
 
 }  // namespace ICE

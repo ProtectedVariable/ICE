@@ -14,14 +14,27 @@
 
 #include <unordered_set>
 
+#include "RenderData.h"
+
 namespace ICE {
 
-ForwardRenderer::ForwardRenderer(const std::shared_ptr<RendererAPI>& api, const std::shared_ptr<Registry>& registry,
-                                 const std::shared_ptr<AssetBank>& assetBank)
+ForwardRenderer::ForwardRenderer(const std::shared_ptr<RendererAPI>& api, const std::shared_ptr<GraphicsFactory>& factory,
+                                 const std::shared_ptr<Registry>& registry, const std::shared_ptr<AssetBank>& assetBank)
     : m_api(api),
       m_registry(registry),
       m_asset_bank(assetBank),
-      m_geometry_pass(api, {
+      m_geometry_pass(api, factory, {1, 1, 1}) {
+
+    m_quad_vao = factory->createVertexArray();
+    auto quad_vertex_vbo = factory->createVertexBuffer();
+    quad_vertex_vbo->putData(full_quad_v.data(), full_quad_v.size() * sizeof(float));
+    m_quad_vao->pushVertexBuffer(quad_vertex_vbo, 3);
+    auto quad_uv_vbo = factory->createVertexBuffer();
+    quad_uv_vbo->putData(full_quad_tx.data(), full_quad_tx.size() * sizeof(float));
+    m_quad_vao->pushVertexBuffer(quad_uv_vbo, 2);
+    auto quad_ibo = factory->createIndexBuffer();
+    quad_ibo->putData(full_quad_idx.data(), full_quad_idx.size() * sizeof(int));
+    m_quad_vao->setIndexBuffer(quad_ibo);
 }
 
 void ForwardRenderer::submit(Entity e) {
@@ -148,16 +161,31 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
                                                   .faceCulling = true,
                                                   .depthTest = true});
     }
+
+    m_geometry_pass.submit(&m_render_commands);
 }
 
 void ForwardRenderer::render() {
+    m_geometry_pass.execute();
+    auto result = m_geometry_pass.getResult();
+
+    //Final pass, render the last result to the screen
+    m_api->bindDefaultFramebuffer();
+    auto shader = m_asset_bank->getAsset<Shader>(AssetPath::WithTypePrefix<Shader>("__ice__lastpass_shader"));
     
+    shader->bind();
+    result->bindAttachment(0);
+    shader->loadInt("uTexture", 0);
+    m_quad_vao->bind();
+    m_quad_vao->getIndexBuffer()->bind();
+    m_api->renderVertexArray(m_quad_vao);
 }
 
 void ForwardRenderer::endFrame() {
     m_api->checkAndLogErrors();
     //TODO: Cleanup and restore state
-    m_render_commands.clear();;
+    m_render_commands.clear();
+
     if (this->target != nullptr)
         this->target->unbind();
 }
@@ -172,9 +200,15 @@ void ForwardRenderer::resize(uint32_t width, uint32_t height) {
         target->resize(width, height);
     }
     m_api->setViewport(0, 0, width, height);
+    m_geometry_pass.resize(width, height);
 }
 
 void ForwardRenderer::setClearColor(Eigen::Vector4f clearColor) {
     m_api->setClearColor(clearColor.x(), clearColor.y(), clearColor.z(), clearColor.w());
 }
+
+void ForwardRenderer::setViewport(int x, int y, int w, int h) {
+    m_api->setViewport(x, y, w, h);
+}
+
 }  // namespace ICE

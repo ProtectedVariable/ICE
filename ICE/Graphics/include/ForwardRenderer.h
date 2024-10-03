@@ -21,7 +21,8 @@
 namespace ICE {
 class ForwardRenderer : public Renderer {
    public:
-    ForwardRenderer(const std::shared_ptr<RendererAPI>& api, const std::shared_ptr<Registry>& registry, const std::shared_ptr<AssetBank>& assetBank);
+    ForwardRenderer(const std::shared_ptr<RendererAPI>& api, const std::shared_ptr<GraphicsFactory>& factory,
+                    const std::shared_ptr<Registry>& registry, const std::shared_ptr<AssetBank>& assetBank);
 
     void submit(Entity e) override;
     void remove(Entity e) override;
@@ -37,6 +38,7 @@ class ForwardRenderer : public Renderer {
     void resize(uint32_t width, uint32_t height) override;
 
     void setClearColor(Eigen::Vector4f clearColor) override;
+    void setViewport(int x, int y, int w, int h) override;
 
    private:
     std::shared_ptr<RendererAPI> m_api;
@@ -50,6 +52,8 @@ class ForwardRenderer : public Renderer {
     AssetUID m_skybox = NO_ASSET_ID;
 
     GeometryPass m_geometry_pass;
+
+    std::shared_ptr<VertexArray> m_quad_vao;
 
     RendererConfig config;
 };

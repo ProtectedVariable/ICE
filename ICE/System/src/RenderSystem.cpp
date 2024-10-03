@@ -45,4 +45,9 @@ void RenderSystem::setCamera(const std::shared_ptr<Camera> &camera) {
 void RenderSystem::setTarget(const std::shared_ptr<Framebuffer> &fb) {
     m_renderer->setTarget(fb);
 }
+
+void RenderSystem::setViewport(int x, int y, int w, int h) {
+    m_renderer->resize(w, h);
+}
+
 }  // namespace ICE

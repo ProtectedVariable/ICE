@@ -16,12 +16,17 @@ ICEEngine::ICEEngine() : camera(std::make_shared<PerspectiveCamera>(60, 16.f / 9
 
 void ICEEngine::initialize(const std::shared_ptr<GraphicsFactory> &graphics_factory, const std::shared_ptr<Window> &window) {
     Logger::Log(Logger::INFO, "Core", "Engine starting up...");
-    m_window = window;
     m_graphics_factory = graphics_factory;
+    m_window = window;
+    m_window->setSwapInterval(1);
+    m_window->setResizeCallback([this](int w, int h) {
+        if (project) {
+            project->getCurrentScene()->getRegistry()->getSystem<RenderSystem>()->setViewport(0, 0, w, h);
+        }
+    });
     ctx = graphics_factory->createContext(m_window);
     ctx->initialize();
     api = graphics_factory->createRendererAPI();
-    m_window->setSwapInterval(1);
     api->initialize();
     internalFB = graphics_factory->createFramebuffer({720, 720, 1});
 }
@@ -29,9 +34,8 @@ void ICEEngine::initialize(const std::shared_ptr<GraphicsFactory> &graphics_fact
 void ICEEngine::step(const std::shared_ptr<Scene> &scene) {
     auto render_system = project->getCurrentScene()->getRegistry()->getSystem<RenderSystem>();
     render_system->setTarget(m_target_fb);
-    render_system->set
-
     project->getCurrentScene()->getRegistry()->updateSystems(0.0);
+    m_window->swapBuffers();
 }
 
 std::shared_ptr<Camera> ICEEngine::getCamera() {
@@ -92,13 +96,15 @@ void ICEEngine::setProject(const std::shared_ptr<Project> &project) {
     this->camera->getPosition() = project->getCameraPosition();
     this->camera->getRotation() = project->getCameraRotation();
 
-    auto renderer = std::make_shared<ForwardRenderer>(api, project->getCurrentScene()->getRegistry(), project->getAssetBank());
+    auto renderer = std::make_shared<ForwardRenderer>(api, m_graphics_factory, project->getCurrentScene()->getRegistry(), project->getAssetBank());
     m_rendersystem = std::make_shared<RenderSystem>();
     m_rendersystem->setCamera(camera);
     m_rendersystem->setRenderer(renderer);
     systems.push_back(m_rendersystem);
     project->getCurrentScene()->getRegistry()->addSystem(m_rendersystem);
-    //Skybox::Initialize();
+
+    auto [w, h] = m_window->getSize();
+    renderer->resize(w, h);
 }
 
 EngineConfig &ICEEngine::getConfig() {
