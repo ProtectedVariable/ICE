@@ -2,11 +2,24 @@
 // Created by Thomas Ibanez on 19.11.20.
 //
 
-#ifndef ICE_RENDERCOMMAND_H
-#define ICE_RENDERCOMMAND_H
+#pragma once
+
+#include <memory>
+#include <unordered_map>
+
+#include "Material.h"
+#include "Mesh.h"
+#include "Shader.h"
 
 namespace ICE {
+struct RenderCommand {
+    std::shared_ptr<Mesh> mesh;
+    std::shared_ptr<Material> material;
+    std::shared_ptr<Shader> shader;
+    std::unordered_map<AssetUID, std::shared_ptr<Texture>> textures;
+    Eigen::Matrix4f model_matrix;
 
-}
-
-#endif //ICE_RENDERCOMMAND_H
+    bool faceCulling = true;
+    bool depthTest = true;
+};
+}  // namespace ICE

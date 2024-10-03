@@ -25,6 +25,7 @@ class RenderSystem : public System {
     void setCamera(const std::shared_ptr<Camera> &camera);
 
     void setTarget(const std::shared_ptr<Framebuffer> &fb);
+    void setViewport(int x, int y, int w, int h);
 
    private:
     std::shared_ptr<Renderer> m_renderer;

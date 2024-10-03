@@ -27,5 +27,6 @@ class Renderer {
     virtual void setTarget(const std::shared_ptr<Framebuffer> &target) = 0;
     virtual void resize(uint32_t width, uint32_t height) = 0;
     virtual void setClearColor(Eigen::Vector4f clearColor) = 0;
+    virtual void setViewport(int x, int y, int w, int h) = 0;
 };
 }  // namespace ICE

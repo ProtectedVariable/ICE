@@ -13,13 +13,16 @@
 
 #include "Camera.h"
 #include "Framebuffer.h"
+#include "GeometryPass.h"
+#include "RenderCommand.h"
 #include "Renderer.h"
 #include "RendererConfig.h"
 
 namespace ICE {
 class ForwardRenderer : public Renderer {
    public:
-    ForwardRenderer(const std::shared_ptr<RendererAPI>& api, const std::shared_ptr<Registry>& registry, const std::shared_ptr<AssetBank>& assetBank);
+    ForwardRenderer(const std::shared_ptr<RendererAPI>& api, const std::shared_ptr<GraphicsFactory>& factory,
+                    const std::shared_ptr<Registry>& registry, const std::shared_ptr<AssetBank>& assetBank);
 
     void submit(Entity e) override;
     void remove(Entity e) override;
@@ -35,6 +38,7 @@ class ForwardRenderer : public Renderer {
     void resize(uint32_t width, uint32_t height) override;
 
     void setClearColor(Eigen::Vector4f clearColor) override;
+    void setViewport(int x, int y, int w, int h) override;
 
    private:
     std::shared_ptr<RendererAPI> m_api;
@@ -42,15 +46,14 @@ class ForwardRenderer : public Renderer {
     std::shared_ptr<AssetBank> m_asset_bank;
 
     std::shared_ptr<Framebuffer> target = nullptr;
-    std::vector<std::function<void(void)>> m_render_commands;
+    std::vector<RenderCommand> m_render_commands;
     std::vector<Entity> m_render_queue;
     std::vector<Entity> m_lights;
     AssetUID m_skybox = NO_ASSET_ID;
 
-    //State
-    AssetUID m_current_shader = 0;
-    AssetUID m_current_material = 0;
-    AssetUID m_current_mesh = 0;
+    GeometryPass m_geometry_pass;
+
+    std::shared_ptr<VertexArray> m_quad_vao;
 
     RendererConfig config;
 };

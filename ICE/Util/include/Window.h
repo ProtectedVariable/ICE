@@ -7,6 +7,8 @@
 #include "MouseHandler.h"
 
 namespace ICE {
+using WindowResizeCallback = std::function<void(int, int)>;
+
 class Window {
    public:
     virtual ~Window() {}
@@ -19,5 +21,7 @@ class Window {
     virtual void getFramebufferSize(int* width, int* height) = 0;
     virtual void setSwapInterval(int interval) = 0;
     virtual void makeContextCurrent() = 0;
+    virtual void setResizeCallback(const WindowResizeCallback &callback) = 0;
+    virtual std::pair<int, int> getSize() const = 0;
 };
 }  // namespace ICE
