@@ -37,3 +37,7 @@ add_custom_command(
             "${CMAKE_CURRENT_SOURCE_DIR}/cube.obj"
             "${CMAKE_CURRENT_BINARY_DIR}"
 )
+message(INFO ${CMAKE_CURRENT_SOURCE_DIR})
+message(INFO ${CMAKE_CURRENT_BINARY_DIR})
+
+

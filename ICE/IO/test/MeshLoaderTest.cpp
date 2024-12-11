@@ -6,6 +6,7 @@
 using namespace ICE;
 
 TEST(MeshLoaderTest, LoadFromObj) {
+    std::cout << std::filesystem::current_path() << std::endl;
     for (const auto &entry : std::filesystem::directory_iterator("."))
         std::cout << entry.path() << std::endl;
     auto gr_f = std::make_shared<NoneGraphicsFactory>();
