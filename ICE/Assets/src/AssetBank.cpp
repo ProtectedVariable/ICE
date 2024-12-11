@@ -5,7 +5,7 @@
 #include "AssetBank.h"
 
 #include <ICEException.h>
-#include <OBJLoader.h>
+#include <MeshLoader.h>
 
 #include "MaterialLoader.h"
 #include "MeshLoader.h"

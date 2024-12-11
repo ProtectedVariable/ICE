@@ -9,10 +9,8 @@ target_sources(${PROJECT_NAME} PRIVATE
     src/BufferUtils.cpp
 	src/ICEException.cpp
 	src/Logger.cpp
-	src/OBJLoader.cpp
 	src/WindowFactory.cpp
-	src/GLFWWindow.cpp
-)
+	src/GLFWWindow.cpp)
 
 target_link_libraries(${PROJECT_NAME}
 	PUBLIC

@@ -4,12 +4,41 @@
 
 #include "MeshLoader.h"
 
-#include <OBJLoader.h>
 #include <BufferUtils.h>
+#include <assimp/postprocess.h>
+#include <assimp/scene.h>
+
+#include <assimp/Importer.hpp>
 
 namespace ICE {
 std::shared_ptr<Mesh> MeshLoader::load(const std::vector<std::filesystem::path> &file) {
-    auto mesh = OBJLoader::loadFromOBJ(file[0].string());
+    Assimp::Importer importer;
+
+    const aiScene *scene = importer.ReadFile(
+        file[0].string(), aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType);
+
+    auto vertices = std::vector<Eigen::Vector3f>();
+    auto normals = std::vector<Eigen::Vector3f>();
+    auto uvs = std::vector<Eigen::Vector2f>();
+    auto indices = std::vector<Eigen::Vector3i>();
+    // Loop over faces(polygon)
+    auto mesh0 = scene->mMeshes[0];
+    for (int i = 0; i < mesh0->mNumVertices; i++) {
+        auto v = mesh0->mVertices[i];
+        auto n = mesh0->mNormals[i];
+        auto uv = mesh0->mTextureCoords[0][i];
+        vertices.emplace_back(v.x, v.y, v.z);
+        normals.emplace_back(n.x, n.y, n.z);
+        uvs.emplace_back(uv.x, uv.y);
+    }
+    for (int i = 0; i < mesh0->mNumFaces; i++) {
+        auto f = mesh0->mFaces[i];
+        assert(f.mNumIndices == 3);
+        indices.emplace_back(f.mIndices[0], f.mIndices[1], f.mIndices[2]);
+    }
+
+    auto mesh = std::make_shared<Mesh>(vertices, normals, uvs, indices);
+
     mesh->setSources(file);
 
     auto vertexArray = graphics_factory->createVertexArray();

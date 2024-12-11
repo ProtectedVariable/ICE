@@ -20,6 +20,7 @@ target_link_libraries(${PROJECT_NAME}
     scene
     assets
     graphics_api
+    assimp
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC
