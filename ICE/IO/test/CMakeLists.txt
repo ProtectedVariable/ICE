@@ -35,9 +35,6 @@ add_custom_command(
     TARGET MeshLoaderTestSuite POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
             "${CMAKE_CURRENT_SOURCE_DIR}/cube.obj"
-            "${CMAKE_CURRENT_BINARY_DIR}"
+            $<TARGET_FILE_DIR:MeshLoaderTestSuite>
 )
-message(INFO ${CMAKE_CURRENT_SOURCE_DIR})
-message(INFO ${CMAKE_CURRENT_BINARY_DIR})
-
 
