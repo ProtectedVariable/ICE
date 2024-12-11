@@ -1,7 +1,7 @@
+#include <NoneGraphicsFactory.h>
 #include <gtest/gtest.h>
 
 #include "MeshLoader.h"
-#include <NoneGraphicsFactory.h>
 
 using namespace ICE;
 

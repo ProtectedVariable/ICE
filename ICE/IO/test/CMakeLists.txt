@@ -31,6 +31,10 @@ target_link_libraries(MeshLoaderTestSuite
         gtest_main
         io)
 
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/cube.obj DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-
+add_custom_command(
+    TARGET MeshLoaderTestSuite POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+            "${CMAKE_CURRENT_SOURCE_DIR}/cube.obj"
+            $<TARGET_FILE_DIR:MeshLoaderTestSuite>
+)
 
