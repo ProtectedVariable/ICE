@@ -21,9 +21,20 @@ set(ICE_LIBS assets core graphics graphics_api io math platform scene storage sy
 add_library(${PROJECT_NAME} INTERFACE)
 
 if(APPLE)
-	target_link_libraries(${PROJECT_NAME} INTERFACE glfw ${COCOA_LIBRARY} ${OPENGL_LIBRARY} ${IOKIT_LIBRARY} ${ICE_LIBS})
+	target_link_libraries(${PROJECT_NAME} 
+		INTERFACE 
+		glfw
+		${COCOA_LIBRARY} 
+		${OPENGL_LIBRARY} 
+		${IOKIT_LIBRARY} 
+		${ICE_LIBS}
+	)
 elseif(WIN32)
-	target_link_libraries(${PROJECT_NAME} INTERFACE glfw ${ICE_LIBS})
+	target_link_libraries(${PROJECT_NAME} 
+		INTERFACE 
+		glfw
+		${ICE_LIBS}
+	)
 else()
 	find_package(GTK REQUIRED)
 	include_directories(${GTK3_INCLUDE_DIRS})
@@ -34,5 +45,11 @@ else()
 	find_package(OpenGL REQUIRED)
 	include_directories(${OPENGL_INCLUDE_DIRS})
 
-	target_link_libraries(${PROJECT_NAME} INTERFACE glfw ${GTK3_LIBRARIES} ${OPENGL_LIBRARIES} stdc++fs)
+	target_link_libraries(${PROJECT_NAME} 
+		INTERFACE 
+		glfw 
+		${GTK3_LIBRARIES} 
+		${OPENGL_LIBRARIES} 
+		stdc++fs
+	)
 endif()

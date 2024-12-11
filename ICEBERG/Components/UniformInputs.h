@@ -111,6 +111,32 @@ class UniformInputs {
         ImGui::PopID();
     }
 
+    void render(Eigen::Vector2f &v) {
+        ImGui::PushID(m_label.c_str());
+        ImGui::PushItemWidth(60);
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
+
+        ImGui::BeginGroup();
+        renderLabel("X", 0x990000FF);
+        if (ImGui::InputFloat("##X", &v.x())) {
+            m_callback(v);
+        }
+        ImGui::EndGroup();
+        ImGui::SameLine();
+
+        ImGui::BeginGroup();
+        renderLabel("Y", 0x9900FF00);
+        if (ImGui::InputFloat("##Y", &v.y())) {
+            m_callback(v);
+        }
+        ImGui::EndGroup();
+        ImGui::SameLine();
+
+        ImGui::PopStyleVar();
+        ImGui::PopItemWidth();
+        ImGui::PopID();
+    }
+
     void renderLabel(const char *text, uint32_t backgroundColor) {
         auto dl = ImGui::GetWindowDrawList();
         ImVec2 rectSize = ImGui::CalcTextSize(text);

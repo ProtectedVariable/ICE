@@ -6,7 +6,6 @@
 #include <ForwardRenderer.h>
 #include <GLFW/glfw3.h>
 #include <Logger.h>
-#include <OBJLoader.h>
 #include <PerspectiveCamera.h>
 #include <TransformComponent.h>
 
