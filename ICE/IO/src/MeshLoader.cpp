@@ -9,6 +9,7 @@
 #include <assimp/scene.h>
 
 #include <assimp/Importer.hpp>
+#include <cassert>
 
 namespace ICE {
 std::shared_ptr<Mesh> MeshLoader::load(const std::vector<std::filesystem::path> &file) {
