@@ -32,5 +32,3 @@ target_link_libraries(MeshLoaderTestSuite
         io)
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/cube.obj DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-
-
