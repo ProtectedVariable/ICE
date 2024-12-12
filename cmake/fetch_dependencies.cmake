@@ -11,6 +11,7 @@ FetchContent_MakeAvailable(googletest)
 
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
+message(STATUS "Fetching GLFW")
 include(FetchContent)
 FetchContent_Declare(
   GLFW
@@ -18,3 +19,12 @@ FetchContent_Declare(
   GIT_TAG master
 )
 FetchContent_MakeAvailable(GLFW)
+
+message(STATUS "Fetching Assimp")
+include(FetchContent)
+FetchContent_Declare(
+  Assimp
+  GIT_REPOSITORY https://github.com/assimp/assimp.git
+  GIT_TAG master
+)
+FetchContent_MakeAvailable(Assimp)
