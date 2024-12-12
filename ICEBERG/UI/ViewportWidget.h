@@ -55,9 +55,8 @@ class ViewportWidget : public Widget {
                 callback("lc_pressed");
             }
         }
-        ImVec2 view = ImGui::GetContentRegionAvail();
         callback("resize", window_width, window_height);
-        ImGuizmo::SetRect(pos.x, pos.y, view.x, view.y);
+        ImGuizmo::SetRect(pos.x, pos.y, window_width, window_height);
         ImGuizmo::SetDrawlist(ImGui::GetWindowDrawList());
         ImGui::End();
     }

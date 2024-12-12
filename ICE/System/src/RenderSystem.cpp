@@ -47,7 +47,9 @@ void RenderSystem::setTarget(const std::shared_ptr<Framebuffer> &fb) {
 }
 
 void RenderSystem::setViewport(int x, int y, int w, int h) {
-    m_renderer->resize(w, h);
+    if (w > 0 && h > 0) {
+        m_renderer->resize(w, h);
+    }
 }
 
 }  // namespace ICE
