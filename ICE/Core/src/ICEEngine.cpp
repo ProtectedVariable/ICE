@@ -34,7 +34,6 @@ void ICEEngine::step(const std::shared_ptr<Scene> &scene) {
     auto render_system = project->getCurrentScene()->getRegistry()->getSystem<RenderSystem>();
     render_system->setTarget(m_target_fb);
     project->getCurrentScene()->getRegistry()->updateSystems(0.0);
-    m_window->swapBuffers();
 }
 
 std::shared_ptr<Camera> ICEEngine::getCamera() {

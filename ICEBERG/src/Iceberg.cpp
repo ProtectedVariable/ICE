@@ -17,7 +17,16 @@
 
 #include "Editor.h"
 #include "ProjectSelection.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
 
+__declspec(dllexport) unsigned long NvOptimusEnablement = 1;
+__declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
+
+#ifdef __cplusplus
+}
+#endif
 enum class UIState { PROJECT_SELECTION, EDITOR };
 
 class Iceberg {
@@ -47,8 +56,10 @@ class Iceberg {
                 m_engine->step(m_engine->getProject()->getCurrentScene());
             }
             ImGui::ShowDemoWindow();
+
             ImGui::Render();
 
+            m_engine->getApi()->bindDefaultFramebuffer();
             int display_w, display_h;
             m_window->getFramebufferSize(&display_w, &display_h);
             glViewport(0, 0, display_w, display_h);

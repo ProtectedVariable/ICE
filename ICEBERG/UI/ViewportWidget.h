@@ -32,7 +32,7 @@ class ViewportWidget : public Widget {
         ImGui::GetWindowDrawList()->AddImage((void *) texture_ptr, ImVec2(pos.x, pos.y), ImVec2(pos.x + window_width, pos.y + window_height),
                                              ImVec2(0, 1), ImVec2(1, 0));
 
-        //ImGuizmo::SetRect(pos.x, pos.y, window_width, window_height);
+
         auto drag = ImGui::GetMouseDragDelta(0);
         if (ImGui::IsWindowHovered()) {
             if (ImGui::IsMouseDragging(0)) {

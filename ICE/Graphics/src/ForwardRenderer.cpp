@@ -78,8 +78,6 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
         }
     });
 
-    m_api->clear();
-
     if (m_skybox != NO_ASSET_ID) {
         auto shader = m_asset_bank->getAsset<Shader>("__ice_skybox_shader");
         shader->bind();
@@ -170,9 +168,14 @@ void ForwardRenderer::render() {
     auto result = m_geometry_pass.getResult();
 
     //Final pass, render the last result to the screen
-    m_api->bindDefaultFramebuffer();
+    if (!this->target) {
+        m_api->bindDefaultFramebuffer();
+    } else {
+        this->target->bind();
+    }
+    m_api->clear();
     auto shader = m_asset_bank->getAsset<Shader>(AssetPath::WithTypePrefix<Shader>("lastpass"));
-    
+
     shader->bind();
     result->bindAttachment(0);
     shader->loadInt("uTexture", 0);
