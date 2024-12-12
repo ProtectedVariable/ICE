@@ -8,6 +8,7 @@ GeometryPass::GeometryPass(const std::shared_ptr<RendererAPI>& api, const std::s
 
 void GeometryPass::execute() {
     m_framebuffer->bind();
+    m_api->setViewport(0, 0, m_framebuffer->getFormat().width, m_framebuffer->getFormat().height);
     m_api->clear();
     std::shared_ptr<Shader> current_shader;
     std::shared_ptr<Material> current_material;

@@ -33,6 +33,7 @@ void ICEEngine::initialize(const std::shared_ptr<GraphicsFactory> &graphics_fact
 void ICEEngine::step(const std::shared_ptr<Scene> &scene) {
     auto render_system = project->getCurrentScene()->getRegistry()->getSystem<RenderSystem>();
     render_system->setTarget(m_target_fb);
+    render_system->setCamera(camera);
     project->getCurrentScene()->getRegistry()->updateSystems(0.0);
 }
 

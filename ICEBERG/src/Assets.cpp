@@ -38,7 +38,7 @@ void* Assets::createThumbnail(const ICE::AssetBankEntry& entry) {
     camera->up(1);
     camera->pitch(-30);
     render_system->setCamera(camera);
-
+    render_system->setViewport(0, 0, 256, 256);
     s.getRegistry()->addSystem(render_system);
 
     auto entity = s.createEntity();
