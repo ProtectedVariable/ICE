@@ -28,11 +28,8 @@ class ViewportWidget : public Widget {
         ImVec2 pos = ImGui::GetCursorScreenPos();
         const float window_width = ImGui::GetContentRegionAvail().x;
         const float window_height = ImGui::GetContentRegionAvail().y;
+        ImGui::Image(texture_ptr, {window_width, window_height}, ImVec2(0, 1), ImVec2(1, 0));
 
-        ImGui::GetWindowDrawList()->AddImage((void *) texture_ptr, ImVec2(pos.x, pos.y), ImVec2(pos.x + window_width, pos.y + window_height),
-                                             ImVec2(0, 1), ImVec2(1, 0));
-
-        //ImGuizmo::SetRect(pos.x, pos.y, window_width, window_height);
         auto drag = ImGui::GetMouseDragDelta(0);
         if (ImGui::IsWindowHovered()) {
             if (ImGui::IsMouseDragging(0)) {
@@ -58,9 +55,8 @@ class ViewportWidget : public Widget {
                 callback("lc_pressed");
             }
         }
-        ImVec2 view = ImGui::GetContentRegionAvail();
-        callback("resize", view.x, view.y);
-        ImGuizmo::SetRect(pos.x, pos.y, view.x, view.y);
+        callback("resize", window_width, window_height);
+        ImGuizmo::SetRect(pos.x, pos.y, window_width, window_height);
         ImGuizmo::SetDrawlist(ImGui::GetWindowDrawList());
         ImGui::End();
     }

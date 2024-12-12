@@ -20,8 +20,8 @@ Viewport::Viewport(const std::shared_ptr<ICE::ICEEngine> &engine) : m_engine(eng
         }
     });
     ui.registerCallback("resize", [this](float width, float height) {
-        m_engine->getInternalFramebuffer()->resize(width, height);
         m_engine->getCamera()->resize(width, height);
+        m_engine->getProject()->getCurrentScene()->getRegistry()->getSystem<ICE::RenderSystem>()->setViewport(0, 0, width, height);
     });
     ui.registerCallback("translate_clicked", [this] { m_guizmo_mode = ImGuizmo::OPERATION::TRANSLATE; });
     ui.registerCallback("rotate_clicked", [this] { m_guizmo_mode = ImGuizmo::OPERATION::ROTATE; });
@@ -29,7 +29,7 @@ Viewport::Viewport(const std::shared_ptr<ICE::ICEEngine> &engine) : m_engine(eng
 }
 
 bool Viewport::update() {
-    ui.setTexture(m_engine->getInternalFramebuffer()->getTexture());
+    ui.setTexture(static_cast<char *>(0) + m_engine->getInternalFramebuffer()->getTexture());
     ui.render();
 
     ImGuizmo::Enable(true);

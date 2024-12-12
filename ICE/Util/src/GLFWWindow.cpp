@@ -8,7 +8,7 @@
 
 namespace ICE {
 
-GLFWWindow::GLFWWindow(int width, int height, const std::string& title) {
+GLFWWindow::GLFWWindow(int width, int height, const std::string& title) : m_width(width), m_height(height) {
     if (!glfwInit())
         throw ICEException("Couldn't init GLFW");
 // Decide GL+GLSL versions
@@ -34,6 +34,11 @@ GLFWWindow::GLFWWindow(int width, int height, const std::string& title) {
     m_keyboard_handler = std::make_shared<GLFWKeyboardHandler>(*this);
 
     glfwSetWindowUserPointer(m_handle, this);
+
+    glfwSetWindowSizeCallback(m_handle, [](GLFWwindow* w, int width, int height) {
+        GLFWWindow* self = (GLFWWindow*) glfwGetWindowUserPointer(w);
+        self->windowResized(width, height);
+    });
 }
 
 std::pair<std::shared_ptr<MouseHandler>, std::shared_ptr<KeyboardHandler>> GLFWWindow::getInputHandlers() const {
@@ -66,4 +71,19 @@ void GLFWWindow::setSwapInterval(int interval) {
 void GLFWWindow::makeContextCurrent() {
     glfwMakeContextCurrent(m_handle);
 }
+
+void GLFWWindow::setResizeCallback(const WindowResizeCallback& callback) {
+    m_resize_callback = callback;
+}
+
+std::pair<int, int> GLFWWindow::getSize() const {
+    return {m_width, m_height};
+}
+
+void GLFWWindow::windowResized(int w, int h) {
+    m_width = w;
+    m_height = h;
+    m_resize_callback(w, h);
+}
+
 }  // namespace ICE

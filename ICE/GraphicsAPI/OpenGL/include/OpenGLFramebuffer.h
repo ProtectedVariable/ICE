@@ -2,35 +2,33 @@
 // Created by Thomas Ibanez on 27.11.20.
 //
 
-#ifndef ICE_OPENGLFRAMEBUFFER_H
-#define ICE_OPENGLFRAMEBUFFER_H
+#pragma once
 
+#include <Eigen/Core>
+#include <Framebuffer.h>
 #include <GL/gl3w.h>
 #include <GLFW/glfw3.h>
-#include <Framebuffer.h>
-#include <Eigen/src/Core/Matrix.h>
 
 namespace ICE {
-    class OpenGLFramebuffer : public Framebuffer {
-    public:
-        OpenGLFramebuffer(FrameBufferFormat fmt);
+class OpenGLFramebuffer : public Framebuffer {
+   public:
+    OpenGLFramebuffer(FrameBufferFormat fmt);
 
-        void bind() override;
+    void bind() override;
 
-        void unbind() override;
+    void unbind() override;
 
-        void resize(int width, int height) override;
+    void resize(int width, int height) override;
 
-        void *getTexture() override;
+    int getTexture() override;
 
-        Eigen::Vector4i readPixel(int x, int y) override;
+    void bindAttachment(int slot) const override;
 
-    private:
-        GLuint uid;
-        GLuint texture;
-        GLuint depth;
-    };
-}
+    Eigen::Vector4i readPixel(int x, int y) override;
 
-
-#endif //ICE_OPENGLFRAMEBUFFER_H
+   private:
+    GLuint uid;
+    GLuint texture;
+    GLuint depth;
+};
+}  // namespace ICE

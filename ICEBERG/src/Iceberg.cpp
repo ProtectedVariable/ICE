@@ -47,8 +47,10 @@ class Iceberg {
                 m_engine->step(m_engine->getProject()->getCurrentScene());
             }
             ImGui::ShowDemoWindow();
+
             ImGui::Render();
 
+            m_engine->getApi()->bindDefaultFramebuffer();
             int display_w, display_h;
             m_window->getFramebufferSize(&display_w, &display_h);
             glViewport(0, 0, display_w, display_h);

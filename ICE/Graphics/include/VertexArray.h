@@ -24,6 +24,7 @@ class VertexArray {
     virtual std::shared_ptr<IndexBuffer> getIndexBuffer() const = 0;
     virtual int getIndexCount() const = 0;
     virtual uint32_t getID() const = 0;
+
 };
 }  // namespace ICE
 

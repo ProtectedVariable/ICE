@@ -16,7 +16,8 @@ class Framebuffer {
     virtual void bind() = 0;
     virtual void unbind() = 0;
     virtual void resize(int width, int height) = 0;
-    virtual void* getTexture() = 0;
+    virtual int getTexture() = 0;
+    virtual void bindAttachment(int slot) const = 0;
     virtual Eigen::Vector4i readPixel(int x, int y) = 0;
 
     FrameBufferFormat getFormat() const { return format; }
