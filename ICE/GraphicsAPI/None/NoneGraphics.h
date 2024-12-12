@@ -42,6 +42,7 @@ class NoneFramebuffer : public Framebuffer {
     void unbind() override {}
     void resize(int width, int height) override {}
     int getTexture() override { return 0; }
+    void bindAttachment(int slot) const override{};
     Eigen::Vector4i readPixel(int x, int y) override { return Eigen::Vector4i(); }
 };
 
