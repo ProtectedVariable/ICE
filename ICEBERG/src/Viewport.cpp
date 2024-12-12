@@ -29,7 +29,7 @@ Viewport::Viewport(const std::shared_ptr<ICE::ICEEngine> &engine) : m_engine(eng
 }
 
 bool Viewport::update() {
-    ui.setTexture(m_engine->getInternalFramebuffer()->getTexture());
+    ui.setTexture(static_cast<char *>(0) + m_engine->getInternalFramebuffer()->getTexture());
     ui.render();
 
     ImGuizmo::Enable(true);

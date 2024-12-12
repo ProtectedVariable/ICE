@@ -171,7 +171,7 @@ void ForwardRenderer::render() {
 
     //Final pass, render the last result to the screen
     m_api->bindDefaultFramebuffer();
-    auto shader = m_asset_bank->getAsset<Shader>(AssetPath::WithTypePrefix<Shader>("__ice__lastpass_shader"));
+    auto shader = m_asset_bank->getAsset<Shader>(AssetPath::WithTypePrefix<Shader>("lastpass"));
     
     shader->bind();
     result->bindAttachment(0);

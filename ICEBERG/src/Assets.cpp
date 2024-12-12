@@ -31,7 +31,7 @@ void* Assets::createThumbnail(const ICE::AssetBankEntry& entry) {
     ICE::Scene s("preview_scene");
 
     auto render_system = std::make_shared<ICE::RenderSystem>();
-    render_system->setRenderer(std::make_shared<ICE::ForwardRenderer>(m_engine->getApi(), s.getRegistry(), m_engine->getAssetBank()));
+    render_system->setRenderer(std::make_shared<ICE::ForwardRenderer>(m_engine->getApi(), m_g_factory, s.getRegistry(), m_engine->getAssetBank()));
 
     auto camera = std::make_shared<ICE::PerspectiveCamera>(60.0, 1.0, 0.01, 10000.0);
     camera->backward(2);
@@ -60,7 +60,7 @@ void* Assets::createThumbnail(const ICE::AssetBankEntry& entry) {
     render_system->setTarget(preview_framebuffer);
     render_system->update(1.0f);
 
-    return preview_framebuffer->getTexture();
+    return static_cast<char*>(0) + preview_framebuffer->getTexture();
 }
 
 void Assets::rebuildViewer() {

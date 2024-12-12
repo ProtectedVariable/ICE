@@ -51,6 +51,8 @@ bool Project::CreateDirectories() {
     copyAssetFile("Shaders", "normal", "Assets/Shaders/normal.fs");
     copyAssetFile("Shaders", "picking", "Assets/Shaders/picking.vs");
     copyAssetFile("Shaders", "picking", "Assets/Shaders/picking.fs");
+    copyAssetFile("Shaders", "lastpass", "Assets/Shaders/lastpass.vs");
+    copyAssetFile("Shaders", "lastpass", "Assets/Shaders/lastpass.fs");
     copyAssetFile("Cubemaps", "skybox", "Assets/Textures/skybox.png");
     copyAssetFile("Materials", "base_mat", "Assets/Materials/base_mat.icm");
 
@@ -59,6 +61,7 @@ bool Project::CreateDirectories() {
     assetBank->addAsset<Shader>("solid", {m_shaders_directory / "solid.vs", m_shaders_directory / "solid.fs"});
     assetBank->addAsset<Shader>("phong", {m_shaders_directory / "phong.vs", m_shaders_directory / "phong.fs"});
     assetBank->addAsset<Shader>("normal", {m_shaders_directory / "normal.vs", m_shaders_directory / "normal.fs"});
+    assetBank->addAsset<Shader>("lastpass", {m_shaders_directory / "lastpass.vs", m_shaders_directory / "lastpass.fs"});
     assetBank->addAsset<Shader>("__ice__picking_shader", {m_shaders_directory / "picking.vs", m_shaders_directory / "picking.fs"});
     assetBank->addAsset<TextureCube>("skybox", {m_cubemaps_directory / "skybox.png"});
     assetBank->addAsset<Material>("base_mat", {m_materials_directory / "base_mat.icm"});
