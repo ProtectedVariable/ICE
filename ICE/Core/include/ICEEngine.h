@@ -22,7 +22,7 @@ class ICEEngine {
 
     void initialize(const std::shared_ptr<GraphicsFactory>& graphics_factor, const std::shared_ptr<Window>& window);
 
-    void step(const std::shared_ptr<Scene>& scene);
+    void step();
 
     Eigen::Vector4i getPickingTextureAt(int x, int y);
 
@@ -54,9 +54,6 @@ class ICEEngine {
     void importTexture(bool cubeMap);
 
    private:
-    std::shared_ptr<RenderSystem> m_rendersystem;
-    std::vector<std::shared_ptr<System>> systems;
-
     std::shared_ptr<GraphicsFactory> m_graphics_factory;
     std::shared_ptr<Context> ctx;
     std::shared_ptr<RendererAPI> api;

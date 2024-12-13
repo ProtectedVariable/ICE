@@ -44,7 +44,7 @@ class Iceberg {
             }
 
             if (m_state == UIState::EDITOR) {
-                m_engine->step(m_engine->getProject()->getCurrentScene());
+                m_engine->step();
             }
             ImGui::ShowDemoWindow();
 
