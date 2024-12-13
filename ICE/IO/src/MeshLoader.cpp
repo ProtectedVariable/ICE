@@ -16,7 +16,8 @@ std::shared_ptr<Mesh> MeshLoader::load(const std::vector<std::filesystem::path> 
     Assimp::Importer importer;
 
     const aiScene *scene = importer.ReadFile(
-        file[0].string(), aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType);
+        file[0].string(),
+        aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices);
 
     auto vertices = std::vector<Eigen::Vector3f>();
     auto normals = std::vector<Eigen::Vector3f>();
@@ -27,10 +28,15 @@ std::shared_ptr<Mesh> MeshLoader::load(const std::vector<std::filesystem::path> 
     for (int i = 0; i < mesh0->mNumVertices; i++) {
         auto v = mesh0->mVertices[i];
         auto n = mesh0->mNormals[i];
-        auto uv = mesh0->mTextureCoords[0][i];
+        Eigen::Vector2f uv(0, 0);
+        if (mesh0->mTextureCoords[0] != nullptr) {
+            auto uv_file = mesh0->mTextureCoords[0][i];
+            uv.x() = uv_file.x;
+            uv.y() = uv_file.y;
+        }
         vertices.emplace_back(v.x, v.y, v.z);
         normals.emplace_back(n.x, n.y, n.z);
-        uvs.emplace_back(uv.x, uv.y);
+        uvs.push_back(uv);
     }
     for (int i = 0; i < mesh0->mNumFaces; i++) {
         auto f = mesh0->mFaces[i];
