@@ -38,10 +38,10 @@ ForwardRenderer::ForwardRenderer(const std::shared_ptr<RendererAPI>& api, const 
 }
 
 void ForwardRenderer::submit(Entity e) {
-    if (m_registry->entityHasComponent<RenderComponent>(e)) {
+    if (std::find(m_render_queue.begin(), m_render_queue.end(), e) == m_render_queue.end() && m_registry->entityHasComponent<RenderComponent>(e)) {
         m_render_queue.emplace_back(e);
     }
-    if (m_registry->entityHasComponent<LightComponent>(e)) {
+    if (std::find(m_lights.begin(), m_lights.end(), e) == m_lights.end() && m_registry->entityHasComponent<LightComponent>(e)) {
         m_lights.emplace_back(e);
     }
     if (m_registry->entityHasComponent<SkyboxComponent>(e)) {
