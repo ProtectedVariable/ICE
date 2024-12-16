@@ -50,7 +50,7 @@ int main(void) {
     while (!window->shouldClose()) {
         window->pollEvents();
 
-        engine.step(scene);
+        engine.step();
     	
 		mat->setUniform("uAlbedo", Eigen::Vector3f(abs(sin(i / 100.0)), 0.5, 1));
         scene->getRegistry()->getComponent<TransformComponent>(entity)->rotation().y() = i;

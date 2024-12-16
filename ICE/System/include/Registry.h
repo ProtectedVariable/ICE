@@ -41,6 +41,11 @@ class Registry {
         systemManager.addSignature<RenderSystem>(signature);
     }
     ~Registry(){};
+    
+    template <typename T>
+    void registerCustomComponent() {
+        componentManager.registerComponent<T>();
+    }
 
     Entity createEntity() {
         Entity e = entityManager.createEntity();
