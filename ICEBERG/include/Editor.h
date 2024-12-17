@@ -4,6 +4,7 @@
 #include <UI/EditorWidget.h>
 #include <UI/NewMaterialWidget.h>
 #include <UI/NewSceneWidget.h>
+#include <UI/OpenSceneWidget.h>
 
 #include <memory>
 #include <vector>
@@ -33,4 +34,5 @@ class Editor : public Controller {
     //Popups
     NewMaterialWidget m_material_popup;
     NewSceneWidget m_scene_popup;
+    OpenSceneWidget m_open_scene_popup;
 };
