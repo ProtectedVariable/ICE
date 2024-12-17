@@ -36,14 +36,24 @@ class AddComponentPopup {
                         break;
                 }
                 ImGui::CloseCurrentPopup();
+                m_accepted = true;
             }
             ImGui::EndPopup();
         }
     }
 
+    bool accepted() {
+        if (m_accepted) {
+            m_accepted = false;
+            return true;
+        }
+        return false;
+    }
+
    private:
     ComboBox m_components_combo;
     bool m_open = false;
+    bool m_accepted = false;
     std::shared_ptr<ICE::Registry> m_registry;
     ICE::Entity m_entity;
 };

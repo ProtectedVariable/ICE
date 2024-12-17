@@ -6,11 +6,13 @@
 
 Editor::Editor(const std::shared_ptr<ICE::ICEEngine>& engine, const std::shared_ptr<ICE::GraphicsFactory>& g_factory)
     : m_engine(engine),
-      m_material_popup(engine) {
+      m_material_popup(engine),
+      m_scene_popup(engine) {
     m_viewport = std::make_unique<Viewport>(engine, [this]() { m_inspector->setSelectedEntity(m_hierarchy->getSelectedEntity(), true); });
     m_hierarchy = std::make_unique<Hierarchy>(engine);
     m_inspector = std::make_unique<Inspector>(engine);
     m_assets = std::make_unique<Assets>(engine, g_factory);
+    ui.registerCallback("new_scene_clicked", [this] { m_scene_popup.open(); });
     ui.registerCallback("new_material_clicked", [this] {
         auto material = std::make_shared<ICE::Material>();
         auto path = ICE::AssetPath::WithTypePrefix<ICE::Material>("");
@@ -70,9 +72,18 @@ bool Editor::update() {
     m_viewport->setSelectedEntity(m_selected_entity);
 
     m_material_popup.render();
+    m_scene_popup.render();
 
     if (m_material_popup.accepted()) {
         m_assets->rebuildViewer();
+    }
+    if (m_scene_popup.accepted()) {
+        m_engine->getProject()->addScene(ICE::Scene(m_scene_popup.getSceneName()));
+        m_engine->getProject()->setCurrentScene(m_engine->getProject()->getScenes().back());
+        m_engine->setupScene();
+        m_hierarchy->setSelectedEntity(0);
+        m_viewport->setSelectedEntity(0);
+        m_inspector->setSelectedEntity(0);
     }
 
     return m_done;

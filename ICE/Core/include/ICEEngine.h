@@ -24,6 +24,8 @@ class ICEEngine {
 
     void step();
 
+    void setupScene();
+
     Eigen::Vector4i getPickingTextureAt(int x, int y);
 
     std::shared_ptr<Camera> getCamera();
