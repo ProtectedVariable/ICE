@@ -37,10 +37,10 @@ void ICEEngine::step() {
     project->getCurrentScene()->getRegistry()->updateSystems(0.0);
 }
 
-void ICEEngine::setupScene() {
+void ICEEngine::setupScene(const std::shared_ptr<Camera> &camera_) {
     auto renderer = std::make_shared<ForwardRenderer>(api, m_graphics_factory, project->getCurrentScene()->getRegistry(), project->getAssetBank());
     auto rs = std::make_shared<RenderSystem>();
-    rs->setCamera(camera);
+    rs->setCamera(camera_);
     rs->setRenderer(renderer);
     project->getCurrentScene()->getRegistry()->addSystem(rs);
 
@@ -105,7 +105,7 @@ void ICEEngine::setProject(const std::shared_ptr<Project> &project) {
     this->project = project;
     this->camera->getPosition() = project->getCameraPosition();
     this->camera->getRotation() = project->getCameraRotation();
-    setupScene();
+    setupScene(camera);
 }
 
 EngineConfig &ICEEngine::getConfig() {
