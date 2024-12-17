@@ -30,8 +30,8 @@ bool Inspector::entityHasChanged() {
     return (m_entity_has_changed + 1) != 0;
 }
 
-void Inspector::setSelectedEntity(ICE::Entity e) {
-    if (m_selected_entity == e) {
+void Inspector::setSelectedEntity(ICE::Entity e, bool force_refesh) {
+    if (m_selected_entity == e && !force_refesh) {
         return;
     }
     m_entity_has_changed = 0;

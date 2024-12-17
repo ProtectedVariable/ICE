@@ -4,7 +4,9 @@
 
 #include <iostream>
 
-Viewport::Viewport(const std::shared_ptr<ICE::ICEEngine> &engine) : m_engine(engine) {
+Viewport::Viewport(const std::shared_ptr<ICE::ICEEngine> &engine, const std::function<void()> &entity_transformed_callback)
+    : m_engine(engine),
+      m_entity_transformed_callback(entity_transformed_callback) {
     engine->setRenderFramebufferInternal(true);
 
     ui.registerCallback("w_pressed", [this]() { m_engine->getCamera()->forward(camera_delta); });
@@ -50,6 +52,9 @@ bool Viewport::update() {
             tc->rotation() += deltaR;
         } else if (m_guizmo_mode == ImGuizmo::SCALE) {
             tc->scale() += (deltaS - Eigen::Vector3f(1, 1, 1));
+        }
+        if (ImGuizmo::IsUsingAny()) {
+            m_entity_transformed_callback();
         }
     }
     return m_done;
