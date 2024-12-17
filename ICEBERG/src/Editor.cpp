@@ -9,7 +9,9 @@ Editor::Editor(const std::shared_ptr<ICE::ICEEngine>& engine, const std::shared_
       m_material_popup(engine),
       m_scene_popup(engine),
       m_open_scene_popup(engine) {
-    m_viewport = std::make_unique<Viewport>(engine, [this]() { m_inspector->setSelectedEntity(m_hierarchy->getSelectedEntity(), true); });
+    m_viewport = std::make_unique<Viewport>(
+        engine, [this]() { m_inspector->setSelectedEntity(m_hierarchy->getSelectedEntity(), true); },
+        [this](ICE::Entity e) { m_hierarchy->setSelectedEntity(e); });
     m_hierarchy = std::make_unique<Hierarchy>(engine);
     m_inspector = std::make_unique<Inspector>(engine);
     m_assets = std::make_unique<Assets>(engine, g_factory);

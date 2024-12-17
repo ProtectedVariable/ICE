@@ -78,8 +78,13 @@ Eigen::Vector4i OpenGLFramebuffer::readPixel(int x, int y) {
     glFlush();
     glFinish();
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    unsigned char data[4];
     auto pixels = Eigen::Vector4i();
-    glReadPixels(x, format.height - y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
+    glReadPixels(x, format.height - y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    pixels.x() = data[0];
+    pixels.y() = data[1];
+    pixels.z() = data[2];
+    pixels.w() = data[3];
     return pixels;
 }
 }  // namespace ICE

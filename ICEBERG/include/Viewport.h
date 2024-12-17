@@ -7,7 +7,8 @@
 
 class Viewport : public Controller {
    public:
-    Viewport(const std::shared_ptr<ICE::ICEEngine> &engine, const std::function<void()> &entity_transformed_callback);
+    Viewport(const std::shared_ptr<ICE::ICEEngine> &engine, const std::function<void()> &entity_transformed_callback,
+             const std::function<void(ICE::Entity e)> &entity_picked_callback);
     bool update() override;
 
     void setSelectedEntity(ICE::Entity e);
@@ -21,4 +22,7 @@ class Viewport : public Controller {
     ICE::Entity m_selected_entity = 0;
     std::function<void()> m_entity_transformed_callback = [] {
     };
+    std::function<void(ICE::Entity e)> m_entity_picked_callback = [](ICE::Entity) {
+    };
+    std::shared_ptr<ICE::Framebuffer> m_picking_frambuffer;
 };

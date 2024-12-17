@@ -56,31 +56,6 @@ std::shared_ptr<AssetBank> ICEEngine::getAssetBank() {
     return project->getAssetBank();
 }
 
-Eigen::Vector4i ICEEngine::getPickingTextureAt(int x, int y) {
-    /* pickingFB->bind();
-    pickingFB->resize(gui.getSceneViewportWidth(), gui.getSceneViewportHeight());
-    api->setViewport(0, 0, gui.getSceneViewportWidth(), gui.getSceneViewportHeight());
-    camera.setParameters({60, (float) gui.getSceneViewportWidth() / (float) gui.getSceneViewportHeight(), 0.01f, 1000});
-    api->setClearColor(0, 0, 0, 0);
-    api->clear();
-    getAssetBank()->getAsset<Shader>("__ice__picking_shader")->bind();
-    getAssetBank()->getAsset<Shader>("__ice__picking_shader")->loadMat4("projection", camera.getProjection());
-    getAssetBank()->getAsset<Shader>("__ice__picking_shader")->loadMat4("view", camera.lookThrough());
-    int id = 1;
-    for (auto e : currentScene->getRegistry()->getEntities()) {
-        //getAssetBank()->getAsset<Shader>("__ice__picking_shader")->loadMat4("model", e->getComponent<TransformComponent>()->getTransformation());
-        //getAssetBank()->getAsset<Shader>("__ice__picking_shader")->loadInt("objectID", id++);
-        //if(e->hasComponent<RenderComponent>()) {
-        //    api->renderVertexArray(getAssetBank()->getAsset<Mesh>(e->getComponent<RenderComponent>()->getMesh())->getVertexArray());
-        //}
-    }
-    auto color = internalFB->readPixel(x, y);
-    internalFB->unbind();
-    return color;
-    */
-    return Eigen::Vector4i();
-}
-
 std::shared_ptr<RendererAPI> ICEEngine::getApi() const {
     return api;
 }

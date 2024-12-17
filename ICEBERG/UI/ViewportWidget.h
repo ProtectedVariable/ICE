@@ -35,6 +35,9 @@ class ViewportWidget : public Widget {
             if (ImGui::IsMouseDragging(0)) {
                 callback("mouse_dragged", drag.x, drag.y);
                 ImGui::ResetMouseDragDelta(0);
+            } else if (ImGui::IsMouseClicked(0)) {
+                auto m_pos = ImGui::GetMousePos();
+                callback("mouse_clicked", m_pos.x - pos.x, m_pos.y - pos.y);
             }
         }
 
