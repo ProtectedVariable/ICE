@@ -45,7 +45,10 @@ Viewport::Viewport(const std::shared_ptr<ICE::ICEEngine> &engine, const std::fun
                 auto rc = registry->getComponent<ICE::RenderComponent>(e);
                 m_engine->getAssetBank()->getAsset<ICE::Shader>("__ice__picking_shader")->loadMat4("model", tc->getModelMatrix());
                 m_engine->getAssetBank()->getAsset<ICE::Shader>("__ice__picking_shader")->loadInt("objectID", e);
-                m_engine->getApi()->renderVertexArray(m_engine->getAssetBank()->getAsset<ICE::Mesh>(rc->mesh)->getVertexArray());
+                auto mesh = m_engine->getAssetBank()->getAsset<ICE::Mesh>(rc->mesh);
+                mesh->getVertexArray()->bind();
+                mesh->getVertexArray()->getIndexBuffer()->bind();
+                m_engine->getApi()->renderVertexArray(mesh->getVertexArray());
             }
         }
         auto color = m_picking_frambuffer->readPixel(x, y);
