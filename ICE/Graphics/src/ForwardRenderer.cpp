@@ -38,10 +38,11 @@ ForwardRenderer::ForwardRenderer(const std::shared_ptr<RendererAPI>& api, const 
 }
 
 void ForwardRenderer::submit(Entity e) {
-    if (std::find(m_render_queue.begin(), m_render_queue.end(), e) == m_render_queue.end() && m_registry->entityHasComponent<RenderComponent>(e)) {
+    remove(e);
+    if (m_registry->entityHasComponent<RenderComponent>(e)) {
         m_render_queue.emplace_back(e);
     }
-    if (std::find(m_lights.begin(), m_lights.end(), e) == m_lights.end() && m_registry->entityHasComponent<LightComponent>(e)) {
+    if (m_registry->entityHasComponent<LightComponent>(e)) {
         m_lights.emplace_back(e);
     }
     if (m_registry->entityHasComponent<SkyboxComponent>(e)) {
@@ -71,7 +72,10 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
         auto rc_b = m_registry->getComponent<RenderComponent>(b);
         auto material_b = m_asset_bank->getAsset<Material>(rc_b->material);
 
-        if (!material_a->isTransparent() && material_b->isTransparent()) {
+        bool a_transparent = material_a ? material_a->isTransparent() : false;
+        bool b_transparent = material_b ? material_b->isTransparent() : false;
+
+        if (!a_transparent && b_transparent) {
             return true;
         } else {
             return false;

@@ -18,6 +18,8 @@ struct SceneTreeView {
 };
 
 class HierarchyWidget : public Widget {
+    friend class Hierarchy;
+
    public:
     HierarchyWidget() = default;
 

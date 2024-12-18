@@ -24,7 +24,7 @@ class ICEEngine {
 
     void step();
 
-    Eigen::Vector4i getPickingTextureAt(int x, int y);
+    void setupScene(const std::shared_ptr<Camera>& camera_);
 
     std::shared_ptr<Camera> getCamera();
 
@@ -48,10 +48,6 @@ class ICEEngine {
 
     std::shared_ptr<Framebuffer> getInternalFramebuffer() const;
     void setRenderFramebufferInternal(bool use_internal);
-
-    void importMesh();
-
-    void importTexture(bool cubeMap);
 
    private:
     std::shared_ptr<GraphicsFactory> m_graphics_factory;

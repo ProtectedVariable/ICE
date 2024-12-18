@@ -43,7 +43,12 @@ class EditorWidget : public Widget {
                     }
                     ImGui::EndMenu();
                 }
-                //if (ImGui::MenuItem("Open", "Ctrl+O")) {}
+                if (ImGui::BeginMenu("Open")) {
+                    if (ImGui::MenuItem("Scene")) {
+                        callback("open_scene_clicked");
+                    }
+                    ImGui::EndMenu();
+                }
                 //if (ImGui::MenuItem("Save", "Ctrl+S")) {}
                 //if (ImGui::MenuItem("Save as..")) {}
                 ImGui::EndMenu();
@@ -59,7 +64,8 @@ class EditorWidget : public Widget {
             ImGui::DockBuilderRemoveNode(dockspace_id);  // Clear out existing layout
             ImGui::DockBuilderAddNode(dockspace_id);     // Add empty node
 
-            ImGuiID dock_main_id = dockspace_id;  // This variable will track the document node, however we are not using it here as we aren't docking anything into it.
+            ImGuiID dock_main_id =
+                dockspace_id;  // This variable will track the document node, however we are not using it here as we aren't docking anything into it.
             ImGuiID dock_top = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Up, 0.80f, NULL, &dock_main_id);
             ImGuiID dock_id_bottom = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Down, 0.20f, NULL, &dock_main_id);
 

@@ -44,6 +44,11 @@ ICE::Entity Hierarchy::getSelectedEntity() const {
     return m_selected;
 }
 
+void Hierarchy::setSelectedEntity(ICE::Entity e) {
+    m_selected = e;
+    ui.selected_id = e;
+}
+
 void Hierarchy::rebuildTree() {
     m_need_rebuild_tree = true;
 }

@@ -29,11 +29,14 @@ class UniformInputs {
     std::string getLabel() const { return m_label; }
 
     void setAssetComboList(const std::vector<std::string> &paths, const std::vector<ICE::AssetUID> &ids) {
-        m_asset_combo.setValues(paths);
-        m_assets_ids = ids;
-        auto it = std::find(ids.begin(), ids.end(), std::get<ICE::AssetUID>(m_value));
-        if (it != ids.end()) {
-            m_asset_combo.setSelected(std::distance(ids.begin(), it));
+        std::vector<std::string> path_with_none = {"<None>"};
+        path_with_none.insert(path_with_none.end(), paths.begin(), paths.end());
+        m_asset_combo.setValues(path_with_none);
+        m_assets_ids = {0};
+        m_assets_ids.insert(m_assets_ids.end(), ids.begin(), ids.end());
+        auto it = std::find(m_assets_ids.begin(), m_assets_ids.end(), std::get<ICE::AssetUID>(m_value));
+        if (it != m_assets_ids.end()) {
+            m_asset_combo.setSelected(std::distance(m_assets_ids.begin(), it));
         }
         m_asset_combo.onSelectionChanged(
             [cb = this->m_callback, id_list = this->m_assets_ids](const std::string &, int index) { cb(id_list[index]); });
