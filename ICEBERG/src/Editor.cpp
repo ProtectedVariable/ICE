@@ -31,7 +31,7 @@ Editor::Editor(const std::shared_ptr<ICE::ICEEngine>& engine, const std::shared_
     ui.registerCallback("import_mesh_clicked", [this] {
         std::filesystem::path file = open_native_dialog("*.obj");
         if (!file.empty()) {
-            std::string import_name = "Imported Mesh ";
+            std::string import_name = file.stem().string();
             int i = 0;
             do {
                 import_name + std::to_string(++i);
@@ -46,7 +46,7 @@ Editor::Editor(const std::shared_ptr<ICE::ICEEngine>& engine, const std::shared_
     ui.registerCallback("import_tex2d_clicked", [this] {
         std::filesystem::path file = open_native_dialog("*.png");
         if (!file.empty()) {
-            std::string import_name = "Imported Texture ";
+            std::string import_name = file.stem().string();
             int i = 0;
             do {
                 import_name + std::to_string(++i);

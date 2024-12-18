@@ -94,27 +94,4 @@ std::shared_ptr<GraphicsFactory> ICEEngine::getGraphicsFactory() const {
 std::shared_ptr<Context> ICEEngine::getContext() const {
     return ctx;
 }
-
-int import_cnt = 0;
-void ICEEngine::importMesh() {
-    const std::string file = FileUtils::openFileDialog("obj");
-    if (file != "") {
-        std::string aname = "imported_mesh_" + std::to_string(import_cnt++);
-        getAssetBank()->addAsset<Mesh>(aname, {file});
-        project->copyAssetFile("Meshes", aname, file);
-    }
-}
-
-void ICEEngine::importTexture(bool cubeMap) {
-    const std::string file = FileUtils::openFileDialog("");
-    if (file != "") {
-        std::string aname = "imported_texture_" + std::to_string(import_cnt++);
-        if (cubeMap) {
-            getAssetBank()->addAsset<TextureCube>(aname, {file});
-        } else {
-            getAssetBank()->addAsset<Texture2D>(aname, {file});
-        }
-        project->copyAssetFile("Textures", aname, file);
-    }
-}
 }  // namespace ICE

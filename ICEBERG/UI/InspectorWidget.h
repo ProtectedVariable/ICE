@@ -30,6 +30,7 @@ class InspectorWidget : public Widget {
             ImGui::EndGroup();
         }
         if (m_rc) {
+            ImGui::PushID("rc");
             ImGui::SeparatorText("Render");
             ImGui::BeginGroup();
             if (ImGui::Button("Remove")) {
@@ -40,8 +41,10 @@ class InspectorWidget : public Widget {
                 input.render();
             }
             ImGui::EndGroup();
+            ImGui::PopID();
         }
         if (m_lc) {
+            ImGui::PushID("lc");
             ImGui::SeparatorText("Light");
             ImGui::BeginGroup();
             if (ImGui::Button("Remove")) {
@@ -52,6 +55,7 @@ class InspectorWidget : public Widget {
                 input.render();
             }
             ImGui::EndGroup();
+            ImGui::PopID();
         }
 
         if (ImGui::Button("Add Component...")) {

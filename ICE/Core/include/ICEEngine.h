@@ -49,10 +49,6 @@ class ICEEngine {
     std::shared_ptr<Framebuffer> getInternalFramebuffer() const;
     void setRenderFramebufferInternal(bool use_internal);
 
-    void importMesh();
-
-    void importTexture(bool cubeMap);
-
    private:
     std::shared_ptr<GraphicsFactory> m_graphics_factory;
     std::shared_ptr<Context> ctx;
