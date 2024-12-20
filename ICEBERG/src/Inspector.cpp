@@ -34,13 +34,16 @@ bool Inspector::entityHasChanged() {
 }
 
 void Inspector::setSelectedEntity(ICE::Entity e, bool force_refesh) {
+    if (!m_engine->getProject()->getCurrentScene()->hasEntity(e)) {
+        return;
+    }
     if (m_selected_entity == e && !force_refesh) {
         return;
     }
     m_entity_has_changed = 0;
     m_selected_entity = e;
-    auto registry = m_engine->getProject()->getCurrentScene()->getRegistry();
 
+    auto registry = m_engine->getProject()->getCurrentScene()->getRegistry();
     ui.setEntityName(m_engine->getProject()->getCurrentScene()->getAlias(e));
     ui.setLightComponent(nullptr);
     ui.setRenderComponent(nullptr, {}, {}, {}, {});

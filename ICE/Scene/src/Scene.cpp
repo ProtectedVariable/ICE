@@ -57,4 +57,9 @@ void Scene::removeEntity(Entity e) {
     aliases.erase(e);
     m_graph->removeEntity(e);
 }
+
+bool Scene::hasEntity(Entity e) {
+    return aliases.contains(e);
+}
+
 }  // namespace ICE

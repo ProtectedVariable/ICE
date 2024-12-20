@@ -30,6 +30,7 @@ class Scene {
     Entity createEntity();
     void addEntity(Entity e, const std::string& alias, Entity parent);
     void removeEntity(Entity e);
+    bool hasEntity(Entity e);
 
    private:
     std::string name;
