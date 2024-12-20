@@ -50,6 +50,7 @@ class InspectorWidget : public Widget {
             if (ImGui::Button("Remove")) {
                 callback("remove_light_component_clicked");
             }
+            m_lc_type_combo.render();
             for (auto& input : m_lc_inputs) {
                 ImGui::Text("%s", input.getLabel().c_str());
                 input.render();
@@ -106,8 +107,12 @@ class InspectorWidget : public Widget {
         m_lc = lc;
         m_lc_inputs.clear();
         if (lc) {
+            m_lc_type_combo.setSelected(lc->type);
+            m_lc_type_combo.onSelectionChanged([this](const std::string&, int idx) { m_lc->type = static_cast<ICE::LightType>(idx); });
             m_lc_inputs.emplace_back("Color", m_lc->color);
             m_lc_inputs.back().onValueChanged([this](const ICE::UniformValue& v) { m_lc->color = std::get<Eigen::Vector3f>(v); });
+            m_lc_inputs.emplace_back("Distance Dropoff", m_lc->distance_dropoff);
+            m_lc_inputs.back().onValueChanged([this](const ICE::UniformValue& v) { m_lc->distance_dropoff = std::get<float>(v); });
         }
     }
 
@@ -120,6 +125,7 @@ class InspectorWidget : public Widget {
 
     ICE::LightComponent* m_lc = nullptr;
     std::vector<UniformInputs> m_lc_inputs;
+    ComboBox m_lc_type_combo{"Light Type", {"Point Light", "Directional Light", "Spot Light"}};
 
     InputText m_input_entity_name{"##inspector_entity_name", ""};
 };

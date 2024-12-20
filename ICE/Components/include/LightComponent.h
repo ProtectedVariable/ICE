@@ -10,12 +10,13 @@
 #include "Component.h"
 
 namespace ICE {
-enum LightType { PointLight, DirectionalLight, SpotLight };
+enum LightType { PointLight = 0, DirectionalLight = 1, SpotLight = 2 };
 
 struct LightComponent : public Component {
     LightComponent(LightType t, const Eigen::Vector3f &col) : type(t), color(col) {}
     LightType type;
     Eigen::Vector3f color;
+    float distance_dropoff = 0;
 };
 }  // namespace ICE
 
