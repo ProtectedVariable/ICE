@@ -29,15 +29,20 @@ class UniformInputs {
     std::string getLabel() const { return m_label; }
 
     void setAssetComboList(const std::vector<std::string> &paths, const std::vector<ICE::AssetUID> &ids) {
-        m_asset_combo.setValues(paths);
-        m_assets_ids = ids;
-        auto it = std::find(ids.begin(), ids.end(), std::get<ICE::AssetUID>(m_value));
-        if (it != ids.end()) {
-            m_asset_combo.setSelected(std::distance(ids.begin(), it));
+        std::vector<std::string> path_with_none = {"<None>"};
+        path_with_none.insert(path_with_none.end(), paths.begin(), paths.end());
+        m_asset_combo.setValues(path_with_none);
+        m_assets_ids = {0};
+        m_assets_ids.insert(m_assets_ids.end(), ids.begin(), ids.end());
+        auto it = std::find(m_assets_ids.begin(), m_assets_ids.end(), std::get<ICE::AssetUID>(m_value));
+        if (it != m_assets_ids.end()) {
+            m_asset_combo.setSelected(std::distance(m_assets_ids.begin(), it));
         }
         m_asset_combo.onSelectionChanged(
             [cb = this->m_callback, id_list = this->m_assets_ids](const std::string &, int index) { cb(id_list[index]); });
     }
+
+    void setForceVectorNumeric(bool force_vector_numeric) { m_force_vector_numeric = force_vector_numeric; }
 
    private:
     void render(int &i) {
@@ -55,24 +60,30 @@ class UniformInputs {
         ImGui::PushID(m_label.c_str());
         ImGui::PushItemWidth(60);
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
-        renderLabel("X", 0x990000FF);
-        if (ImGui::InputFloat("##X", &v.x())) {
-            m_callback(v);
-        }
-        ImGui::SameLine();
-        renderLabel("Y", 0x9900FF00);
-        if (ImGui::InputFloat("##Y", &v.y())) {
-            m_callback(v);
-        }
-        ImGui::SameLine();
-        renderLabel("Z", 0x99FF0000);
-        if (ImGui::InputFloat("##Z", &v.z())) {
-            m_callback(v);
-        }
-        ImGui::SameLine();
-        renderLabel("W", 0x99FFFFFF);
-        if (ImGui::InputFloat("##W", &v.w())) {
-            m_callback(v);
+        if (m_force_vector_numeric) {
+            renderLabel("X", 0x990000FF);
+            if (ImGui::InputFloat("##X", &v.x())) {
+                m_callback(v);
+            }
+            ImGui::SameLine();
+            renderLabel("Y", 0x9900FF00);
+            if (ImGui::InputFloat("##Y", &v.y())) {
+                m_callback(v);
+            }
+            ImGui::SameLine();
+            renderLabel("Z", 0x99FF0000);
+            if (ImGui::InputFloat("##Z", &v.z())) {
+                m_callback(v);
+            }
+            ImGui::SameLine();
+            renderLabel("W", 0x99FFFFFF);
+            if (ImGui::InputFloat("##W", &v.w())) {
+                m_callback(v);
+            }
+        } else {
+            if (ImGui::ColorEdit4("##vector_picker", v.data(), ImGuiColorEditFlags_NoInputs)) {
+                m_callback(v);
+            }
         }
         ImGui::PopStyleVar();
         ImGui::PopItemWidth();
@@ -83,29 +94,34 @@ class UniformInputs {
         ImGui::PushID(m_label.c_str());
         ImGui::PushItemWidth(60);
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
+        if (m_force_vector_numeric) {
+            ImGui::BeginGroup();
+            renderLabel("X", 0x990000FF);
+            if (ImGui::InputFloat("##X", &v.x())) {
+                m_callback(v);
+            }
+            ImGui::EndGroup();
+            ImGui::SameLine();
 
-        ImGui::BeginGroup();
-        renderLabel("X", 0x990000FF);
-        if (ImGui::InputFloat("##X", &v.x())) {
-            m_callback(v);
-        }
-        ImGui::EndGroup();
-        ImGui::SameLine();
+            ImGui::BeginGroup();
+            renderLabel("Y", 0x9900FF00);
+            if (ImGui::InputFloat("##Y", &v.y())) {
+                m_callback(v);
+            }
+            ImGui::EndGroup();
+            ImGui::SameLine();
 
-        ImGui::BeginGroup();
-        renderLabel("Y", 0x9900FF00);
-        if (ImGui::InputFloat("##Y", &v.y())) {
-            m_callback(v);
+            ImGui::BeginGroup();
+            renderLabel("Z", 0x99FF0000);
+            if (ImGui::InputFloat("##Z", &v.z())) {
+                m_callback(v);
+            }
+            ImGui::EndGroup();
+        } else {
+            if (ImGui::ColorEdit3("##vector_picker", v.data(), ImGuiColorEditFlags_NoInputs)) {
+                m_callback(v);
+            }
         }
-        ImGui::EndGroup();
-        ImGui::SameLine();
-
-        ImGui::BeginGroup();
-        renderLabel("Z", 0x99FF0000);
-        if (ImGui::InputFloat("##Z", &v.z())) {
-            m_callback(v);
-        }
-        ImGui::EndGroup();
         ImGui::PopStyleVar();
         ImGui::PopItemWidth();
         ImGui::PopID();
@@ -161,4 +177,5 @@ class UniformInputs {
     //Used when it's an asset input
     ComboBox m_asset_combo;
     std::vector<ICE::AssetUID> m_assets_ids;
+    bool m_force_vector_numeric = false;
 };

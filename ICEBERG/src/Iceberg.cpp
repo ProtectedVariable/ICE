@@ -46,7 +46,7 @@ class Iceberg {
             if (m_state == UIState::EDITOR) {
                 m_engine->step();
             }
-            ImGui::ShowDemoWindow();
+            //ImGui::ShowDemoWindow();
 
             ImGui::Render();
 
@@ -58,7 +58,16 @@ class Iceberg {
             m_window->swapBuffers();
         }
         if (m_engine->getProject()) {
-            m_engine->getConfig().getLocalProjects()->push_back(*m_engine->getProject());
+            bool append_to_selector = true;
+            for (const auto& project : *m_engine->getConfig().getLocalProjects()) {
+                if (project.getBaseDirectory() == m_engine->getProject()->getBaseDirectory()) {
+                    append_to_selector = false;
+                    break;
+                }
+            }
+            if (append_to_selector) {
+                m_engine->getConfig().getLocalProjects()->push_back(*m_engine->getProject());
+            }
             m_engine->getProject()->writeToFile(m_engine->getCamera());
             m_engine->getConfig().save();
         }

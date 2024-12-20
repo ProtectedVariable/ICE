@@ -46,7 +46,7 @@ class EntityManager {
     void setSignature(Entity e, Signature s) { signatures[e] = s; }
 
     Signature getSignature(Entity e) const {
-        if (e == 0) {
+        if (e == 0 || !signatures.contains(e)) {
             return 0;
         }
         return signatures.at(e);

@@ -9,17 +9,20 @@ Inspector::Inspector(const std::shared_ptr<ICE::ICEEngine>& engine) : m_engine(e
                         [this] { m_add_component_popup.open(m_engine->getProject()->getCurrentScene()->getRegistry(), m_selected_entity); });
     ui.registerCallback("remove_light_component_clicked", [this] {
         m_engine->getProject()->getCurrentScene()->getRegistry()->removeComponent<ICE::LightComponent>(m_selected_entity);
-        setSelectedEntity(m_selected_entity);
+        setSelectedEntity(m_selected_entity, true);
     });
     ui.registerCallback("remove_render_component_clicked", [this] {
         m_engine->getProject()->getCurrentScene()->getRegistry()->removeComponent<ICE::RenderComponent>(m_selected_entity);
-        setSelectedEntity(m_selected_entity);
+        setSelectedEntity(m_selected_entity, true);
     });
 }
 
 bool Inspector::update() {
     m_add_component_popup.render();
     ui.render();
+    if (m_add_component_popup.accepted()) {
+        setSelectedEntity(m_selected_entity, true);
+    }
     return m_done;
 }
 
@@ -30,14 +33,17 @@ bool Inspector::entityHasChanged() {
     return (m_entity_has_changed + 1) != 0;
 }
 
-void Inspector::setSelectedEntity(ICE::Entity e) {
-    if (m_selected_entity == e) {
+void Inspector::setSelectedEntity(ICE::Entity e, bool force_refesh) {
+    if (!m_engine->getProject()->getCurrentScene()->hasEntity(e)) {
+        return;
+    }
+    if (m_selected_entity == e && !force_refesh) {
         return;
     }
     m_entity_has_changed = 0;
     m_selected_entity = e;
-    auto registry = m_engine->getProject()->getCurrentScene()->getRegistry();
 
+    auto registry = m_engine->getProject()->getCurrentScene()->getRegistry();
     ui.setEntityName(m_engine->getProject()->getCurrentScene()->getAlias(e));
     ui.setLightComponent(nullptr);
     ui.setRenderComponent(nullptr, {}, {}, {}, {});

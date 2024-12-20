@@ -4,8 +4,14 @@
 
 #include <iostream>
 
-Viewport::Viewport(const std::shared_ptr<ICE::ICEEngine> &engine) : m_engine(engine) {
+Viewport::Viewport(const std::shared_ptr<ICE::ICEEngine> &engine, const std::function<void()> &entity_transformed_callback,
+                   const std::function<void(ICE::Entity e)> &entity_picked_callback)
+    : m_engine(engine),
+      m_entity_transformed_callback(entity_transformed_callback),
+      m_entity_picked_callback(entity_picked_callback) {
     engine->setRenderFramebufferInternal(true);
+
+    m_picking_frambuffer = engine->getGraphicsFactory()->createFramebuffer({1, 1, 1});
 
     ui.registerCallback("w_pressed", [this]() { m_engine->getCamera()->forward(camera_delta); });
     ui.registerCallback("s_pressed", [this]() { m_engine->getCamera()->backward(camera_delta); });
@@ -18,6 +24,40 @@ Viewport::Viewport(const std::shared_ptr<ICE::ICEEngine> &engine) : m_engine(eng
             m_engine->getCamera()->yaw(dx / 6.0);
             m_engine->getCamera()->pitch(dy / 6.0);
         }
+    });
+    ui.registerCallback("mouse_clicked", [this](float x, float y) {
+        auto fmt = m_engine->getInternalFramebuffer()->getFormat();
+        m_picking_frambuffer->bind();
+        m_picking_frambuffer->resize(fmt.width, fmt.height);
+        m_engine->getApi()->setViewport(0, 0, fmt.width, fmt.height);
+        m_engine->getApi()->setClearColor(0, 0, 0, 0);
+        m_engine->getApi()->clear();
+
+        auto camera = m_engine->getCamera();
+        m_engine->getAssetBank()->getAsset<ICE::Shader>("__ice__picking_shader")->bind();
+        m_engine->getAssetBank()->getAsset<ICE::Shader>("__ice__picking_shader")->loadMat4("projection", camera->getProjection());
+        m_engine->getAssetBank()->getAsset<ICE::Shader>("__ice__picking_shader")->loadMat4("view", camera->lookThrough());
+        auto registry = m_engine->getProject()->getCurrentScene()->getRegistry();
+        for (auto e : registry->getEntities()) {
+            if (registry->entityHasComponent<ICE::RenderComponent>(e) && registry->entityHasComponent<ICE::TransformComponent>(e)) {
+
+                auto tc = registry->getComponent<ICE::TransformComponent>(e);
+                auto rc = registry->getComponent<ICE::RenderComponent>(e);
+                m_engine->getAssetBank()->getAsset<ICE::Shader>("__ice__picking_shader")->loadMat4("model", tc->getModelMatrix());
+                m_engine->getAssetBank()->getAsset<ICE::Shader>("__ice__picking_shader")->loadInt("objectID", e);
+                auto mesh = m_engine->getAssetBank()->getAsset<ICE::Mesh>(rc->mesh);
+                mesh->getVertexArray()->bind();
+                mesh->getVertexArray()->getIndexBuffer()->bind();
+                m_engine->getApi()->renderVertexArray(mesh->getVertexArray());
+            }
+        }
+        auto color = m_picking_frambuffer->readPixel(x, y);
+        m_picking_frambuffer->unbind();
+        ICE::Entity e = 0;
+        e += color.x();
+        e += color.y() << 8;
+        e += color.z() << 16;
+        m_entity_picked_callback(e);
     });
     ui.registerCallback("resize", [this](float width, float height) {
         m_engine->getCamera()->resize(width, height);
@@ -50,6 +90,9 @@ bool Viewport::update() {
             tc->rotation() += deltaR;
         } else if (m_guizmo_mode == ImGuizmo::SCALE) {
             tc->scale() += (deltaS - Eigen::Vector3f(1, 1, 1));
+        }
+        if (ImGuizmo::IsUsingAny()) {
+            m_entity_transformed_callback();
         }
     }
     return m_done;

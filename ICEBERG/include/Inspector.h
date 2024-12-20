@@ -12,7 +12,7 @@ class Inspector : public Controller {
     Inspector(const std::shared_ptr<ICE::ICEEngine> &engine);
     bool update() override;
 
-    void setSelectedEntity(ICE::Entity e);
+    void setSelectedEntity(ICE::Entity e, bool force_refesh = false);
     bool entityHasChanged();
 
    private:

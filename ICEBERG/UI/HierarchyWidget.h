@@ -18,6 +18,8 @@ struct SceneTreeView {
 };
 
 class HierarchyWidget : public Widget {
+    friend class Hierarchy;
+
    public:
     HierarchyWidget() = default;
 
@@ -58,7 +60,7 @@ class HierarchyWidget : public Widget {
                 }
                 ImGui::EndDragDropTarget();
             }
-            if (ImGui::BeginPopupContextWindow("hierarchy_popup")) {
+            if (ImGui::BeginPopupContextItem("hierarchy_popup")) {
                 if (ImGui::Button("Create new entity")) {
                     callback("create_entity_clicked", tree.id);
                     ImGui::CloseCurrentPopup();
