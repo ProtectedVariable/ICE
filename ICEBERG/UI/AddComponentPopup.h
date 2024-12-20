@@ -21,7 +21,8 @@ class AddComponentPopup {
             ImGui::OpenPopup("Add Component");
             m_open = false;
         }
-        if (ImGui::BeginPopupModal("Add Component")) {
+        ImGui::SetNextWindowSizeConstraints(ImVec2(0, 0), ImVec2(FLT_MAX, FLT_MAX));
+        if (ImGui::BeginPopupModal("Add Component", 0, ImGuiWindowFlags_AlwaysAutoResize)) {
             m_components_combo.render();
             if (ImGui::Button("Add")) {
                 switch (m_components_combo.getSelectedIndex()) {
