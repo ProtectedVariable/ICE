@@ -16,11 +16,12 @@ class AddComponentPopup {
     }
 
     void render() {
+        ImGui::PushID("add_component_popup");
         if (m_open) {
-            ImGui::OpenPopup("add_component_popup");
+            ImGui::OpenPopup("Add Component");
             m_open = false;
         }
-        if (ImGui::BeginPopupModal("add_component_popup")) {
+        if (ImGui::BeginPopupModal("Add Component")) {
             m_components_combo.render();
             if (ImGui::Button("Add")) {
                 switch (m_components_combo.getSelectedIndex()) {
@@ -40,6 +41,7 @@ class AddComponentPopup {
             }
             ImGui::EndPopup();
         }
+        ImGui::PopID();
     }
 
     bool accepted() {

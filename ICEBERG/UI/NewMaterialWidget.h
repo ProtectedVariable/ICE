@@ -83,16 +83,22 @@ class NewMaterialWidget : public Widget {
     void open(ICE::AssetUID id) {
         m_id = id;
         m_open = true;
+        m_material = m_engine->getAssetBank()->getAsset<ICE::Material>(id);
         auto shaders = m_engine->getAssetBank()->getAll<ICE::Shader>();
         std::vector<std::string> shader_names;
+        int shader_idx = 0;
+        int i = 0;
         for (const auto& [id, shader] : shaders) {
             shader_names.push_back(m_engine->getAssetBank()->getName(id).toString());
+            if (id == m_material->getShader()) {
+                shader_idx = i;
+            }
+            i++;
         }
         m_shaders_combo.setValues(shader_names);
+        m_shaders_combo.setSelected(shader_idx);
         auto name = m_engine->getAssetBank()->getName(id).getName();
         memcpy(m_name, name.c_str(), name.size() + 1);
-
-        m_material = m_engine->getAssetBank()->getAsset<ICE::Material>(id);
 
         m_shaders_combo.onSelectionChanged([this](const std::string& name, int) { m_material->setShader(m_engine->getAssetBank()->getUID(name)); });
 
