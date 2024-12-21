@@ -10,7 +10,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     src/Project.cpp
     src/MaterialExporter.cpp
     src/TextureLoader.cpp
-	src/MeshLoader.cpp
+	"src/ModelLoader.cpp"
     src/ShaderLoader.cpp
     src/MaterialLoader.cpp
 )
