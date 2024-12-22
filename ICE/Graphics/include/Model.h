@@ -11,6 +11,9 @@ class Model : public Asset {
     std::vector<std::shared_ptr<ICE::Mesh>> getMeshes() const { return m_meshes; }
     std::vector<ICE::AssetUID> getMaterialsIDs() const { return m_materials; }
 
+    AssetType getType() const override { return AssetType::EModel; }
+    std::string getTypeName() const override { return "Model"; }
+
    private:
     std::vector<std::shared_ptr<ICE::Mesh>> m_meshes;
     std::vector<ICE::AssetUID> m_materials;

@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <assimp/material.h>
 #include <string>
 
 #include "Asset.h"
@@ -13,7 +14,8 @@
 namespace ICE {
 class ModelLoader : public IAssetLoader<Model> {
    public:
-    ModelLoader(const std::shared_ptr<GraphicsFactory> &factory) : IAssetLoader<Mesh>(factory) {}
+    ModelLoader(const std::shared_ptr<GraphicsFactory> &factory) : IAssetLoader<Model>(factory) {}
     std::shared_ptr<Model> load(const std::vector<std::filesystem::path> &file) override;
+    AssetUID extractMaterial(const aiMaterial *material);
 };
 }  // namespace ICE

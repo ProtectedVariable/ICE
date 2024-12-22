@@ -108,7 +108,7 @@ class AssetBank {
         if (nameMapping.find(name) != nameMapping.end()) {
             AssetUID id = getUID(name);
             nameMapping.erase(name);
-            resources[id].asset->unload();
+            //TODO: Check resources[id].asset->unload();
             resources.erase(id);
             return true;
         }

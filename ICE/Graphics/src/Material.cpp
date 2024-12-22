@@ -32,8 +32,4 @@ std::string Material::getTypeName() const {
 AssetType Material::getType() const {
     return AssetType::EMaterial;
 }
-void Material::load() {
-}
-void Material::unload() {
-}
 }  // namespace ICE

@@ -41,7 +41,7 @@ Editor::Editor(const std::shared_ptr<ICE::ICEEngine>& engine, const std::shared_
             } while (m_engine->getAssetBank()->nameInUse(ICE::AssetPath::WithTypePrefix<ICE::Mesh>(import_name + std::to_string(i))));
             import_name = import_name + std::to_string(i);
             m_engine->getProject()->copyAssetFile("Meshes", import_name, file);
-            m_engine->getAssetBank()->addAsset<ICE::Mesh>(
+            m_engine->getAssetBank()->addAsset<ICE::Model>(
                 import_name, {m_engine->getProject()->getBaseDirectory() / "Assets" / "Meshes" / (import_name + file.extension().string())});
             m_assets->rebuildViewer();
         }

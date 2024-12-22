@@ -50,8 +50,6 @@ class Texture2D : public Texture {
 
     virtual AssetType getType() const override { return AssetType::ETex2D; }
     virtual std::string getTypeName() const override { return "Texture2D"; }
-    virtual void load() override = 0;
-    virtual void unload() override = 0;
 };
 
 class TextureCube : public Texture {
@@ -61,8 +59,6 @@ class TextureCube : public Texture {
 
     virtual AssetType getType() const override { return AssetType::ETexCube; }
     virtual std::string getTypeName() const override { return "TextureCube"; }
-    virtual void load() override = 0;
-    virtual void unload() override = 0;
 };
 }  // namespace ICE
 

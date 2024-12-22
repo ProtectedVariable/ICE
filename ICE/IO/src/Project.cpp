@@ -56,8 +56,8 @@ bool Project::CreateDirectories() {
     copyAssetFile("Cubemaps", "skybox", "Assets/Textures/skybox.png");
     copyAssetFile("Materials", "base_mat", "Assets/Materials/base_mat.icm");
 
-    assetBank->addAsset<Mesh>("cube", {m_meshes_directory / "cube.obj"});
-    assetBank->addAsset<Mesh>("sphere", {m_meshes_directory / "sphere.obj"});
+    assetBank->addAsset<Model>("cube", {m_meshes_directory / "cube.obj"});
+    assetBank->addAsset<Model>("sphere", {m_meshes_directory / "sphere.obj"});
     assetBank->addAsset<Shader>("solid", {m_shaders_directory / "solid.vs", m_shaders_directory / "solid.fs"});
     assetBank->addAsset<Shader>("phong", {m_shaders_directory / "phong.vs", m_shaders_directory / "phong.fs"});
     assetBank->addAsset<Shader>("normal", {m_shaders_directory / "normal.vs", m_shaders_directory / "normal.fs"});
@@ -94,7 +94,7 @@ void Project::writeToFile(const std::shared_ptr<Camera> &editorCamera) {
     j["scenes"] = vec;
     vec.clear();
 
-    for (const auto &[asset_id, mesh] : assetBank->getAll<Mesh>()) {
+    for (const auto &[asset_id, mesh] : assetBank->getAll<Model>()) {
         vec.push_back(dumpAsset(asset_id, mesh));
     }
     j["meshes"] = vec;
@@ -207,7 +207,7 @@ void Project::loadFromFile() {
 
     loadAssetsOfType<Texture2D>(texture);
     loadAssetsOfType<TextureCube>(cubeMap);
-    loadAssetsOfType<Mesh>(meshes);
+    loadAssetsOfType<Model>(meshes);
     loadAssetsOfType<Material>(material);
     loadAssetsOfType<Shader>(shader);
 

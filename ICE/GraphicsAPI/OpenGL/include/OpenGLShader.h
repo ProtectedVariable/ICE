@@ -36,10 +36,6 @@ namespace ICE {
 
         OpenGLShader(const std::string &vertexFile, const std::string &fragmentFile);
 
-        void load() override {}
-
-        void unload() override {}
-
     private:
 
         GLint getLocation(const std::string &name);

@@ -13,6 +13,7 @@ void GeometryPass::execute() {
     std::shared_ptr<Shader> current_shader;
     std::shared_ptr<Material> current_material;
     std::shared_ptr<Mesh> current_mesh;
+    return; //TODO
     for (const auto& command : *m_render_queue) {
         auto& shader = command.shader;
         auto& material = command.material;

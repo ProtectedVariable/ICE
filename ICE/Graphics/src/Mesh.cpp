@@ -60,8 +60,4 @@ std::string Mesh::getTypeName() const {
 AssetType Mesh::getType() const {
     return AssetType::EMesh;
 }
-void Mesh::load() {
-}
-void Mesh::unload() {
-}
 }  // namespace ICE

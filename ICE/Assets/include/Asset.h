@@ -14,14 +14,12 @@ namespace ICE {
 
 typedef unsigned long long AssetUID;
 
-enum class AssetType { ETex2D, ETexCube, EShader, EMesh, EMaterial };
+enum class AssetType { ETex2D, ETexCube, EShader, EMesh, EModel, EMaterial };
 
 class Asset : public Resource {
    public:
     Asset() : Resource({}) {}
     virtual AssetType getType() const = 0;
     virtual std::string getTypeName() const = 0;
-    virtual void load() = 0;
-    virtual void unload() = 0;
 };
 }  // namespace ICE
