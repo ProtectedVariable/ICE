@@ -4,6 +4,7 @@
 
 #include "ModelLoader.h"
 
+#include <AssetBank.h>
 #include <BufferUtils.h>
 #include <Material.h>
 #include <assimp/postprocess.h>
@@ -30,7 +31,7 @@ std::shared_ptr<Model> ModelLoader::load(const std::vector<std::filesystem::path
         auto mesh = scene->mMeshes[m];
         auto material = scene->mMaterials[mesh->mMaterialIndex];
 
-        materials.push_back(extractMaterial(material));
+        materials.push_back(extractMaterial(material, file[0].filename().stem().string()));
 
         for (int i = 0; i < mesh->mNumVertices; i++) {
             auto v = mesh->mVertices[i];
@@ -77,8 +78,40 @@ std::shared_ptr<Model> ModelLoader::load(const std::vector<std::filesystem::path
     return std::make_shared<Model>(meshes, materials);
 }
 
-AssetUID extractMaterial(const aiMaterial *material) {
+AssetUID ModelLoader::extractMaterial(const aiMaterial *material, const std::string &model_name) {
     auto mtl = std::make_shared<Material>();
-    mtl->setShader()
+    mtl->setShader(ref_bank.getUID(AssetPath::WithTypePrefix<Shader>("phong")));
+
+    aiColor4D diffuse;
+    aiColor4D specular;
+    aiColor4D ambient;
+    ai_real alpha = 1.0;
+
+    if (aiGetMaterialColor(material, AI_MATKEY_COLOR_DIFFUSE, &diffuse) == aiReturn_SUCCESS)
+        mtl->setUniform("material.albedo", colorToVec(&diffuse));
+    if (aiGetMaterialColor(material, AI_MATKEY_COLOR_SPECULAR, &specular) == aiReturn_SUCCESS)
+        mtl->setUniform("material.specular", colorToVec(&specular));
+    if (aiGetMaterialColor(material, AI_MATKEY_COLOR_AMBIENT, &ambient) == aiReturn_SUCCESS)
+        mtl->setUniform("material.ambient", colorToVec(&ambient));
+    if (aiGetMaterialFloat(material, AI_MATKEY_SHININESS, &alpha) == aiReturn_SUCCESS)
+        mtl->setUniform("material.alpha", alpha);
+    mtl->setUniform("material.use_diffuse_map", false);
+    mtl->setUniform("material.use_ambient_map", false);
+    mtl->setUniform("material.use_specular_map", false);
+    mtl->setUniform("material.use_normal_map", false);
+
+    auto bank_name = model_name + "-" + material->GetName().C_Str();
+    ref_bank.addAsset<Material>(bank_name, mtl);
+    return ref_bank.getUID(AssetPath::WithTypePrefix<Material>(bank_name));
 }
+
+Eigen::Vector4f ModelLoader::colorToVec(aiColor4D *color) {
+    Eigen::Vector4f v;
+    v.x() = color->r;
+    v.y() = color->g;
+    v.z() = color->b;
+    v.w() = color->a;
+    return v;
+}
+
 }  // namespace ICE

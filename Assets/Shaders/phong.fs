@@ -10,9 +10,9 @@ struct Light {
 };
 
 struct Material {
-    vec3 albedo;
-    vec3 specular;
-    vec3 ambient;
+    vec4 albedo;
+    vec4 specular;
+    vec4 ambient;
     float alpha;
     bool use_diffuse_map;
     sampler2D diffuse_map;
