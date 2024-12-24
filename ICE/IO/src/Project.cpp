@@ -62,11 +62,12 @@ bool Project::CreateDirectories() {
     assetBank->addAsset<Shader>("lastpass", {m_shaders_directory / "lastpass.vs", m_shaders_directory / "lastpass.fs"});
     assetBank->addAsset<Shader>("__ice__picking_shader", {m_shaders_directory / "picking.vs", m_shaders_directory / "picking.fs"});
 
+    assetBank->addAsset<TextureCube>("skybox", {m_cubemaps_directory / "skybox.png"});
+
+    assetBank->addAsset<Material>("base_mat", {m_materials_directory / "base_mat.icm"});
+
     assetBank->addAsset<Model>("cube", {m_meshes_directory / "cube.obj"});
     assetBank->addAsset<Model>("sphere", {m_meshes_directory / "sphere.obj"});
-
-    assetBank->addAsset<TextureCube>("skybox", {m_cubemaps_directory / "skybox.png"});
-    assetBank->addAsset<Material>("base_mat", {m_materials_directory / "base_mat.icm"});
 
     scenes.push_back(std::make_shared<Scene>("MainScene"));
     setCurrentScene(getScenes()[0]);
@@ -99,7 +100,7 @@ void Project::writeToFile(const std::shared_ptr<Camera> &editorCamera) {
     for (const auto &[asset_id, mesh] : assetBank->getAll<Model>()) {
         vec.push_back(dumpAsset(asset_id, mesh));
     }
-    j["meshes"] = vec;
+    j["models"] = vec;
     vec.clear();
 
     for (const auto &[asset_id, material] : assetBank->getAll<Material>()) {
@@ -197,7 +198,7 @@ void Project::loadFromFile() {
     infile.close();
 
     std::vector<std::string> sceneNames = j["scenes"];
-    json meshes = j["meshes"];
+    json meshes = j["models"];
     json material = j["materials"];
     json shader = j["shaders"];
     json texture = j["textures2D"];
@@ -206,11 +207,11 @@ void Project::loadFromFile() {
     cameraPosition = JsonParser::parseVec3(j["camera_position"]);
     cameraRotation = JsonParser::parseVec3(j["camera_rotation"]);
 
+    loadAssetsOfType<Shader>(shader);
     loadAssetsOfType<Texture2D>(texture);
     loadAssetsOfType<TextureCube>(cubeMap);
-    loadAssetsOfType<Model>(meshes);
     loadAssetsOfType<Material>(material);
-    loadAssetsOfType<Shader>(shader);
+    loadAssetsOfType<Model>(meshes);
 
     for (const auto &s : sceneNames) {
         infile = std::ifstream(m_scenes_directory / (s + ".ics"));

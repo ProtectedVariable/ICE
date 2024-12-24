@@ -75,10 +75,16 @@ std::shared_ptr<Model> ModelLoader::load(const std::vector<std::filesystem::path
 
         meshes.back()->setVertexArray(vertexArray);
     }
-    return std::make_shared<Model>(meshes, materials);
+    auto model = std::make_shared<Model>(meshes, materials);
+    model->setSources(file);
+    return model;
 }
 
 AssetUID ModelLoader::extractMaterial(const aiMaterial *material, const std::string &model_name) {
+    auto bank_name = model_name + "-" + material->GetName().C_Str();
+    if (ref_bank.getUID(AssetPath::WithTypePrefix<Material>(bank_name)) != 0) {
+        return ref_bank.getUID(AssetPath::WithTypePrefix<Material>(bank_name));
+    }
     auto mtl = std::make_shared<Material>();
     mtl->setShader(ref_bank.getUID(AssetPath::WithTypePrefix<Shader>("phong")));
 
@@ -100,7 +106,6 @@ AssetUID ModelLoader::extractMaterial(const aiMaterial *material, const std::str
     mtl->setUniform("material.use_specular_map", false);
     mtl->setUniform("material.use_normal_map", false);
 
-    auto bank_name = model_name + "-" + material->GetName().C_Str();
     ref_bank.addAsset<Material>(bank_name, mtl);
     return ref_bank.getUID(AssetPath::WithTypePrefix<Material>(bank_name));
 }
