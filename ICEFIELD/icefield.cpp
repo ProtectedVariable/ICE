@@ -23,7 +23,7 @@ int main(void) {
     
     engine.setProject(project);
 
-    engine.getAssetBank()->addAsset<Mesh>("cube", {"Assets/cube.obj"});
+    engine.getAssetBank()->addAsset<Model>("cube", {"Assets/cube.obj"});
 
     engine.getAssetBank()->addAsset<Shader>("solid", {"Assets/solid.vs", "Assets/solid.fs"});
     auto shader_id = engine.getAssetBank()->getUID(std::string("Shaders/solid"));
@@ -33,12 +33,12 @@ int main(void) {
     mat->setUniform("uAlbedo", Eigen::Vector3f(0.2, 0.5, 1));
     engine.getAssetBank()->addAsset<Material>("mat", mat);
 
-    auto mesh_id = engine.getAssetBank()->getUID(std::string("Meshes/cube"));
+    auto mesh_id = engine.getAssetBank()->getUID(std::string("Models/cube"));
     auto material_id = engine.getAssetBank()->getUID(std::string("Materials/mat"));
 
     auto entity = scene->createEntity();
     scene->getRegistry()->addComponent<TransformComponent>(entity, TransformComponent(Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero(), Eigen::Vector3f(1, 1, 1)));
-    scene->getRegistry()->addComponent<RenderComponent>(entity, RenderComponent(mesh_id, material_id));
+    scene->getRegistry()->addComponent<RenderComponent>(entity, RenderComponent(mesh_id));
 
     auto camera = std::make_shared<PerspectiveCamera>(60.0, 16.0 / 9.0, 0.01, 10000.0);
     camera->backward(2);

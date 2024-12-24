@@ -36,8 +36,8 @@ in vec2 ftex_coords;
 
 vec3 normal;
 
-vec3 pointLight(Light light) {
-    vec4 rcolor = vec3(0.0);
+vec4 pointLight(Light light) {
+    vec4 rcolor = vec4(0.0);
 
     //diffuse
     vec3 n = normalize(normal);
@@ -78,17 +78,17 @@ void main() {
     //ambient
     vec4 color_accumulator = material.ambient * vec4(ambient_light, 1.0);
     if(material.use_ambient_map) {
-        color_accumulator *= texture(material.ambient_map, ftex_coords).xyz;
+        color_accumulator *= texture(material.ambient_map, ftex_coords);
     }
     for(int i = 0; i < light_count; i++) {
         color_accumulator += pointLight(lights[i]);
     }
     if(light_count == 0) {
-        frag_color = vec4(material.albedo, 1.0);
+        frag_color = material.albedo;
         if(material.use_diffuse_map) {
            frag_color *= texture(material.diffuse_map, ftex_coords);
         }
     } else {
-        frag_color = vec4(color_accumulator, 1.0);
+        frag_color = color_accumulator;
     }
 }

@@ -109,10 +109,12 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
     for (const auto& e : m_render_queue) {
         auto rc = m_registry->getComponent<RenderComponent>(e);
         auto tc = m_registry->getComponent<TransformComponent>(e);
-        auto model = m_asset_bank->getAsset<Model>(m_registry->getComponent<RenderComponent>(e)->model);
+        auto model = m_asset_bank->getAsset<Model>(rc->model);
+        if (!model)
+            continue;
         for (int i = 0; i < model->getMeshes().size(); i++) {
             auto mtl_id = model->getMaterialsIDs().at(i);
-            auto& mesh = model->getMeshes().at(i);
+            auto mesh = model->getMeshes().at(i);
             auto material = m_asset_bank->getAsset<Material>(mtl_id);
             if (!material) {
                 continue;

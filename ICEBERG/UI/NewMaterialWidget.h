@@ -185,9 +185,9 @@ class NewMaterialWidget : public Widget {
         s.getRegistry()->addSystem(render_system);
 
         auto entity = s.createEntity();
-        auto mesh_uid = m_engine->getAssetBank()->getUID(ICE::AssetPath("Meshes/sphere"));
+        auto model_uid = m_engine->getAssetBank()->getUID(ICE::AssetPath::WithTypePrefix<ICE::Model>("sphere"));
 
-        s.getRegistry()->addComponent<ICE::RenderComponent>(entity, ICE::RenderComponent(mesh_uid, m_id));
+        s.getRegistry()->addComponent<ICE::RenderComponent>(entity, ICE::RenderComponent(model_uid));
         s.getRegistry()->addComponent<ICE::TransformComponent>(entity, ICE::TransformComponent({0, 0, 0}, {0, 45, 0}, {1, 1, 1}));
         render_system->setTarget(preview_framebuffer);
         render_system->update(1.0f);

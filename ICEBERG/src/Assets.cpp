@@ -42,12 +42,12 @@ void* Assets::createThumbnail(const ICE::AssetBankEntry& entry) {
     s.getRegistry()->addSystem(render_system);
 
     auto entity = s.createEntity();
-    auto mesh_uid = m_engine->getAssetBank()->getUID(ICE::AssetPath("Meshes/sphere"));
+    auto model_uid = m_engine->getAssetBank()->getUID(ICE::AssetPath::WithTypePrefix<ICE::Model>("sphere"));
     auto material_uid = m_engine->getAssetBank()->getUID(ICE::AssetPath("Materials/base_mat"));
 
     auto self_uid = m_engine->getAssetBank()->getUID(entry.path);
-    if (auto m = std::dynamic_pointer_cast<ICE::Mesh>(asset); m) {
-        mesh_uid = self_uid;
+    if (auto m = std::dynamic_pointer_cast<ICE::Model>(asset); m) {
+        model_uid = self_uid;
     } else if (auto m = std::dynamic_pointer_cast<ICE::Material>(asset); m) {
         material_uid = self_uid;
     } else {
@@ -55,7 +55,7 @@ void* Assets::createThumbnail(const ICE::AssetBankEntry& entry) {
         return nullptr;
     }
 
-    s.getRegistry()->addComponent<ICE::RenderComponent>(entity, ICE::RenderComponent(mesh_uid, material_uid));
+    s.getRegistry()->addComponent<ICE::RenderComponent>(entity, ICE::RenderComponent(model_uid));
     s.getRegistry()->addComponent<ICE::TransformComponent>(entity, ICE::TransformComponent({0, 0, 0}, {0, 45, 0}, {1, 1, 1}));
     render_system->setTarget(preview_framebuffer);
     render_system->update(1.0f);
