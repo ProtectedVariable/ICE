@@ -67,10 +67,10 @@ void ForwardRenderer::remove(Entity e) {
 void ForwardRenderer::prepareFrame(Camera& camera) {
     //TODO: Sort entities, make shader list, batch, make instances, set uniforms, etc..
     std::sort(m_render_queue.begin(), m_render_queue.end(), [this](Entity a, Entity b) {
-        auto rc_a = m_registry->getComponent<RenderComponent>(a);
-        auto material_a = m_asset_bank->getAsset<Material>(rc_a->material);
-        auto rc_b = m_registry->getComponent<RenderComponent>(b);
-        auto material_b = m_asset_bank->getAsset<Material>(rc_b->material);
+        auto model_a = m_asset_bank->getAsset<Model>(m_registry->getComponent<RenderComponent>(a)->model);
+        auto material_a = m_asset_bank->getAsset<Material>(model_a->getMaterialsIDs().front());
+        auto model_b = m_asset_bank->getAsset<Model>(m_registry->getComponent<RenderComponent>(b)->model);
+        auto material_b = m_asset_bank->getAsset<Material>(model_b->getMaterialsIDs().front());
 
         bool a_transparent = material_a ? material_a->isTransparent() : false;
         bool b_transparent = material_b ? material_b->isTransparent() : false;
@@ -109,59 +109,63 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
     for (const auto& e : m_render_queue) {
         auto rc = m_registry->getComponent<RenderComponent>(e);
         auto tc = m_registry->getComponent<TransformComponent>(e);
-        auto material = m_asset_bank->getAsset<Material>(rc->material);
-        if (!material) {
-            continue;
-        }
-        auto shader = m_asset_bank->getAsset<Shader>(material->getShader());
-        if (!shader) {
-            continue;
-        }
-
-        if (!prepared_shaders.contains(material->getShader())) {
-            shader->bind();
-
-            shader->loadMat4("projection", camera.getProjection());
-            shader->loadMat4("view", view_mat);
-
-            shader->loadFloat3("ambient_light", Eigen::Vector3f(0.1f, 0.1f, 0.1f));
-            int i = 0;
-            for (const auto& e : m_lights) {
-                auto light = m_registry->getComponent<LightComponent>(e);
-                auto transform = m_registry->getComponent<TransformComponent>(e);
-                std::string light_name = (std::string("lights[") + std::to_string(i) + std::string("]."));
-                shader->loadFloat3((light_name + std::string("position")).c_str(), transform->getPosition());
-                shader->loadFloat3((light_name + std::string("rotation")).c_str(), transform->getRotation());
-                shader->loadFloat3((light_name + std::string("color")).c_str(), light->color);
-                shader->loadInt((light_name + std::string("type")).c_str(), static_cast<int>(light->type));
-                i++;
+        auto model = m_asset_bank->getAsset<Model>(m_registry->getComponent<RenderComponent>(e)->model);
+        for (int i = 0; i < model->getMeshes().size(); i++) {
+            auto mtl_id = model->getMaterialsIDs().at(i);
+            auto& mesh = model->getMeshes().at(i);
+            auto material = m_asset_bank->getAsset<Material>(mtl_id);
+            if (!material) {
+                continue;
             }
-            shader->loadInt("light_count", i);
-            prepared_shaders.emplace(material->getShader());
-        }
+            auto shader = m_asset_bank->getAsset<Shader>(material->getShader());
+            if (!shader) {
+                continue;
+            }
 
-        auto mesh = m_asset_bank->getAsset<Mesh>(rc->mesh);
-        if (!mesh) {
-            return;
-        }
+            if (!prepared_shaders.contains(material->getShader())) {
+                shader->bind();
 
-        std::unordered_map<AssetUID, std::shared_ptr<Texture>> texs;
-        for (const auto& [name, value] : material->getAllUniforms()) {
-            if (std::holds_alternative<AssetUID>(value)) {
-                auto v = std::get<AssetUID>(value);
-                if (auto tex = m_asset_bank->getAsset<Texture2D>(v); tex) {
-                    texs.try_emplace(v, tex);
+                shader->loadMat4("projection", camera.getProjection());
+                shader->loadMat4("view", view_mat);
+
+                shader->loadFloat3("ambient_light", Eigen::Vector3f(0.1f, 0.1f, 0.1f));
+                int i = 0;
+                for (const auto& e : m_lights) {
+                    auto light = m_registry->getComponent<LightComponent>(e);
+                    auto transform = m_registry->getComponent<TransformComponent>(e);
+                    std::string light_name = (std::string("lights[") + std::to_string(i) + std::string("]."));
+                    shader->loadFloat3((light_name + std::string("position")).c_str(), transform->getPosition());
+                    shader->loadFloat3((light_name + std::string("rotation")).c_str(), transform->getRotation());
+                    shader->loadFloat3((light_name + std::string("color")).c_str(), light->color);
+                    shader->loadInt((light_name + std::string("type")).c_str(), static_cast<int>(light->type));
+                    i++;
+                }
+                shader->loadInt("light_count", i);
+                prepared_shaders.emplace(material->getShader());
+            }
+
+            if (!mesh) {
+                return;
+            }
+
+            std::unordered_map<AssetUID, std::shared_ptr<Texture>> texs;
+            for (const auto& [name, value] : material->getAllUniforms()) {
+                if (std::holds_alternative<AssetUID>(value)) {
+                    auto v = std::get<AssetUID>(value);
+                    if (auto tex = m_asset_bank->getAsset<Texture2D>(v); tex) {
+                        texs.try_emplace(v, tex);
+                    }
                 }
             }
-        }
 
-        m_render_commands.push_back(RenderCommand{.mesh = mesh,
-                                                  .material = material,
-                                                  .shader = shader,
-                                                  .textures = texs,
-                                                  .model_matrix = tc->getModelMatrix(),
-                                                  .faceCulling = true,
-                                                  .depthTest = true});
+            m_render_commands.push_back(RenderCommand{.mesh = mesh,
+                                                      .material = material,
+                                                      .shader = shader,
+                                                      .textures = texs,
+                                                      .model_matrix = tc->getModelMatrix(),
+                                                      .faceCulling = true,
+                                                      .depthTest = true});
+        }
     }
 
     m_geometry_pass.submit(&m_render_commands);

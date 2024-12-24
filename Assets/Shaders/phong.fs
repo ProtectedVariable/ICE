@@ -37,28 +37,28 @@ in vec2 ftex_coords;
 vec3 normal;
 
 vec3 pointLight(Light light) {
-    vec3 rcolor = vec3(0.0);
+    vec4 rcolor = vec3(0.0);
 
     //diffuse
     vec3 n = normalize(normal);
     vec3 light_direction = normalize(light.position - fposition);
     float diff = max(dot(n, light_direction), 0.0);
-    vec3 diffuse_color = material.albedo;
+    vec4 diffuse_color = material.albedo;
     if(material.use_diffuse_map) {
-        diffuse_color *= texture(material.diffuse_map, ftex_coords).xyz;
+        diffuse_color *= texture(material.diffuse_map, ftex_coords);
     }
-	rcolor += light.color * (diff * diffuse_color);
+	rcolor += vec4(light.color, 1.0) * (diff * diffuse_color);
 	
 	if(diff > 0) {
 		//specular
 		vec3 view_direction = normalize(fview - fposition);
 		vec3 reflection_direction = reflect(-light_direction, n);
 		float spec = pow(max(dot(view_direction, reflection_direction), 0.0), material.alpha);
-		vec3 specular_color = material.specular;
+		vec4 specular_color = material.specular;
 		if(material.use_specular_map) {
-			specular_color *= texture(material.specular_map, ftex_coords).xyz;
+			specular_color *= texture(material.specular_map, ftex_coords);
 		}
-		rcolor += light.color * (spec * specular_color);
+		rcolor += vec4(light.color, 1.0) * (spec * specular_color);
 	}
     return rcolor;
 }
@@ -76,7 +76,7 @@ void main() {
         normal = fnormal;
     }
     //ambient
-    vec3 color_accumulator = vec3(material.ambient*ambient_light);
+    vec4 color_accumulator = material.ambient * vec4(ambient_light, 1.0);
     if(material.use_ambient_map) {
         color_accumulator *= texture(material.ambient_map, ftex_coords).xyz;
     }
