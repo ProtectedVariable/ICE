@@ -1,5 +1,5 @@
 #version 330 core
-#define ICE_MAX_LIGHTS (256)
+#define ICE_MAX_LIGHTS (16)
 
 out vec4 frag_color;
 
@@ -7,6 +7,7 @@ struct Light {
     vec3 position;
     vec3 rotation;
     vec3 color;
+    int type; //0 = Point, 1 = Directional, 2 = Spot
 };
 
 struct Material {
@@ -36,12 +37,11 @@ in vec2 ftex_coords;
 
 vec3 normal;
 
-vec4 pointLight(Light light) {
+vec4 computeLightEffect(Light light, vec3 light_direction) {
     vec4 rcolor = vec4(0.0);
 
     //diffuse
     vec3 n = normalize(normal);
-    vec3 light_direction = normalize(light.position - fposition);
     float diff = max(dot(n, light_direction), 0.0);
     vec4 diffuse_color = material.albedo;
     if(material.use_diffuse_map) {
@@ -63,6 +63,17 @@ vec4 pointLight(Light light) {
     return rcolor;
 }
 
+vec4 applyLight(Light light) {
+    if(light.type == 0) {
+        vec3 light_direction = normalize(light.position - fposition);
+        float distance = length(light.position - fposition);
+        return computeLightEffect(light, light_direction);
+    } else if(light.type == 1) {
+        return computeLightEffect(light, -normalize(light.rotation));
+    } else if(light.type == 2) {
+        //TODO: Spot lights
+    }
+}
 
 vec3 colorToNormal(vec3 color) {
     return normalize(vec3(color.x * 2 - 1, color.y * 2 - 1, color.z * 2 - 1));
@@ -81,7 +92,7 @@ void main() {
         color_accumulator *= texture(material.ambient_map, ftex_coords);
     }
     for(int i = 0; i < light_count; i++) {
-        color_accumulator += pointLight(lights[i]);
+        color_accumulator += applyLight(lights[i]);
     }
     if(light_count == 0) {
         frag_color = material.albedo;

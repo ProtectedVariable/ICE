@@ -105,7 +105,9 @@ void Project::writeToFile(const std::shared_ptr<Camera> &editorCamera) {
 
     for (const auto &[asset_id, material] : assetBank->getAll<Material>()) {
         auto mtlName = assetBank->getName(asset_id).getName();
-        fs::path path = m_materials_directory / (mtlName + ".icm");
+
+        fs::path path = m_materials_directory.parent_path() / (assetBank->getName(asset_id).prefix() + mtlName + ".icm");
+        fs::create_directories(path.parent_path());
         MaterialExporter().writeToJson(path, *material);
 
         material->setSources({path});

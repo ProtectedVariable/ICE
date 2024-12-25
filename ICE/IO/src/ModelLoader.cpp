@@ -81,7 +81,7 @@ std::shared_ptr<Model> ModelLoader::load(const std::vector<std::filesystem::path
 }
 
 AssetUID ModelLoader::extractMaterial(const aiMaterial *material, const std::string &model_name) {
-    auto bank_name = model_name + "-" + material->GetName().C_Str();
+    auto bank_name = model_name + "/" + material->GetName().C_Str();
     if (ref_bank.getUID(AssetPath::WithTypePrefix<Material>(bank_name)) != 0) {
         return ref_bank.getUID(AssetPath::WithTypePrefix<Material>(bank_name));
     }
