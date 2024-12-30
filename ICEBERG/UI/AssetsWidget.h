@@ -37,6 +37,7 @@ class AssetsWidget : public Widget {
                     if (ImGui::Selectable(asset->folder_name.c_str(), i == m_selected_index)) {
                         m_selected_index = i;
                         m_current_view = m_assets[i];
+                        m_prefix = "";
                     }
                 }
                 ImGui::EndTable();
@@ -51,6 +52,7 @@ class AssetsWidget : public Widget {
                     ImGui::Text(folder->folder_name.c_str());
                     if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {
                         m_current_view = folder;
+                        m_prefix += folder->folder_name+"/";
                     }
                 }
 
@@ -64,7 +66,7 @@ class AssetsWidget : public Widget {
                     ImGui::EndGroup();
                     if (m_assets[m_selected_index]->folder_name == "Materials") {
                         if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {
-                            callback("material_edit", name);
+                            callback("material_edit", m_prefix+name); 
                         }
                     }
                     if (ImGui::BeginPopupContextItem((name + "_material_context").c_str())) {
@@ -112,4 +114,5 @@ class AssetsWidget : public Widget {
     std::vector<std::shared_ptr<AssetView>> m_assets;
     int m_selected_index = 0;
     std::shared_ptr<AssetView> m_current_view = nullptr;
+    std::string m_prefix;
 };

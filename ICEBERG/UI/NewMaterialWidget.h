@@ -62,8 +62,9 @@ class NewMaterialWidget : public Widget {
                 }
                 ImGui::SameLine();
                 if (ImGui::Button("Apply")) {
+                    auto new_name = m_engine->getAssetBank()->getName(m_id).prefix() + m_name;
                     auto rename_ok = m_engine->getAssetBank()->renameAsset(m_engine->getAssetBank()->getName(m_id),
-                                                                           ICE::AssetPath::WithTypePrefix<ICE::Material>(m_name));
+                                                                           new_name);
                     if (rename_ok) {
                         m_accepted = true;
                         ImGui::CloseCurrentPopup();
