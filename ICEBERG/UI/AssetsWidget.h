@@ -108,6 +108,7 @@ class AssetsWidget : public Widget {
         m_assets.clear();
         m_current_view = nullptr;
         m_selected_index = 0;
+        m_prefix = "";
     }
 
    private:
