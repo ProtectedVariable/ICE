@@ -169,31 +169,29 @@ class NewMaterialWidget : public Widget {
     }
 
     void* renderPreview() {
-        auto preview_framebuffer = m_engine->getGraphicsFactory()->createFramebuffer({256, 256, 1});
-        ICE::Scene s("preview_scene");
+        auto model_uid = m_engine->getAssetBank()->getUID(ICE::AssetPath::WithTypePrefix<ICE::Model>("sphere"));
 
-        auto render_system = std::make_shared<ICE::RenderSystem>();
-        render_system->setRenderer(
-            std::make_shared<ICE::ForwardRenderer>(m_engine->getApi(), m_engine->getGraphicsFactory(), s.getRegistry(), m_engine->getAssetBank()));
+        auto model = m_engine->getAssetBank()->getAsset<ICE::Model>(model_uid);
+        auto shader = m_engine->getAssetBank()->getAsset<ICE::Shader>(m_material->getShader());
 
         auto camera = std::make_shared<ICE::PerspectiveCamera>(60.0, 1.0, 0.01, 10000.0);
         camera->backward(2);
         camera->up(1);
         camera->pitch(-30);
-        render_system->setCamera(camera);
-        render_system->setViewport(0, 0, 256, 256);
 
-        s.getRegistry()->addSystem(render_system);
+        shader->bind();
+        shader->loadMat4("projection", camera->getProjection());
+        shader->loadMat4("view", camera->lookThrough());
 
-        auto entity = s.createEntity();
-        auto model_uid = m_engine->getAssetBank()->getUID(ICE::AssetPath::WithTypePrefix<ICE::Model>("sphere"));
+        ICE::GeometryPass pass(m_engine->getApi(), m_engine->getGraphicsFactory(), {256, 256, 1});
+        std::vector<ICE::RenderCommand> cmds;
+        for (const auto& mesh : model->getMeshes()) {
+            cmds.push_back(ICE::RenderCommand{.mesh = mesh, .material = m_material, .shader = shader, .model_matrix = Eigen::Matrix4f::Identity()});
+        }
+        pass.submit(&cmds);
+        pass.execute();
 
-        s.getRegistry()->addComponent<ICE::RenderComponent>(entity, ICE::RenderComponent(model_uid));
-        s.getRegistry()->addComponent<ICE::TransformComponent>(entity, ICE::TransformComponent({0, 0, 0}, {0, 45, 0}, {1, 1, 1}));
-        render_system->setTarget(preview_framebuffer);
-        render_system->update(1.0f);
-
-        return static_cast<char*>(0) + preview_framebuffer->getTexture();
+        return static_cast<char*>(0) + pass.getResult()->getTexture();
     }
 
     bool accepted() {
