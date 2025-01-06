@@ -36,6 +36,9 @@ class NoneGraphicsFactory : public GraphicsFactory {
     }
 
     std::shared_ptr<Texture2D> createTexture2D(const std::string& file) const override { return std::make_shared<NoneTexture2D>(); }
+    std::shared_ptr<Texture2D> createTexture2D(const void* data, size_t w, size_t h, TextureFormat fmt) const override {
+        return std::make_shared<NoneTexture2D>();
+    }
 
     std::shared_ptr<TextureCube> createTextureCube(const std::string& file) const override { return std::make_shared<NoneTextureCube>(); }
 };

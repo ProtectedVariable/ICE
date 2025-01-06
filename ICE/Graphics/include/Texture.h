@@ -4,10 +4,10 @@
 
 #ifndef ICE_TEXTURE_H
 #define ICE_TEXTURE_H
+#include <stb/stb_image.h>
 
 #include <Asset.h>
 #include <Logger.h>
-#include <stb/stb_image.h>
 
 #include <cstdint>
 #include <string>

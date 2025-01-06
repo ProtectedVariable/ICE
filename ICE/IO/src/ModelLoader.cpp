@@ -31,11 +31,11 @@ std::shared_ptr<Model> ModelLoader::load(const std::vector<std::filesystem::path
         auto mesh = scene->mMeshes[m];
         auto material = scene->mMaterials[mesh->mMaterialIndex];
 
-        materials.push_back(extractMaterial(material, file[0].filename().stem().string()));
+        materials.push_back(extractMaterial(material, file[0].filename().stem().string(), scene));
 
         for (int i = 0; i < mesh->mNumVertices; i++) {
             auto v = mesh->mVertices[i];
-            auto n = mesh->mNormals[i];
+            auto n = mesh->mNormals ? mesh->mNormals[i] : aiVector3D{0, 0, 0};
             Eigen::Vector2f uv(0, 0);
             if (mesh->mTextureCoords[0] != nullptr) {
                 auto uv_file = mesh->mTextureCoords[0][i];
@@ -80,7 +80,7 @@ std::shared_ptr<Model> ModelLoader::load(const std::vector<std::filesystem::path
     return model;
 }
 
-AssetUID ModelLoader::extractMaterial(const aiMaterial *material, const std::string &model_name) {
+AssetUID ModelLoader::extractMaterial(const aiMaterial *material, const std::string &model_name, const aiScene *scene) {
     auto bank_name = model_name + "/" + material->GetName().C_Str();
     if (ref_bank.getUID(AssetPath::WithTypePrefix<Material>(bank_name)) != 0) {
         return ref_bank.getUID(AssetPath::WithTypePrefix<Material>(bank_name));
@@ -101,6 +101,15 @@ AssetUID ModelLoader::extractMaterial(const aiMaterial *material, const std::str
         mtl->setUniform("material.ambient", colorToVec(&ambient));
     if (aiGetMaterialFloat(material, AI_MATKEY_SHININESS, &alpha) == aiReturn_SUCCESS)
         mtl->setUniform("material.alpha", alpha);
+
+    aiString texture_file;
+    material->Get(AI_MATKEY_TEXTURE(aiTextureType_DIFFUSE, 0), texture_file);
+    if (auto texture = scene->GetEmbeddedTexture(texture_file.C_Str())) {
+        uint32_t *data = reinterpret_cast<uint32_t *>(texture->pcData);
+        auto texture_ice = m_graphics_factory->createTexture2D(data, texture->mWidth, texture->mHeight, TextureFormat::RGBA); 
+    } else {
+        //regular file, check if it exists and read it
+    }
     mtl->setUniform("material.use_diffuse_map", false);
     mtl->setUniform("material.use_ambient_map", false);
     mtl->setUniform("material.use_specular_map", false);
