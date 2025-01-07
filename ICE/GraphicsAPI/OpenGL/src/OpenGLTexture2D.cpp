@@ -12,13 +12,22 @@ namespace ICE {
 OpenGLTexture2D::OpenGLTexture2D(const std::string &file) : file(file) {
     int channels, w, h;
     void *data = Texture::getDataFromFile(file, &w, &h, &channels);
+    loadData(data, w, h, channels == 4 ? TextureFormat::RGBA : TextureFormat::RGB);
+    stbi_image_free(data);
+}
+
+OpenGLTexture2D::OpenGLTexture2D(const void *data, size_t w, size_t h, TextureFormat fmt) {
+    loadData(data, w, h, fmt);
+}
+
+void OpenGLTexture2D::loadData(const void *data, size_t w, size_t h, TextureFormat fmt) {
     width = w;
     height = h;
     storageFormat = GL_RGBA;
     dataFormat = GL_RGBA;
-    if (channels == 4) {
+    if (fmt == TextureFormat::RGBA) {
         format = TextureFormat::RGBA;
-    } else if (channels == 3) {
+    } else if (fmt == TextureFormat::RGB) {
         storageFormat = dataFormat = GL_RGB;
         format = TextureFormat::RGB;
     }
@@ -34,12 +43,6 @@ OpenGLTexture2D::OpenGLTexture2D(const std::string &file) : file(file) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
     glTexImage2D(GL_TEXTURE_2D, 0, storageFormat, width, height, 0, dataFormat, GL_UNSIGNED_BYTE, data);
-
-    stbi_image_free(data);
-}
-
-OpenGLTexture2D::OpenGLTexture2D(const void *data, size_t w, size_t h, TextureFormat fmt) {
-    //TODO :)
 }
 
 void OpenGLTexture2D::setData(void *data, uint32_t size) {

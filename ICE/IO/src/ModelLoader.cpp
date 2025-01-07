@@ -17,7 +17,9 @@ namespace ICE {
 std::shared_ptr<Model> ModelLoader::load(const std::vector<std::filesystem::path> &file) {
     Assimp::Importer importer;
 
-    const aiScene *scene = importer.ReadFile(file[0].string(), aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices);
+    const aiScene *scene = importer.ReadFile(
+        file[0].string(),
+        aiProcess_ValidateDataStructure | aiProcess_SortByPType | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace | aiProcess_Triangulate);
 
     std::vector<std::shared_ptr<Mesh>> meshes;
     std::vector<AssetUID> materials;
@@ -81,7 +83,11 @@ std::shared_ptr<Model> ModelLoader::load(const std::vector<std::filesystem::path
 }
 
 AssetUID ModelLoader::extractMaterial(const aiMaterial *material, const std::string &model_name, const aiScene *scene) {
-    auto bank_name = model_name + "/" + material->GetName().C_Str();
+    auto mtl_name = material->GetName().C_Str();
+    if (strlen(mtl_name) == 0) {
+        mtl_name = "DefaultMat";
+    }
+    auto bank_name = model_name + "/" + mtl_name;
     if (ref_bank.getUID(AssetPath::WithTypePrefix<Material>(bank_name)) != 0) {
         return ref_bank.getUID(AssetPath::WithTypePrefix<Material>(bank_name));
     }
@@ -100,23 +106,59 @@ AssetUID ModelLoader::extractMaterial(const aiMaterial *material, const std::str
     if (aiGetMaterialColor(material, AI_MATKEY_COLOR_AMBIENT, &ambient) == aiReturn_SUCCESS)
         mtl->setUniform("material.ambient", colorToVec(&ambient));
     if (aiGetMaterialFloat(material, AI_MATKEY_SHININESS, &alpha) == aiReturn_SUCCESS)
-        mtl->setUniform("material.alpha", alpha);
+        mtl->setUniform("material.alpha", max(alpha, 1.0f));
 
-    aiString texture_file;
-    material->Get(AI_MATKEY_TEXTURE(aiTextureType_DIFFUSE, 0), texture_file);
-    if (auto texture = scene->GetEmbeddedTexture(texture_file.C_Str())) {
-        uint32_t *data = reinterpret_cast<uint32_t *>(texture->pcData);
-        auto texture_ice = m_graphics_factory->createTexture2D(data, texture->mWidth, texture->mHeight, TextureFormat::RGBA); 
-    } else {
-        //regular file, check if it exists and read it
-    }
     mtl->setUniform("material.use_diffuse_map", false);
     mtl->setUniform("material.use_ambient_map", false);
     mtl->setUniform("material.use_specular_map", false);
     mtl->setUniform("material.use_normal_map", false);
 
+    if (auto ambient_map = extractTexture(material, bank_name + "/ambient_map", scene, aiTextureType_AMBIENT); ambient_map != 0) {
+        mtl->setUniform("material.ambient_map", ambient_map);
+        mtl->setUniform("material.use_ambient_map", true);
+    }
+    if (auto diffuse_tex = extractTexture(material, bank_name + "/diffuse_map", scene, aiTextureType_DIFFUSE); diffuse_tex != 0) {
+        mtl->setUniform("material.diffuse_map", diffuse_tex);
+        mtl->setUniform("material.use_diffuse_map", true);
+    }
+    if (auto specular_tex = extractTexture(material, bank_name + "/specular_map", scene, aiTextureType_SPECULAR); specular_tex != 0) {
+        mtl->setUniform("material.specular_map", specular_tex);
+        mtl->setUniform("material.use_specular_map", true);
+    }
+    if (auto normal_tex = extractTexture(material, bank_name + "/normal_map", scene, aiTextureType_NORMALS); normal_tex != 0) {
+        mtl->setUniform("material.normal_map", normal_tex);
+        mtl->setUniform("material.use_normal_map", true);
+    }
+
     ref_bank.addAsset<Material>(bank_name, mtl);
     return ref_bank.getUID(AssetPath::WithTypePrefix<Material>(bank_name));
+}
+
+AssetUID ModelLoader::extractTexture(const aiMaterial *material, const std::string &tex_path, const aiScene *scene, aiTextureType type) {
+    AssetUID tex_id = 0;
+    aiString texture_file;
+    if (material->Get(AI_MATKEY_TEXTURE(type, 0), texture_file) == aiReturn_SUCCESS) {
+        if (auto texture = scene->GetEmbeddedTexture(texture_file.C_Str())) {
+            unsigned char *data = reinterpret_cast<unsigned char *>(texture->pcData);
+            void *data2 = nullptr;
+            int width = texture->mWidth;
+            int height = texture->mHeight;
+            int channels = 0;
+            if (height == 0) {
+                //Compressed memory, use stbi to load
+                data2 = stbi_load_from_memory(data, texture->mWidth, &width, &height, &channels, 4);
+            } else {
+                data2 = data;
+            }
+            auto texture_ice = m_graphics_factory->createTexture2D(data2, width, height, TextureFormat::RGBA);
+            ref_bank.addAsset<Texture2D>(tex_path, texture_ice);
+            tex_id = ref_bank.getUID(AssetPath::WithTypePrefix<Texture2D>(tex_path));
+        } else {
+            //regular file, check if it exists and read it
+            //TODO :)
+        }
+    }
+    return tex_id;
 }
 
 Eigen::Vector4f ModelLoader::colorToVec(aiColor4D *color) {

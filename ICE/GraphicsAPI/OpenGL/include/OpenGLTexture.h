@@ -32,6 +32,8 @@ class OpenGLTexture2D : public Texture2D {
     TextureType getTextureType() const override;
 
    private:
+    void loadData(const void *data, size_t w, size_t h, TextureFormat fmt);
+
     std::string file;
     uint32_t id;
     uint32_t width, height;

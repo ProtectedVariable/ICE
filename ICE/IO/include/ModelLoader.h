@@ -24,6 +24,7 @@ class ModelLoader : public IAssetLoader<Model> {
           IAssetLoader<Model>(factory) {}
     std::shared_ptr<Model> load(const std::vector<std::filesystem::path> &file) override;
     AssetUID extractMaterial(const aiMaterial *material, const std::string &model_name, const aiScene *scene);
+    AssetUID extractTexture(const aiMaterial *material, const std::string &tex_path, const aiScene *scene, aiTextureType type);
 
    private:
     Eigen::Vector4f colorToVec(aiColor4D *color);
