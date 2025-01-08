@@ -127,7 +127,7 @@ AssetUID ModelLoader::extractMaterial(const aiMaterial *material, const std::str
     if (aiGetMaterialColor(material, AI_MATKEY_COLOR_AMBIENT, &ambient) == aiReturn_SUCCESS)
         mtl->setUniform("material.ambient", colorToVec(&ambient));
     if (aiGetMaterialFloat(material, AI_MATKEY_SHININESS, &alpha) == aiReturn_SUCCESS)
-        mtl->setUniform("material.alpha", max(alpha, 1.0f));
+        mtl->setUniform("material.alpha", std::max(alpha, 1.0f));
 
     ref_bank.addAsset<Material>(bank_name, mtl);
     return ref_bank.getUID(AssetPath::WithTypePrefix<Material>(bank_name));

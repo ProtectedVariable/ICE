@@ -90,6 +90,7 @@ class AssetBank {
         if (resources.find(id) == resources.end() && nameMapping.find(name) == nameMapping.end()) {
             resources.try_emplace(id, AssetBankEntry{name, asset});
             nameMapping.try_emplace(name, id);
+            nextUID = nextUID > id ? nextUID : id + 1;
             return true;
         }
         return false;
