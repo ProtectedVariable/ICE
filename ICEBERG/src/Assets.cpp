@@ -55,8 +55,19 @@ void* Assets::createThumbnail(const ICE::AssetBankEntry& entry) {
 
     ICE::GeometryPass pass(m_engine->getApi(), m_engine->getGraphicsFactory(), {256, 256, 1});
     std::vector<ICE::RenderCommand> cmds;
+    std::unordered_map<ICE::AssetUID, std::shared_ptr<ICE::Texture>> textures;
+    for (const auto& [k, v] : material->getAllUniforms()) {
+        if (std::holds_alternative<ICE::AssetUID>(v)) {
+            auto id = std::get<ICE::AssetUID>(v);
+            textures.try_emplace(id, m_engine->getAssetBank()->getAsset<ICE::Texture2D>(id));
+        }
+    }
     for (const auto& mesh : model->getMeshes()) {
-        cmds.push_back(ICE::RenderCommand{.mesh = mesh, .material = material, .shader = shader, .model_matrix = Eigen::Matrix4f::Identity()});
+        cmds.push_back(ICE::RenderCommand{.mesh = mesh,
+                                          .material = material,
+                                          .shader = shader,
+                                          .textures = textures,
+                                          .model_matrix = Eigen::Matrix4f::Identity()});
     }
     pass.submit(&cmds);
     pass.execute();

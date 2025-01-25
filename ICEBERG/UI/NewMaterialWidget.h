@@ -63,8 +63,7 @@ class NewMaterialWidget : public Widget {
                 ImGui::SameLine();
                 if (ImGui::Button("Apply")) {
                     auto new_name = m_engine->getAssetBank()->getName(m_id).prefix() + m_name;
-                    auto rename_ok = m_engine->getAssetBank()->renameAsset(m_engine->getAssetBank()->getName(m_id),
-                                                                           new_name);
+                    auto rename_ok = m_engine->getAssetBank()->renameAsset(m_engine->getAssetBank()->getName(m_id), new_name);
                     if (rename_ok) {
                         m_accepted = true;
                         ImGui::CloseCurrentPopup();
@@ -185,8 +184,19 @@ class NewMaterialWidget : public Widget {
 
         ICE::GeometryPass pass(m_engine->getApi(), m_engine->getGraphicsFactory(), {256, 256, 1});
         std::vector<ICE::RenderCommand> cmds;
+        std::unordered_map<ICE::AssetUID, std::shared_ptr<ICE::Texture>> textures;
+        for (const auto& [k, v] : m_material->getAllUniforms()) {
+            if (std::holds_alternative<ICE::AssetUID>(v)) {
+                auto id = std::get<ICE::AssetUID>(v);
+                textures.try_emplace(id, m_engine->getAssetBank()->getAsset<ICE::Texture2D>(id));
+            }
+        }
         for (const auto& mesh : model->getMeshes()) {
-            cmds.push_back(ICE::RenderCommand{.mesh = mesh, .material = m_material, .shader = shader, .model_matrix = Eigen::Matrix4f::Identity()});
+            cmds.push_back(ICE::RenderCommand{.mesh = mesh,
+                                              .material = m_material,
+                                              .shader = shader,
+                                              .textures = textures,
+                                              .model_matrix = Eigen::Matrix4f::Identity()});
         }
         pass.submit(&cmds);
         pass.execute();
