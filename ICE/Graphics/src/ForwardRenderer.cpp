@@ -106,12 +106,22 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
 
     std::unordered_set<AssetUID> prepared_shaders;
     auto view_mat = camera.lookThrough();
+    auto frustum = extractFrustumPlanes(camera.getProjection() * view_mat);
     for (const auto& e : m_render_queue) {
         auto rc = m_registry->getComponent<RenderComponent>(e);
         auto tc = m_registry->getComponent<TransformComponent>(e);
         auto model = m_asset_bank->getAsset<Model>(rc->model);
         if (!model)
             continue;
+
+        auto aabb = model->getBoundingBox();
+        Eigen::Vector3f min = (tc->getModelMatrix() * Eigen::Vector4f(aabb.getMin().x(), aabb.getMin().y(), aabb.getMin().z(), 1.0)).head<3>();
+        Eigen::Vector3f max = (tc->getModelMatrix() * Eigen::Vector4f(aabb.getMax().x(), aabb.getMax().y(), aabb.getMax().z(), 1.0)).head<3>();
+        aabb = AABB(std::vector<Eigen::Vector3f>{min, max});
+        if (!isAABBInFrustum(frustum, aabb)) {
+            continue;
+        }
+
         for (int i = 0; i < model->getMeshes().size(); i++) {
             auto mtl_id = model->getMaterialsIDs().at(i);
             auto mesh = model->getMeshes().at(i);

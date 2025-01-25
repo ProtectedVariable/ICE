@@ -10,6 +10,8 @@
 #include <Eigen/Dense>
 #include <array>
 
+#include "AABB.h"
+
 #define DEG_TO_RAD(x) ((x) * M_PI / 180.0)
 #define RAD_TO_DEG(x) ((x) * 180.0 / M_PI)
 
@@ -30,6 +32,8 @@ Eigen::Matrix4f transformationMatrix(const Eigen::Vector3f &translation, const E
 Eigen::Vector3f orientation(int face, float x, float y);
 int clamp(int x, int a, int b);
 std::array<uint8_t *, 6> equirectangularToCubemap(uint8_t *inputPixels, int width, int height, float rotation = 180);
+std::array<Eigen::Vector4f, 6> extractFrustumPlanes(const Eigen::Matrix4f &PV);
+bool isAABBInFrustum(const std::array<Eigen::Vector4f, 6> &frustum, const AABB &aabb);
 }  // namespace ICE
 
 #endif  //ICE_ICEMATH_H
