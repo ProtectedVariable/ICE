@@ -83,11 +83,11 @@ std::shared_ptr<Model> ModelLoader::load(const std::vector<std::filesystem::path
 }
 
 AssetUID ModelLoader::extractMaterial(const aiMaterial *material, const std::string &model_name, const aiScene *scene) {
-    auto mtl_name = material->GetName().C_Str();
-    if (strlen(mtl_name) == 0) {
+    auto mtl_name = material->GetName();
+    if (mtl_name.length == 0) {
         mtl_name = "DefaultMat";
     }
-    auto bank_name = model_name + "/" + mtl_name;
+    auto bank_name = model_name + "/" + mtl_name.C_Str();
     auto mtl = std::make_shared<Material>();
     mtl->setUniform("material.use_diffuse_map", false);
     mtl->setUniform("material.use_ambient_map", false);
