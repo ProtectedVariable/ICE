@@ -2,7 +2,7 @@
 // Created by Thomas Ibanez on 24.02.21.
 //
 #include <Material.h>
-#include <Mesh.h>
+#include <Model.h>
 #include <Shader.h>
 #include <Texture.h>
 #include <gtest/gtest.h>
@@ -32,7 +32,7 @@ TEST(AssetPathTest, setNameOk) {
 
 TEST(AssetPathTest, TypePrefixOk) {
     EXPECT_EQ(AssetPath::WithTypePrefix<Material>("a").toString(), "Materials/a");
-    EXPECT_EQ(AssetPath::WithTypePrefix<Mesh>("a").toString(), "Meshes/a");
+    EXPECT_EQ(AssetPath::WithTypePrefix<Model>("a").toString(), "Models/a");
     EXPECT_EQ(AssetPath::WithTypePrefix<Shader>("a").toString(), "Shaders/a");
     EXPECT_EQ(AssetPath::WithTypePrefix<Texture2D>("a").toString(), "Textures/a");
     EXPECT_EQ(AssetPath::WithTypePrefix<TextureCube>("a").toString(), "CubeMaps/a");

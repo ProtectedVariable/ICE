@@ -66,21 +66,6 @@ void ForwardRenderer::remove(Entity e) {
 
 void ForwardRenderer::prepareFrame(Camera& camera) {
     //TODO: Sort entities, make shader list, batch, make instances, set uniforms, etc..
-    std::sort(m_render_queue.begin(), m_render_queue.end(), [this](Entity a, Entity b) {
-        auto rc_a = m_registry->getComponent<RenderComponent>(a);
-        auto material_a = m_asset_bank->getAsset<Material>(rc_a->material);
-        auto rc_b = m_registry->getComponent<RenderComponent>(b);
-        auto material_b = m_asset_bank->getAsset<Material>(rc_b->material);
-
-        bool a_transparent = material_a ? material_a->isTransparent() : false;
-        bool b_transparent = material_b ? material_b->isTransparent() : false;
-
-        if (!a_transparent && b_transparent) {
-            return true;
-        } else {
-            return false;
-        }
-    });
 
     if (m_skybox != NO_ASSET_ID) {
         auto shader = m_asset_bank->getAsset<Shader>("__ice_skybox_shader");
@@ -106,64 +91,90 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
 
     std::unordered_set<AssetUID> prepared_shaders;
     auto view_mat = camera.lookThrough();
+    auto frustum = extractFrustumPlanes(camera.getProjection() * view_mat);
     for (const auto& e : m_render_queue) {
         auto rc = m_registry->getComponent<RenderComponent>(e);
         auto tc = m_registry->getComponent<TransformComponent>(e);
-        auto material = m_asset_bank->getAsset<Material>(rc->material);
-        if (!material) {
+        auto model = m_asset_bank->getAsset<Model>(rc->model);
+        if (!model)
+            continue;
+
+        auto aabb = model->getBoundingBox();
+        Eigen::Vector3f min = (tc->getModelMatrix() * Eigen::Vector4f(aabb.getMin().x(), aabb.getMin().y(), aabb.getMin().z(), 1.0)).head<3>();
+        Eigen::Vector3f max = (tc->getModelMatrix() * Eigen::Vector4f(aabb.getMax().x(), aabb.getMax().y(), aabb.getMax().z(), 1.0)).head<3>();
+        aabb = AABB(std::vector<Eigen::Vector3f>{min, max});
+        if (!isAABBInFrustum(frustum, aabb)) {
             continue;
         }
-        auto shader = m_asset_bank->getAsset<Shader>(material->getShader());
-        if (!shader) {
-            continue;
-        }
 
-        if (!prepared_shaders.contains(material->getShader())) {
-            shader->bind();
-
-            shader->loadMat4("projection", camera.getProjection());
-            shader->loadMat4("view", view_mat);
-
-            shader->loadFloat3("ambient_light", Eigen::Vector3f(0.1f, 0.1f, 0.1f));
-            int i = 0;
-            for (const auto& e : m_lights) {
-                auto light = m_registry->getComponent<LightComponent>(e);
-                auto transform = m_registry->getComponent<TransformComponent>(e);
-                std::string light_name = (std::string("lights[") + std::to_string(i) + std::string("]."));
-                shader->loadFloat3((light_name + std::string("position")).c_str(), transform->getPosition());
-                shader->loadFloat3((light_name + std::string("rotation")).c_str(), transform->getRotation());
-                shader->loadFloat3((light_name + std::string("color")).c_str(), light->color);
-                shader->loadInt((light_name + std::string("type")).c_str(), static_cast<int>(light->type));
-                i++;
+        for (int i = 0; i < model->getMeshes().size(); i++) {
+            auto mtl_id = model->getMaterialsIDs().at(i);
+            auto mesh = model->getMeshes().at(i);
+            auto material = m_asset_bank->getAsset<Material>(mtl_id);
+            if (!material) {
+                continue;
             }
-            shader->loadInt("light_count", i);
-            prepared_shaders.emplace(material->getShader());
-        }
+            auto shader = m_asset_bank->getAsset<Shader>(material->getShader());
+            if (!shader) {
+                continue;
+            }
 
-        auto mesh = m_asset_bank->getAsset<Mesh>(rc->mesh);
-        if (!mesh) {
-            return;
-        }
+            if (!prepared_shaders.contains(material->getShader())) {
+                shader->bind();
 
-        std::unordered_map<AssetUID, std::shared_ptr<Texture>> texs;
-        for (const auto& [name, value] : material->getAllUniforms()) {
-            if (std::holds_alternative<AssetUID>(value)) {
-                auto v = std::get<AssetUID>(value);
-                if (auto tex = m_asset_bank->getAsset<Texture2D>(v); tex) {
-                    texs.try_emplace(v, tex);
+                shader->loadMat4("projection", camera.getProjection());
+                shader->loadMat4("view", view_mat);
+
+                shader->loadFloat3("ambient_light", Eigen::Vector3f(0.1f, 0.1f, 0.1f));
+                int i = 0;
+                for (const auto& e : m_lights) {
+                    auto light = m_registry->getComponent<LightComponent>(e);
+                    auto transform = m_registry->getComponent<TransformComponent>(e);
+                    std::string light_name = (std::string("lights[") + std::to_string(i) + std::string("]."));
+                    shader->loadFloat3((light_name + std::string("position")).c_str(), transform->getPosition());
+                    shader->loadFloat3((light_name + std::string("rotation")).c_str(), transform->getRotation());
+                    shader->loadFloat3((light_name + std::string("color")).c_str(), light->color);
+                    shader->loadInt((light_name + std::string("type")).c_str(), static_cast<int>(light->type));
+                    i++;
+                }
+                shader->loadInt("light_count", i);
+                prepared_shaders.emplace(material->getShader());
+            }
+
+            if (!mesh) {
+                return;
+            }
+
+            std::unordered_map<AssetUID, std::shared_ptr<Texture>> texs;
+            for (const auto& [name, value] : material->getAllUniforms()) {
+                if (std::holds_alternative<AssetUID>(value)) {
+                    auto v = std::get<AssetUID>(value);
+                    if (auto tex = m_asset_bank->getAsset<Texture2D>(v); tex) {
+                        texs.try_emplace(v, tex);
+                    }
                 }
             }
-        }
 
-        m_render_commands.push_back(RenderCommand{.mesh = mesh,
-                                                  .material = material,
-                                                  .shader = shader,
-                                                  .textures = texs,
-                                                  .model_matrix = tc->getModelMatrix(),
-                                                  .faceCulling = true,
-                                                  .depthTest = true});
+            m_render_commands.push_back(RenderCommand{.mesh = mesh,
+                                                      .material = material,
+                                                      .shader = shader,
+                                                      .textures = texs,
+                                                      .model_matrix = tc->getModelMatrix(),
+                                                      .faceCulling = true,
+                                                      .depthTest = true});
+        }
     }
 
+    std::sort(m_render_commands.begin(), m_render_commands.end(), [this](const RenderCommand &a, const RenderCommand &b) {
+        bool a_transparent = a.material->isTransparent();
+        bool b_transparent = b.material->isTransparent();
+
+        if (!a_transparent && b_transparent) {
+            return true;
+        } else {
+            return false;
+        }
+        });
     m_geometry_pass.submit(&m_render_commands);
 }
 

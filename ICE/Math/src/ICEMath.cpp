@@ -29,7 +29,7 @@ Eigen::Matrix4f rotationMatrix(Eigen::Vector3f angles, bool yaw_first) {
     mz(1, 0) = sinf(rz);
     mz(1, 1) = cosf(rz);
 
-    if(yaw_first) {
+    if (yaw_first) {
         return my * mx * mz;
     } else {
         return mx * my * mz;
@@ -124,5 +124,43 @@ std::array<uint8_t *, 6> equirectangularToCubemap(uint8_t *inputPixels, int widt
         }
     }
     return outputPixels;
+}
+
+std::array<Eigen::Vector4f, 6> extractFrustumPlanes(const Eigen::Matrix4f &PV) {
+    std::array<Eigen::Vector4f, 6> planes;
+    // Left
+    planes[0] = {PV(3, 0) + PV(0, 0), PV(3, 1) + PV(0, 1), PV(3, 2) + PV(0, 2), PV(3, 3) + PV(0, 3)};
+    // Right
+    planes[1] = {PV(3, 0) - PV(0, 0), PV(3, 1) - PV(0, 1), PV(3, 2) - PV(0, 2), PV(3, 3) - PV(0, 3)};
+    // Bottom
+    planes[2] = {PV(3, 0) + PV(1, 0), PV(3, 1) + PV(1, 1), PV(3, 2) + PV(1, 2), PV(3, 3) + PV(1, 3)};
+    // Top
+    planes[3] = {PV(3, 0) - PV(1, 0), PV(3, 1) - PV(1, 1), PV(3, 2) - PV(1, 2), PV(3, 3) - PV(1, 3)};
+    // Near
+    planes[4] = {PV(3, 0) + PV(2, 0), PV(3, 1) + PV(2, 1), PV(3, 2) + PV(2, 2), PV(3, 3) + PV(2, 3)};
+    // Far
+    planes[5] = {PV(3, 0) - PV(2, 0), PV(3, 1) - PV(2, 1), PV(3, 2) - PV(2, 2), PV(3, 3) - PV(2, 3)};
+    // Normalize planes
+    for (int i = 0; i < 6; i++) {
+        float length = sqrt(planes[i](0) * planes[i](0) + planes[i](1) * planes[i](1) + planes[i](2) * planes[i](2));
+        planes[i](0) /= length;
+        planes[i](1) /= length;
+        planes[i](2) /= length;
+        planes[i](3) /= length;
+    }
+    return planes;
+}
+
+bool isAABBInFrustum(const std::array<Eigen::Vector4f, 6> &frustum, const AABB &aabb) {
+    for (int i = 0; i < 6; i++) {
+        Eigen::Vector3f positive(frustum[i](0) >= 0 ? aabb.getMax().x() : aabb.getMin().x(),
+                                 frustum[i](1) >= 0 ? aabb.getMax().y() : aabb.getMin().y(),
+                                 frustum[i](2) >= 0 ? aabb.getMax().z() : aabb.getMin().z());
+
+        if (frustum[i](0) * positive.x() + frustum[i](1) * positive.y() + frustum[i](2) * positive.z() + frustum[i](3) < 0) {
+            return false;
+        }
+    }
+    return true;
 }
 }  // namespace ICE

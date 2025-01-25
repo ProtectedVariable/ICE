@@ -18,23 +18,23 @@ target_link_libraries(MaterialsTestSuite
         gtest_main
         io)
 
-add_executable(MeshLoaderTestSuite
-    MeshLoaderTest.cpp
+add_executable(ModelLoaderTestSuite
+    ModelLoaderTest.cpp
 )
 
-add_test(NAME MeshLoaderTestSuite
-        COMMAND MeshLoaderTestSuite
-        WORKING_DIRECTORY $<TARGET_FILE_DIR:MeshLoaderTestSuite>)
+add_test(NAME ModelLoaderTestSuite
+        COMMAND ModelLoaderTestSuite
+        WORKING_DIRECTORY $<TARGET_FILE_DIR:ModelLoaderTestSuite>)
 
-target_link_libraries(MeshLoaderTestSuite
+target_link_libraries(ModelLoaderTestSuite
         PRIVATE
         gtest_main
         io)
 
 add_custom_command(
-    TARGET MeshLoaderTestSuite POST_BUILD
+    TARGET ModelLoaderTestSuite POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
             "${CMAKE_CURRENT_SOURCE_DIR}/cube.obj"
-            $<TARGET_FILE_DIR:MeshLoaderTestSuite>
+            $<TARGET_FILE_DIR:ModelLoaderTestSuite>
 )
 

@@ -14,6 +14,8 @@ namespace ICE {
         AABB(const Eigen::Vector3f& min, const Eigen::Vector3f& max);
         AABB(const std::vector<Eigen::Vector3f>& points);
 
+        AABB scaledBy(const Eigen::Vector3f& scale) const;
+        AABB translatedBy(const Eigen::Vector3f& tr) const;
         float getVolume() const;
         bool overlaps(const AABB& other) const;
         bool contains(const Eigen::Vector3f& point) const;

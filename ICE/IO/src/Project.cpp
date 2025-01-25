@@ -29,7 +29,7 @@ Project::Project(const fs::path &base_directory, const std::string &name)
     m_shaders_directory = m_base_directory / assets_folder / "Shaders";
     m_textures_directory = m_base_directory / assets_folder / "Textures";
     m_cubemaps_directory = m_base_directory / assets_folder / "Cubemaps";
-    m_meshes_directory = m_base_directory / assets_folder / "Meshes";
+    m_meshes_directory = m_base_directory / assets_folder / "Models";
     m_scenes_directory = m_base_directory / "Scenes";
 }
 
@@ -41,8 +41,8 @@ bool Project::CreateDirectories() {
     fs::create_directories(m_meshes_directory);
     fs::create_directories(m_scenes_directory);
 
-    copyAssetFile("Meshes", "cube", "Assets/Meshes/cube.obj");
-    copyAssetFile("Meshes", "sphere", "Assets/Meshes/sphere.obj");
+    copyAssetFile("Models", "cube", "Assets/Models/cube.obj");
+    copyAssetFile("Models", "sphere", "Assets/Models/sphere.obj");
     copyAssetFile("Shaders", "phong", "Assets/Shaders/phong.vs");
     copyAssetFile("Shaders", "phong", "Assets/Shaders/phong.fs");
     copyAssetFile("Shaders", "solid", "Assets/Shaders/solid.vs");
@@ -56,15 +56,18 @@ bool Project::CreateDirectories() {
     copyAssetFile("Cubemaps", "skybox", "Assets/Textures/skybox.png");
     copyAssetFile("Materials", "base_mat", "Assets/Materials/base_mat.icm");
 
-    assetBank->addAsset<Mesh>("cube", {m_meshes_directory / "cube.obj"});
-    assetBank->addAsset<Mesh>("sphere", {m_meshes_directory / "sphere.obj"});
     assetBank->addAsset<Shader>("solid", {m_shaders_directory / "solid.vs", m_shaders_directory / "solid.fs"});
     assetBank->addAsset<Shader>("phong", {m_shaders_directory / "phong.vs", m_shaders_directory / "phong.fs"});
     assetBank->addAsset<Shader>("normal", {m_shaders_directory / "normal.vs", m_shaders_directory / "normal.fs"});
     assetBank->addAsset<Shader>("lastpass", {m_shaders_directory / "lastpass.vs", m_shaders_directory / "lastpass.fs"});
     assetBank->addAsset<Shader>("__ice__picking_shader", {m_shaders_directory / "picking.vs", m_shaders_directory / "picking.fs"});
+
     assetBank->addAsset<TextureCube>("skybox", {m_cubemaps_directory / "skybox.png"});
+
     assetBank->addAsset<Material>("base_mat", {m_materials_directory / "base_mat.icm"});
+
+    assetBank->addAsset<Model>("cube", {m_meshes_directory / "cube.obj"});
+    assetBank->addAsset<Model>("sphere", {m_meshes_directory / "sphere.obj"});
 
     scenes.push_back(std::make_shared<Scene>("MainScene"));
     setCurrentScene(getScenes()[0]);
@@ -94,15 +97,17 @@ void Project::writeToFile(const std::shared_ptr<Camera> &editorCamera) {
     j["scenes"] = vec;
     vec.clear();
 
-    for (const auto &[asset_id, mesh] : assetBank->getAll<Mesh>()) {
+    for (const auto &[asset_id, mesh] : assetBank->getAll<Model>()) {
         vec.push_back(dumpAsset(asset_id, mesh));
     }
-    j["meshes"] = vec;
+    j["models"] = vec;
     vec.clear();
 
     for (const auto &[asset_id, material] : assetBank->getAll<Material>()) {
         auto mtlName = assetBank->getName(asset_id).getName();
-        fs::path path = m_materials_directory / (mtlName + ".icm");
+
+        fs::path path = m_materials_directory.parent_path() / (assetBank->getName(asset_id).prefix() + mtlName + ".icm");
+        fs::create_directories(path.parent_path());
         MaterialExporter().writeToJson(path, *material);
 
         material->setSources({path});
@@ -147,8 +152,7 @@ void Project::writeToFile(const std::shared_ptr<Camera> &editorCamera) {
             if (s->getRegistry()->entityHasComponent<RenderComponent>(e)) {
                 RenderComponent rc = *s->getRegistry()->getComponent<RenderComponent>(e);
                 json renderjson;
-                renderjson["mesh"] = rc.mesh;
-                renderjson["material"] = rc.material;
+                renderjson["model"] = rc.model;
                 entity["renderComponent"] = renderjson;
             }
             if (s->getRegistry()->entityHasComponent<TransformComponent>(e)) {
@@ -196,7 +200,7 @@ void Project::loadFromFile() {
     infile.close();
 
     std::vector<std::string> sceneNames = j["scenes"];
-    json meshes = j["meshes"];
+    json meshes = j["models"];
     json material = j["materials"];
     json shader = j["shaders"];
     json texture = j["textures2D"];
@@ -205,11 +209,11 @@ void Project::loadFromFile() {
     cameraPosition = JsonParser::parseVec3(j["camera_position"]);
     cameraRotation = JsonParser::parseVec3(j["camera_rotation"]);
 
+    loadAssetsOfType<Shader>(shader);
     loadAssetsOfType<Texture2D>(texture);
     loadAssetsOfType<TextureCube>(cubeMap);
-    loadAssetsOfType<Mesh>(meshes);
     loadAssetsOfType<Material>(material);
-    loadAssetsOfType<Shader>(shader);
+    loadAssetsOfType<Model>(meshes);
 
     for (const auto &s : sceneNames) {
         infile = std::ifstream(m_scenes_directory / (s + ".ics"));
@@ -234,12 +238,12 @@ void Project::loadFromFile() {
             }
             if (!jentity["renderComponent"].is_null()) {
                 json rj = jentity["renderComponent"];
-                RenderComponent rc(rj["mesh"], rj["material"]);
+                RenderComponent rc(rj["model"]);
                 scene.getRegistry()->addComponent(e, rc);
             }
             if (!jentity["lightComponent"].is_null()) {
                 json lj = jentity["lightComponent"];
-                LightComponent lc(static_cast<LightType>((int)lj["type"]), JsonParser::parseVec3(lj["color"]));
+                LightComponent lc(static_cast<LightType>((int) lj["type"]), JsonParser::parseVec3(lj["color"]));
                 scene.getRegistry()->addComponent(e, lc);
             }
         }

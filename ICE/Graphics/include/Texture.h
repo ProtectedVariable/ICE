@@ -4,10 +4,10 @@
 
 #ifndef ICE_TEXTURE_H
 #define ICE_TEXTURE_H
+#include <stb/stb_image.h>
 
 #include <Asset.h>
 #include <Logger.h>
-#include <stb/stb_image.h>
 
 #include <cstdint>
 #include <string>
@@ -34,7 +34,6 @@ class Texture : public Asset {
     virtual TextureType getTextureType() const = 0;
 
     static void* getDataFromFile(const std::string file, int* width, int* height, int* channels, int force = STBI_default) {
-        stbi_set_flip_vertically_on_load(1);
         stbi_uc* data = stbi_load(file.c_str(), width, height, channels, force);
         if(data == nullptr) {
             Logger::Log(Logger::ERROR, "Graphics", "Texture %s could not load: %s", file.c_str(), stbi_failure_reason());
@@ -50,8 +49,6 @@ class Texture2D : public Texture {
 
     virtual AssetType getType() const override { return AssetType::ETex2D; }
     virtual std::string getTypeName() const override { return "Texture2D"; }
-    virtual void load() override = 0;
-    virtual void unload() override = 0;
 };
 
 class TextureCube : public Texture {
@@ -61,8 +58,6 @@ class TextureCube : public Texture {
 
     virtual AssetType getType() const override { return AssetType::ETexCube; }
     virtual std::string getTypeName() const override { return "TextureCube"; }
-    virtual void load() override = 0;
-    virtual void unload() override = 0;
 };
 }  // namespace ICE
 

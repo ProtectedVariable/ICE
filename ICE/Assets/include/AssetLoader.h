@@ -12,6 +12,7 @@
 
 #include "Asset.h"
 #include "IAssetLoader.h"
+#include "Model.h"
 
 namespace ICE {
 class AssetLoader {
@@ -32,9 +33,10 @@ class AssetLoader {
     }
 
    private:
-    std::unordered_map<std::type_index,
-                       std::variant<std::shared_ptr<IAssetLoader<Mesh>>, std::shared_ptr<IAssetLoader<Material>>, std::shared_ptr<IAssetLoader<Shader>>,
-                                    std::shared_ptr<IAssetLoader<Texture2D>>, std::shared_ptr<IAssetLoader<TextureCube>>>>
+    std::unordered_map<
+        std::type_index,
+        std::variant<std::shared_ptr<IAssetLoader<Model>>, std::shared_ptr<IAssetLoader<Material>>, std::shared_ptr<IAssetLoader<Shader>>,
+                     std::shared_ptr<IAssetLoader<Texture2D>>, std::shared_ptr<IAssetLoader<TextureCube>>>>
         loaders;
 };
 }  // namespace ICE

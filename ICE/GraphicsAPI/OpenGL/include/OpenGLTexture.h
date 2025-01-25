@@ -5,73 +5,72 @@
 #ifndef ICE_OPENGLTEXTURE_H
 #define ICE_OPENGLTEXTURE_H
 
-
-#include <Texture.h>
-#include <string>
 #include <GL/gl3w.h>
+#include <Texture.h>
+
+#include <string>
 
 namespace ICE {
-    class OpenGLTexture2D : public Texture2D {
-    public:
-        OpenGLTexture2D(const std::string &file);
+class OpenGLTexture2D : public Texture2D {
+   public:
+    OpenGLTexture2D(const std::string &file);
+    OpenGLTexture2D(const void *data, size_t w, size_t h, TextureFormat fmt);
 
-        void bind(uint32_t slot) const override;
+    void bind(uint32_t slot) const override;
 
-        TextureFormat getFormat() const override;
+    TextureFormat getFormat() const override;
 
-        uint32_t getWidth() const override;
-        uint32_t getHeight() const override;
+    uint32_t getWidth() const override;
+    uint32_t getHeight() const override;
 
-        TextureWrap getWrap() const override;
+    TextureWrap getWrap() const override;
 
-        void setData(void *data, uint32_t size) override;
+    void setData(void *data, uint32_t size) override;
 
-        void *getTexture() const override;
+    void *getTexture() const override;
 
-        TextureType getTextureType() const override;
-        void load() override {}
-        void unload() override {}
+    TextureType getTextureType() const override;
 
-    private:
-        std::string file;
-        uint32_t id;
-        uint32_t width, height;
-        TextureFormat format;
-        TextureWrap wrap;
-        GLenum storageFormat;
-        GLenum dataFormat;
-    };
+   private:
+    void loadData(const void *data, size_t w, size_t h, TextureFormat fmt);
 
-    class OpenGLTextureCube : public TextureCube {
-    public:
-        OpenGLTextureCube(const std::string &file);
+    std::string file;
+    uint32_t id;
+    uint32_t width, height;
+    TextureFormat format;
+    TextureWrap wrap;
+    GLenum storageFormat;
+    GLenum dataFormat;
+};
 
-        void bind(uint32_t slot) const override;
+class OpenGLTextureCube : public TextureCube {
+   public:
+    OpenGLTextureCube(const std::string &file);
 
-        TextureFormat getFormat() const override;
+    void bind(uint32_t slot) const override;
 
-        uint32_t getWidth() const override;
-        uint32_t getHeight() const override;
+    TextureFormat getFormat() const override;
 
-        TextureWrap getWrap() const override;
+    uint32_t getWidth() const override;
+    uint32_t getHeight() const override;
 
-        void setData(void *data, uint32_t size) override;
+    TextureWrap getWrap() const override;
 
-        void *getTexture() const override;
+    void setData(void *data, uint32_t size) override;
 
-        TextureType getTextureType() const override;
-        void load() override {}
-        void unload() override {}
-    private:
-        std::string file;
-        uint32_t id;
-        uint32_t width, height;
-        TextureFormat format;
-        TextureWrap wrap;
-        GLenum storageFormat;
-        GLenum dataFormat;
-    };
-}
+    void *getTexture() const override;
 
+    TextureType getTextureType() const override;
 
-#endif //ICE_OPENGLTEXTURE_H
+   private:
+    std::string file;
+    uint32_t id;
+    uint32_t width, height;
+    TextureFormat format;
+    TextureWrap wrap;
+    GLenum storageFormat;
+    GLenum dataFormat;
+};
+}  // namespace ICE
+
+#endif  //ICE_OPENGLTEXTURE_H

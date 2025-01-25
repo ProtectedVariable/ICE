@@ -44,8 +44,6 @@ class Material : public Asset {
     //Asset interface
     std::string getTypeName() const override;
     AssetType getType() const override;
-    void load() override;
-    void unload() override;
 
    private:
     AssetUID m_shader = NO_ASSET_ID;

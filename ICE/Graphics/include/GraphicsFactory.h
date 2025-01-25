@@ -33,6 +33,7 @@ class GraphicsFactory {
                                                  const std::string& fragmentFile) const = 0;
 
     virtual std::shared_ptr<Texture2D> createTexture2D(const std::string& file) const = 0;
+    virtual std::shared_ptr<Texture2D> createTexture2D(const void* data, size_t w, size_t h, TextureFormat fmt) const = 0;
 
     virtual std::shared_ptr<TextureCube> createTextureCube(const std::string& file) const = 0;
 };

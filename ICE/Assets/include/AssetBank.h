@@ -86,6 +86,16 @@ class AssetBank {
         return false;
     }
 
+    bool addAssetWithSpecificUID(const AssetPath& name, const std::shared_ptr<Asset>& asset, AssetUID id) {
+        if (resources.find(id) == resources.end() && nameMapping.find(name) == nameMapping.end()) {
+            resources.try_emplace(id, AssetBankEntry{name, asset});
+            nameMapping.try_emplace(name, id);
+            nextUID = nextUID > id ? nextUID : id + 1;
+            return true;
+        }
+        return false;
+    }
+
     bool renameAsset(const AssetPath& oldName, const AssetPath& newName) {
         if (oldName.toString() == newName.toString()) {
             return true;
@@ -108,7 +118,7 @@ class AssetBank {
         if (nameMapping.find(name) != nameMapping.end()) {
             AssetUID id = getUID(name);
             nameMapping.erase(name);
-            resources[id].asset->unload();
+            //TODO: Check resources[id].asset->unload();
             resources.erase(id);
             return true;
         }

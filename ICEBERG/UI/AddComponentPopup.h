@@ -35,7 +35,7 @@ class AddComponentPopup {
             m_components_combo.render();
             if (ImGui::Button("Add")) {
                 if(m_components_combo.getSelectedItem() == "Render Component")
-                    m_registry->addComponent(m_entity, ICE::RenderComponent(0, 0));
+                    m_registry->addComponent(m_entity, ICE::RenderComponent(0));
                     
                 if(m_components_combo.getSelectedItem() == "Light Component")
                     m_registry->addComponent(m_entity, ICE::LightComponent(ICE::PointLight, Eigen::Vector3f(1, 1, 1)));
