@@ -66,21 +66,6 @@ void ForwardRenderer::remove(Entity e) {
 
 void ForwardRenderer::prepareFrame(Camera& camera) {
     //TODO: Sort entities, make shader list, batch, make instances, set uniforms, etc..
-    std::sort(m_render_queue.begin(), m_render_queue.end(), [this](Entity a, Entity b) {
-        auto model_a = m_asset_bank->getAsset<Model>(m_registry->getComponent<RenderComponent>(a)->model);
-        auto material_a = m_asset_bank->getAsset<Material>(model_a->getMaterialsIDs().front());
-        auto model_b = m_asset_bank->getAsset<Model>(m_registry->getComponent<RenderComponent>(b)->model);
-        auto material_b = m_asset_bank->getAsset<Material>(model_b->getMaterialsIDs().front());
-
-        bool a_transparent = material_a ? material_a->isTransparent() : false;
-        bool b_transparent = material_b ? material_b->isTransparent() : false;
-
-        if (!a_transparent && b_transparent) {
-            return true;
-        } else {
-            return false;
-        }
-    });
 
     if (m_skybox != NO_ASSET_ID) {
         auto shader = m_asset_bank->getAsset<Shader>("__ice_skybox_shader");
@@ -180,6 +165,16 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
         }
     }
 
+    std::sort(m_render_commands.begin(), m_render_commands.end(), [this](const RenderCommand &a, const RenderCommand &b) {
+        bool a_transparent = a.material->isTransparent();
+        bool b_transparent = b.material->isTransparent();
+
+        if (!a_transparent && b_transparent) {
+            return true;
+        } else {
+            return false;
+        }
+        });
     m_geometry_pass.submit(&m_render_commands);
 }
 
