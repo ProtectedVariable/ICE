@@ -1,0 +1,6 @@
+paths:
+ - 'ICE'
+ - 'ICEBERG' 
+paths-ignore:
+ - '**/_deps/**'
+ - 'includes'
