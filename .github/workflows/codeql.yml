@@ -44,7 +44,7 @@ jobs:
       matrix:
         include:
         - language: c-cpp
-          build-mode: autobuild
+          build-mode: manual
         - language: python
           build-mode: none
         # CodeQL supports the following values keywords for 'language': 'c-cpp', 'csharp', 'go', 'java-kotlin', 'javascript-typescript', 'python', 'ruby', 'swift'
@@ -84,9 +84,10 @@ jobs:
         echo 'If you are using a "manual" build mode for one or more of the' \
           'languages you are analyzing, replace this with the commands to build' \
           'your code, for example:'
-        echo '  make bootstrap'
-        echo '  make release'
-        exit 1
+        cmake -E make_directory build
+        cd build
+        cmake .. -DCMAKE_BUILD_TYPE=RELEASE
+        cmake --build . --config RELEASE
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
