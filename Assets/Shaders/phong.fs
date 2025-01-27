@@ -8,6 +8,7 @@ struct Light {
     vec3 rotation;
     vec3 color;
     int type; //0 = Point, 1 = Directional, 2 = Spot
+    float distance_dropoff;
 };
 
 struct Material {
@@ -67,7 +68,7 @@ vec4 applyLight(Light light) {
     if(light.type == 0) {
         vec3 light_direction = normalize(light.position - fposition);
         float distance = length(light.position - fposition);
-        return computeLightEffect(light, light_direction);
+        return computeLightEffect(light, light_direction) / (1 + light.distance_dropoff * distance * distance);
     } else if(light.type == 1) {
         return computeLightEffect(light, -normalize(light.rotation));
     } else if(light.type == 2) {

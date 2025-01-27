@@ -134,6 +134,7 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
                     shader->loadFloat3((light_name + std::string("position")).c_str(), transform->getPosition());
                     shader->loadFloat3((light_name + std::string("rotation")).c_str(), transform->getRotation());
                     shader->loadFloat3((light_name + std::string("color")).c_str(), light->color);
+                    shader->loadFloat((light_name + std::string("distance_dropoff")).c_str(), light->distance_dropoff);
                     shader->loadInt((light_name + std::string("type")).c_str(), static_cast<int>(light->type));
                     i++;
                 }
@@ -165,7 +166,7 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
         }
     }
 
-    std::sort(m_render_commands.begin(), m_render_commands.end(), [this](const RenderCommand &a, const RenderCommand &b) {
+    std::sort(m_render_commands.begin(), m_render_commands.end(), [this](const RenderCommand& a, const RenderCommand& b) {
         bool a_transparent = a.material->isTransparent();
         bool b_transparent = b.material->isTransparent();
 
@@ -174,7 +175,7 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
         } else {
             return false;
         }
-        });
+    });
     m_geometry_pass.submit(&m_render_commands);
 }
 
