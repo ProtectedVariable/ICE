@@ -21,6 +21,7 @@ target_link_libraries(${PROJECT_NAME}
     assets
     graphics_api
     assimp
+    platform
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC

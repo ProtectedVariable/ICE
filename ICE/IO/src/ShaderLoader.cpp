@@ -7,6 +7,8 @@
 #include <ICEException.h>
 #include <Shader.h>
 
+#include "FileUtils.h"
+
 namespace ICE {
 std::shared_ptr<Shader> ShaderLoader::load(const std::vector<std::filesystem::path> &files) {
     if (files.size() < 2) {
@@ -14,9 +16,10 @@ std::shared_ptr<Shader> ShaderLoader::load(const std::vector<std::filesystem::pa
     }
     std::shared_ptr<Shader> shader;
     if (files.size() == 2) {
-        shader = graphics_factory->createShader(files[0].string(), files[1].string());
+        shader = graphics_factory->createShader(FileUtils::readFile(files[0].string()), FileUtils::readFile(files[1].string()));
     } else if (files.size() == 3) {
-        shader = graphics_factory->createShader(files[0].string(), files[1].string(), files[2].string());
+        shader = graphics_factory->createShader(FileUtils::readFile(files[0].string()), FileUtils::readFile(files[1].string()),
+                                                FileUtils::readFile(files[2].string()));
     } else {
         throw ICEException("Too many files for shader");
     }

@@ -34,13 +34,13 @@ class OpenGLFactory : public GraphicsFactory {
 
     std::shared_ptr<IndexBuffer> createIndexBuffer() const override { return std::make_shared<OpenGLIndexBuffer>(); }
 
-    std::shared_ptr<Shader> createShader(const std::string& vertexFile, const std::string& fragmentFile) const override {
-        return createShader(vertexFile, "", fragmentFile);
+    std::shared_ptr<Shader> createShader(const std::string& vertex_src, const std::string& fragment_src) const override {
+        return createShader(vertex_src, "", fragment_src);
     }
 
-    std::shared_ptr<Shader> createShader(const std::string& vertexFile, const std::string& geometryFile,
-                                         const std::string& fragmentFile) const override {
-        return std::make_shared<OpenGLShader>(vertexFile, geometryFile, fragmentFile);
+    std::shared_ptr<Shader> createShader(const std::string& vertex_src, const std::string& geometry_src,
+                                         const std::string& fragment_src) const override {
+        return std::make_shared<OpenGLShader>(vertex_src, geometry_src, fragment_src);
     }
 
     std::shared_ptr<Texture2D> createTexture2D(const std::string& file) const override { return std::make_shared<OpenGLTexture2D>(file); }
