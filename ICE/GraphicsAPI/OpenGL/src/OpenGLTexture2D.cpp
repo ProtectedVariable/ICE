@@ -25,15 +25,22 @@ void OpenGLTexture2D::loadData(const void *data, size_t w, size_t h, TextureForm
     height = h;
     storageFormat = GL_RGBA;
     dataFormat = GL_RGBA;
-    if (fmt == TextureFormat::RGBA) {
-        format = TextureFormat::RGBA;
-    } else if (fmt == TextureFormat::RGB) {
-        storageFormat = dataFormat = GL_RGB;
-        format = TextureFormat::RGB;
-    }
 
     glGenTextures(1, &id);
     glBindTexture(GL_TEXTURE_2D, id);
+
+    if (fmt == TextureFormat::RGBA) {
+        format = TextureFormat::RGBA;
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+    } else if (fmt == TextureFormat::RGB) {
+        storageFormat = dataFormat = GL_RGB;
+        format = TextureFormat::RGB;
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    } else if (fmt == TextureFormat::MONO8) {
+        storageFormat = dataFormat = GL_RED;
+        format = TextureFormat::MONO8;
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    }
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
