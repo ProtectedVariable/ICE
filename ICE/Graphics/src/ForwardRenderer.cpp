@@ -79,7 +79,7 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
         shader->loadInt("skybox", 0);
 
         auto skybox = m_registry->getComponent<SkyboxComponent>(m_skybox);
-        auto mesh = m_asset_bank->getAsset<Mesh>("cube");
+        auto mesh = m_asset_bank->getAsset<Model>("cube")->getMeshes().at(0);
         auto tex = m_asset_bank->getAsset<TextureCube>(skybox->texture);
         m_render_commands.push_back(RenderCommand{.mesh = mesh,
                                                   .material = nullptr,
@@ -167,8 +167,8 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
     }
 
     std::sort(m_render_commands.begin(), m_render_commands.end(), [this](const RenderCommand& a, const RenderCommand& b) {
-        bool a_transparent = a.material->isTransparent();
-        bool b_transparent = b.material->isTransparent();
+        bool a_transparent = a.material ? a.material->isTransparent() : false;
+        bool b_transparent = b.material ? b.material->isTransparent() : false;
 
         if (!a_transparent && b_transparent) {
             return true;
