@@ -92,7 +92,7 @@ int main(int argc, char const* argv[]) {
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
     ImGui_ImplGlfw_InitForOpenGL(static_cast<GLFWwindow*>(window->getHandle()), true);
-    ImGui_ImplOpenGL3_Init("#version 330 core");
+    ImGui_ImplOpenGL3_Init("#version 420 core");
 
     Iceberg iceberg(window);
 

@@ -1,15 +1,8 @@
-#version 330 core
-#define ICE_MAX_LIGHTS (16)
+#version 420 core
+
+#include "frag_uniforms.glsl"
 
 out vec4 frag_color;
-
-struct Light {
-    vec3 position;
-    vec3 rotation;
-    vec3 color;
-    int type; //0 = Point, 1 = Directional, 2 = Spot
-    float distance_dropoff;
-};
 
 struct Material {
     vec4 albedo;
@@ -26,9 +19,6 @@ struct Material {
     sampler2D normal_map;
 };
 
-uniform vec3 ambient_light;
-uniform Light lights[ICE_MAX_LIGHTS];
-uniform int light_count;
 uniform Material material;
 
 in vec3 fnormal;
@@ -88,7 +78,7 @@ void main() {
         normal = fnormal;
     }
     //ambient
-    vec4 color_accumulator = material.ambient * vec4(ambient_light, 1.0);
+    vec4 color_accumulator = material.ambient * ambient_light;
     if(material.use_ambient_map) {
         color_accumulator *= texture(material.ambient_map, ftex_coords);
     }

@@ -27,6 +27,8 @@ class GraphicsFactory {
 
     virtual std::shared_ptr<IndexBuffer> createIndexBuffer() const = 0;
 
+    virtual std::shared_ptr<UniformBuffer> createUniformBuffer(size_t size, size_t binding) const = 0;
+
     virtual std::shared_ptr<Shader> createShader(const std::string& vertexFile, const std::string& fragmentFile) const = 0;
 
     virtual std::shared_ptr<Shader> createShader(const std::string& vertexFile, const std::string& geometryFile,
