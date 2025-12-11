@@ -89,9 +89,9 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
                                                   .depthTest = false});
     }
 
-    std::unordered_set<AssetUID> prepared_shaders;
-    auto view_mat = camera.lookThrough();
-    auto frustum = extractFrustumPlanes(camera.getProjection() * view_mat);
+    m_view_matrix = camera.lookThrough();
+    m_projection_matrix = camera.getProjection();
+    auto frustum = extractFrustumPlanes(camera.getProjection() * m_view_matrix);
     for (const auto& e : m_render_queue) {
         auto rc = m_registry->getComponent<RenderComponent>(e);
         auto tc = m_registry->getComponent<TransformComponent>(e);
@@ -106,64 +106,10 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
         if (!isAABBInFrustum(frustum, aabb)) {
             continue;
         }
-
-        for (int i = 0; i < model->getMeshes().size(); i++) {
-            auto mtl_id = model->getMaterialsIDs().at(i);
-            auto mesh = model->getMeshes().at(i);
-            auto material = m_asset_bank->getAsset<Material>(mtl_id);
-            if (!material) {
-                continue;
-            }
-            auto shader = m_asset_bank->getAsset<Shader>(material->getShader());
-            if (!shader) {
-                continue;
-            }
-
-            if (!prepared_shaders.contains(material->getShader())) {
-                shader->bind();
-
-                shader->loadMat4("projection", camera.getProjection());
-                shader->loadMat4("view", view_mat);
-
-                shader->loadFloat3("ambient_light", Eigen::Vector3f(0.1f, 0.1f, 0.1f));
-                int i = 0;
-                for (const auto& e : m_lights) {
-                    auto light = m_registry->getComponent<LightComponent>(e);
-                    auto transform = m_registry->getComponent<TransformComponent>(e);
-                    std::string light_name = (std::string("lights[") + std::to_string(i) + std::string("]."));
-                    shader->loadFloat3((light_name + std::string("position")).c_str(), transform->getPosition());
-                    shader->loadFloat3((light_name + std::string("rotation")).c_str(), transform->getRotation());
-                    shader->loadFloat3((light_name + std::string("color")).c_str(), light->color);
-                    shader->loadFloat((light_name + std::string("distance_dropoff")).c_str(), light->distance_dropoff);
-                    shader->loadInt((light_name + std::string("type")).c_str(), static_cast<int>(light->type));
-                    i++;
-                }
-                shader->loadInt("light_count", i);
-                prepared_shaders.emplace(material->getShader());
-            }
-
-            if (!mesh) {
-                return;
-            }
-
-            std::unordered_map<AssetUID, std::shared_ptr<Texture>> texs;
-            for (const auto& [name, value] : material->getAllUniforms()) {
-                if (std::holds_alternative<AssetUID>(value)) {
-                    auto v = std::get<AssetUID>(value);
-                    if (auto tex = m_asset_bank->getAsset<Texture2D>(v); tex) {
-                        texs.try_emplace(v, tex);
-                    }
-                }
-            }
-
-            m_render_commands.push_back(RenderCommand{.mesh = mesh,
-                                                      .material = material,
-                                                      .shader = shader,
-                                                      .textures = texs,
-                                                      .model_matrix = tc->getModelMatrix(),
-                                                      .faceCulling = true,
-                                                      .depthTest = true});
-        }
+        auto meshes = model->getMeshes();
+        auto materials = model->getMaterialsIDs();
+        auto nodes = model->getNodes();
+        submitModel(0, nodes, meshes, materials, tc->getModelMatrix());
     }
 
     std::sort(m_render_commands.begin(), m_render_commands.end(), [this](const RenderCommand& a, const RenderCommand& b) {
@@ -177,6 +123,76 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
         }
     });
     m_geometry_pass.submit(&m_render_commands);
+}
+
+void ForwardRenderer::submitModel(int node_idx, const std::vector<Model::Node>& nodes, const std::vector<std::shared_ptr<Mesh>>& meshes,
+                                  const std::vector<AssetUID>& materials, const Eigen::Matrix4f& transform) {
+    auto node = nodes.at(node_idx);
+    auto node_transform = transform * node.localTransform;
+    for (const auto& i : node.meshIndices) {
+        if (i >= meshes.size()) {
+            continue;
+        }
+        auto mtl_id = materials.at(i);
+        auto mesh = meshes.at(i);
+        auto material = m_asset_bank->getAsset<Material>(mtl_id);
+        if (!material) {
+            continue;
+        }
+        auto shader = m_asset_bank->getAsset<Shader>(material->getShader());
+        if (!shader) {
+            continue;
+        }
+
+        if (!m_prepared_shaders.contains(material->getShader())) {
+            shader->bind();
+
+            shader->loadMat4("projection", m_projection_matrix);
+            shader->loadMat4("view", m_view_matrix);
+
+            shader->loadFloat3("ambient_light", Eigen::Vector3f(0.1f, 0.1f, 0.1f));
+            int i = 0;
+            for (const auto& e : m_lights) {
+                auto light = m_registry->getComponent<LightComponent>(e);
+                auto transform = m_registry->getComponent<TransformComponent>(e);
+                std::string light_name = (std::string("lights[") + std::to_string(i) + std::string("]."));
+                shader->loadFloat3((light_name + std::string("position")).c_str(), transform->getPosition());
+                shader->loadFloat3((light_name + std::string("rotation")).c_str(), transform->getRotation());
+                shader->loadFloat3((light_name + std::string("color")).c_str(), light->color);
+                shader->loadFloat((light_name + std::string("distance_dropoff")).c_str(), light->distance_dropoff);
+                shader->loadInt((light_name + std::string("type")).c_str(), static_cast<int>(light->type));
+                i++;
+            }
+            shader->loadInt("light_count", i);
+            m_prepared_shaders.emplace(material->getShader());
+        }
+
+        if (!mesh) {
+            return;
+        }
+
+        std::unordered_map<AssetUID, std::shared_ptr<Texture>> texs;
+        for (const auto& [name, value] : material->getAllUniforms()) {
+            if (std::holds_alternative<AssetUID>(value)) {
+                auto v = std::get<AssetUID>(value);
+                if (auto tex = m_asset_bank->getAsset<Texture2D>(v); tex) {
+                    texs.try_emplace(v, tex);
+                }
+            }
+        }
+
+        m_render_commands.push_back(RenderCommand{.mesh = mesh,
+                                                  .material = material,
+                                                  .shader = shader,
+                                                  .textures = texs,
+                                                  .model_matrix = node_transform,
+                                                  .faceCulling = true,
+                                                  .depthTest = true});
+    }
+
+    for (const auto& child_idx : node.children) {
+        submitModel(child_idx, nodes, meshes, materials, node_transform);
+    }
 }
 
 void ForwardRenderer::render() {
@@ -202,9 +218,8 @@ void ForwardRenderer::render() {
 
 void ForwardRenderer::endFrame() {
     m_api->checkAndLogErrors();
-    //TODO: Cleanup and restore state
     m_render_commands.clear();
-
+    m_prepared_shaders.clear();
     if (this->target != nullptr)
         this->target->unbind();
 }

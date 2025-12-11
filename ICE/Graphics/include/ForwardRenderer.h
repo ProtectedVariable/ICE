@@ -41,12 +41,18 @@ class ForwardRenderer : public Renderer {
     void setViewport(int x, int y, int w, int h) override;
 
    private:
+    void submitModel(int node_idx, const std::vector<Model::Node>& nodes, const std::vector<std::shared_ptr<Mesh>>& meshes,
+                     const std::vector<AssetUID>& materials, const Eigen::Matrix4f& transform);
+
     std::shared_ptr<RendererAPI> m_api;
     std::shared_ptr<Registry> m_registry;
     std::shared_ptr<AssetBank> m_asset_bank;
 
     std::shared_ptr<Framebuffer> target = nullptr;
     std::vector<RenderCommand> m_render_commands;
+    Eigen::Matrix4f m_view_matrix;
+    Eigen::Matrix4f m_projection_matrix;
+    std::unordered_set<AssetUID> m_prepared_shaders;
     std::vector<Entity> m_render_queue;
     std::vector<Entity> m_lights;
     AssetUID m_skybox = NO_ASSET_ID;

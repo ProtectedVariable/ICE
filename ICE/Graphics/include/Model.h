@@ -6,8 +6,16 @@
 namespace ICE {
 class Model : public Asset {
    public:
-    Model(const std::vector<std::shared_ptr<ICE::Mesh>> &meshes, const std::vector<ICE::AssetUID> &materials);
+    struct Node {
+        std::string name;
+        Eigen::Matrix4f localTransform;
+        std::vector<size_t> meshIndices;  // Meshes used by this node
+        std::vector<int> children;        // Node indices
+    };
 
+    Model(const std::vector<Node> &nodes, const std::vector<std::shared_ptr<ICE::Mesh>> &meshes, const std::vector<ICE::AssetUID> &materials);
+
+    std::vector<Node> getNodes() const { return m_nodes; }
     std::vector<std::shared_ptr<ICE::Mesh>> getMeshes() const { return m_meshes; }
     std::vector<ICE::AssetUID> getMaterialsIDs() const { return m_materials; }
     AABB getBoundingBox() const { return m_boundingbox; }
@@ -16,6 +24,7 @@ class Model : public Asset {
     std::string getTypeName() const override { return "Model"; }
 
    private:
+    std::vector<Node> m_nodes;
     std::vector<std::shared_ptr<ICE::Mesh>> m_meshes;
     std::vector<ICE::AssetUID> m_materials;
     AABB m_boundingbox{{0, 0, 0}, {0, 0, 0}};
