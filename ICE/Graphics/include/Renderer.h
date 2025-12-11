@@ -25,18 +25,16 @@ struct alignas(16) LightUBO {
     Eigen::Vector3f rotation;
     float __padding1;  //align to vec4
     Eigen::Vector3f color;
-    float __padding2;  //align to vec4
 
     float distance_dropoff;
     int type;
-    float __padding3[2];
 };
 
 struct alignas(16) SceneLightsUBO {
     LightUBO lights[MAX_LIGHTS];
-    int light_count;
-    float __padding0[3];
     Eigen::Vector4f ambient_light;
+    int light_count;
+    float __padding[3];
 };
 
 struct alignas(16) CameraUBO {
