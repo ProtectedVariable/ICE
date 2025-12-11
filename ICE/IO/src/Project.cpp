@@ -34,28 +34,13 @@ Project::Project(const fs::path &base_directory, const std::string &name)
 }
 
 bool Project::CreateDirectories() {
-    fs::create_directories(m_materials_directory);
-    fs::create_directories(m_shaders_directory);
-    fs::create_directories(m_textures_directory);
-    fs::create_directories(m_cubemaps_directory);
-    fs::create_directories(m_meshes_directory);
     fs::create_directories(m_scenes_directory);
-
-    copyAssetFile("Models", "cube", "Assets/Models/cube.obj");
-    copyAssetFile("Models", "sphere", "Assets/Models/sphere.obj");
-    copyAssetFile("Shaders", "phong", "Assets/Shaders/phong.vs");
-    copyAssetFile("Shaders", "phong", "Assets/Shaders/phong.fs");
-    copyAssetFile("Shaders", "solid", "Assets/Shaders/solid.vs");
-    copyAssetFile("Shaders", "solid", "Assets/Shaders/solid.fs");
-    copyAssetFile("Shaders", "normal", "Assets/Shaders/normal.vs");
-    copyAssetFile("Shaders", "normal", "Assets/Shaders/normal.fs");
-    copyAssetFile("Shaders", "picking", "Assets/Shaders/picking.vs");
-    copyAssetFile("Shaders", "picking", "Assets/Shaders/picking.fs");
-    copyAssetFile("Shaders", "lastpass", "Assets/Shaders/lastpass.vs");
-    copyAssetFile("Shaders", "lastpass", "Assets/Shaders/lastpass.fs");
-    copyAssetFile("Cubemaps", "skybox", "Assets/Textures/skybox.png");
-    copyAssetFile("Materials", "base_mat", "Assets/Materials/base_mat.icm");
-
+    try {
+        fs::create_directories(m_base_directory / "Assets");
+        fs::copy("Assets", m_base_directory / "Assets", fs::copy_options::recursive);
+    } catch (std::filesystem::filesystem_error &e) {
+        Logger::Log(Logger::FATAL, "IO", "Could not copy default assets: %s", e.what());
+    }
     assetBank->addAsset<Shader>("solid", {m_shaders_directory / "solid.vs", m_shaders_directory / "solid.fs"});
     assetBank->addAsset<Shader>("phong", {m_shaders_directory / "phong.vs", m_shaders_directory / "phong.fs"});
     assetBank->addAsset<Shader>("normal", {m_shaders_directory / "normal.vs", m_shaders_directory / "normal.fs"});
