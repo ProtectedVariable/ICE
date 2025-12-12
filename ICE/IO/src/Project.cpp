@@ -47,8 +47,6 @@ bool Project::CreateDirectories() {
     assetBank->addAsset<Shader>("lastpass", {m_shaders_directory / "lastpass.vs", m_shaders_directory / "lastpass.fs"});
     assetBank->addAsset<Shader>("__ice__picking_shader", {m_shaders_directory / "picking.vs", m_shaders_directory / "picking.fs"});
 
-    assetBank->addAsset<TextureCube>("skybox", {m_cubemaps_directory / "skybox.png"});
-
     assetBank->addAsset<Material>("base_mat", {m_materials_directory / "base_mat.icm"});
 
     assetBank->addAsset<Model>("cube", {m_meshes_directory / "cube.obj"});
