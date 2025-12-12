@@ -60,6 +60,8 @@ class ICEEngine {
     std::shared_ptr<Camera> camera;
     std::shared_ptr<Project> project = nullptr;
 
+    std::chrono::steady_clock::time_point lastFrameTime;
+
     EngineConfig config;
     Registry registry;
 };

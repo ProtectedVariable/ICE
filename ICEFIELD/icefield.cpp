@@ -1,3 +1,4 @@
+#include <AnimationSystem.h>
 #include <ICEEngine.h>
 #include <ICEMath.h>
 #include <MaterialExporter.h>
@@ -23,16 +24,26 @@ int main(void) {
     project->setCurrentScene(scene);
 
     engine.setProject(project);
+    project->getCurrentScene()->getRegistry()->addSystem(std::make_shared<AnimationSystem>(scene->getRegistry(), engine.getAssetBank()));
 
     engine.getProject()->copyAssetFile("Models", "glock", "ImportAssets/glock.glb");
     engine.getAssetBank()->addAsset<ICE::Model>("glock", {engine.getProject()->getBaseDirectory() / "Assets" / "Models" / "glock.glb"});
 
     auto mesh_id = engine.getAssetBank()->getUID(AssetPath::WithTypePrefix<Model>("cube"));
 
+    /*
     auto entity = scene->createEntity();
     scene->getRegistry()->addComponent<TransformComponent>(
-        entity, TransformComponent(Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero(), Eigen::Vector3f(1, 1, 1)));
+        entity, TransformComponent(Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero(), Eigen::Vector3f(0.1, 0.1, 0.1)));
     scene->getRegistry()->addComponent<RenderComponent>(entity, RenderComponent(mesh_id));
+    */
+    auto mesh_id_2 = engine.getAssetBank()->getUID(AssetPath::WithTypePrefix<Model>("glock"));
+
+    auto entity2 = scene->createEntity();
+    scene->getRegistry()->addComponent<TransformComponent>(
+        entity2, TransformComponent(Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero(), Eigen::Vector3f::Constant(0.1)));
+    scene->getRegistry()->addComponent<RenderComponent>(entity2, RenderComponent(mesh_id_2));
+    scene->getRegistry()->addComponent<AnimationComponent>(entity2, AnimationComponent{.currentAnimation = "glock_19|Shoot", .loop = true});
 
     auto camera = std::make_shared<PerspectiveCamera>(60.0, 16.0 / 9.0, 0.01, 10000.0);
     camera->backward(2);
@@ -46,7 +57,7 @@ int main(void) {
 
         engine.step();
 
-        scene->getRegistry()->getComponent<TransformComponent>(entity)->rotation().y() = i;
+        scene->getRegistry()->getComponent<TransformComponent>(entity2)->rotation().y() = i;
 
         //Render system duty
         int display_w, display_h;

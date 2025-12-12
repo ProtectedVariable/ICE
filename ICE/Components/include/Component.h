@@ -110,13 +110,13 @@ class ComponentManager {
     }
 
     template<typename T>
-    ComponentType getComponentType() {
+    ComponentType getComponentType() const {
         auto const& type = typeid(T);
 
         assert(componentTypes.find(type) != componentTypes.end() && "Component not registered before use.");
 
         // Return this component's type - used for creating signatures
-        return componentTypes[type];
+        return componentTypes.at(type);
     }
 
     template<typename T>

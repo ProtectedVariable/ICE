@@ -9,7 +9,15 @@
 namespace ICE {
 class AnimationSystem : public System {
    public:
+    AnimationSystem(const std::shared_ptr<Registry>& reg, const std::shared_ptr<AssetBank>& bank);
     void update(double delta) override;
+
+    std::vector<Signature> getSignatures(const ComponentManager& comp_manager) const override {
+        Signature signature;
+        signature.set(comp_manager.getComponentType<AnimationComponent>());
+        signature.set(comp_manager.getComponentType<RenderComponent>());
+        return {signature};
+    }
 
    private:
     template<typename T>

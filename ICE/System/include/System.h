@@ -14,12 +14,16 @@
 
 namespace ICE {
 class Scene;
+class ComponentManager;
 
 class System {
    public:
     virtual void update(double delta) = 0;
-    virtual void onEntityAdded(Entity e) = 0; 
-    virtual void onEntityRemoved(Entity e) = 0;
+    virtual void onEntityAdded(Entity e) {};
+    virtual void onEntityRemoved(Entity e) {};
+
+    virtual std::vector<Signature> getSignatures(const ComponentManager& comp_manager) const = 0;
+    virtual ~System() = default;
 
    protected:
     std::unordered_set<Entity> entities;
@@ -29,20 +33,6 @@ class System {
 
 class SystemManager {
    public:
-    template<typename T>
-    void registerSystem() {
-        assert(systems.find(typeid(T)) == systems.end() && "Registering system more than once.");
-        signatures.insert({typeid(T), std::vector<Signature>()});
-    }
-
-    template<typename T>
-    void addSignature(Signature signature) {
-        assert(signatures.find(typeid(T)) != signatures.end() && "System used before registered.");
-
-        // Set the signature for this system
-        signatures[typeid(T)].push_back(signature);
-    }
-
     void entityDestroyed(Entity entity) {
         // Erase a destroyed entity from all system lists
         // mEntities is a set so no check needed
@@ -54,11 +44,11 @@ class SystemManager {
         }
     }
 
-    void entitySignatureChanged(Entity entity, Signature entitySignature) {
+    void entitySignatureChanged(Entity entity, Signature entitySignature, const ComponentManager& comp_manager) {
         // Notify each system that an entity's signature changed
         for (auto const& pair : systems) {
             auto const& system = pair.second;
-            auto const& systemSignature = signatures[pair.first];
+            auto const& systemSignature = system->getSignatures(comp_manager);
 
             // Entity signature matches system signature - insert into set
             bool match = false;
@@ -95,9 +85,6 @@ class SystemManager {
     }
 
    private:
-    // Map from system type string pointer to a signature
-    std::unordered_map<std::type_index, std::vector<Signature>> signatures;
-
     // Map from system type string pointer to a system pointer
     std::unordered_map<std::type_index, std::shared_ptr<System>> systems;
 };

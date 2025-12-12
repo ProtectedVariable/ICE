@@ -5,6 +5,7 @@
 #ifndef ICE_REGISTRY_H
 #define ICE_REGISTRY_H
 
+#include <AnimationComponent.h>
 #include <CameraComponent.h>
 #include <Component.h>
 #include <Entity.h>
@@ -20,29 +21,17 @@
 namespace ICE {
 class Registry {
    public:
-    Registry(/* args */) {
+    Registry() {
         componentManager.registerComponent<TransformComponent>();
         componentManager.registerComponent<RenderComponent>();
         componentManager.registerComponent<LightComponent>();
         componentManager.registerComponent<CameraComponent>();
         componentManager.registerComponent<SkyboxComponent>();
-
-        Signature signature;
-        signature.set(componentManager.getComponentType<RenderComponent>());
-        signature.set(componentManager.getComponentType<TransformComponent>());
-        systemManager.registerSystem<RenderSystem>();
-        systemManager.addSignature<RenderSystem>(signature);
-        signature.reset();
-        signature.set(componentManager.getComponentType<TransformComponent>());
-        signature.set(componentManager.getComponentType<LightComponent>());
-        systemManager.addSignature<RenderSystem>(signature);
-        signature.reset();
-        signature.set(componentManager.getComponentType<SkyboxComponent>());
-        systemManager.addSignature<RenderSystem>(signature);
+        componentManager.registerComponent<AnimationComponent>();
     }
-    ~Registry(){};
-    
-    template <typename T>
+    ~Registry() = default;
+
+    template<typename T>
     void registerCustomComponent() {
         componentManager.registerComponent<T>();
     }
@@ -84,7 +73,7 @@ class Registry {
         auto signature = entityManager.getSignature(e);
         signature.set(componentManager.getComponentType<T>(), true);
         entityManager.setSignature(e, signature);
-        systemManager.entitySignatureChanged(e, signature);
+        systemManager.entitySignatureChanged(e, signature, componentManager);
     }
 
     template<typename T>
@@ -93,14 +82,14 @@ class Registry {
         auto signature = entityManager.getSignature(e);
         signature.set(componentManager.getComponentType<T>(), false);
         entityManager.setSignature(e, signature);
-        systemManager.entitySignatureChanged(e, signature);
+        systemManager.entitySignatureChanged(e, signature, componentManager);
     }
 
     template<typename T>
     void addSystem(const std::shared_ptr<T> &system) {
         systemManager.addSystem(system);
         for (const auto e : entities) {
-            systemManager.entitySignatureChanged(e, entityManager.getSignature(e));
+            systemManager.entitySignatureChanged(e, entityManager.getSignature(e), componentManager);
         }
     }
 

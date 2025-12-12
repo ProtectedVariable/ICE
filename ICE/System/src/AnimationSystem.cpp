@@ -1,6 +1,9 @@
 #include "AnimationSystem.h"
 
 namespace ICE {
+AnimationSystem::AnimationSystem(const std::shared_ptr<Registry>& reg, const std::shared_ptr<AssetBank>& bank) : m_registry(reg), m_asset_bank(bank) {
+}
+
 void AnimationSystem::update(double delta) {
     for (auto e : entities) {
         auto anim = m_registry->getComponent<AnimationComponent>(e);
@@ -134,6 +137,7 @@ void AnimationSystem::applyTransforms(Model::Node* node, const Eigen::Matrix4f& 
 
     Eigen::Matrix4f globalTransform = parentTransform * nodeLocalTransform;
     node->globalTransform = globalTransform;
+    node->localTransform = nodeLocalTransform;
 
     if (skeleton.boneMapping.contains(nodeName)) {
         int boneID = skeleton.boneMapping.at(nodeName);
