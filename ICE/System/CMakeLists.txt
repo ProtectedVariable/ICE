@@ -6,8 +6,8 @@ message(STATUS "Building ${PROJECT_NAME} module")
 add_library(${PROJECT_NAME} STATIC)
 
 target_sources(${PROJECT_NAME} PRIVATE
-    src/RenderSystem.cpp
-)
+    src/RenderSystem.cpp 
+    src/AnimationSystem.cpp)
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC

@@ -19,22 +19,29 @@ std::shared_ptr<Model> ModelLoader::load(const std::vector<std::filesystem::path
 
     const aiScene *scene = importer.ReadFile(file[0].string(),
                                              aiProcess_FlipUVs | aiProcess_ValidateDataStructure | aiProcess_SortByPType | aiProcess_GenSmoothNormals
-                                                 | aiProcess_CalcTangentSpace | aiProcess_Triangulate);
+                                                 | aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_LimitBoneWeights);
 
     std::vector<std::shared_ptr<Mesh>> meshes;
     std::vector<AssetUID> materials;
     std::vector<Model::Node> nodes;
-
+    Model::Skeleton skeleton;
+    skeleton.globalInverseTransform = aiMat4ToEigen(scene->mRootNode->mTransformation).inverse();
     for (int m = 0; m < scene->mNumMeshes; m++) {
         auto mesh = scene->mMeshes[m];
         auto material = scene->mMaterials[mesh->mMaterialIndex];
         auto model_name = file[0].filename().stem().string();
-        meshes.push_back(extractMesh(mesh, model_name, scene));
+        meshes.push_back(extractMesh(mesh, model_name, scene, skeleton));
         materials.push_back(extractMaterial(material, model_name, scene));
         meshes.back()->setSources(file);
     }
     processNode(scene->mRootNode, nodes);
     auto model = std::make_shared<Model>(nodes, meshes, materials);
+
+    if (scene->HasAnimations()) {
+        auto animations = extractAnimations(scene, skeleton);
+        model->setAnimations(animations);
+        model->setSkeleton(skeleton);
+    }
     model->setSources(file);
     return model;
 }
@@ -44,7 +51,7 @@ int ModelLoader::processNode(const aiNode *ainode, std::vector<Model::Node> &nod
     node.name = ainode->mName.C_Str();
     // compute local transform (relative to parent)
     aiMatrix4x4 local = ainode->mTransformation;
-    node.localTransform = aiMat4ToEigen(local);  // store local transform (or AiMat4ToGlm(world) if you want world)
+    node.localTransform = aiMat4ToEigen(local);
 
     for (unsigned int i = 0; i < ainode->mNumMeshes; ++i) {
         unsigned int mesh_idx = ainode->mMeshes[i];
@@ -61,7 +68,7 @@ int ModelLoader::processNode(const aiNode *ainode, std::vector<Model::Node> &nod
     return insert_pos;
 }
 
-std::shared_ptr<Mesh> ModelLoader::extractMesh(const aiMesh *mesh, const std::string &model_name, const aiScene *scene) {
+std::shared_ptr<Mesh> ModelLoader::extractMesh(const aiMesh *mesh, const std::string &model_name, const aiScene *scene, Model::Skeleton &skeleton) {
     MeshData data;
 
     for (int i = 0; i < mesh->mNumVertices; i++) {
@@ -90,7 +97,7 @@ std::shared_ptr<Mesh> ModelLoader::extractMesh(const aiMesh *mesh, const std::st
     }
 
     if (mesh->HasBones()) {
-        extractBoneWeightForVertices(mesh, scene, data);
+        extractBoneData(mesh, scene, data, skeleton);
     }
 
     auto mesh_ = std::make_shared<Mesh>(data);
@@ -211,32 +218,72 @@ AssetUID ModelLoader::extractTexture(const aiMaterial *material, const std::stri
     return tex_id;
 }
 
-void extractBoneWeightForVertices(const aiMesh *mesh, const aiScene *scene, MeshData &data) {
-    unsigned int numBones = mesh->mNumBones > MAX_BONES ? MAX_BONES : mesh->mNumBones;
-
-    for (unsigned int boneIndex = 0; boneIndex < numBones; ++boneIndex) {
-        int boneID = boneIndex;
+void ModelLoader::extractBoneData(const aiMesh *mesh, const aiScene *scene, MeshData &data, Model::Skeleton &skeleton) {
+    for (unsigned int boneIndex = 0; boneIndex < mesh->mNumBones; ++boneIndex) {
         std::string boneName = mesh->mBones[boneIndex]->mName.C_Str();
+        int boneID = -1;
+        // If the bone is new (hasn't been added by a previous mesh)
+        if (!skeleton.boneMapping.contains(boneName)) {
+            boneID = skeleton.boneMapping.size();
+            skeleton.boneMapping[boneName] = boneID;
+            Model::BoneInfo newBoneInfo = {.offsetMatrix = aiMat4ToEigen(mesh->mBones[boneIndex]->mOffsetMatrix),
+                                           .finalTransformation = Eigen::Matrix4f::Identity()};
+            skeleton.bones.push_back(newBoneInfo);
+        } else {
+            //Bone Already Exists
+            boneID = skeleton.boneMapping.at(boneName);
+        }
 
-        // Get all vertex weights for current bone
         aiVertexWeight *weights = mesh->mBones[boneIndex]->mWeights;
         unsigned int numWeights = mesh->mBones[boneIndex]->mNumWeights;
 
-        // For each weight at vertex x for current bone
         for (int weightIndex = 0; weightIndex < numWeights; ++weightIndex) {
             unsigned int vertexId = weights[weightIndex].mVertexId;
             float weight = weights[weightIndex].mWeight;
 
-            // Update four most influential bones
             for (int i = 0; i < 4; ++i) {
                 if (data.boneIDs[vertexId][i] < 0) {
                     data.boneWeights[vertexId][i] = weight;
                     data.boneIDs[vertexId][i] = boneID;
-                    break;
                 }
             }
         }
     }
+}
+
+std::unordered_map<std::string, Animation> ModelLoader::extractAnimations(const aiScene *scene, Model::Skeleton &skeleton) {
+    std::unordered_map<std::string, Animation> out;
+    for (unsigned int i = 0; i < scene->mNumAnimations; i++) {
+        aiAnimation *anim = scene->mAnimations[i];
+
+        Animation a;
+        a.duration = anim->mDuration;
+        a.ticksPerSecond = anim->mTicksPerSecond != 0 ? anim->mTicksPerSecond : 25.0f;
+
+        for (unsigned int c = 0; c < anim->mNumChannels; c++) {
+            aiNodeAnim *channel = anim->mChannels[c];
+            std::string boneName = channel->mNodeName.C_Str();
+
+            BoneAnimation track;
+
+            for (int k = 0; k < channel->mNumPositionKeys; k++) {
+                track.positions.push_back({(float) channel->mPositionKeys[k].mTime, aiVec3ToEigen(channel->mPositionKeys[k].mValue)});
+            }
+
+            for (int k = 0; k < channel->mNumRotationKeys; k++) {
+                track.rotations.push_back({(float) channel->mRotationKeys[k].mTime, aiQuatToEigen(channel->mRotationKeys[k].mValue)});
+            }
+
+            for (int k = 0; k < channel->mNumScalingKeys; k++) {
+                track.scales.push_back({(float) channel->mScalingKeys[k].mTime, aiVec3ToEigen(channel->mScalingKeys[k].mValue)});
+            }
+
+            a.tracks[boneName] = std::move(track);
+        }
+
+        out.try_emplace(anim->mName.C_Str(), std::move(a));
+    }
+    return out;
 }
 
 Eigen::Vector4f ModelLoader::colorToVec(aiColor4D *color) {
@@ -269,6 +316,23 @@ Eigen::Matrix4f ModelLoader::aiMat4ToEigen(const aiMatrix4x4 &m) {
     out(3, 3) = m.d4;
 
     return out;
+}
+
+Eigen::Vector3f ModelLoader::aiVec3ToEigen(const aiVector3D &vec) {
+    Eigen::Vector3f v;
+    v.x() = vec.x;
+    v.y() = vec.y;
+    v.z() = vec.z;
+    return v;
+}
+
+Eigen::Quaternionf ModelLoader::aiQuatToEigen(const aiQuaternion &q) {
+    Eigen::Quaternionf quat;
+    quat.w() = q.w;
+    quat.x() = q.x;
+    quat.y() = q.y;
+    quat.z() = q.z;
+    return quat;
 }
 
 }  // namespace ICE
