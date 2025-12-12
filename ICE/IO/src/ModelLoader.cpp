@@ -42,7 +42,6 @@ std::shared_ptr<Model> ModelLoader::load(const std::vector<std::filesystem::path
 int ModelLoader::processNode(const aiNode *ainode, std::vector<Model::Node> &nodes) {
     Model::Node node;
     node.name = ainode->mName.C_Str();
-
     // compute local transform (relative to parent)
     aiMatrix4x4 local = ainode->mTransformation;
     node.localTransform = aiMat4ToEigen(local);  // store local transform (or AiMat4ToGlm(world) if you want world)
@@ -63,47 +62,66 @@ int ModelLoader::processNode(const aiNode *ainode, std::vector<Model::Node> &nod
 }
 
 std::shared_ptr<Mesh> ModelLoader::extractMesh(const aiMesh *mesh, const std::string &model_name, const aiScene *scene) {
-    auto vertices = std::vector<Eigen::Vector3f>();
-    auto normals = std::vector<Eigen::Vector3f>();
-    auto uvs = std::vector<Eigen::Vector2f>();
-    auto indices = std::vector<Eigen::Vector3i>();
+    MeshData data;
 
     for (int i = 0; i < mesh->mNumVertices; i++) {
         auto v = mesh->mVertices[i];
         auto n = mesh->HasNormals() ? mesh->mNormals[i] : aiVector3D{0, 0, 0};
+        auto t = mesh->HasTangentsAndBitangents() ? mesh->mTangents[i] : aiVector3D{0, 0, 0};
+        auto b = mesh->HasTangentsAndBitangents() ? mesh->mBitangents[i] : aiVector3D{0, 0, 0};
         Eigen::Vector2f uv(0, 0);
         if (mesh->mTextureCoords[0] != nullptr) {
             auto uv_file = mesh->mTextureCoords[0][i];
             uv.x() = uv_file.x;
             uv.y() = uv_file.y;
         }
-        vertices.emplace_back(v.x, v.y, v.z);
-        normals.emplace_back(n.x, n.y, n.z);
-        uvs.push_back(uv);
+        data.vertices.emplace_back(v.x, v.y, v.z);
+        data.normals.emplace_back(n.x, n.y, n.z);
+        data.uvCoords.push_back(uv);
+        data.tangents.emplace_back(t.x, t.y, t.z);
+        data.bitangents.emplace_back(b.x, b.y, b.z);
+        data.boneIDs.emplace_back(Eigen::Vector4i::Constant(-1));
+        data.boneWeights.emplace_back(Eigen::Vector4f::Zero());
     }
     for (int i = 0; i < mesh->mNumFaces; i++) {
         auto f = mesh->mFaces[i];
         assert(f.mNumIndices == 3);
-        indices.emplace_back(f.mIndices[0], f.mIndices[1], f.mIndices[2]);
+        data.indices.emplace_back(f.mIndices[0], f.mIndices[1], f.mIndices[2]);
     }
 
-    auto mesh_ = std::make_shared<Mesh>(vertices, normals, uvs, indices);
+    if (mesh->HasBones()) {
+        extractBoneWeightForVertices(mesh, scene, data);
+    }
+
+    auto mesh_ = std::make_shared<Mesh>(data);
 
     auto vertexArray = graphics_factory->createVertexArray();
 
     auto vertexBuffer = graphics_factory->createVertexBuffer();
     auto normalsBuffer = graphics_factory->createVertexBuffer();
     auto uvBuffer = graphics_factory->createVertexBuffer();
+    auto tangentBuffer = graphics_factory->createVertexBuffer();
+    auto biTangentBuffer = graphics_factory->createVertexBuffer();
+    auto boneIDBuffer = graphics_factory->createVertexBuffer();
+    auto boneWeightBuffer = graphics_factory->createVertexBuffer();
     auto indexBuffer = graphics_factory->createIndexBuffer();
 
-    vertexBuffer->putData(BufferUtils::CreateFloatBuffer(vertices), 3 * vertices.size() * sizeof(float));
-    normalsBuffer->putData(BufferUtils::CreateFloatBuffer(normals), 3 * normals.size() * sizeof(float));
-    uvBuffer->putData(BufferUtils::CreateFloatBuffer(uvs), 2 * uvs.size() * sizeof(float));
-    indexBuffer->putData(BufferUtils::CreateIntBuffer(indices), 3 * indices.size() * sizeof(int));
+    vertexBuffer->putData(BufferUtils::CreateFloatBuffer(data.vertices), 3 * data.vertices.size() * sizeof(float));
+    normalsBuffer->putData(BufferUtils::CreateFloatBuffer(data.normals), 3 * data.normals.size() * sizeof(float));
+    tangentBuffer->putData(BufferUtils::CreateFloatBuffer(data.tangents), 3 * data.tangents.size() * sizeof(float));
+    biTangentBuffer->putData(BufferUtils::CreateFloatBuffer(data.bitangents), 3 * data.bitangents.size() * sizeof(float));
+    boneIDBuffer->putData(BufferUtils::CreateIntBuffer(data.boneIDs), 4 * data.boneIDs.size() * sizeof(int));
+    boneWeightBuffer->putData(BufferUtils::CreateFloatBuffer(data.boneWeights), 4 * data.boneWeights.size() * sizeof(float));
+    uvBuffer->putData(BufferUtils::CreateFloatBuffer(data.uvCoords), 2 * data.uvCoords.size() * sizeof(float));
+    indexBuffer->putData(BufferUtils::CreateIntBuffer(data.indices), 3 * data.indices.size() * sizeof(int));
 
-    vertexArray->pushVertexBuffer(vertexBuffer, 3);
-    vertexArray->pushVertexBuffer(normalsBuffer, 3);
-    vertexArray->pushVertexBuffer(uvBuffer, 2);
+    vertexArray->pushVertexBuffer(vertexBuffer, 0, 3);
+    vertexArray->pushVertexBuffer(normalsBuffer, 1, 3);
+    vertexArray->pushVertexBuffer(uvBuffer, 2, 2);
+    vertexArray->pushVertexBuffer(tangentBuffer, 3, 3);
+    vertexArray->pushVertexBuffer(biTangentBuffer, 4, 3);
+    vertexArray->pushVertexBuffer(boneIDBuffer, 5, 4);
+    vertexArray->pushVertexBuffer(boneWeightBuffer, 6, 4);
     vertexArray->setIndexBuffer(indexBuffer);
 
     mesh_->setVertexArray(vertexArray);
@@ -191,6 +209,34 @@ AssetUID ModelLoader::extractTexture(const aiMaterial *material, const std::stri
         }
     }
     return tex_id;
+}
+
+void extractBoneWeightForVertices(const aiMesh *mesh, const aiScene *scene, MeshData &data) {
+    unsigned int numBones = mesh->mNumBones > MAX_BONES ? MAX_BONES : mesh->mNumBones;
+
+    for (unsigned int boneIndex = 0; boneIndex < numBones; ++boneIndex) {
+        int boneID = boneIndex;
+        std::string boneName = mesh->mBones[boneIndex]->mName.C_Str();
+
+        // Get all vertex weights for current bone
+        aiVertexWeight *weights = mesh->mBones[boneIndex]->mWeights;
+        unsigned int numWeights = mesh->mBones[boneIndex]->mNumWeights;
+
+        // For each weight at vertex x for current bone
+        for (int weightIndex = 0; weightIndex < numWeights; ++weightIndex) {
+            unsigned int vertexId = weights[weightIndex].mVertexId;
+            float weight = weights[weightIndex].mWeight;
+
+            // Update four most influential bones
+            for (int i = 0; i < 4; ++i) {
+                if (data.boneIDs[vertexId][i] < 0) {
+                    data.boneWeights[vertexId][i] = weight;
+                    data.boneIDs[vertexId][i] = boneID;
+                    break;
+                }
+            }
+        }
+    }
 }
 
 Eigen::Vector4f ModelLoader::colorToVec(aiColor4D *color) {

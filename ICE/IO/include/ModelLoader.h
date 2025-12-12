@@ -24,11 +24,12 @@ class ModelLoader : public IAssetLoader<Model> {
           IAssetLoader<Model>(factory) {}
 
     std::shared_ptr<Model> load(const std::vector<std::filesystem::path> &file) override;
-    
+
     int processNode(const aiNode *node, std::vector<Model::Node> &nodes);
     std::shared_ptr<Mesh> extractMesh(const aiMesh *mesh, const std::string &model_name, const aiScene *scene);
     AssetUID extractMaterial(const aiMaterial *material, const std::string &model_name, const aiScene *scene);
     AssetUID extractTexture(const aiMaterial *material, const std::string &tex_path, const aiScene *scene, aiTextureType type);
+    void extractBoneWeightForVertices(const aiMesh *mesh, const aiScene *scene, MeshData &data);
 
    private:
     Eigen::Vector4f colorToVec(aiColor4D *color);
