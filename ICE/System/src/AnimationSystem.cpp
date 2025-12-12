@@ -67,8 +67,7 @@ Eigen::Matrix4f AnimationSystem::interpolateScale(double timeInTicks, const Bone
     }
     if (track.scales.size() == 1) {
         Eigen::Matrix4f scaleMatrix = Eigen::Matrix4f::Identity();
-        scaleMatrix.block<3, 3>(0, 0) =
-            Eigen::Array3f(track.scales[0].scale.x(), track.scales[0].scale.y(), track.scales[0].scale.z()).matrix().asDiagonal();
+        scaleMatrix.block<3, 3>(0, 0) = track.scales[0].scale.asDiagonal();
         return scaleMatrix;
     }
 
@@ -94,7 +93,10 @@ Eigen::Matrix4f AnimationSystem::interpolateScale(double timeInTicks, const Bone
 
 Eigen::Matrix4f AnimationSystem::interpolateRotation(double time, const BoneAnimation& track) {
     if (track.rotations.size() == 1) {
-        return track.rotations[0].rotation.toRotationMatrix();
+        Eigen::Matrix4f rotation_matrix = Eigen::Matrix4f::Identity();
+        rotation_matrix.block<3, 3>(0, 0) = track.rotations[0].rotation.toRotationMatrix();
+
+        return rotation_matrix;
     }
 
     size_t startIdx = findKeyIndex(time, track.rotations);
@@ -109,7 +111,10 @@ Eigen::Matrix4f AnimationSystem::interpolateRotation(double time, const BoneAnim
     Eigen::Quaternionf finalQuat = startKey.rotation.slerp((float) factor, nextKey.rotation);
     finalQuat.normalize();
 
-    return finalQuat.toRotationMatrix();
+    Eigen::Matrix4f rotation_matrix = Eigen::Matrix4f::Identity();
+    rotation_matrix.block<3, 3>(0, 0) = finalQuat.toRotationMatrix();
+
+    return rotation_matrix;
 }
 
 void AnimationSystem::applyTransforms(Model::Node* node, const Eigen::Matrix4f& parentTransform, Model::Skeleton& skeleton, double time,
