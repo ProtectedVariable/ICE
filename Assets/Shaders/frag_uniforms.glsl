@@ -5,11 +5,11 @@ struct Light {
     vec3 rotation;         
     vec3 color;            
     float distance_dropoff;
-    int type;              
+    int type;
 };
 
 layout(std140, binding = 1) uniform SceneLightsUBO {
     Light lights[MAX_LIGHTS];
-    int light_count;
     vec4 ambient_light;
+    int light_count;
 };
