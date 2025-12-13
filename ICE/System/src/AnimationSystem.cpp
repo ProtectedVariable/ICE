@@ -133,7 +133,7 @@ void AnimationSystem::applyTransforms(Model::Node* node, const Eigen::Matrix4f& 
         Eigen::Matrix4f posMatrix = interpolatePosition(time, track);
         Eigen::Matrix4f rotMatrix = interpolateRotation(time, track);
         Eigen::Matrix4f scaleMatrix = interpolateScale(time, track);
-
+        /*
         float Sx = nodeLocalTransform.block<3, 1>(0, 0).norm();
         float Sy = nodeLocalTransform.block<3, 1>(0, 1).norm();
         float Sz = nodeLocalTransform.block<3, 1>(0, 2).norm();
@@ -141,11 +141,12 @@ void AnimationSystem::applyTransforms(Model::Node* node, const Eigen::Matrix4f& 
         originalScaleMatrix(0, 0) = Sx;
         originalScaleMatrix(1, 1) = Sy;
         originalScaleMatrix(2, 2) = Sz;
+        */
 
-        nodeLocalTransform = originalScaleMatrix * posMatrix * rotMatrix * scaleMatrix;
+        nodeLocalTransform = node->localTransform * posMatrix * rotMatrix * scaleMatrix;
     }
 
-    Eigen::Matrix4f globalTransform = parentTransform * node->localTransform;
+    Eigen::Matrix4f globalTransform = parentTransform * nodeLocalTransform;
     node->animatedTransform = nodeLocalTransform;
 
     if (skeleton.boneMapping.contains(nodeName)) {
