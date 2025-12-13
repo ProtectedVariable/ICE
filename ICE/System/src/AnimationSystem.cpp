@@ -136,8 +136,7 @@ void AnimationSystem::applyTransforms(Model::Node* node, const Eigen::Matrix4f& 
     }
 
     Eigen::Matrix4f globalTransform = parentTransform * nodeLocalTransform;
-    node->globalTransform = globalTransform;
-    node->localTransform = nodeLocalTransform;
+    node->animatedTransform = nodeLocalTransform;
 
     if (skeleton.boneMapping.contains(nodeName)) {
         int boneID = skeleton.boneMapping.at(nodeName);
