@@ -145,6 +145,7 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
             shader->bind();
             for (int i = 0; i < model->getSkeleton().bones.size(); i++) {
                 shader->loadMat4("finalBonesMatrices[" + std::to_string(i) + "]", model->getSkeleton().bones[i].finalTransformation);
+                Logger::Log(Logger::DEBUG, "ForwardRenderer", "Bone %d matrix : %f", i, model->getSkeleton().bones[i].finalTransformation.determinant());
             }
         }
         

@@ -143,7 +143,7 @@ void AnimationSystem::applyTransforms(Model::Node* node, const Eigen::Matrix4f& 
         originalScaleMatrix(2, 2) = Sz;
         */
 
-        nodeLocalTransform = node->localTransform * posMatrix * rotMatrix * scaleMatrix;
+        nodeLocalTransform =  posMatrix * rotMatrix * scaleMatrix;
     }
 
     Eigen::Matrix4f globalTransform = parentTransform * nodeLocalTransform;

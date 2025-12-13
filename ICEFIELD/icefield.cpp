@@ -43,12 +43,12 @@ int main(void) {
 
     auto entity2 = scene->createEntity();
     scene->getRegistry()->addComponent<TransformComponent>(
-        entity2, TransformComponent(Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero(), Eigen::Vector3f::Constant(0.001)));
+        entity2, TransformComponent(Eigen::Vector3f::Zero(), Eigen::Vector3f(90, 0, 0), Eigen::Vector3f::Constant(1)));
     scene->getRegistry()->addComponent<RenderComponent>(entity2, RenderComponent(mesh_id_2));
     scene->getRegistry()->addComponent<AnimationComponent>(entity2, AnimationComponent{.currentAnimation = "PistolArmature|Fire", .speed=0.1f, .loop = true});
 
     auto camera = std::make_shared<PerspectiveCamera>(60.0, 16.0 / 9.0, 0.01, 10000.0);
-    camera->backward(10);
+    camera->backward(1000);
     //camera->up(1);
     //camera->pitch(-30);
     scene->getRegistry()->getSystem<RenderSystem>()->setCamera(camera);
@@ -59,7 +59,7 @@ int main(void) {
 
         engine.step();
 
-        scene->getRegistry()->getComponent<TransformComponent>(entity2)->rotation().y() = 90;
+        scene->getRegistry()->getComponent<TransformComponent>(entity2)->rotation().y() = 0;
 
         //Render system duty
         int display_w, display_h;
