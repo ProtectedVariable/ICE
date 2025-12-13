@@ -23,6 +23,8 @@ int main(void) {
     auto scene = project->getScenes().front();
     project->setCurrentScene(scene);
 
+    engine.getApi()->setClearColor(0.5f, 0.5f, 0.5f, 1.0f);
+
     engine.setProject(project);
     project->getCurrentScene()->getRegistry()->addSystem(std::make_shared<AnimationSystem>(scene->getRegistry(), engine.getAssetBank()));
 
@@ -43,7 +45,7 @@ int main(void) {
     scene->getRegistry()->addComponent<TransformComponent>(
         entity2, TransformComponent(Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero(), Eigen::Vector3f::Constant(0.1)));
     scene->getRegistry()->addComponent<RenderComponent>(entity2, RenderComponent(mesh_id_2));
-    scene->getRegistry()->addComponent<AnimationComponent>(entity2, AnimationComponent{.currentAnimation = "glock_19|Shoot", .loop = true});
+    scene->getRegistry()->addComponent<AnimationComponent>(entity2, AnimationComponent{.currentAnimation = "glock_19|Shoot", .speed=0.1f, .loop = true});
 
     auto camera = std::make_shared<PerspectiveCamera>(60.0, 16.0 / 9.0, 0.01, 10000.0);
     camera->backward(2);
@@ -57,7 +59,7 @@ int main(void) {
 
         engine.step();
 
-        scene->getRegistry()->getComponent<TransformComponent>(entity2)->rotation().y() = i;
+        scene->getRegistry()->getComponent<TransformComponent>(entity2)->rotation().y() = 90;
 
         //Render system duty
         int display_w, display_h;

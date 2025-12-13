@@ -52,6 +52,7 @@ int ModelLoader::processNode(const aiNode *ainode, std::vector<Model::Node> &nod
     // compute local transform (relative to parent)
     aiMatrix4x4 local = ainode->mTransformation;
     node.localTransform = aiMat4ToEigen(local);
+    node.animatedTransform = node.localTransform;
 
     for (unsigned int i = 0; i < ainode->mNumMeshes; ++i) {
         unsigned int mesh_idx = ainode->mMeshes[i];

@@ -133,6 +133,7 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
         auto meshes = model->getMeshes();
         auto materials = model->getMaterialsIDs();
         auto nodes = model->getNodes();
+        Logger::Log(Logger::DEBUG, "ForwardRenderer", "===================================================");
         submitModel(0, nodes, meshes, materials, tc->getModelMatrix());
     }
 
@@ -152,7 +153,7 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
 void ForwardRenderer::submitModel(int node_idx, const std::vector<Model::Node>& nodes, const std::vector<std::shared_ptr<Mesh>>& meshes,
                                   const std::vector<AssetUID>& materials, const Eigen::Matrix4f& transform) {
     auto node = nodes.at(node_idx);
-    auto node_transform = transform * node.localTransform;
+    Eigen::Matrix4f node_transform = transform * node.animatedTransform;
     for (const auto& i : node.meshIndices) {
         if (i >= meshes.size()) {
             continue;
@@ -181,6 +182,7 @@ void ForwardRenderer::submitModel(int node_idx, const std::vector<Model::Node>& 
                 }
             }
         }
+        //Logger::Log(Logger::DEBUG, "ForwardRenderer", "%s %f", node.name.c_str(), node_transform.determinant());
 
         m_render_commands.push_back(RenderCommand{.mesh = mesh,
                                                   .material = material,

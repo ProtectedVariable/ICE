@@ -28,6 +28,7 @@ Eigen::Matrix4f rotationMatrix(Eigen::Vector3f angles, bool yaw_first = true);
 Eigen::Matrix4f translationMatrix(Eigen::Vector3f translation);
 Eigen::Matrix4f scaleMatrix(Eigen::Vector3f scale);
 Eigen::Matrix4f transformationMatrix(const Eigen::Vector3f &translation, const Eigen::Vector3f &angles, const Eigen::Vector3f &scale);
+void decomposeMatrix(const Eigen::Matrix4f &M, Eigen::Vector3f &position, Eigen::Vector3f &rotation_eulers, Eigen::Vector3f &scale);
 
 Eigen::Vector3f orientation(int face, float x, float y);
 int clamp(int x, int a, int b);

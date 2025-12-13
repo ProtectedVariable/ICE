@@ -9,10 +9,10 @@ class Model : public Asset {
    public:
     struct Node {
         std::string name;
-        Eigen::Matrix4f localTransform;
-        Eigen::Matrix4f globalTransform;  // For mesh-only animation (no bones)
-        std::vector<size_t> meshIndices;  // Meshes used by this node
-        std::vector<int> children;        // Node indices
+        Eigen::Matrix4f localTransform;     // default transform
+        Eigen::Matrix4f animatedTransform;  // For mesh-only animation (no bones)
+        std::vector<size_t> meshIndices;    // Meshes used by this node
+        std::vector<int> children;          // Node indices
     };
 
     struct BoneInfo {
@@ -29,7 +29,7 @@ class Model : public Asset {
     Model(const std::vector<Node> &nodes, const std::vector<std::shared_ptr<ICE::Mesh>> &meshes, const std::vector<ICE::AssetUID> &materials);
 
     std::vector<Node> getNodes() const { return m_nodes; }
-    std::vector<Node>& getNodes() { return m_nodes; }
+    std::vector<Node> &getNodes() { return m_nodes; }
     std::vector<std::shared_ptr<ICE::Mesh>> getMeshes() const { return m_meshes; }
     std::vector<ICE::AssetUID> getMaterialsIDs() const { return m_materials; }
     AABB getBoundingBox() const { return m_boundingbox; }
