@@ -1,17 +1,19 @@
-#include "AnimationSystem.h"
+﻿#include "AnimationSystem.h"
+
+#include <iostream>
 
 namespace ICE {
 AnimationSystem::AnimationSystem(const std::shared_ptr<Registry>& reg, const std::shared_ptr<AssetBank>& bank) : m_registry(reg), m_asset_bank(bank) {
 }
 
-void AnimationSystem::update(double delta) {
+void AnimationSystem::update(double dt) {
     for (auto e : entities) {
         auto anim = m_registry->getComponent<AnimationComponent>(e);
         auto rc = m_registry->getComponent<RenderComponent>(e);
         if (!anim->playing)
             continue;
 
-        anim->currentTime += delta * anim->speed;
+        anim->currentTime += dt * anim->speed;
 
         auto model = m_asset_bank->getAsset<Model>(rc->model);
         auto animation = model->getAnimations().at(anim->currentAnimation);
@@ -132,10 +134,18 @@ void AnimationSystem::applyTransforms(Model::Node* node, const Eigen::Matrix4f& 
         Eigen::Matrix4f rotMatrix = interpolateRotation(time, track);
         Eigen::Matrix4f scaleMatrix = interpolateScale(time, track);
 
-        nodeLocalTransform = posMatrix * rotMatrix * scaleMatrix;
+        float Sx = nodeLocalTransform.block<3, 1>(0, 0).norm();
+        float Sy = nodeLocalTransform.block<3, 1>(0, 1).norm();
+        float Sz = nodeLocalTransform.block<3, 1>(0, 2).norm();
+        Eigen::Matrix4f originalScaleMatrix = Eigen::Matrix4f::Identity();
+        originalScaleMatrix(0, 0) = Sx;
+        originalScaleMatrix(1, 1) = Sy;
+        originalScaleMatrix(2, 2) = Sz;
+
+        nodeLocalTransform = originalScaleMatrix * posMatrix * rotMatrix * scaleMatrix;
     }
 
-    Eigen::Matrix4f globalTransform = parentTransform * nodeLocalTransform;
+    Eigen::Matrix4f globalTransform = parentTransform * node->localTransform;
     node->animatedTransform = nodeLocalTransform;
 
     if (skeleton.boneMapping.contains(nodeName)) {

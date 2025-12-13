@@ -134,6 +134,20 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
         auto materials = model->getMaterialsIDs();
         auto nodes = model->getNodes();
         Logger::Log(Logger::DEBUG, "ForwardRenderer", "===================================================");
+        
+        for (const auto& mtl : materials) {
+            auto material = m_asset_bank->getAsset<Material>(mtl);
+            auto shader = m_asset_bank->getAsset<Shader>(material->getShader());
+
+            if (!shader) {
+                continue;
+            }
+            shader->bind();
+            for (int i = 0; i < model->getSkeleton().bones.size(); i++) {
+                shader->loadMat4("finalBonesMatrices[" + std::to_string(i) + "]", model->getSkeleton().bones[i].finalTransformation);
+            }
+        }
+        
         submitModel(0, nodes, meshes, materials, tc->getModelMatrix());
     }
 
@@ -182,6 +196,7 @@ void ForwardRenderer::submitModel(int node_idx, const std::vector<Model::Node>& 
                 }
             }
         }
+
         //Logger::Log(Logger::DEBUG, "ForwardRenderer", "%s %f", node.name.c_str(), node_transform.determinant());
 
         m_render_commands.push_back(RenderCommand{.mesh = mesh,

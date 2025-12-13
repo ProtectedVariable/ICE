@@ -20,23 +20,31 @@ out vec2 ftex_coords;
 
 void main() {
     vec4 totalPosition = vec4(0.0f);
+    vec3 totalNormal = vec3(0.0f);
+    
     for(int i = 0 ; i < MAX_BONE_INFLUENCE ; i++)
     {
-        if(bone_ids[i] == -1) 
-            continue;
-        if(bone_ids[i] >= MAX_BONES) 
-        {
+        if(bone_ids[i] == -1) continue;
+       
+        if(bone_ids[i] >= MAX_BONES) {
             totalPosition = vec4(vertex, 1.0f);
-            break;
+            totalNormal = normal;
+            break; 
         }
-        vec4 localPosition = finalBonesMatrices[bone_ids[i]] * vec4(vertex,1.0f);
+        
+        vec4 localPosition = finalBonesMatrices[bone_ids[i]] * vec4(vertex, 1.0f);
         totalPosition += localPosition * bone_weights[i];
+        
         vec3 localNormal = mat3(finalBonesMatrices[bone_ids[i]]) * normal;
+        totalNormal += localNormal * bone_weights[i];
     }
 
+
+    fposition = (model * totalPosition).xyz; 
+    fnormal = normalize(mat3(transpose(inverse(model))) * totalNormal); 
+
+    gl_Position = uProjection * uView * model * totalPosition;
+
     fview = (inverse(uView) * vec4(0, 0, 0, 1)).xyz;
-    fnormal = normalize(mat3(transpose(inverse(model))) * normal);
-    fposition = (model * vec4(vertex, 1.0)).xyz;
     ftex_coords = tex_coords;
-    gl_Position = uProjection * uView * model * vec4(vertex, 1.0);
 }
