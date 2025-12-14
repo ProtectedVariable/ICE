@@ -18,7 +18,7 @@ TEST(AssetBankTest, AddedAssetsCanBeRetrieved) {
     ASSERT_EQ(ab.getAsset<Material>("a_ice_test_mtl"), mtl);
     ASSERT_EQ(ab.getAsset<Material>("lol"), nullptr);
 
-    auto mesh = std::make_shared<Mesh>(MeshData{});
+    auto mesh = std::make_shared<Mesh>(MeshData{{Eigen::Vector3f()}});
     ab.addAsset<Mesh>("a_ice_test_mesh", mesh);
     ASSERT_EQ(ab.getAsset<Mesh>("a_ice_test_mesh"), mesh);
     ASSERT_EQ(ab.getAsset<Mesh>("lel"), nullptr);
