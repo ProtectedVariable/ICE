@@ -22,8 +22,12 @@ void main() {
     vec4 totalPosition = vec4(0.0f);
     vec3 totalNormal = vec3(0.0f);
     
-    for(int i = 0 ; i < MAX_BONE_INFLUENCE ; i++)
-    {
+    for(int i = 0 ; i < MAX_BONE_INFLUENCE ; i++) {
+        if(i == 0 && bone_ids[i] == -1) {
+            totalPosition = vec4(vertex, 1.0f);
+            totalNormal = normal;
+            break; 
+        }
         if(bone_ids[i] == -1) continue;
        
         if(bone_ids[i] >= MAX_BONES) {
