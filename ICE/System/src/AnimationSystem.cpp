@@ -35,6 +35,36 @@ void AnimationSystem::updateSkeleton(const std::shared_ptr<Model>& model, double
     applyTransforms(&all_nodes[0], Eigen::Matrix4f::Identity(), model->getSkeleton(), time, anim, all_nodes);
 }
 
+void AnimationSystem::applyTransforms(Model::Node* node, const Eigen::Matrix4f& parentTransform, Model::Skeleton& skeleton, double time,
+                                      const Animation& anim, std::vector<Model::Node>& allModelNodes) {
+    Eigen::Matrix4f nodeLocalTransform = node->localTransform;
+    std::string nodeName = node->name;
+    Eigen::Matrix4f globalTransform;
+    if (anim.tracks.contains(nodeName)) {
+        const BoneAnimation& track = anim.tracks.at(nodeName);
+
+        Eigen::Matrix4f posMatrix = interpolatePosition(time, track);
+        Eigen::Matrix4f rotMatrix = interpolateRotation(time, track);
+        Eigen::Matrix4f scaleMatrix = interpolateScale(time, track);
+
+        nodeLocalTransform = posMatrix * rotMatrix * scaleMatrix;
+    }
+
+    globalTransform = parentTransform * nodeLocalTransform;
+    node->animatedTransform = globalTransform;
+
+    if (skeleton.boneMapping.contains(nodeName)) {
+        int boneID = skeleton.boneMapping.at(nodeName);
+
+        Eigen::Matrix4f finalMatrix = skeleton.globalInverseTransform * globalTransform * skeleton.bones[boneID].offsetMatrix;
+        skeleton.bones[boneID].finalTransformation = finalMatrix;
+    }
+
+    for (int childIndex : node->children) {
+        applyTransforms(&allModelNodes[childIndex], globalTransform, skeleton, time, anim, allModelNodes);
+    }
+}
+
 Eigen::Matrix4f AnimationSystem::interpolatePosition(double timeInTicks, const BoneAnimation& track) {
     if (track.positions.empty()) {
         return Eigen::Matrix4f::Identity();
@@ -120,37 +150,6 @@ Eigen::Matrix4f AnimationSystem::interpolateRotation(double time, const BoneAnim
     rotation_matrix.block<3, 3>(0, 0) = finalQuat.toRotationMatrix();
 
     return rotation_matrix;
-}
-
-void AnimationSystem::applyTransforms(Model::Node* node, const Eigen::Matrix4f& parentTransform, Model::Skeleton& skeleton, double time,
-                                      const Animation& anim, std::vector<Model::Node>& allModelNodes) {
-    Eigen::Matrix4f nodeLocalTransform = node->localTransform;
-    std::string nodeName = node->name;
-
-    if (anim.tracks.contains(nodeName)) {
-        const BoneAnimation& track = anim.tracks.at(nodeName);
-
-        Eigen::Matrix4f posMatrix = interpolatePosition(time, track);
-        Eigen::Matrix4f rotMatrix = interpolateRotation(time, track);
-        Eigen::Matrix4f scaleMatrix = interpolateScale(time, track);
-
-        nodeLocalTransform = posMatrix * rotMatrix * scaleMatrix;
-    }
-
-    Eigen::Matrix4f globalTransform = parentTransform * nodeLocalTransform;
-    node->animatedTransform = parentTransform.inverse();
-
-    if (skeleton.boneMapping.contains(nodeName)) {
-        int boneID = skeleton.boneMapping.at(nodeName);
-
-        Eigen::Matrix4f finalMatrix = skeleton.globalInverseTransform * globalTransform * skeleton.bones[boneID].offsetMatrix;
-
-        skeleton.bones[boneID].finalTransformation = finalMatrix;
-    }
-
-    for (int childIndex : node->children) {
-        applyTransforms(&allModelNodes[childIndex], globalTransform, skeleton, time, anim, allModelNodes);
-    }
 }
 
 }  // namespace ICE

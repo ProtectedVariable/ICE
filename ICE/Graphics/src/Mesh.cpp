@@ -11,8 +11,28 @@
 
 namespace ICE {
 Mesh::Mesh(const MeshData &data) : m_data(data), boundingBox(data.vertices) {
+    for (const auto &boneIDs : m_data.boneIDs) {
+        for (int i = 0; i < MAX_BONES_PER_VERTEX; i++) {
+            if (boneIDs[i] != INVALID_BONE_ID) {
+                m_has_bones = true;
+                break;
+            }
+        }
+        if (m_has_bones)
+            break;
+    }
 }
 Mesh::Mesh(MeshData &&data) : m_data(std::move(data)), boundingBox(getVertices()) {
+    for (const auto & boneIDs : m_data.boneIDs) {
+        for (int i = 0; i < MAX_BONES_PER_VERTEX; i++) {
+            if (boneIDs[i] != INVALID_BONE_ID) {
+                m_has_bones = true;
+                break;
+            }
+        }
+        if (m_has_bones)
+            break;
+    }
 }
 const std::vector<Eigen::Vector3f> &Mesh::getVertices() const {
     return m_data.vertices;

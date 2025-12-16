@@ -166,7 +166,6 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
 void ForwardRenderer::submitModel(int node_idx, const std::vector<Model::Node>& nodes, const std::vector<std::shared_ptr<Mesh>>& meshes,
                                   const std::vector<AssetUID>& materials, const Eigen::Matrix4f& transform) {
     auto node = nodes.at(node_idx);
-    Eigen::Matrix4f node_transform = transform * node.animatedTransform;
     for (const auto& i : node.meshIndices) {
         if (i >= meshes.size()) {
             continue;
@@ -185,6 +184,12 @@ void ForwardRenderer::submitModel(int node_idx, const std::vector<Model::Node>& 
         if (!mesh) {
             continue;
         }
+
+        Eigen::Matrix4f node_transform;
+        if (mesh->usesBones())
+            node_transform = transform;
+        else
+            node_transform = transform * node.animatedTransform;
 
         std::unordered_map<AssetUID, std::shared_ptr<Texture>> texs;
         for (const auto& [name, value] : material->getAllUniforms()) {
@@ -206,7 +211,7 @@ void ForwardRenderer::submitModel(int node_idx, const std::vector<Model::Node>& 
     }
 
     for (const auto& child_idx : node.children) {
-        submitModel(child_idx, nodes, meshes, materials, node_transform);
+        submitModel(child_idx, nodes, meshes, materials, transform);
     }
 }
 

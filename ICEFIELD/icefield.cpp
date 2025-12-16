@@ -44,9 +44,9 @@ int main(void) {
 
     auto entity2 = scene->createEntity();
     scene->getRegistry()->addComponent<TransformComponent>(
-        entity2, TransformComponent(Eigen::Vector3f::Zero(), Eigen::Vector3f(0, 90, 0), Eigen::Vector3f::Constant(1)));
+        entity2, TransformComponent(Eigen::Vector3f::Zero(), Eigen::Vector3f(0, 0, 0), Eigen::Vector3f::Constant(1)));
     scene->getRegistry()->addComponent<RenderComponent>(entity2, RenderComponent(mesh_id_2));
-    scene->getRegistry()->addComponent<AnimationComponent>(entity2, AnimationComponent{.currentAnimation = "CharacterArmature|Run", .loop = true});
+    //scene->getRegistry()->addComponent<AnimationComponent>(entity2, AnimationComponent{.currentAnimation = "CharacterArmature|Death", .loop = true});
 
     auto camera = std::make_shared<PerspectiveCamera>(60.0, 16.0 / 9.0, 0.01, 10000.0);
     camera->backward(10);

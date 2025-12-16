@@ -17,9 +17,10 @@ namespace ICE {
 std::shared_ptr<Model> ModelLoader::load(const std::vector<std::filesystem::path> &file) {
     Assimp::Importer importer;
 
-    const aiScene *scene = importer.ReadFile(file[0].string(),
-                                             aiProcess_LimitBoneWeights |  aiProcess_FlipUVs | aiProcess_ValidateDataStructure | aiProcess_SortByPType | aiProcess_GenSmoothNormals
-                                                 | aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_LimitBoneWeights);
+    const aiScene *scene =
+        importer.ReadFile(file[0].string(),
+                          aiProcess_OptimizeGraph | aiProcess_FlipUVs | aiProcess_ValidateDataStructure | aiProcess_SortByPType
+                              | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_LimitBoneWeights);
 
     std::vector<std::shared_ptr<Mesh>> meshes;
     std::vector<AssetUID> materials;
@@ -34,7 +35,8 @@ std::shared_ptr<Model> ModelLoader::load(const std::vector<std::filesystem::path
         materials.push_back(extractMaterial(material, model_name, scene));
         meshes.back()->setSources(file);
     }
-    processNode(scene->mRootNode, nodes);
+    std::unordered_set<std::string> used_node_names;
+    processNode(scene->mRootNode, nodes, skeleton, used_node_names, Eigen::Matrix4f::Identity());
     auto model = std::make_shared<Model>(nodes, meshes, materials);
 
     if (scene->HasAnimations()) {
@@ -46,24 +48,39 @@ std::shared_ptr<Model> ModelLoader::load(const std::vector<std::filesystem::path
     return model;
 }
 
-int ModelLoader::processNode(const aiNode *ainode, std::vector<Model::Node> &nodes) {
+int ModelLoader::processNode(const aiNode *ainode, std::vector<Model::Node> &nodes, Model::Skeleton &skeleton,
+                             std::unordered_set<std::string> &used_names, const Eigen::Matrix4f &parent_transform) {
+    std::string name = ainode->mName.C_Str();
+    if (used_names.contains(name)) {
+        name = name + "_" + std::to_string(used_names.size());
+    }
+    used_names.insert(name);
+
     Model::Node node;
-    node.name = ainode->mName.C_Str();
-    // compute local transform (relative to parent)
+    node.name = name;
+
     aiMatrix4x4 local = ainode->mTransformation;
     node.localTransform = aiMat4ToEigen(local);
-    node.animatedTransform = node.localTransform;
+    node.animatedTransform = parent_transform * node.localTransform;
 
     for (unsigned int i = 0; i < ainode->mNumMeshes; ++i) {
         unsigned int mesh_idx = ainode->mMeshes[i];
         node.meshIndices.push_back(mesh_idx);
     }
     auto insert_pos = nodes.size();
+
+    if (skeleton.boneMapping.contains(name)) {
+        int boneID = skeleton.boneMapping.at(name);
+
+        Eigen::Matrix4f finalMatrix = skeleton.globalInverseTransform * node.animatedTransform * skeleton.bones[boneID].offsetMatrix;
+        skeleton.bones[boneID].finalTransformation = finalMatrix;
+    }
+
     nodes.push_back(node);
 
     for (unsigned int c = 0; c < ainode->mNumChildren; ++c) {
         const aiNode *child = ainode->mChildren[c];
-        int child_pos = processNode(child, nodes);
+        int child_pos = processNode(child, nodes, skeleton, used_names, node.animatedTransform);
         nodes.at(insert_pos).children.push_back(child_pos);
     }
     return insert_pos;

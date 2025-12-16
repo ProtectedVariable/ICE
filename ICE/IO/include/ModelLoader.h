@@ -25,7 +25,8 @@ class ModelLoader : public IAssetLoader<Model> {
 
     std::shared_ptr<Model> load(const std::vector<std::filesystem::path> &file) override;
 
-    int processNode(const aiNode *node, std::vector<Model::Node> &nodes);
+    int processNode(const aiNode *node, std::vector<Model::Node> &nodes, Model::Skeleton &skeleton, std::unordered_set<std::string> &used_names,
+                    const Eigen::Matrix4f &parent_transform);
     std::shared_ptr<Mesh> extractMesh(const aiMesh *mesh, const std::string &model_name, const aiScene *scene, Model::Skeleton &skeleton);
     AssetUID extractMaterial(const aiMaterial *material, const std::string &model_name, const aiScene *scene);
     AssetUID extractTexture(const aiMaterial *material, const std::string &tex_path, const aiScene *scene, aiTextureType type);

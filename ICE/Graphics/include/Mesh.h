@@ -49,9 +49,11 @@ class Mesh : public Asset {
 
     std::string getTypeName() const override;
     AssetType getType() const override;
+    bool usesBones() const { return m_has_bones; }
 
    private:
     MeshData m_data;
+    bool m_has_bones = false;
     std::shared_ptr<VertexArray> vertexArray;
     AABB boundingBox;
 };
