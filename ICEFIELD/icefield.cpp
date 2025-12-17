@@ -34,12 +34,11 @@ int main(void) {
     engine.getAssetBank()->addAsset<ICE::Model>("pistol", {engine.getProject()->getBaseDirectory() / "Assets" / "Models" / "pistol.glb"});
     engine.getProject()->copyAssetFile("Models", "Adventurer", "ImportAssets/Adventurer.glb");
     engine.getAssetBank()->addAsset<ICE::Model>("Adventurer", {engine.getProject()->getBaseDirectory() / "Assets" / "Models" / "Adventurer.glb"});
-    /*
+
     auto entity = scene->createEntity();
-    scene->getRegistry()->addComponent<TransformComponent>(
-        entity, TransformComponent(Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero(), Eigen::Vector3f(0.1, 0.1, 0.1)));
-    scene->getRegistry()->addComponent<RenderComponent>(entity, RenderComponent(mesh_id));
-    */
+    scene->getRegistry()->addComponent<TransformComponent>(entity, TransformComponent({0, 1000, 0}, Eigen::Vector3f::Zero(), Eigen::Vector3f(0.1, 0.1, 0.1)));
+    scene->getRegistry()->addComponent<LightComponent>(entity, LightComponent(LightType::PointLight, {1, 1, 1}));
+
     auto mesh_id_2 = engine.getAssetBank()->getUID(AssetPath::WithTypePrefix<Model>("Adventurer"));
 
     auto entity2 = scene->createEntity();
@@ -49,9 +48,9 @@ int main(void) {
     scene->getRegistry()->addComponent<AnimationComponent>(entity2, AnimationComponent{.currentAnimation = "CharacterArmature|Walk", .loop = true});
 
     auto camera = std::make_shared<PerspectiveCamera>(60.0, 16.0 / 9.0, 0.01, 10000.0);
-    camera->backward(10);
-    //camera->up(1);
-    //camera->pitch(-30);
+    camera->backward(5);
+    camera->up(5);
+    camera->pitch(-30);
     scene->getRegistry()->getSystem<RenderSystem>()->setCamera(camera);
 
     int i = 0;
