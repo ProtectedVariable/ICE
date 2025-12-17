@@ -303,8 +303,9 @@ std::unordered_map<std::string, Animation> ModelLoader::extractAnimations(const 
 
             a.tracks[boneName] = std::move(track);
         }
-
-        out.try_emplace(anim->mName.C_Str(), std::move(a));
+        std::string anim_name = anim->mName.C_Str();
+        
+        out.try_emplace(anim_name.substr(anim_name.find_first_of('|') + 1), std::move(a));
     }
     return out;
 }
