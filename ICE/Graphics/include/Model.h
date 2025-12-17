@@ -16,7 +16,6 @@ class Model : public Asset {
     };
 
     struct BoneInfo {
-        Eigen::Matrix4f offsetMatrix;
         Eigen::Matrix4f finalTransformation;
     };
 

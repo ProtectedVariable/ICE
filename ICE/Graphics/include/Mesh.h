@@ -29,6 +29,10 @@ struct MeshData {
     std::vector<Eigen::Vector3i> indices;
 };
 
+struct SkinningData {
+    std::unordered_map<int, Eigen::Matrix4f> boneOffsetMatrices;
+};
+
 class Mesh : public Asset {
    public:
     Mesh(const MeshData &data);
@@ -50,9 +54,15 @@ class Mesh : public Asset {
     std::string getTypeName() const override;
     AssetType getType() const override;
     bool usesBones() const { return m_has_bones; }
+    void setSkinningData(const SkinningData &skinningData) {
+        m_skinningData = skinningData;
+        m_has_bones = true;
+    }
 
+    SkinningData getSkinningData() const { return m_skinningData; }
    private:
     MeshData m_data;
+    SkinningData m_skinningData;
     bool m_has_bones = false;
     std::shared_ptr<VertexArray> vertexArray;
     AABB boundingBox;

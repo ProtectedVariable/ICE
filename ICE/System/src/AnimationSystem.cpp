@@ -55,9 +55,7 @@ void AnimationSystem::applyTransforms(Model::Node* node, const Eigen::Matrix4f& 
 
     if (skeleton.boneMapping.contains(nodeName)) {
         int boneID = skeleton.boneMapping.at(nodeName);
-
-        Eigen::Matrix4f finalMatrix = skeleton.globalInverseTransform * globalTransform * skeleton.bones[boneID].offsetMatrix;
-        skeleton.bones[boneID].finalTransformation = finalMatrix;
+        skeleton.bones[boneID].finalTransformation = skeleton.globalInverseTransform * globalTransform;
     }
 
     for (int childIndex : node->children) {

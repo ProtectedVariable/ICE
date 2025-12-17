@@ -143,7 +143,7 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
             }
             shader->bind();
             for (int i = 0; i < model->getSkeleton().bones.size(); i++) {
-                shader->loadMat4("finalBonesMatrices[" + std::to_string(i) + "]", model->getSkeleton().bones[i].finalTransformation);
+                shader->loadMat4("bonesTransformMatrices[" + std::to_string(i) + "]", model->getSkeleton().bones[i].finalTransformation);
             }
         }
 
@@ -186,10 +186,11 @@ void ForwardRenderer::submitModel(int node_idx, const std::vector<Model::Node>& 
         }
 
         Eigen::Matrix4f node_transform;
-        if (mesh->usesBones())
+        if (mesh->usesBones()) {
             node_transform = transform;
-        else
+        } else {
             node_transform = transform * node.animatedTransform;
+        }
 
         std::unordered_map<AssetUID, std::shared_ptr<Texture>> texs;
         for (const auto& [name, value] : material->getAllUniforms()) {
