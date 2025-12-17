@@ -41,11 +41,12 @@ bool Project::CreateDirectories() {
     } catch (std::filesystem::filesystem_error &e) {
         Logger::Log(Logger::FATAL, "IO", "Could not copy default assets: %s", e.what());
     }
-    assetBank->addAsset<Shader>("solid", {m_shaders_directory / "solid.vs", m_shaders_directory / "solid.fs"});
-    assetBank->addAsset<Shader>("phong", {m_shaders_directory / "phong.vs", m_shaders_directory / "phong.fs"});
-    assetBank->addAsset<Shader>("normal", {m_shaders_directory / "normal.vs", m_shaders_directory / "normal.fs"});
+    assetBank->addAsset<Shader>("solid", {m_shaders_directory / "skinning.vs", m_shaders_directory / "solid.fs"});
+    assetBank->addAsset<Shader>("phong", {m_shaders_directory / "skinning.vs", m_shaders_directory / "phong.fs"});
+    assetBank->addAsset<Shader>("normal", {m_shaders_directory / "skinning.vs", m_shaders_directory / "normal.fs"});
+    assetBank->addAsset<Shader>("pbr", {m_shaders_directory / "skinning.vs", m_shaders_directory / "pbr.fs"});
     assetBank->addAsset<Shader>("lastpass", {m_shaders_directory / "lastpass.vs", m_shaders_directory / "lastpass.fs"});
-    assetBank->addAsset<Shader>("__ice__picking_shader", {m_shaders_directory / "picking.vs", m_shaders_directory / "picking.fs"});
+    assetBank->addAsset<Shader>("__ice__picking_shader", {m_shaders_directory / "skinning.vs", m_shaders_directory / "picking.fs"});
 
     assetBank->addAsset<Material>("base_mat", {m_materials_directory / "base_mat.icm"});
 

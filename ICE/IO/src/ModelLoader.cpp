@@ -161,47 +161,55 @@ AssetUID ModelLoader::extractMaterial(const aiMaterial *material, const std::str
     if (mtl_name.length == 0) {
         mtl_name = "DefaultMat";
     }
+    //If material already exists, return its UID
     auto bank_name = model_name + "/" + mtl_name.C_Str();
-    auto mtl = std::make_shared<Material>();
-    mtl->setUniform("material.use_diffuse_map", false);
-    mtl->setUniform("material.use_ambient_map", false);
-    mtl->setUniform("material.use_specular_map", false);
-    mtl->setUniform("material.use_normal_map", false);
-    if (auto ambient_map = extractTexture(material, bank_name + "/ambient_map", scene, aiTextureType_AMBIENT); ambient_map != 0) {
-        mtl->setUniform("material.ambient_map", ambient_map);
-        mtl->setUniform("material.use_ambient_map", true);
-    }
-    if (auto diffuse_tex = extractTexture(material, bank_name + "/diffuse_map", scene, aiTextureType_DIFFUSE); diffuse_tex != 0) {
-        mtl->setUniform("material.diffuse_map", diffuse_tex);
-        mtl->setUniform("material.use_diffuse_map", true);
-    }
-    if (auto specular_tex = extractTexture(material, bank_name + "/specular_map", scene, aiTextureType_SPECULAR); specular_tex != 0) {
-        mtl->setUniform("material.specular_map", specular_tex);
-        mtl->setUniform("material.use_specular_map", true);
-    }
-    if (auto normal_tex = extractTexture(material, bank_name + "/normal_map", scene, aiTextureType_NORMALS); normal_tex != 0) {
-        mtl->setUniform("material.normal_map", normal_tex);
-        mtl->setUniform("material.use_normal_map", true);
-    }
-
     if (ref_bank.getUID(AssetPath::WithTypePrefix<Material>(bank_name)) != 0) {
         return ref_bank.getUID(AssetPath::WithTypePrefix<Material>(bank_name));
     }
-    mtl->setShader(ref_bank.getUID(AssetPath::WithTypePrefix<Shader>("phong")));
 
+    auto mtl = std::make_shared<Material>();
+    mtl->setUniform("material.hasAoMap", 0);
+    mtl->setUniform("material.hasBaseColorMap", 0);
+    mtl->setUniform("material.hasMetallicRoughnessMap", 0);
+    mtl->setUniform("material.hasNormalMap", 0);
+    mtl->setUniform("material.ao", 1.0f);
+    mtl->setUniform("material.metallic", 0.0f);
+    mtl->setUniform("material.roughness", 1.0f);
+    mtl->setShader(ref_bank.getUID(AssetPath::WithTypePrefix<Shader>("pbr")));
+    // Base color
     aiColor4D diffuse;
-    aiColor4D specular;
-    aiColor4D ambient;
-    ai_real alpha = 1.0;
-
     if (aiGetMaterialColor(material, AI_MATKEY_COLOR_DIFFUSE, &diffuse) == aiReturn_SUCCESS)
-        mtl->setUniform("material.albedo", colorToVec(&diffuse));
-    if (aiGetMaterialColor(material, AI_MATKEY_COLOR_SPECULAR, &specular) == aiReturn_SUCCESS)
-        mtl->setUniform("material.specular", colorToVec(&specular));
-    if (aiGetMaterialColor(material, AI_MATKEY_COLOR_AMBIENT, &ambient) == aiReturn_SUCCESS)
-        mtl->setUniform("material.ambient", colorToVec(&ambient));
-    if (aiGetMaterialFloat(material, AI_MATKEY_SHININESS, &alpha) == aiReturn_SUCCESS)
-        mtl->setUniform("material.alpha", std::max(alpha, 1.0f));
+        mtl->setUniform("material.baseColor", colorToVec(&diffuse));
+
+    ai_real shininess = 1.0f;
+    if (aiGetMaterialFloat(material, AI_MATKEY_SHININESS, &shininess) == aiReturn_SUCCESS)
+        mtl->setUniform("material.roughness", sqrt(2.0f / (shininess + 2.0f)));
+
+    aiColor4D specular;
+    if (aiGetMaterialColor(material, AI_MATKEY_COLOR_SPECULAR, &specular) == aiReturn_SUCCESS) {
+        float maxSpec = std::max({specular.r, specular.g, specular.b});
+        mtl->setUniform("material.metallic", maxSpec);
+    }
+
+    if (auto ambient_map = extractTexture(material, bank_name + "/ambient_map", scene, aiTextureType_AMBIENT); ambient_map != 0) {
+        mtl->setUniform("material.hasAoMap", 1);
+        mtl->setUniform("material.aoMap", ambient_map);
+    }
+
+    if (auto diffuse_tex = extractTexture(material, bank_name + "/diffuse_map", scene, aiTextureType_DIFFUSE); diffuse_tex != 0) {
+        mtl->setUniform("material.hasBaseColorMap", 1);
+        mtl->setUniform("material.baseColorMap", diffuse_tex);
+    }
+
+    if (auto specular_tex = extractTexture(material, bank_name + "/specular_map", scene, aiTextureType_SPECULAR); specular_tex != 0) {
+        mtl->setUniform("material.hasMetallicRoughnessMap", 1);
+        mtl->setUniform("material.metallicRoughnessMap", specular_tex);
+    }
+
+    if (auto normal_tex = extractTexture(material, bank_name + "/normal_map", scene, aiTextureType_NORMALS); normal_tex != 0) {
+        mtl->setUniform("material.hasNormalMap", 1);
+        mtl->setUniform("material.normalMap", normal_tex);
+    }
 
     ref_bank.addAsset<Material>(bank_name, mtl);
     return ref_bank.getUID(AssetPath::WithTypePrefix<Material>(bank_name));
