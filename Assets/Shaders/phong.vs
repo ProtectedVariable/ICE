@@ -11,7 +11,8 @@ layout (location = 5) in ivec4 bone_ids;
 layout (location = 6) in vec4 bone_weights;
 
 uniform mat4 model;
-uniform mat4 finalBonesMatrices[MAX_BONES];
+uniform mat4 bonesTransformMatrices[MAX_BONES];
+uniform mat4 bonesOffsetMatrices[MAX_BONES];
 
 out vec3 fnormal;
 out vec3 fposition;
@@ -21,27 +22,29 @@ out vec2 ftex_coords;
 void main() {
     vec4 totalPosition = vec4(0.0f);
     vec3 totalNormal = vec3(0.0f);
-    
-    for(int i = 0 ; i < MAX_BONE_INFLUENCE ; i++) {
-        if(i == 0 && bone_ids[i] == -1) {
-            totalPosition = vec4(vertex, 1.0f);
-            totalNormal = normal;
-            break; 
-        }
-        if(bone_ids[i] == -1) continue;
-       
-        if(bone_ids[i] >= MAX_BONES) {
-            totalPosition = vec4(vertex, 1.0f);
-            totalNormal = normal;
-            break; 
-        }
-        
-        vec4 localPosition = finalBonesMatrices[bone_ids[i]] * vec4(vertex, 1.0f);
-        totalPosition += localPosition * bone_weights[i];
-        
-        vec3 localNormal = mat3(finalBonesMatrices[bone_ids[i]]) * normal;
-        totalNormal += localNormal * bone_weights[i];
-    }
+	
+	if(bone_weights == ivec4(-1)) {
+		totalPosition = vec4(vertex, 1.0f);
+        totalNormal = normal;
+	} else {
+		for(int i = 0 ; i < MAX_BONE_INFLUENCE ; i++) {
+			if(bone_ids[i] == -1) continue;
+		   
+			if(bone_ids[i] >= MAX_BONES) {
+				totalPosition = vec4(vertex, 1.0f);
+				totalNormal = normal;
+				break; 
+			}
+			
+			mat4 finalBonesMatrix = bonesTransformMatrices[bone_ids[i]] * bonesOffsetMatrices[bone_ids[i]];
+			
+			vec4 localPosition = finalBonesMatrix * vec4(vertex, 1.0f);
+			totalPosition += localPosition * bone_weights[i];
+			
+			vec3 localNormal = mat3(finalBonesMatrix) * normal;
+			totalNormal += localNormal * bone_weights[i];
+		}
+	}
 
 
     fposition = (model * totalPosition).xyz; 
