@@ -20,7 +20,7 @@ struct TransformComponent : public Component {
     Eigen::Vector3f getRotation() const { return m_rotation; }
     Eigen::Vector3f getScale() const { return m_scale; }
 
-    Eigen::Matrix4f getModelMatrix() {
+    Eigen::Matrix4f getModelMatrix() const {
         if (m_dirty) {
             m_model_matrix = transformationMatrix(m_position, m_rotation, m_scale);
             m_dirty = false;
@@ -56,7 +56,7 @@ struct TransformComponent : public Component {
 
    private:
     Eigen::Vector3f m_position, m_rotation, m_scale;
-    Eigen::Matrix4f m_model_matrix;
-    bool m_dirty = true;
+    mutable Eigen::Matrix4f m_model_matrix;
+    mutable bool m_dirty = true;
 };
 }  // namespace ICE

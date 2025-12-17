@@ -19,6 +19,7 @@
 #include "RendererConfig.h"
 
 namespace ICE {
+
 class ForwardRenderer : public Renderer {
    public:
     ForwardRenderer(const std::shared_ptr<RendererAPI>& api, const std::shared_ptr<GraphicsFactory>& factory,
@@ -41,6 +42,9 @@ class ForwardRenderer : public Renderer {
     void setViewport(int x, int y, int w, int h) override;
 
    private:
+    void submitModel(int node_idx, const std::vector<Model::Node>& nodes, const std::vector<std::shared_ptr<Mesh>>& meshes,
+                     const std::vector<AssetUID>& materials, const Eigen::Matrix4f& transform);
+
     std::shared_ptr<RendererAPI> m_api;
     std::shared_ptr<Registry> m_registry;
     std::shared_ptr<AssetBank> m_asset_bank;
@@ -54,6 +58,9 @@ class ForwardRenderer : public Renderer {
     GeometryPass m_geometry_pass;
 
     std::shared_ptr<VertexArray> m_quad_vao;
+
+    std::shared_ptr<UniformBuffer> m_camera_ubo;
+    std::shared_ptr<UniformBuffer> m_light_ubo;
 
     RendererConfig config;
 };

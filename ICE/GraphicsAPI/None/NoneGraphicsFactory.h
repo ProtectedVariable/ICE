@@ -26,6 +26,8 @@ class NoneGraphicsFactory : public GraphicsFactory {
 
     std::shared_ptr<IndexBuffer> createIndexBuffer() const override { return std::make_shared<NoneIndexBuffer>(); }
 
+    std::shared_ptr<UniformBuffer> createUniformBuffer(size_t size, size_t binding) const override { return std::make_shared<NoneUniformBuffer>(); }
+
     std::shared_ptr<Shader> createShader(const std::string& vertexFile, const std::string& fragmentFile) const override {
         return createShader(vertexFile, "", fragmentFile);
     }

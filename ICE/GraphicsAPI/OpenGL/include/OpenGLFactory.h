@@ -32,6 +32,10 @@ class OpenGLFactory : public GraphicsFactory {
 
     std::shared_ptr<VertexBuffer> createVertexBuffer() const override { return std::make_shared<OpenGLVertexBuffer>(); }
 
+    std::shared_ptr<UniformBuffer> createUniformBuffer(size_t size, size_t binding) const override {
+        return std::make_shared<OpenGLUniformBuffer>(size, binding);
+    }
+
     std::shared_ptr<IndexBuffer> createIndexBuffer() const override { return std::make_shared<OpenGLIndexBuffer>(); }
 
     std::shared_ptr<Shader> createShader(const std::string& vertex_src, const std::string& fragment_src) const override {
@@ -44,7 +48,9 @@ class OpenGLFactory : public GraphicsFactory {
     }
 
     std::shared_ptr<Texture2D> createTexture2D(const std::string& file) const override { return std::make_shared<OpenGLTexture2D>(file); }
-    std::shared_ptr<Texture2D> createTexture2D(const void* data, size_t w, size_t h, TextureFormat fmt) const override { return std::make_shared<OpenGLTexture2D>(data, w, h, fmt); }
+    std::shared_ptr<Texture2D> createTexture2D(const void* data, size_t w, size_t h, TextureFormat fmt) const override {
+        return std::make_shared<OpenGLTexture2D>(data, w, h, fmt);
+    }
 
     std::shared_ptr<TextureCube> createTextureCube(const std::string& file) const override { return std::make_shared<OpenGLTextureCube>(file); }
 };

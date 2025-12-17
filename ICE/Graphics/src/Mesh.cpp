@@ -10,36 +10,24 @@
 #include <iostream>
 
 namespace ICE {
-Mesh::Mesh(const std::vector<Eigen::Vector3f> &vertices, const std::vector<Eigen::Vector3f> &normals, const std::vector<Eigen::Vector2f> &uvCoords,
-           const std::vector<Eigen::Vector3i> &indices)
-    : vertices(vertices),
-      normals(normals),
-      uvCoords(uvCoords),
-      indices(indices),
-      boundingBox(vertices) {
+Mesh::Mesh(const MeshData &data) : m_data(data), boundingBox(data.vertices) {
 }
-Mesh::Mesh(std::vector<Eigen::Vector3f> &&vertices, std::vector<Eigen::Vector3f> &&normals, std::vector<Eigen::Vector2f> &&uvCoords,
-           std::vector<Eigen::Vector3i> &&indices)
-    : vertices(std::move(vertices)),
-      normals(std::move(normals)),
-      uvCoords(std::move(uvCoords)),
-      indices(std::move(indices)),
-      boundingBox(this->vertices) {
+Mesh::Mesh(MeshData &&data) : m_data(std::move(data)), boundingBox(getVertices()) {
 }
 const std::vector<Eigen::Vector3f> &Mesh::getVertices() const {
-    return vertices;
+    return m_data.vertices;
 }
 
 const std::vector<Eigen::Vector3f> &Mesh::getNormals() const {
-    return normals;
+    return m_data.normals;
 }
 
 const std::vector<Eigen::Vector2f> &Mesh::getUVCoords() const {
-    return uvCoords;
+    return m_data.uvCoords;
 }
 
 const std::vector<Eigen::Vector3i> &Mesh::getIndices() const {
-    return indices;
+    return m_data.indices;
 }
 
 const std::shared_ptr<VertexArray> Mesh::getVertexArray() const {

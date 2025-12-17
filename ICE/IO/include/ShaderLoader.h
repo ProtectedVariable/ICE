@@ -15,5 +15,6 @@ class ShaderLoader : public IAssetLoader<Shader> {
    public:
     ShaderLoader(const std::shared_ptr<GraphicsFactory> &factory) : IAssetLoader<Shader>(factory) {}
     std::shared_ptr<Shader> load(const std::vector<std::filesystem::path> &file) override;
+    std::string readAndResolveIncludes(const std::filesystem::path &file);
 };
 }  // namespace ICE

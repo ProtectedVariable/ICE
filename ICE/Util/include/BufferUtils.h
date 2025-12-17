@@ -25,6 +25,19 @@ namespace ICE {
             return buffer;
         }
 
+        static float* CreateFloatBuffer(const std::vector<Eigen::Vector4f>& vectors) {
+            auto buffer = static_cast<float*>(malloc(sizeof(float) * 4 * vectors.size()));
+            uint32_t i = 0;
+            for (const auto& v : vectors) {
+                buffer[i] = (float) v.x();
+                buffer[i + 1] = (float) v.y();
+                buffer[i + 2] = (float) v.z();
+                buffer[i + 3] = (float) v.w();
+                i += 4;
+            }
+            return buffer;
+        }
+
         static float* CreateFloatBuffer(const std::vector<Eigen::Vector2f>& vectors) {
             auto* buffer = static_cast<float *>(malloc(sizeof(float) * 2 * vectors.size()));
             uint32_t i = 0;
@@ -44,6 +57,19 @@ namespace ICE {
                 buffer[i+1] = v.y();
                 buffer[i+2] = v.z();
                 i += 3;
+            }
+            return buffer;
+        }
+
+        static int* CreateIntBuffer(const std::vector<Eigen::Vector4i>& vectors) {
+            auto* buffer = static_cast<int*>(malloc(sizeof(int) * 4 * vectors.size()));
+            uint32_t i = 0;
+            for (const auto& v : vectors) {
+                buffer[i] = v.x();
+                buffer[i + 1] = v.y();
+                buffer[i + 2] = v.z();
+                buffer[i + 3] = v.w();
+                i += 4;
             }
             return buffer;
         }

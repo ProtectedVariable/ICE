@@ -33,9 +33,12 @@ void ICEEngine::initialize(const std::shared_ptr<GraphicsFactory> &graphics_fact
 }
 
 void ICEEngine::step() {
+    auto now = std::chrono::steady_clock::now();
+    auto dt = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastFrameTime).count();
+    lastFrameTime = now;
     auto render_system = project->getCurrentScene()->getRegistry()->getSystem<RenderSystem>();
     render_system->setTarget(m_target_fb);
-    project->getCurrentScene()->getRegistry()->updateSystems(0.0);
+    project->getCurrentScene()->getRegistry()->updateSystems(dt);
 }
 
 void ICEEngine::setupScene(const std::shared_ptr<Camera> &camera_) {

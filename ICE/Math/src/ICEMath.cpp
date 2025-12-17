@@ -58,6 +58,54 @@ Eigen::Matrix4f transformationMatrix(const Eigen::Vector3f &translation, const E
     return translationMatrix(translation) * rotationMatrix(angles) * scaleMatrix(scale);
 }
 
+void decomposeMatrix(const Eigen::Matrix4f &M, Eigen::Vector3f &position, Eigen::Vector3f &rotation_eulers, Eigen::Vector3f &scale) {
+    // --- 1. Extract Translation (Position) ---
+    position = M.block<3, 1>(0, 3);
+
+    // --- 2. Extract Scale and Rotation ---
+
+    // The 3x3 rotational/scaling block (top-left)
+    Eigen::Matrix3f R_S = M.block<3, 3>(0, 0);
+
+    // --- Extract Scale (S) ---
+    // Scale factors are the magnitudes (norms) of the basis vectors (columns)
+    scale.x() = R_S.col(0).norm();
+    scale.y() = R_S.col(1).norm();
+    scale.z() = R_S.col(2).norm();
+
+    // Check for negative scale (reflection)
+    if (R_S.determinant() < 0.0f) {
+        scale.x() *= -1.0f;  // Negate one component to account for reflection
+    }
+
+    // --- Extract Rotation (R) ---
+
+    // Create the pure rotation matrix R by dividing the R_S block by the extracted scale.
+    Eigen::Matrix3f R = R_S;
+
+    // Divide each column by its corresponding scale factor to normalize it to a unit vector.
+    if (scale.x() != 0.0f)
+        R.col(0) /= scale.x();
+    if (scale.y() != 0.0f)
+        R.col(1) /= scale.y();
+    if (scale.z() != 0.0f)
+        R.col(2) /= scale.z();
+
+    // Convert the resulting 3x3 rotation matrix (R) to Z-Y-X Euler angles.
+    // Eigen's toEulerAngles(Z, Y, X) returns (alpha, beta, gamma) where:
+    // alpha = Rotation around Z (Yaw)
+    // beta  = Rotation around Y (Pitch)
+    // gamma = Rotation around X (Roll)
+    rotation_eulers = R.eulerAngles(2, 1, 0);  // 2=Z, 1=Y, 0=X
+
+    // Note: The returned angles are in radians.
+
+    // The Euler angles returned are in the following order based on the specified Eigen constants:
+    // rotation_eulers.x() is the Z-axis rotation (Yaw)
+    // rotation_eulers.y() is the Y-axis rotation (Pitch)
+    // rotation_eulers.z() is the X-axis rotation (Roll)
+}
+
 Eigen::Vector3f orientation(int face, float x, float y) {
     Eigen::Vector3f out;
     if (face == ICE_CUBEMAP_PZ) {

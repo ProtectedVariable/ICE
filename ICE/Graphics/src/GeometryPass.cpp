@@ -26,6 +26,13 @@ void GeometryPass::execute() {
             shader->bind();
             current_shader = shader;
         }
+
+         if (mesh->usesBones()) {
+            for (const auto& [boneID, offsetMatrix] : mesh->getSkinningData().boneOffsetMatrices) {
+                 current_shader->loadMat4("bonesOffsetMatrices[" + std::to_string(boneID) + "]", offsetMatrix);
+            }
+        }
+
         if (material != current_material) {
             auto& textures = command.textures;
             current_material = material;

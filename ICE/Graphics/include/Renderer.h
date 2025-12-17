@@ -17,6 +17,31 @@
 namespace ICE {
 class Scene;
 
+constexpr int MAX_LIGHTS = 16;
+
+struct alignas(16) LightUBO {
+    Eigen::Vector3f position;
+    float __padding0;  //align to vec4
+    Eigen::Vector3f rotation;
+    float __padding1;  //align to vec4
+    Eigen::Vector3f color;
+
+    float distance_dropoff;
+    int type;
+};
+
+struct alignas(16) SceneLightsUBO {
+    LightUBO lights[MAX_LIGHTS];
+    Eigen::Vector4f ambient_light;
+    int light_count;
+    float __padding[3];
+};
+
+struct alignas(16) CameraUBO {
+    Eigen::Matrix4f projection;
+    Eigen::Matrix4f view;
+};
+
 class Renderer {
    public:
     virtual void submit(Entity e) = 0;

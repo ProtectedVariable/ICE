@@ -27,6 +27,14 @@ class NoneIndexBuffer : public IndexBuffer {
     void putData(const void *data, uint32_t size) override {}
 };
 
+class NoneUniformBuffer : public UniformBuffer {
+   public:
+    void bind() const override {}
+    void unbind() const override {}
+    uint32_t getSize() const override { return 0; }
+    void putData(const void *data, uint32_t size, uint32_t offset) override {}
+};
+
 class NoneContext : public Context {
    public:
     void swapBuffers() override {}

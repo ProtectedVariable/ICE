@@ -13,12 +13,30 @@
 #include "VertexArray.h"
 
 namespace ICE {
+
+constexpr int MAX_BONES_PER_VERTEX = 4;
+constexpr int MAX_BONES = 100;
+constexpr int INVALID_BONE_ID = -1;
+
+struct MeshData {
+    std::vector<Eigen::Vector3f> vertices;
+    std::vector<Eigen::Vector3f> normals;
+    std::vector<Eigen::Vector2f> uvCoords;
+    std::vector<Eigen::Vector3f> tangents;
+    std::vector<Eigen::Vector3f> bitangents;
+    std::vector<Eigen::Vector4i> boneIDs;
+    std::vector<Eigen::Vector4f> boneWeights;
+    std::vector<Eigen::Vector3i> indices;
+};
+
+struct SkinningData {
+    std::unordered_map<int, Eigen::Matrix4f> boneOffsetMatrices;
+};
+
 class Mesh : public Asset {
    public:
-    Mesh(const std::vector<Eigen::Vector3f> &vertices, const std::vector<Eigen::Vector3f> &normals, const std::vector<Eigen::Vector2f> &uvCoords,
-         const std::vector<Eigen::Vector3i> &indices);
-    Mesh(std::vector<Eigen::Vector3f> &&vertices, std::vector<Eigen::Vector3f> &&normals, std::vector<Eigen::Vector2f> &&uvCoords,
-         std::vector<Eigen::Vector3i> &&indices);
+    Mesh(const MeshData &data);
+    Mesh(MeshData &&data);
 
     const std::vector<Eigen::Vector3f> &getVertices() const;
 
@@ -35,11 +53,17 @@ class Mesh : public Asset {
 
     std::string getTypeName() const override;
     AssetType getType() const override;
+    bool usesBones() const { return m_has_bones; }
+    void setSkinningData(const SkinningData &skinningData) {
+        m_skinningData = skinningData;
+        m_has_bones = true;
+    }
 
+    SkinningData getSkinningData() const { return m_skinningData; }
    private:
-    std::vector<Eigen::Vector3f> vertices, normals;
-    std::vector<Eigen::Vector2f> uvCoords;
-    std::vector<Eigen::Vector3i> indices;
+    MeshData m_data;
+    SkinningData m_skinningData;
+    bool m_has_bones = false;
     std::shared_ptr<VertexArray> vertexArray;
     AABB boundingBox;
 };
