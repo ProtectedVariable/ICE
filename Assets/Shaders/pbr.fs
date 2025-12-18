@@ -40,11 +40,13 @@ vec3 getNormalFromMap() {
     if(material.hasNormalMap) {
         vec3 tangentNormal = texture(material.normalMap, ftex_coords).xyz * 2.0 - 1.0;
 
-        vec3 N   = normalize(fnormal);
-        vec3 T  = normalize(ftangent);
-        vec3 B  = normalize(fbitangent);
-        mat3 TBN = mat3(T, B, N);
+        vec3 N = normalize(fnormal);
+        vec3 T = normalize(ftangent);
+        // Gram-Schmidt process to re-orthogonalize T
+        T = normalize(T - dot(T, N) * N);
+        vec3 B = cross(N, T); // Reconstruct Bitangent
 
+        mat3 TBN = mat3(T, B, N);
         return normalize(TBN * tangentNormal);
     } else {
         return fnormal;
