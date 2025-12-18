@@ -173,6 +173,7 @@ AssetUID ModelLoader::extractMaterial(const aiMaterial *material, const std::str
     mtl->setUniform("material.hasMetallicMap", 0);
     mtl->setUniform("material.hasRoughnessMap", 0);
     mtl->setUniform("material.hasNormalMap", 0);
+    mtl->setUniform("material.hasEmissiveMap", 0);
     mtl->setUniform("material.ao", 1.0f);
     mtl->setUniform("material.metallic", 0.0f);
     mtl->setUniform("material.roughness", 1.0f);
@@ -190,7 +191,7 @@ AssetUID ModelLoader::extractMaterial(const aiMaterial *material, const std::str
     aiGetMaterialFloat(material, AI_MATKEY_METALLIC_FACTOR, &metallic);
     mtl->setUniform("material.metallic", (float) metallic);
 
-    if (auto ambient_map = extractTexture(material, bank_name + "/ao_map", scene, aiTextureType_AMBIENT_OCCLUSION); ambient_map != 0) {
+    if (auto ambient_map = extractTexture(material, bank_name + "/ao_map", scene, aiTextureType_LIGHTMAP); ambient_map != 0) {
         mtl->setUniform("material.hasAoMap", 1);
         mtl->setUniform("material.aoMap", ambient_map);
     }
@@ -215,6 +216,11 @@ AssetUID ModelLoader::extractMaterial(const aiMaterial *material, const std::str
         mtl->setUniform("material.normalMap", normal_tex);
     }
 
+    if (auto emissive_tex = extractTexture(material, bank_name + "/emissive_map", scene, aiTextureType_EMISSIVE); emissive_tex != 0) {
+        mtl->setUniform("material.hasEmissiveMap", 1);
+        mtl->setUniform("material.emissiveMap", emissive_tex);
+    }
+
     ref_bank.addAsset<Material>(bank_name, mtl);
     return ref_bank.getUID(AssetPath::WithTypePrefix<Material>(bank_name));
 }
@@ -228,14 +234,15 @@ AssetUID ModelLoader::extractTexture(const aiMaterial *material, const std::stri
             void *data2 = nullptr;
             int width = texture->mWidth;
             int height = texture->mHeight;
-            int channels = 0;
+            int channels = 3;
             if (height == 0) {
                 //Compressed memory, use stbi to load
                 data2 = stbi_load_from_memory(data, texture->mWidth, &width, &height, &channels, 4);
+                channels = 4;
             } else {
                 data2 = data;
             }
-            auto texture_ice = m_graphics_factory->createTexture2D(data2, width, height, TextureFormat::RGBA);
+            auto texture_ice = m_graphics_factory->createTexture2D(data2, width, height, getTextureFormat(type, channels));
             if (tex_id = ref_bank.getUID(AssetPath::WithTypePrefix<Texture2D>(tex_path)); tex_id != 0) {
                 ref_bank.removeAsset(AssetPath::WithTypePrefix<Texture2D>(tex_path));
                 ref_bank.addAssetWithSpecificUID(AssetPath::WithTypePrefix<Texture2D>(tex_path), texture_ice, tex_id);
@@ -368,6 +375,23 @@ Eigen::Quaternionf ModelLoader::aiQuatToEigen(const aiQuaternion &q) {
     quat.y() = q.y;
     quat.z() = q.z;
     return quat;
+}
+
+constexpr TextureFormat ModelLoader::getTextureFormat(aiTextureType type, int channels) {
+    switch (type) {
+        case aiTextureType_METALNESS:
+        case aiTextureType_AMBIENT_OCCLUSION:
+        case aiTextureType_LIGHTMAP:
+        case aiTextureType_DIFFUSE_ROUGHNESS:
+        case aiTextureType_NORMALS:
+            return channels == 3 ? TextureFormat::RGB8 : TextureFormat::RGBA8;
+
+        case aiTextureType_BASE_COLOR:
+        case aiTextureType_EMISSIVE:
+            return channels == 3 ? TextureFormat::SRGB8 : TextureFormat::SRGBA8;
+        default:
+            return channels == 3 ? TextureFormat::RGB8 : TextureFormat::RGBA8;
+    }
 }
 
 }  // namespace ICE

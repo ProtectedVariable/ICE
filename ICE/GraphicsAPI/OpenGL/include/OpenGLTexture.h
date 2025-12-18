@@ -11,6 +11,58 @@
 #include <string>
 
 namespace ICE {
+
+constexpr GLenum textureFormatToGLInternalFormat(TextureFormat format) {
+    switch (format) {
+        case TextureFormat::SRGB8:
+            return GL_SRGB8;
+        case TextureFormat::SRGBA8:
+            return GL_SRGB8_ALPHA8;
+        case TextureFormat::RGB8:
+            return GL_RGB8;
+        case TextureFormat::RGBA8:
+            return GL_RGBA8;
+        case TextureFormat::Float16:
+            return GL_RGBA16F;
+        case TextureFormat::MONO8:
+            return GL_R8;
+        default:
+            return GL_RGBA8;
+    }
+}
+
+constexpr int textureFormatToAlignment(TextureFormat format) {
+    switch (format) {
+        case TextureFormat::SRGB8:
+        case TextureFormat::RGB8:
+            return 1;
+        case TextureFormat::SRGBA8:
+        case TextureFormat::RGBA8:
+        case TextureFormat::Float16:
+            return 4;
+        case TextureFormat::MONO8:
+            return 1;
+        default:
+            return 4;
+    }
+}
+
+constexpr int textureFormatToChannels(TextureFormat format) {
+    switch (format) {
+        case TextureFormat::SRGB8:
+        case TextureFormat::RGB8:
+            return 3;
+        case TextureFormat::SRGBA8:
+        case TextureFormat::RGBA8:
+        case TextureFormat::Float16:
+            return 4;
+        case TextureFormat::MONO8:
+            return 1;
+        default:
+            return 4;
+    }
+}
+
 class OpenGLTexture2D : public Texture2D {
    public:
     OpenGLTexture2D(const std::string &file);

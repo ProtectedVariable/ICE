@@ -22,6 +22,9 @@ struct Material {
 
     bool hasAoMap;
     sampler2D aoMap;
+
+    bool hasEmissiveMap;
+    sampler2D emissiveMap;
 };
 
 uniform Material material;
@@ -91,9 +94,9 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0) {
 // ----------------------------------------------------------------------------
 void main() {		
     vec3 albedo     = pow(material.hasBaseColorMap ? texture(material.baseColorMap, ftex_coords).rgb : material.baseColor, vec3(2.2));
-    float metallic  = material.hasMetallicMap ? texture(material.metallicMap, ftex_coords).r : material.metallic;
-    float roughness = material.hasRoughnessMap ? texture(material.roughnessMap, ftex_coords).r : material.roughness;
-    float ao        = material.hasAoMap ? texture(material.aoMap, ftex_coords).r : material.ao;
+    float metallic  = material.hasMetallicMap ? texture(material.metallicMap, ftex_coords).b : material.metallic;
+    float roughness = material.hasRoughnessMap ? texture(material.roughnessMap, ftex_coords).g : material.roughness;
+    float ao        = material.hasAoMap ? texture(material.aoMap, ftex_coords).length() : material.ao;
 
     vec3 N = getNormalFromMap();
     vec3 V = normalize(fview - fposition);
@@ -143,7 +146,8 @@ void main() {
     //TODO IBL
     vec3 ambient = vec3(0.03) * albedo * ao;
     
-    vec3 color = ambient + Lo;
+    vec3 emissive = material.hasEmissiveMap ? texture(material.emissiveMap, ftex_coords).rgb : vec3(0.0);
+    vec3 color = ambient + Lo + emissive;
 
     // HDR tonemapping
     color = color / (color + vec3(1.0));

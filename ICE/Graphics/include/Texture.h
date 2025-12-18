@@ -13,7 +13,7 @@
 #include <string>
 
 namespace ICE {
-enum class TextureFormat { None = 0, RGB = 1, RGBA = 2, Float16 = 3, MONO8 = 4 };
+enum class TextureFormat { None = 0, SRGB8, SRGBA8, RGB8, RGBA8, Float16, MONO8 };
 
 enum class TextureWrap { None = 0, Clamp = 1, Repeat = 2 };
 
