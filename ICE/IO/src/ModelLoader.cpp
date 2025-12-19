@@ -161,12 +161,7 @@ AssetUID ModelLoader::extractMaterial(const aiMaterial *material, const std::str
     if (mtl_name.length == 0) {
         mtl_name = "DefaultMat";
     }
-    //If material already exists, return its UID
     auto bank_name = model_name + "/" + mtl_name.C_Str();
-    if (ref_bank.getUID(AssetPath::WithTypePrefix<Material>(bank_name)) != 0) {
-        return ref_bank.getUID(AssetPath::WithTypePrefix<Material>(bank_name));
-    }
-
     auto mtl = std::make_shared<Material>();
     mtl->setUniform("material.hasAoMap", 0);
     mtl->setUniform("material.hasBaseColorMap", 0);
@@ -219,6 +214,10 @@ AssetUID ModelLoader::extractMaterial(const aiMaterial *material, const std::str
     if (auto emissive_tex = extractTexture(material, bank_name + "/emissive_map", scene, aiTextureType_EMISSIVE); emissive_tex != 0) {
         mtl->setUniform("material.hasEmissiveMap", 1);
         mtl->setUniform("material.emissiveMap", emissive_tex);
+    }
+
+    if (ref_bank.getUID(AssetPath::WithTypePrefix<Material>(bank_name)) != 0) {
+        return ref_bank.getUID(AssetPath::WithTypePrefix<Material>(bank_name));
     }
 
     ref_bank.addAsset<Material>(bank_name, mtl);
