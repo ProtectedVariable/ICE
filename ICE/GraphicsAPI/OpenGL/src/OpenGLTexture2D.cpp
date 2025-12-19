@@ -12,7 +12,7 @@ namespace ICE {
 OpenGLTexture2D::OpenGLTexture2D(const std::string &file) : file(file) {
     int channels, w, h;
     void *data = Texture::getDataFromFile(file, &w, &h, &channels);
-    loadData(data, w, h, channels == 4 ? TextureFormat::RGBA : TextureFormat::RGB);
+    loadData(data, w, h, channels == 4 ? TextureFormat::RGBA8 : TextureFormat::RGB8);
     stbi_image_free(data);
 }
 
@@ -23,24 +23,13 @@ OpenGLTexture2D::OpenGLTexture2D(const void *data, size_t w, size_t h, TextureFo
 void OpenGLTexture2D::loadData(const void *data, size_t w, size_t h, TextureFormat fmt) {
     width = w;
     height = h;
-    storageFormat = GL_RGBA;
-    dataFormat = GL_RGBA;
 
     glGenTextures(1, &id);
     glBindTexture(GL_TEXTURE_2D, id);
 
-    if (fmt == TextureFormat::RGBA) {
-        format = TextureFormat::RGBA;
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-    } else if (fmt == TextureFormat::RGB) {
-        storageFormat = dataFormat = GL_RGB;
-        format = TextureFormat::RGB;
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    } else if (fmt == TextureFormat::MONO8) {
-        storageFormat = dataFormat = GL_RED;
-        format = TextureFormat::MONO8;
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    }
+    storageFormat = textureFormatToGLInternalFormat(fmt);
+    dataFormat = (textureFormatToChannels(fmt) == 4) ? GL_RGBA : (textureFormatToChannels(fmt) == 3) ? GL_RGB : GL_RED;
+    glPixelStorei(GL_UNPACK_ALIGNMENT, textureFormatToAlignment(fmt));
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -53,10 +42,6 @@ void OpenGLTexture2D::loadData(const void *data, size_t w, size_t h, TextureForm
 }
 
 void OpenGLTexture2D::setData(void *data, uint32_t size) {
-    uint32_t bpp = (format == TextureFormat::RGBA) ? 4 : 3;
-    if (size != bpp * width * height) {
-        throw ICEException("Texture size corrupted");
-    }
     glTextureSubImage2D(id, 0, 0, 0, width, height, dataFormat, GL_UNSIGNED_BYTE, data);
 }
 

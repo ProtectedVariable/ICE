@@ -38,7 +38,7 @@ void OpenGLTextureCube::bind(uint32_t slot) const {
 }
 
 TextureFormat OpenGLTextureCube::getFormat() const {
-    return TextureFormat::RGB;
+    return TextureFormat::RGB8;
 }
 
 uint32_t OpenGLTextureCube::getWidth() const {

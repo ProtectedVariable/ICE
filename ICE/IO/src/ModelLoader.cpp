@@ -163,45 +163,62 @@ AssetUID ModelLoader::extractMaterial(const aiMaterial *material, const std::str
     }
     auto bank_name = model_name + "/" + mtl_name.C_Str();
     auto mtl = std::make_shared<Material>();
-    mtl->setUniform("material.use_diffuse_map", false);
-    mtl->setUniform("material.use_ambient_map", false);
-    mtl->setUniform("material.use_specular_map", false);
-    mtl->setUniform("material.use_normal_map", false);
-    if (auto ambient_map = extractTexture(material, bank_name + "/ambient_map", scene, aiTextureType_AMBIENT); ambient_map != 0) {
-        mtl->setUniform("material.ambient_map", ambient_map);
-        mtl->setUniform("material.use_ambient_map", true);
+    mtl->setUniform("material.hasAoMap", 0);
+    mtl->setUniform("material.hasBaseColorMap", 0);
+    mtl->setUniform("material.hasMetallicMap", 0);
+    mtl->setUniform("material.hasRoughnessMap", 0);
+    mtl->setUniform("material.hasNormalMap", 0);
+    mtl->setUniform("material.hasEmissiveMap", 0);
+    mtl->setUniform("material.ao", 1.0f);
+    mtl->setUniform("material.metallic", 0.0f);
+    mtl->setUniform("material.roughness", 1.0f);
+    mtl->setShader(ref_bank.getUID(AssetPath::WithTypePrefix<Shader>("pbr")));
+    // Base color
+    aiColor4D diffuse = aiColor4D(1, 1, 1, 1);
+    aiGetMaterialColor(material, AI_MATKEY_COLOR_DIFFUSE, &diffuse);
+    mtl->setUniform("material.baseColor", Eigen::Vector3f(colorToVec(&diffuse).head<3>()));
+
+    ai_real roughness = 1.0f;
+    aiGetMaterialFloat(material, AI_MATKEY_ROUGHNESS_FACTOR, &roughness);
+    mtl->setUniform("material.roughness", (float) roughness);
+
+    ai_real metallic = 0.0f;
+    aiGetMaterialFloat(material, AI_MATKEY_METALLIC_FACTOR, &metallic);
+    mtl->setUniform("material.metallic", (float) metallic);
+
+    if (auto ambient_map = extractTexture(material, bank_name + "/ao_map", scene, aiTextureType_LIGHTMAP); ambient_map != 0) {
+        mtl->setUniform("material.hasAoMap", 1);
+        mtl->setUniform("material.aoMap", ambient_map);
     }
-    if (auto diffuse_tex = extractTexture(material, bank_name + "/diffuse_map", scene, aiTextureType_DIFFUSE); diffuse_tex != 0) {
-        mtl->setUniform("material.diffuse_map", diffuse_tex);
-        mtl->setUniform("material.use_diffuse_map", true);
+
+    if (auto diffuse_tex = extractTexture(material, bank_name + "/diffuse_map", scene, aiTextureType_BASE_COLOR); diffuse_tex != 0) {
+        mtl->setUniform("material.hasBaseColorMap", 1);
+        mtl->setUniform("material.baseColorMap", diffuse_tex);
     }
-    if (auto specular_tex = extractTexture(material, bank_name + "/specular_map", scene, aiTextureType_SPECULAR); specular_tex != 0) {
-        mtl->setUniform("material.specular_map", specular_tex);
-        mtl->setUniform("material.use_specular_map", true);
+
+    if (auto metallic_tex = extractTexture(material, bank_name + "/metallic_map", scene, aiTextureType_METALNESS); metallic_tex != 0) {
+        mtl->setUniform("material.hasMetallicMap", 1);
+        mtl->setUniform("material.metallicMap", metallic_tex);
     }
+
+    if (auto roughness_tex = extractTexture(material, bank_name + "/roughness_map", scene, aiTextureType_DIFFUSE_ROUGHNESS); roughness_tex != 0) {
+        mtl->setUniform("material.hasRoughnessMap", 1);
+        mtl->setUniform("material.roughnessMap", roughness_tex);
+    }
+
     if (auto normal_tex = extractTexture(material, bank_name + "/normal_map", scene, aiTextureType_NORMALS); normal_tex != 0) {
-        mtl->setUniform("material.normal_map", normal_tex);
-        mtl->setUniform("material.use_normal_map", true);
+        mtl->setUniform("material.hasNormalMap", 1);
+        mtl->setUniform("material.normalMap", normal_tex);
+    }
+
+    if (auto emissive_tex = extractTexture(material, bank_name + "/emissive_map", scene, aiTextureType_EMISSIVE); emissive_tex != 0) {
+        mtl->setUniform("material.hasEmissiveMap", 1);
+        mtl->setUniform("material.emissiveMap", emissive_tex);
     }
 
     if (ref_bank.getUID(AssetPath::WithTypePrefix<Material>(bank_name)) != 0) {
         return ref_bank.getUID(AssetPath::WithTypePrefix<Material>(bank_name));
     }
-    mtl->setShader(ref_bank.getUID(AssetPath::WithTypePrefix<Shader>("phong")));
-
-    aiColor4D diffuse;
-    aiColor4D specular;
-    aiColor4D ambient;
-    ai_real alpha = 1.0;
-
-    if (aiGetMaterialColor(material, AI_MATKEY_COLOR_DIFFUSE, &diffuse) == aiReturn_SUCCESS)
-        mtl->setUniform("material.albedo", colorToVec(&diffuse));
-    if (aiGetMaterialColor(material, AI_MATKEY_COLOR_SPECULAR, &specular) == aiReturn_SUCCESS)
-        mtl->setUniform("material.specular", colorToVec(&specular));
-    if (aiGetMaterialColor(material, AI_MATKEY_COLOR_AMBIENT, &ambient) == aiReturn_SUCCESS)
-        mtl->setUniform("material.ambient", colorToVec(&ambient));
-    if (aiGetMaterialFloat(material, AI_MATKEY_SHININESS, &alpha) == aiReturn_SUCCESS)
-        mtl->setUniform("material.alpha", std::max(alpha, 1.0f));
 
     ref_bank.addAsset<Material>(bank_name, mtl);
     return ref_bank.getUID(AssetPath::WithTypePrefix<Material>(bank_name));
@@ -216,14 +233,15 @@ AssetUID ModelLoader::extractTexture(const aiMaterial *material, const std::stri
             void *data2 = nullptr;
             int width = texture->mWidth;
             int height = texture->mHeight;
-            int channels = 0;
+            int channels = 3;
             if (height == 0) {
                 //Compressed memory, use stbi to load
                 data2 = stbi_load_from_memory(data, texture->mWidth, &width, &height, &channels, 4);
+                channels = 4;
             } else {
                 data2 = data;
             }
-            auto texture_ice = m_graphics_factory->createTexture2D(data2, width, height, TextureFormat::RGBA);
+            auto texture_ice = m_graphics_factory->createTexture2D(data2, width, height, getTextureFormat(type, channels));
             if (tex_id = ref_bank.getUID(AssetPath::WithTypePrefix<Texture2D>(tex_path)); tex_id != 0) {
                 ref_bank.removeAsset(AssetPath::WithTypePrefix<Texture2D>(tex_path));
                 ref_bank.addAssetWithSpecificUID(AssetPath::WithTypePrefix<Texture2D>(tex_path), texture_ice, tex_id);
@@ -357,6 +375,23 @@ Eigen::Quaternionf ModelLoader::aiQuatToEigen(const aiQuaternion &q) {
     quat.y() = q.y;
     quat.z() = q.z;
     return quat;
+}
+
+constexpr TextureFormat ModelLoader::getTextureFormat(aiTextureType type, int channels) {
+    switch (type) {
+        case aiTextureType_METALNESS:
+        case aiTextureType_AMBIENT_OCCLUSION:
+        case aiTextureType_LIGHTMAP:
+        case aiTextureType_DIFFUSE_ROUGHNESS:
+        case aiTextureType_NORMALS:
+            return channels == 3 ? TextureFormat::RGB8 : TextureFormat::RGBA8;
+
+        case aiTextureType_BASE_COLOR:
+        case aiTextureType_EMISSIVE:
+            return channels == 3 ? TextureFormat::SRGB8 : TextureFormat::SRGBA8;
+        default:
+            return channels == 3 ? TextureFormat::RGB8 : TextureFormat::RGBA8;
+    }
 }
 
 }  // namespace ICE

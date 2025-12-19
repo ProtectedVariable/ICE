@@ -32,6 +32,8 @@ void main() {
 	if(bone_ids == ivec4(-1)) {
 		totalPosition = vec4(vertex, 1.0f);
         totalNormal = normal;
+		totalTangent = tangent; 
+		totalBitangent = bitangent;
 	} else {
 		for(int i = 0 ; i < MAX_BONE_INFLUENCE ; i++) {
 			if(bone_ids[i] == -1) continue;
@@ -39,6 +41,8 @@ void main() {
 			if(bone_ids[i] >= MAX_BONES) {
 				totalPosition = vec4(vertex, 1.0f);
 				totalNormal = normal;
+				totalTangent = tangent; 
+				totalBitangent = bitangent;
 				break; 
 			}
 			
