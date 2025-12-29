@@ -1,13 +1,13 @@
 #pragma once
 
-#include <ImGUI/imgui.h>
+#include <imgui.h>
 #include <Registry.h>
 
 #include "Components/ComboBox.h"
 
 class AddComponentPopup {
    public:
-    AddComponentPopup() : m_components_combo("##add_component_combo", {"Render", "Light"}) {}
+    AddComponentPopup() : m_components_combo("##add_component_combo", {"Render", "Light", "Animation"}) {}
 
     void open(const std::shared_ptr<ICE::Registry> &registry, ICE::Entity entity) {
         m_registry = registry;
@@ -20,6 +20,9 @@ class AddComponentPopup {
         }
         if(!registry->entityHasComponent<ICE::LightComponent>(entity)) {
             values.push_back("Light Component");
+        }
+        if (!registry->entityHasComponent<ICE::AnimationComponent>(entity)) {
+            values.push_back("Animation Component");
         }
         m_components_combo.setValues(values);
     }
@@ -39,6 +42,9 @@ class AddComponentPopup {
                     
                 if(m_components_combo.getSelectedItem() == "Light Component")
                     m_registry->addComponent(m_entity, ICE::LightComponent(ICE::PointLight, Eigen::Vector3f(1, 1, 1)));
+
+                if (m_components_combo.getSelectedItem() == "Animation Component")
+                    m_registry->addComponent(m_entity, ICE::AnimationComponent{"", 0.0, 1.0, true, true});
                 ImGui::CloseCurrentPopup();
                 m_accepted = true;
             }

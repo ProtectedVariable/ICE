@@ -1,6 +1,6 @@
 #pragma once
 #include <ForwardRenderer.h>
-#include <ImGUI/imgui.h>
+#include <imgui.h>
 #include <PerspectiveCamera.h>
 #include <TransformComponent.h>
 

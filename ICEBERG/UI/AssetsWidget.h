@@ -1,5 +1,5 @@
 #pragma once
-#include <ImGUI/imgui.h>
+#include <imgui.h>
 
 #include <memory>
 #include <string>

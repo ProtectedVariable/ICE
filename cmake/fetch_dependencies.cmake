@@ -28,3 +28,12 @@ FetchContent_Declare(
   GIT_TAG master
 )
 FetchContent_MakeAvailable(Assimp)
+
+message(STATUS "Fetching DearImXML")
+include(FetchContent)
+FetchContent_Declare(
+  DearImXML
+  GIT_REPOSITORY https://github.com/ProtectedVariable/DearImXML.git
+  GIT_TAG build-lib
+)
+FetchContent_MakeAvailable(DearImXML)

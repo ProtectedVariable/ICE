@@ -4,6 +4,11 @@
 #include <UI/ProjectSelectionWidget.h>
 
 #include "Controller.h"
+#include <XMLReader.h>
+#include <XMLTree.h>
+#include <XMLRenderer.h>
+#include <XMLEventHandler.h>
+#include <XMLDynamicBind.h>
 
 class ProjectSelection : public Controller {
    public:

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<begin name="ICE Engine" flags="ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoCollapse">
+	<table name="header_table" columns="4">
+		<setupcolumn label="" width="0.5" flags="ImGuiTableColumnFlags_WidthStretch"/>
+		<setupcolumn label="" width="0.3" flags="ImGuiTableColumnFlags_WidthStretch"/>
+		<setupcolumn label="" width="0.1" flags="ImGuiTableColumnFlags_WidthStretch"/>
+		<setupcolumn label="" width="0.1" flags="ImGuiTableColumnFlags_WidthStretch"/>
+		<row>
+			<column>
+				<text label="Projects"/>
+			</column>
+			<column>
+				<inputtext label="###ProjectSearch" dynamic="str_project_search" hint="Search..."/>
+			</column>
+			<column>
+				<button id="btn_add_project" label="Add..."/>
+			</column>
+			<column>
+				<button id="btn_create_project" label="+ New Project..."/>
+			</column>
+		</row>
+	</table>
+	<table name="list_table" columns="3">
+		<setupcolumn label="Name" width="0.2" flags="ImGuiTableColumnFlags_WidthStretch"/>
+		<setupcolumn label="Modified" width="0.2" flags="ImGuiTableColumnFlags_WidthStretch"/>
+		<setupcolumn label="Path" width="0.6" flags="ImGuiTableColumnFlags_WidthStretch"/>
+		<header/>
+		<placeholder id="list_table_body"/>
+	</table>
+</begin>

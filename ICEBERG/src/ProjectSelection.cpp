@@ -3,7 +3,7 @@
 #include <dialog.h>
 
 ProjectSelection::ProjectSelection(const std::shared_ptr<ICE::ICEEngine> &engine) : m_engine(engine) {
-
+    /*
     auto projects_list = m_engine->getConfig().getLocalProjects();
     std::vector<ProjectView> view(projects_list->size());
     std::transform(projects_list->begin(), projects_list->end(), view.begin(), [](const ICE::Project &project) {
@@ -12,12 +12,12 @@ ProjectSelection::ProjectSelection(const std::shared_ptr<ICE::ICEEngine> &engine
         v.path = project.getBaseDirectory().string();
         return v;
     });
-    ui.setProjects(view);
+    //ui.setProjects(view);
 
     ui.registerCallback("create_clicked", [this]() {
         auto folder = open_native_folder_dialog();
         m_done = true;
-        auto project = std::make_shared<ICE::Project>(folder, ui.getProjectName());
+        auto project = std::make_shared<ICE::Project>(folder, "");
         project->CreateDirectories();
         m_engine->setProject(project);
     });
@@ -35,7 +35,7 @@ ProjectSelection::ProjectSelection(const std::shared_ptr<ICE::ICEEngine> &engine
         project->loadFromFile();
         m_engine->setProject(std::make_shared<ICE::Project>(*project));
         m_done = true;
-    });
+    });*/
 }
 
 bool ProjectSelection::update() {

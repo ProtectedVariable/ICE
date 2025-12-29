@@ -1,6 +1,6 @@
 #pragma once
 #include <ImGUI/ImGuizmo.h>
-#include <ImGUI/imgui.h>
+#include <imgui.h>
 
 #include "Widget.h"
 
