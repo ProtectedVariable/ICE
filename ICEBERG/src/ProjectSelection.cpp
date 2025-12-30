@@ -3,7 +3,6 @@
 #include <dialog.h>
 
 ProjectSelection::ProjectSelection(const std::shared_ptr<ICE::ICEEngine> &engine) : m_engine(engine) {
-    /*
     auto projects_list = m_engine->getConfig().getLocalProjects();
     std::vector<ProjectView> view(projects_list->size());
     std::transform(projects_list->begin(), projects_list->end(), view.begin(), [](const ICE::Project &project) {
@@ -12,22 +11,21 @@ ProjectSelection::ProjectSelection(const std::shared_ptr<ICE::ICEEngine> &engine
         v.path = project.getBaseDirectory().string();
         return v;
     });
-    //ui.setProjects(view);
+    ui.setProjects(view);
 
-    ui.registerCallback("create_clicked", [this]() {
-        auto folder = open_native_folder_dialog();
-        m_done = true;
-        auto project = std::make_shared<ICE::Project>(folder, "");
+    ui.registerCallback("create_clicked", [this](std::string folder, std::string name) {
+        auto project = std::make_shared<ICE::Project>(folder, name);
         project->CreateDirectories();
         m_engine->setProject(project);
+        m_done = true;
     });
 
-     ui.registerCallback("load_clicked", [this]() {
-        auto folder = std::filesystem::path(open_native_folder_dialog());
-        m_done = true;
-        auto project = std::make_shared<ICE::Project>(folder.parent_path(), folder.filename().string());
+    ui.registerCallback("load_clicked", [this](std::string path) {
+        auto ice_file = std::filesystem::path(path);
+        auto project = std::make_shared<ICE::Project>(ice_file.parent_path().parent_path(), ice_file.filename().stem().string());
         project->loadFromFile();
         m_engine->setProject(project);
+        m_done = true;
     });
 
     ui.registerCallback("project_selected", [this](int index) {
@@ -35,7 +33,7 @@ ProjectSelection::ProjectSelection(const std::shared_ptr<ICE::ICEEngine> &engine
         project->loadFromFile();
         m_engine->setProject(std::make_shared<ICE::Project>(*project));
         m_done = true;
-    });*/
+    });
 }
 
 bool ProjectSelection::update() {

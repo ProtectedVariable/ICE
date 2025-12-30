@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<BeginPopupModal name="New Project" flags="ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoCollapse">
+<BeginPopupModal name="New Project" flags="ImGuiWindowFlags_NoCollapse">
 	<table name="main_layout" columns="3">
 		<setupcolumn label="" width="0.2" flags="ImGuiTableColumnFlags_WidthStretch"/>
 		<setupcolumn label="" width="0.6" flags="ImGuiTableColumnFlags_WidthStretch"/>

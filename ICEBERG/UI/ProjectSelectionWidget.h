@@ -27,37 +27,45 @@ class ProjectSelectionWidget : public Widget, ImXML::XMLEventHandler {
         ImGui::SetNextWindowSize(viewport->Size);
         m_xml_renderer.render(m_xml_tree, *this);
         m_new_project_popup.render();
+
+        if (m_new_project_popup.getResult() == DialogResult::Ok) {
+            callback("create_clicked", m_new_project_popup.getProjectDirectory(), m_new_project_popup.getProjectName());
+        }
     }
 
-    int getSelectedProject() const { return m_selected_project; }
+    void setProjects(const std::vector<ProjectView>& projects) { m_projects = projects; }
 
     void onNodeBegin(ImXML::XMLNode& node) override {
-        if (node.args.contains("id") && node.args["id"] == "list_table_body") {
+        if (node.arg<std::string>("id") == "list_table_body") {
             renderExistingProjects();
         }
     }
     void onNodeEnd(ImXML::XMLNode& node) override {}
     void onEvent(ImXML::XMLNode& node) override {
-        if (node.args.contains("id") && node.args["id"] == "btn_create_project") {
+        if (node.arg<std::string>("id") == "btn_create_project") {
             m_new_project_popup.open();
+        } else if (node.arg<std::string>("id") == "btn_add_project") {
+            auto path = open_native_dialog("*.ice");
+            callback("load_clicked", path);
         }
     }
 
    private:
     void renderExistingProjects() {
-        ImGui::TableNextColumn();
-        ImGui::Text("Load existing project");
         for (int i = 0; i < m_projects.size(); i++) {
             const auto& p = m_projects[i];
             ImGui::TableNextColumn();
-            ImGui::BeginGroup();
-            ImGui::Text(p.name.c_str());
-            ImGui::Text(p.path.c_str());
-            ImGui::Text(p.modified_date.c_str());
-            ImGui::EndGroup();
-            if (ImGui::IsItemHovered()) {
-                ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, ImGui::GetColorU32(ImVec4(0.2, 0.2, 0.2, 1)));
+            ImGui::Selectable(p.name.c_str(), false, ImGuiSelectableFlags_SpanAllColumns);
+            if (ImGui::IsItemClicked()) {
+                m_selected_project = i;
+                callback("project_selected", i);
             }
+            ImGui::TableNextColumn();
+            ImGui::Text(p.modified_date.c_str());
+            ImGui::TableNextColumn();
+            ImGui::Text(p.path.c_str());
+            ImGui::TableNextRow();
+
             if (ImGui::IsItemClicked()) {
                 m_selected_project = i;
                 callback("project_selected", i);
