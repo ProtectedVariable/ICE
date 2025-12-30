@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<begin name="Asset Browser" flags="ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoNavFocus">
+	<table name="asset_browser_layout" columns="3">
+		<setupcolumn label="Category" width="0.1" flags="ImGuiTableColumnFlags_WidthStretch"/>
+		<setupcolumn label="Content" width="0.9" flags="ImGuiTableColumnFlags_WidthStretch"/>
+		<setupcolumn label="Preview" width="256" flags="ImGuiTableColumnFlags_WidthFixed"/>
+		<header/>
+		<row>
+			<column>
+				<placeholder id="asset_browser_category"/>
+			</column>
+			<column>
+				<placeholder id="asset_browser_content"/>
+			</column>
+			<column>
+				<placeholder id="asset_browser_preview"/>
+			</column>
+		</row>
+	</table>
+</begin>

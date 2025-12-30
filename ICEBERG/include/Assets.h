@@ -3,7 +3,7 @@
 #include <ICEEngine.h>
 
 #include "Controller.h"
-#include "UI/AssetsWidget.h"
+#include "UI/AssetsBrowserWidget.h"
 #include "UI/NewMaterialWidget.h"
 
 class Assets : public Controller {
@@ -19,6 +19,6 @@ class Assets : public Controller {
     std::shared_ptr<ICE::ICEEngine> m_engine;
     std::shared_ptr<ICE::GraphicsFactory> m_g_factory;
     bool m_done = false;
-    AssetsWidget ui;
+    AssetsBrowserWidget ui;
     NewMaterialWidget m_material_widget;
 };

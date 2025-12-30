@@ -73,7 +73,7 @@ class EditorWidget : public Widget {
             ImGuiID dock_id_right = ImGui::DockBuilderSplitNode(dock_top, ImGuiDir_Right, 0.20f, NULL, &dock_top);
             ImGuiID dock_id_center = ImGui::DockBuilderSplitNode(dock_top, ImGuiDir_Left, 0.60f, NULL, &dock_top);
 
-            ImGui::DockBuilderDockWindow("Assets", dock_id_bottom);
+            ImGui::DockBuilderDockWindow("Asset Browser", dock_id_bottom);
             ImGui::DockBuilderDockWindow("Hierarchy", dock_id_left);
             ImGui::DockBuilderDockWindow("Inspector", dock_id_right);
             ImGui::DockBuilderDockWindow("Viewport", dock_id_center);
