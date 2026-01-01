@@ -10,7 +10,7 @@
 
 class AssetsCategoryWidget : public Widget {
    public:
-    AssetsCategoryWidget() = default;
+    explicit AssetsCategoryWidget(const std::vector<std::string> &asset_categories) : m_asset_categories(asset_categories) {}
 
     void render() override {
         if (ImGui::BeginTable("asset_folders", 1, ImGuiTableFlags_BordersInnerH)) {
@@ -27,5 +27,5 @@ class AssetsCategoryWidget : public Widget {
 
    private:
     int m_selected_index = 0;
-    std::vector<std::string> m_asset_categories = {"Models", "Materials", "Textures2D", "TextureCubes", "Shaders", "Others"};
+    std::vector<std::string> m_asset_categories;
 };
