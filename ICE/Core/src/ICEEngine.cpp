@@ -47,7 +47,7 @@ void ICEEngine::setupScene(const std::shared_ptr<Camera> &camera_) {
     rs->setCamera(camera_);
     rs->setRenderer(renderer);
     project->getCurrentScene()->getRegistry()->addSystem(rs);
-
+    camera = camera_;
     auto [w, h] = m_window->getSize();
     renderer->resize(w, h);
 }

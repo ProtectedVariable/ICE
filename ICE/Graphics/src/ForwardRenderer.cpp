@@ -55,16 +55,6 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
         light_ubo_data.lights[i].type = static_cast<int>(light.type);
     }
     m_light_ubo->putData(&light_ubo_data, sizeof(SceneLightsUBO));
-    std::sort(m_render_commands.begin(), m_render_commands.end(), [this](const RenderCommand& a, const RenderCommand& b) {
-        bool a_transparent = a.material ? a.material->isTransparent() : false;
-        bool b_transparent = b.material ? b.material->isTransparent() : false;
-
-        if (!a_transparent && b_transparent) {
-            return true;
-        } else {
-            return false;
-        }
-    });
 
     if (m_skybox.has_value()) {
         RenderCommand skybox_cmd;
@@ -83,9 +73,22 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
         cmd.shader = drawable.shader;
         cmd.textures = drawable.textures;
         cmd.model_matrix = drawable.model_matrix;
+        cmd.depthTest = true;
+        cmd.faceCulling = true;
         //TODO: Bones
         m_render_commands.push_back(cmd);
     }
+
+    std::sort(m_render_commands.begin(), m_render_commands.end(), [this](const RenderCommand& a, const RenderCommand& b) {
+        bool a_transparent = a.material ? a.material->isTransparent() : false;
+        bool b_transparent = b.material ? b.material->isTransparent() : false;
+
+        if (!a_transparent && b_transparent) {
+            return true;
+        } else {
+            return false;
+        }
+    });
 
     m_geometry_pass.submit(&m_render_commands);
 }

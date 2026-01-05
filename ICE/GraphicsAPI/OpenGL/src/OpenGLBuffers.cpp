@@ -5,6 +5,7 @@
 #include "OpenGLBuffers.h"
 
 #include <GL/gl3w.h>
+#include <cassert>
 
 namespace ICE {
 
@@ -82,12 +83,13 @@ uint32_t OpenGLUniformBuffer::getSize() const {
 
 void OpenGLUniformBuffer::unbind() const {
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    glBindBufferBase(GL_UNIFORM_BUFFER, binding, id);
 }
 
 void OpenGLUniformBuffer::putData(const void *data, uint32_t _size, uint32_t offset) {
+    assert(offset + _size <= size);
     bind();
-    glBufferSubData(GL_UNIFORM_BUFFER, offset, size, data);
+    glBufferSubData(GL_UNIFORM_BUFFER, offset, _size, data);
     unbind();
-    size = _size;
 }
 }  // namespace ICE
