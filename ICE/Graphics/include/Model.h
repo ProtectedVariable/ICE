@@ -37,6 +37,9 @@ class Model : public Asset {
     void setSkeleton(const Skeleton &skeleton) { m_skeleton = skeleton; }
     void setAnimations(const std::unordered_map<std::string, Animation> &animations) { m_animations = animations; }
 
+    void traverse(std::vector<std::shared_ptr<Mesh>> &meshes, std::vector<AssetUID> &materials, std::vector<Eigen::Matrix4f> &transforms,
+                  const Eigen::Matrix4f &base_transform = Eigen::Matrix4f::Identity());
+
     AssetType getType() const override { return AssetType::EModel; }
     std::string getTypeName() const override { return "Model"; }
 

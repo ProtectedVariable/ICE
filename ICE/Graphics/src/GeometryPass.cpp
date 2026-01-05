@@ -27,9 +27,10 @@ void GeometryPass::execute() {
             current_shader = shader;
         }
 
-         if (mesh->usesBones()) {
+        if (mesh->usesBones()) {
             for (const auto& [boneID, offsetMatrix] : mesh->getSkinningData().boneOffsetMatrices) {
-                 current_shader->loadMat4("bonesOffsetMatrices[" + std::to_string(boneID) + "]", offsetMatrix);
+                current_shader->loadMat4("bonesOffsetMatrices[" + std::to_string(boneID) + "]", offsetMatrix);
+                current_shader->loadMat4("bonesTransformMatrices[" + std::to_string(boneID) + "]", command.bones[boneID].finalTransformation);
             }
         }
 

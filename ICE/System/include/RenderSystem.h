@@ -14,14 +14,18 @@
 
 namespace ICE {
 class Scene;
+class Registry;
 
 class RenderSystem : public System {
    public:
-    RenderSystem() {};
+    RenderSystem(const std::shared_ptr<RendererAPI> &api, const std::shared_ptr<GraphicsFactory> &factory, const std::shared_ptr<Registry> &reg,
+                 const std::shared_ptr<AssetBank> &bank);
 
     void onEntityAdded(Entity e) override;
     void onEntityRemoved(Entity e) override;
     void update(double delta) override;
+
+    void submitModel(const std::shared_ptr<Model> &model, const Eigen::Matrix4f &transform);
 
     std::shared_ptr<Renderer> getRenderer() const;
     void setRenderer(const std::shared_ptr<Renderer> &renderer);
@@ -46,5 +50,17 @@ class RenderSystem : public System {
    private:
     std::shared_ptr<Renderer> m_renderer;
     std::shared_ptr<Camera> m_camera;
+    std::shared_ptr<Framebuffer> m_target;
+
+    AssetUID m_skybox = NO_ASSET_ID;
+    std::vector<Entity> m_render_queue;
+    std::vector<Entity> m_lights;
+
+    std::shared_ptr<RendererAPI> m_api;
+    std::shared_ptr<GraphicsFactory> m_factory;
+    std::shared_ptr<Registry> m_registry;
+    std::shared_ptr<AssetBank> m_asset_bank;
+
+    std::shared_ptr<VertexArray> m_quad_vao;
 };
 }  // namespace ICE

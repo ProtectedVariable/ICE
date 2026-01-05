@@ -4,22 +4,168 @@
 
 #include "RenderSystem.h"
 
+#include "Registry.h"
+#include "RenderData.h"
+
 namespace ICE {
+RenderSystem::RenderSystem(const std::shared_ptr<RendererAPI> &api, const std::shared_ptr<GraphicsFactory> &factory,
+                           const std::shared_ptr<Registry> &reg, const std::shared_ptr<AssetBank> &bank)
+    : m_api(api),
+      m_factory(factory),
+      m_registry(reg),
+      m_asset_bank(bank) {
+    m_quad_vao = factory->createVertexArray();
+    auto quad_vertex_vbo = factory->createVertexBuffer();
+    quad_vertex_vbo->putData(full_quad_v.data(), full_quad_v.size() * sizeof(float));
+    m_quad_vao->pushVertexBuffer(quad_vertex_vbo, 3);
+    auto quad_uv_vbo = factory->createVertexBuffer();
+    quad_uv_vbo->putData(full_quad_tx.data(), full_quad_tx.size() * sizeof(float));
+    m_quad_vao->pushVertexBuffer(quad_uv_vbo, 2);
+    auto quad_ibo = factory->createIndexBuffer();
+    quad_ibo->putData(full_quad_idx.data(), full_quad_idx.size() * sizeof(int));
+    m_quad_vao->setIndexBuffer(quad_ibo);
+}
+
 void RenderSystem::update(double delta) {
+
+    auto view_mat = m_camera->lookThrough();
+    auto proj_mat = m_camera->getProjection();
+
+    if (m_skybox != NO_ASSET_ID) {
+        auto shader = m_asset_bank->getAsset<Shader>("__ice_skybox_shader");
+        auto skybox = m_registry->getComponent<SkyboxComponent>(m_skybox);
+        auto mesh = m_asset_bank->getAsset<Model>("cube")->getMeshes().at(0);
+        auto tex = m_asset_bank->getAsset<TextureCube>(skybox->texture);
+        m_renderer->submitSkybox(Skybox{
+            .cube_mesh = mesh,
+            .shader = shader,
+            .textures = {{skybox->texture, tex}},
+        });
+    }
+
+    auto frustum = extractFrustumPlanes(proj_mat * view_mat);
+    for (const auto &e : m_render_queue) {
+        auto rc = m_registry->getComponent<RenderComponent>(e);
+        auto tc = m_registry->getComponent<TransformComponent>(e);
+        auto model = m_asset_bank->getAsset<Model>(rc->model);
+        if (!model)
+            continue;
+
+        auto aabb = model->getBoundingBox();
+        Eigen::Vector3f min = (tc->getModelMatrix() * Eigen::Vector4f(aabb.getMin().x(), aabb.getMin().y(), aabb.getMin().z(), 1.0)).head<3>();
+        Eigen::Vector3f max = (tc->getModelMatrix() * Eigen::Vector4f(aabb.getMax().x(), aabb.getMax().y(), aabb.getMax().z(), 1.0)).head<3>();
+        aabb = AABB(std::vector<Eigen::Vector3f>{min, max});
+        if (!isAABBInFrustum(frustum, aabb)) {
+            continue;
+        }
+
+        submitModel(model, tc->getModelMatrix());
+    }
+
+    for (int i = 0; i < m_lights.size(); i++) {
+        if (i >= MAX_LIGHTS)
+            break;
+        auto light = m_lights[i];
+        auto lc = m_registry->getComponent<LightComponent>(light);
+        auto tc = m_registry->getComponent<TransformComponent>(light);
+
+        m_renderer->submitLight(Light{.position = tc->getPosition(),
+                                      .rotation = tc->getRotation(),
+                                      .color = lc->color,
+                                      .distance_dropoff = lc->distance_dropoff,
+                                      .type = lc->type});
+    }
+
     m_renderer->prepareFrame(*m_camera);
-    m_renderer->render();
+    auto rendered_fb = m_renderer->render();
     m_renderer->endFrame();
+
+    //Final pass, render the last result to the screen
+    if (!m_target) {
+        m_api->bindDefaultFramebuffer();
+    } else {
+        m_target->bind();
+    }
+
+    m_api->clear();
+    auto shader = m_asset_bank->getAsset<Shader>(AssetPath::WithTypePrefix<Shader>("lastpass"));
+
+    shader->bind();
+    rendered_fb->bindAttachment(0);
+    shader->loadInt("uTexture", 0);
+    m_quad_vao->bind();
+    m_quad_vao->getIndexBuffer()->bind();
+    m_api->renderVertexArray(m_quad_vao);
+}
+
+void RenderSystem::submitModel(const std::shared_ptr<Model> &model, const Eigen::Matrix4f &model_matrix) {
+
+    std::vector<std::shared_ptr<Mesh>> meshes;
+    std::vector<AssetUID> materials;
+    std::vector<Eigen::Matrix4f> transforms;
+
+    model->traverse(meshes, materials, transforms, model_matrix);
+
+    for (int i = 0; i < meshes.size(); i++) {
+        auto mtl_id = materials.at(i);
+        auto mesh = meshes.at(i);
+        auto material = m_asset_bank->getAsset<Material>(mtl_id);
+        if (!material) {
+            continue;
+        }
+        auto shader = m_asset_bank->getAsset<Shader>(material->getShader());
+        if (!shader) {
+            continue;
+        }
+
+        if (!mesh) {
+            continue;
+        }
+
+        std::unordered_map<AssetUID, std::shared_ptr<Texture>> texs;
+        for (const auto &[name, value] : material->getAllUniforms()) {
+            if (std::holds_alternative<AssetUID>(value)) {
+                auto v = std::get<AssetUID>(value);
+                if (auto tex = m_asset_bank->getAsset<Texture2D>(v); tex) {
+                    texs.try_emplace(v, tex);
+                }
+            }
+        }
+
+        m_renderer->submitDrawable(Drawable{
+            .mesh = mesh,
+            .material = material,
+            .shader = shader,
+            .textures = texs,
+            .model_matrix = transforms[i],
+        });
+    }
 }
 
 void RenderSystem::onEntityAdded(Entity e) {
-    if (m_renderer) {
-        m_renderer->submit(e);
+    onEntityRemoved(e);
+    if (m_registry->entityHasComponent<RenderComponent>(e)) {
+        m_render_queue.emplace_back(e);
+    }
+    if (m_registry->entityHasComponent<LightComponent>(e)) {
+        m_lights.emplace_back(e);
+    }
+    if (m_registry->entityHasComponent<SkyboxComponent>(e)) {
+        m_skybox = e;
     }
 }
 
 void RenderSystem::onEntityRemoved(Entity e) {
-    if (m_renderer) {
-        m_renderer->remove(e);
+    auto queue_pos = std::ranges::find(m_render_queue, e);
+    if (queue_pos != m_render_queue.end()) {
+        m_render_queue.erase(queue_pos);
+    }
+    auto light_pos = std::ranges::find(m_lights, e);
+    if (light_pos != m_lights.end()) {
+        m_lights.erase(light_pos);
+    }
+    if (e == m_skybox) {
+        m_skybox = NO_ASSET_ID;
     }
 }
 
@@ -29,9 +175,6 @@ std::shared_ptr<Renderer> RenderSystem::getRenderer() const {
 
 void RenderSystem::setRenderer(const std::shared_ptr<Renderer> &renderer) {
     m_renderer = renderer;
-    for (const auto &e : entities) {
-        m_renderer->submit(e);
-    }
 }
 
 std::shared_ptr<Camera> RenderSystem::getCamera() const {
@@ -43,11 +186,12 @@ void RenderSystem::setCamera(const std::shared_ptr<Camera> &camera) {
 }
 
 void RenderSystem::setTarget(const std::shared_ptr<Framebuffer> &fb) {
-    m_renderer->setTarget(fb);
+    m_target = fb;
 }
 
 void RenderSystem::setViewport(int x, int y, int w, int h) {
     if (w > 0 && h > 0) {
+        m_target->resize(w, h);
         m_renderer->resize(w, h);
     }
 }

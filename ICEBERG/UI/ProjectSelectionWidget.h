@@ -55,6 +55,7 @@ class ProjectSelectionWidget : public Widget, ImXML::XMLEventHandler {
         for (int i = 0; i < m_projects.size(); i++) {
             const auto& p = m_projects[i];
             ImGui::TableNextColumn();
+            ImGui::PushID(i);
             ImGui::Selectable(p.name.c_str(), false, ImGuiSelectableFlags_SpanAllColumns);
             if (ImGui::IsItemClicked()) {
                 m_selected_project = i;
@@ -70,6 +71,7 @@ class ProjectSelectionWidget : public Widget, ImXML::XMLEventHandler {
                 m_selected_project = i;
                 callback("project_selected", i);
             }
+            ImGui::PopID();
         }
     }
 

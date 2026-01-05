@@ -57,9 +57,18 @@ void* Assets::createThumbnail(const ICE::AssetBankEntry& entry) {
     camera->up(1);
     camera->pitch(-30);
 
-    shader->bind();
-    shader->loadMat4("projection", camera->getProjection());
-    shader->loadMat4("view", camera->lookThrough());
+    ICE::Scene scene("thumbnail_scene");
+    auto registry = scene.getRegistry();
+    ICE::ForwardRenderer renderer(m_engine->getApi(), m_engine->getGraphicsFactory());
+
+    auto entity0 = registry->createEntity();
+    registry->addComponent<ICE::TransformComponent>(
+        entity0, ICE::TransformComponent(Eigen::Vector3f::Constant(0.f), Eigen::Vector3f::Constant(0.f), Eigen::Vector3f::Constant(1.f)));
+    registry->addComponent<ICE::RenderComponent>(entity0, ICE::RenderComponent(model_uid));
+
+    auto light = registry->createEntity();
+    registry->addComponent<ICE::TransformComponent>(
+        light, ICE::TransformComponent(Eigen::Vector3f(0.f, 10.f, 0.f), Eigen::Vector3f::Constant(0.f), Eigen::Vector3f::Constant(1.f)));
 
     ICE::GeometryPass pass(m_engine->getApi(), m_engine->getGraphicsFactory(), {256, 256, 1});
     std::vector<ICE::RenderCommand> cmds;

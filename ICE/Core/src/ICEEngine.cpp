@@ -42,8 +42,8 @@ void ICEEngine::step() {
 }
 
 void ICEEngine::setupScene(const std::shared_ptr<Camera> &camera_) {
-    auto renderer = std::make_shared<ForwardRenderer>(api, m_graphics_factory, project->getCurrentScene()->getRegistry(), project->getAssetBank());
-    auto rs = std::make_shared<RenderSystem>();
+    auto renderer = std::make_shared<ForwardRenderer>(api, m_graphics_factory);
+    auto rs = std::make_shared<RenderSystem>(api, m_graphics_factory, project->getCurrentScene()->getRegistry(), project->getAssetBank());
     rs->setCamera(camera_);
     rs->setRenderer(renderer);
     project->getCurrentScene()->getRegistry()->addSystem(rs);
