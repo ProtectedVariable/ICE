@@ -10,13 +10,17 @@
 
 #include "AssetsCategoryWidget.h"
 #include "AssetsContentWidget.h"
+#include "AssetsPreviewWidget.h"
 
 class AssetsBrowserWidget : public Widget, ImXML::XMLEventHandler {
    public:
-    explicit AssetsBrowserWidget(const std::vector<std::string>& asset_categories)
+    explicit AssetsBrowserWidget(const std::vector<std::string>& asset_categories, const ICE::ForwardRenderer& renderer)
         : m_xml_tree(ImXML::XMLReader().read("XML/AssetBrowser.xml")),
-          m_category_widget(asset_categories) {
+          m_category_widget(asset_categories),
+          m_preview_widget(renderer) {
         m_category_widget.registerCallback("asset_category_selected", [this](int index) { callback("asset_category_selected", index); });
+        m_content_widget.registerCallback("item_clicked", [this](std::string label) { callback("item_clicked", label); });
+        m_content_widget.registerCallback("item_selected", [this](std::string label) { callback("item_selected", label); });
     }
 
     void onNodeBegin(ImXML::XMLNode& node) override {
@@ -24,6 +28,8 @@ class AssetsBrowserWidget : public Widget, ImXML::XMLEventHandler {
             m_category_widget.render();
         } else if (node.arg<std::string>("id") == "asset_browser_content") {
             m_content_widget.render();
+        } else if (node.arg<std::string>("id") == "asset_browser_preview") {
+            m_preview_widget.render();
         }
     }
     void onNodeEnd(ImXML::XMLNode& node) override {}
@@ -36,10 +42,12 @@ class AssetsBrowserWidget : public Widget, ImXML::XMLEventHandler {
     }
 
     void setCurrentView(const AssetView& view) { m_content_widget.setCurrentView(view); }
+    AssetView getCurrentView() const { return m_content_widget.getCurrentView(); }
 
    private:
     AssetsCategoryWidget m_category_widget;
     AssetsContentWidget m_content_widget;
+    AssetsPreviewWidget m_preview_widget;
 
     ImXML::XMLTree m_xml_tree;
     ImXML::XMLRenderer m_xml_renderer;

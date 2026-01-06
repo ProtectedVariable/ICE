@@ -6,7 +6,7 @@
 Assets::Assets(const std::shared_ptr<ICE::ICEEngine>& engine, const std::shared_ptr<ICE::GraphicsFactory>& g_factory)
     : m_engine(engine),
       m_g_factory(g_factory),
-      ui(m_asset_categories) {
+      ui(m_asset_categories, ICE::ForwardRenderer(engine->getApi(), g_factory)) {
     rebuildViewer();
     /* ui.registerCallback("material_edit",
                              [this](std::string name) { m_material_widget.open(m_engine->getAssetBank()->getUID("Materials/" + name)); });
@@ -25,6 +25,35 @@ Assets::Assets(const std::shared_ptr<ICE::ICEEngine>& engine, const std::shared_
     ui.registerCallback("asset_category_selected", [this](int index) {
         m_current_category_index = index;
         ui.setCurrentView(m_asset_views[m_current_category_index]);
+    });
+
+    ui.registerCallback("item_clicked", [this](std::string label) {
+        auto current_view = ui.getCurrentView();
+        if (label == "..") {
+            ui.setCurrentView(*current_view.parent);
+        } else {
+            for (const auto& folder : current_view.subfolders) {
+                if (folder.folder_name == label) {
+                    ui.setCurrentView(folder);
+                    return;
+                }
+            }
+            for (const auto& asset : current_view.assets) {
+                if (asset.first == label) {
+                    //TODO: Handle
+                    return;
+                }
+            }
+        }
+    });
+    ui.registerCallback("item_clicked", [this](std::string label) {
+        auto current_view = ui.getCurrentView();
+        for (const auto& asset : current_view.assets) {
+            if (asset.first == label) {
+
+                return;
+            }
+        }
     });
 
     ui.setCurrentView(m_asset_views[m_current_category_index]);
@@ -57,21 +86,13 @@ void* Assets::createThumbnail(const ICE::AssetBankEntry& entry) {
     camera->up(1);
     camera->pitch(-30);
 
-    ICE::Scene scene("thumbnail_scene");
-    auto registry = scene.getRegistry();
     ICE::ForwardRenderer renderer(m_engine->getApi(), m_engine->getGraphicsFactory());
+    renderer.resize(256, 256);
+    std::vector<std::shared_ptr<ICE::Mesh>> meshes;
+    std::vector<ICE::AssetUID> materials;
+    std::vector<Eigen::Matrix4f> transforms;
 
-    auto entity0 = registry->createEntity();
-    registry->addComponent<ICE::TransformComponent>(
-        entity0, ICE::TransformComponent(Eigen::Vector3f::Constant(0.f), Eigen::Vector3f::Constant(0.f), Eigen::Vector3f::Constant(1.f)));
-    registry->addComponent<ICE::RenderComponent>(entity0, ICE::RenderComponent(model_uid));
-
-    auto light = registry->createEntity();
-    registry->addComponent<ICE::TransformComponent>(
-        light, ICE::TransformComponent(Eigen::Vector3f(0.f, 10.f, 0.f), Eigen::Vector3f::Constant(0.f), Eigen::Vector3f::Constant(1.f)));
-
-    ICE::GeometryPass pass(m_engine->getApi(), m_engine->getGraphicsFactory(), {256, 256, 1});
-    std::vector<ICE::RenderCommand> cmds;
+    model->traverse(meshes, materials, transforms, Eigen::Matrix4f::Identity());
     std::unordered_map<ICE::AssetUID, std::shared_ptr<ICE::Texture>> textures;
     for (const auto& [k, v] : material->getAllUniforms()) {
         if (std::holds_alternative<ICE::AssetUID>(v)) {
@@ -79,17 +100,18 @@ void* Assets::createThumbnail(const ICE::AssetBankEntry& entry) {
             textures.try_emplace(id, m_engine->getAssetBank()->getAsset<ICE::Texture2D>(id));
         }
     }
-    for (const auto& mesh : model->getMeshes()) {
-        cmds.push_back(ICE::RenderCommand{.mesh = mesh,
-                                          .material = material,
-                                          .shader = shader,
-                                          .textures = textures,
-                                          .model_matrix = Eigen::Matrix4f::Identity()});
+    for (int i = 0; i < meshes.size(); i++) {
+        renderer.submitDrawable(
+            ICE::Drawable{.mesh = meshes[i], .material = material, .shader = shader, .textures = textures, .model_matrix = transforms[i]});
     }
-    pass.submit(&cmds);
-    pass.execute();
+    renderer.submitLight(
+        ICE::Light{.position = {-2, 2, 2}, .rotation = {0, 0, 0}, .color = {1, 1, 1}, .distance_dropoff = 0, .type = ICE::LightType::PointLight});
 
-    return static_cast<char*>(0) + pass.getResult()->getTexture();
+    renderer.prepareFrame(*camera);
+    auto fb = renderer.render();
+    renderer.endFrame();
+
+    return static_cast<char*>(0) + fb->getTexture();
 }
 
 void Assets::rebuildViewer() {
