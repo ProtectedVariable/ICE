@@ -50,8 +50,6 @@ class NewProjectPopup : public Dialog, ImXML::XMLEventHandler {
     char m_project_name[512] = {0};
     char m_project_dir[512] = {0};
 
-    bool m_open = false;
-
     ImXML::XMLTree m_xml_tree;
     ImXML::XMLRenderer m_xml_renderer;
 };

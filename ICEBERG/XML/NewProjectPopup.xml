@@ -28,12 +28,12 @@
 		</row>
 		<row>
 			<column>
-				<button id="btn_create" label="Create"/>
 			</column>
 			<column>
 				<button id="btn_cancel" label="Cancel"/>
 			</column>
 			<column>
+				<button id="btn_create" label="Create"/>
 			</column>
 		</row>
 	</table>

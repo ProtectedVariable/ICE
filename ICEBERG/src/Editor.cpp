@@ -6,7 +6,6 @@
 
 Editor::Editor(const std::shared_ptr<ICE::ICEEngine>& engine, const std::shared_ptr<ICE::GraphicsFactory>& g_factory)
     : m_engine(engine),
-      m_material_popup(engine),
       m_scene_popup(engine),
       m_open_scene_popup(engine) {
     m_viewport = std::make_unique<Viewport>(
@@ -29,7 +28,7 @@ Editor::Editor(const std::shared_ptr<ICE::ICEEngine>& engine, const std::shared_
             path.setName(import_name + std::to_string(i++));
         } while (m_engine->getAssetBank()->nameInUse(path));
         m_engine->getAssetBank()->addAsset(path, material);
-        m_material_popup.open(m_engine->getAssetBank()->getUID(path));
+        m_material_popup.open();
     });
     ui.registerCallback("import_mesh_clicked", [this] {
         std::filesystem::path file = open_native_dialog("*.obj");
@@ -81,10 +80,11 @@ bool Editor::update() {
     m_material_popup.render();
     m_scene_popup.render();
     m_open_scene_popup.render();
-
+    /*
     if (m_material_popup.accepted()) {
         m_assets->rebuildViewer();
     }
+    */
     if (m_scene_popup.accepted()) {
         m_engine->getProject()->addScene(ICE::Scene(m_scene_popup.getSceneName()));
         m_engine->getProject()->setCurrentScene(m_engine->getProject()->getScenes().back());

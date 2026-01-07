@@ -2,7 +2,7 @@
 
 #include <ICEEngine.h>
 #include <UI/EditorWidget.h>
-#include <UI/NewMaterialWidget.h>
+#include <UI/MaterialEditDialog.h>
 #include <UI/NewSceneWidget.h>
 #include <UI/OpenSceneWidget.h>
 
@@ -32,7 +32,7 @@ class Editor : public Controller {
     bool m_entity_transform_changed = false;
 
     //Popups
-    NewMaterialWidget m_material_popup;
+    MaterialEditDialog m_material_popup;
     NewSceneWidget m_scene_popup;
     OpenSceneWidget m_open_scene_popup;
 };

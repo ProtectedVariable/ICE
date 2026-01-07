@@ -32,7 +32,7 @@ std::pair<void*, bool> AssetsRenderer::getPreview(const std::shared_ptr<ICE::Ass
 
     auto key = thumbnail ? "thumb_" + asset_path : "preview_" + asset_path;
     if (thumbnail) {
-        t = 0;
+        t = 45;
     }
     if (!m_renderers.contains(key)) {
         m_renderers.try_emplace(key, m_api, m_factory);
