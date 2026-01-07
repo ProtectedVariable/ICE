@@ -12,18 +12,12 @@
 
 class AssetsPreviewWidget : public Widget {
    public:
-    explicit AssetsPreviewWidget(const ICE::ForwardRenderer& renderer) : m_renderer(renderer) {}
+    AssetsPreviewWidget() = default;
 
-    void render() override {
-        auto fb = m_renderer.render();
-        ImGui::Image(fb->getTexture(), {256, 256});
-    }
+    void render() override { ImGui::Image(m_texture, {256, 256}, ImVec2(0, 1), ImVec2(1, 0)); }
 
-    void setDrawable(const ICE::Drawable& drawable) { m_drawable = drawable; }
+    void setTexture(void* tex) { m_texture = tex; }
 
    private:
-    ICE::ForwardRenderer m_renderer;
-    ICE::Drawable m_drawable{nullptr, nullptr, nullptr, {}, {}};
-    ICE::Light m_light;
-    ICE::PerspectiveCamera m_camera{60, 1.0f, 0.1f, 100.f};
+    void* m_texture = nullptr;
 };

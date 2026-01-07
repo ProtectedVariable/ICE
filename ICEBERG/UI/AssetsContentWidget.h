@@ -8,10 +8,15 @@
 
 #include "Widget.h"
 
+struct AssetData {
+    std::string name;
+    void* thumbnail;
+    std::string asset_path;
+};
 struct AssetView {
     AssetView* parent = nullptr;
     std::string folder_name;
-    std::vector<std::pair<std::string, void*>> assets;
+    std::vector<AssetData> assets;
     std::vector<AssetView> subfolders;
 };
 
@@ -41,7 +46,7 @@ class AssetsContentWidget : public Widget {
                     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
                 }
                 ImGui::BeginGroup();
-                ImGui::ImageButton("##item", (ImTextureID) textureID, ImVec2(thumbnailSize, thumbnailSize));
+                ImGui::ImageButton("##item", (ImTextureID) textureID, ImVec2(thumbnailSize, thumbnailSize), ImVec2(0, 1), ImVec2(1, 0));
                 ImGui::PushTextWrapPos(ImGui::GetCursorPos().x + thumbnailSize);
                 ImGui::TextWrapped("%s", label.c_str());
                 ImGui::PopTextWrapPos();
@@ -67,7 +72,7 @@ class AssetsContentWidget : public Widget {
                 renderItem(folder.folder_name, nullptr);  //TODO: Replace nullptr with folder icon
 
             for (const auto& asset : m_current_view.assets)
-                renderItem(asset.first, asset.second);
+                renderItem(asset.name, asset.thumbnail);
 
             ImGui::EndTable();
         }

@@ -14,10 +14,9 @@
 
 class AssetsBrowserWidget : public Widget, ImXML::XMLEventHandler {
    public:
-    explicit AssetsBrowserWidget(const std::vector<std::string>& asset_categories, const ICE::ForwardRenderer& renderer)
+    explicit AssetsBrowserWidget(const std::vector<std::string>& asset_categories)
         : m_xml_tree(ImXML::XMLReader().read("XML/AssetBrowser.xml")),
-          m_category_widget(asset_categories),
-          m_preview_widget(renderer) {
+          m_category_widget(asset_categories) {
         m_category_widget.registerCallback("asset_category_selected", [this](int index) { callback("asset_category_selected", index); });
         m_content_widget.registerCallback("item_clicked", [this](std::string label) { callback("item_clicked", label); });
         m_content_widget.registerCallback("item_selected", [this](std::string label) { callback("item_selected", label); });
@@ -43,6 +42,7 @@ class AssetsBrowserWidget : public Widget, ImXML::XMLEventHandler {
 
     void setCurrentView(const AssetView& view) { m_content_widget.setCurrentView(view); }
     AssetView getCurrentView() const { return m_content_widget.getCurrentView(); }
+    void setPreviewTexture(void* tex) { m_preview_widget.setTexture(tex); }
 
    private:
     AssetsCategoryWidget m_category_widget;
