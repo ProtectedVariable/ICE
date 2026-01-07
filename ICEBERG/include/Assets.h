@@ -15,7 +15,7 @@ class Assets : public Controller {
     void rebuildViewer();
 
    private:
-    void createSubfolderView(AssetView *parent_view, const std::vector<std::string> &path, void *thumbnail, const std::string &full_path);
+    void createSubfolderView(AssetView *parent_view, const std::vector<std::string> &path, const Thumbnail &thumbnail, const std::string &full_path);
 
     const std::vector<std::string> m_asset_categories = {"Models", "Materials", "Textures2D", "TextureCubes", "Shaders", "Others"};
 

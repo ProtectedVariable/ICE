@@ -36,7 +36,6 @@ Project::Project(const fs::path &base_directory, const std::string &name)
 bool Project::CreateDirectories() {
     fs::create_directories(m_scenes_directory);
     try {
-        fs::create_directories(m_base_directory / "Assets");
         fs::copy("Assets", m_base_directory / "Assets", fs::copy_options::recursive);
     } catch (std::filesystem::filesystem_error &e) {
         Logger::Log(Logger::FATAL, "IO", "Could not copy default assets: %s", e.what());
@@ -52,6 +51,9 @@ bool Project::CreateDirectories() {
 
     assetBank->addAsset<Model>("cube", {m_meshes_directory / "cube.obj"});
     assetBank->addAsset<Model>("sphere", {m_meshes_directory / "sphere.obj"});
+
+    assetBank->addAsset<Texture2D>("Editor/folder", {m_textures_directory / "Editor" / "folder.png"});
+    assetBank->addAsset<Texture2D>("Editor/shader", {m_textures_directory / "Editor" / "shader.png"});
 
     scenes.push_back(std::make_shared<Scene>("MainScene"));
     setCurrentScene(getScenes()[0]);

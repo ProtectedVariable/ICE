@@ -7,7 +7,8 @@ Assets::Assets(const std::shared_ptr<ICE::ICEEngine>& engine, const std::shared_
     : m_engine(engine),
       m_g_factory(g_factory),
       m_renderer(engine->getApi(), g_factory, engine->getAssetBank()),
-      ui(m_asset_categories) {
+      ui(m_asset_categories,
+         m_engine->getAssetBank()->getAsset<ICE::Texture2D>(ICE::AssetPath::WithTypePrefix<ICE::Texture2D>("Editor/folder"))->getTexture()) {
     rebuildViewer();
     /* ui.registerCallback("material_edit",
                              [this](std::string name) { m_material_widget.open(m_engine->getAssetBank()->getUID("Materials/" + name)); });
@@ -70,7 +71,10 @@ void Assets::rebuildViewer() {
 
     auto asset_bank = m_engine->getAssetBank();
     for (const auto& entry : asset_bank->getAllEntries()) {
-        void* thumbnail = m_renderer.createThumbnail(entry.asset, entry.path.toString());
+        Thumbnail thumbnail;
+        auto [ptr, flip] = m_renderer.createThumbnail(entry.asset, entry.path.toString());
+        thumbnail.ptr = ptr;
+        thumbnail.flip = flip;
         std::string category;
         if (std::dynamic_pointer_cast<ICE::Model>(entry.asset)) {
             category = "Models";
@@ -96,7 +100,7 @@ void Assets::rebuildViewer() {
     }
 }
 
-void Assets::createSubfolderView(AssetView* parent_view, const std::vector<std::string>& path, void* thumbnail, const std::string& full_path) {
+void Assets::createSubfolderView(AssetView* parent_view, const std::vector<std::string>& path, const Thumbnail &thumbnail, const std::string& full_path) {
     if (path.size() == 1) {
         parent_view->assets.push_back({path.back(), thumbnail, full_path});
         return;
@@ -116,7 +120,7 @@ bool Assets::update() {
 
     if (m_current_preview.has_value()) {
         auto asset_ptr = m_engine->getAssetBank()->getAsset(m_engine->getAssetBank()->getUID(m_current_preview.value().asset_path));
-        ui.setPreviewTexture(m_renderer.getPreview(asset_ptr, m_current_preview.value().asset_path, m_t));
+        ui.setPreviewTexture(m_renderer.getPreview(asset_ptr, m_current_preview.value().asset_path, m_t).first);
     }
     ui.render();
     //m_material_widget.render();

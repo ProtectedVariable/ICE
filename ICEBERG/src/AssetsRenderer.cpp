@@ -2,13 +2,17 @@
 
 #include <PerspectiveCamera.h>
 
-void* AssetsRenderer::createThumbnail(const std::shared_ptr<ICE::Asset>& asset, const std::string& asset_path) {
+std::pair<void*, bool> AssetsRenderer::createThumbnail(const std::shared_ptr<ICE::Asset>& asset, const std::string& asset_path) {
     return getPreview(asset, asset_path, std::numeric_limits<float>::infinity());
 }
 
-void* AssetsRenderer::getPreview(const std::shared_ptr<ICE::Asset>& asset, const std::string& asset_path, float t) {
+std::pair<void*, bool> AssetsRenderer::getPreview(const std::shared_ptr<ICE::Asset>& asset, const std::string& asset_path, float t) {
     if (auto m = std::dynamic_pointer_cast<ICE::Texture2D>(asset); m) {
-        return m->getTexture();
+        return {m->getTexture(), false};
+    } else if (auto m = std::dynamic_pointer_cast<ICE::TextureCube>(asset); m) {
+        return {nullptr, false};  //TODO
+    } else if (auto m = std::dynamic_pointer_cast<ICE::Shader>(asset); m) {
+        return {m_bank->getAsset<ICE::Texture2D>(ICE::AssetPath::WithTypePrefix<ICE::Texture2D>("Editor/shader"))->getTexture(), false};
     }
 
     auto model = m_bank->getAsset<ICE::Model>(ICE::AssetPath::WithTypePrefix<ICE::Model>("sphere"));
@@ -21,8 +25,7 @@ void* AssetsRenderer::getPreview(const std::shared_ptr<ICE::Asset>& asset, const
         material = m;
         override_material = true;
     } else {
-        //TODO return default icons
-        return nullptr;
+        return {nullptr, false};
     }
 
     bool thumbnail = (t == std::numeric_limits<float>::infinity());
@@ -69,5 +72,5 @@ void* AssetsRenderer::getPreview(const std::shared_ptr<ICE::Asset>& asset, const
     auto fb = renderer.render();
     renderer.endFrame();
 
-    return static_cast<char*>(0) + fb->getTexture();
+    return {static_cast<char*>(0) + fb->getTexture(), true};
 }

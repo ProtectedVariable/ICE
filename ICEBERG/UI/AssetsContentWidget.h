@@ -8,9 +8,13 @@
 
 #include "Widget.h"
 
+struct Thumbnail {
+    void* ptr;
+    bool flip = true;
+};
 struct AssetData {
     std::string name;
-    void* thumbnail;
+    Thumbnail thumbnail;
     std::string asset_path;
 };
 struct AssetView {
@@ -22,7 +26,7 @@ struct AssetView {
 
 class AssetsContentWidget : public Widget {
    public:
-    AssetsContentWidget() = default;
+    AssetsContentWidget(void* folder_texture) : m_folder_texture(folder_texture) {}
 
     void render() override {
         const float thumbnailSize = 64.0f;
@@ -37,7 +41,7 @@ class AssetsContentWidget : public Widget {
         if (ImGui::BeginTable("FileBrowserTable", columnCount)) {
             int itemIndex = 0;
 
-            auto renderItem = [&](const std::string& label, void* textureID) {
+            auto renderItem = [&](const std::string& label, const Thumbnail &tb) {
                 itemIndex++;
                 ImGui::TableNextColumn();
                 ImGui::PushID(itemIndex);
@@ -46,7 +50,9 @@ class AssetsContentWidget : public Widget {
                     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
                 }
                 ImGui::BeginGroup();
-                ImGui::ImageButton("##item", (ImTextureID) textureID, ImVec2(thumbnailSize, thumbnailSize), ImVec2(0, 1), ImVec2(1, 0));
+                ImVec2 uv0 = tb.flip ? ImVec2(0, 1) : ImVec2(0, 0);
+                ImVec2 uv1 = tb.flip ? ImVec2(1, 0) : ImVec2(1, 1);
+                ImGui::ImageButton("##item", (ImTextureID) tb.ptr, ImVec2(thumbnailSize, thumbnailSize), uv0, uv1);
                 ImGui::PushTextWrapPos(ImGui::GetCursorPos().x + thumbnailSize);
                 ImGui::TextWrapped("%s", label.c_str());
                 ImGui::PopTextWrapPos();
@@ -66,10 +72,10 @@ class AssetsContentWidget : public Widget {
             };
 
             if (m_current_view.parent != nullptr) {
-                renderItem("..", nullptr);
+                renderItem("..", {m_folder_texture, false});
             }
             for (const auto& folder : m_current_view.subfolders)
-                renderItem(folder.folder_name, nullptr);  //TODO: Replace nullptr with folder icon
+                renderItem(folder.folder_name, {m_folder_texture, false});
 
             for (const auto& asset : m_current_view.assets)
                 renderItem(asset.name, asset.thumbnail);
@@ -85,6 +91,7 @@ class AssetsContentWidget : public Widget {
     AssetView getCurrentView() const { return m_current_view; }
 
    private:
+    void* m_folder_texture;
     AssetView m_current_view;
     int m_selected_item = -1;
 };

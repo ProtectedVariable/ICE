@@ -13,8 +13,8 @@ class AssetsRenderer {
           m_factory(factory),
           m_bank(bank) {}
 
-    void* createThumbnail(const std::shared_ptr<ICE::Asset>& asset, const std::string& path);
-    void* getPreview(const std::shared_ptr<ICE::Asset>& asset, const std::string &path, float t);
+    std::pair<void*, bool> createThumbnail(const std::shared_ptr<ICE::Asset>& asset, const std::string& path);
+    std::pair<void*, bool> getPreview(const std::shared_ptr<ICE::Asset>& asset, const std::string& path, float t);
 
    private:
     std::unordered_map<std::string, ICE::ForwardRenderer> m_renderers;
