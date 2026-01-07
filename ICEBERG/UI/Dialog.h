@@ -6,6 +6,7 @@ enum class DialogResult { None, Ok, Cancel };
 
 class Dialog : public Widget {
    public:
+    Dialog() { m_dialog_id = DIALOG_ID++; }
     virtual ~Dialog() = default;
 
     void open() {
@@ -25,7 +26,11 @@ class Dialog : public Widget {
 
     DialogResult getResult() const { return m_result; }
 
+   protected:
+    int m_dialog_id;
+
    private:
+    static int DIALOG_ID;
     bool m_open_request = false;
     DialogResult m_result = DialogResult::None;
 };

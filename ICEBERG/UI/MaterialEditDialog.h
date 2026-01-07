@@ -23,9 +23,11 @@ class MaterialEditDialog : public Dialog, ImXML::XMLEventHandler {
     }
 
     void render() override {
+        ImGui::PushID(m_dialog_id);
         if (isOpenRequested())
             ImGui::OpenPopup("Material Editor");
         m_xml_renderer.render(m_xml_tree, *this);
+        ImGui::PopID();
     }
 
     void onNodeBegin(ImXML::XMLNode& node) override {}
@@ -42,7 +44,7 @@ class MaterialEditDialog : public Dialog, ImXML::XMLEventHandler {
 
    private:
     bool m_mtl_opaque;
-    char m_mtl_name[512];
+    char m_mtl_name[512] = {0};
 
     ImXML::XMLTree m_xml_tree;
     ImXML::XMLRenderer m_xml_renderer;

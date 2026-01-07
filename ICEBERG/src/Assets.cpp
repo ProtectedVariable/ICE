@@ -110,7 +110,7 @@ void Assets::handleClick(const AssetData& data) {
     } else if (auto m = std::dynamic_pointer_cast<ICE::Model>(asset_ptr); m) {
         return; // Probably no action
     } else if (auto m = std::dynamic_pointer_cast<ICE::Material>(asset_ptr); m) {
-
+        m_material_dialog.open();
     }
 }
 

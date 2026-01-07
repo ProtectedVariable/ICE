@@ -12,6 +12,7 @@ add_executable(${PROJECT_NAME}
     src/Assets.cpp
     src/Viewport.cpp
     src/AssetsRenderer.cpp
+    src/Dialog.cpp
     ${IMGUI_SRC}
     ${IMGUIZMO_SRC}
     ${GL3W_SRC} 
