@@ -132,13 +132,12 @@ void RenderSystem::submitModel(const std::shared_ptr<Model> &model, const Eigen:
             }
         }
 
-        m_renderer->submitDrawable(Drawable{
-            .mesh = mesh,
-            .material = material,
-            .shader = shader,
-            .textures = texs,
-            .model_matrix = transforms[i],
-        });
+        m_renderer->submitDrawable(Drawable{.mesh = mesh,
+                                            .material = material,
+                                            .shader = shader,
+                                            .textures = texs,
+                                            .model_matrix = transforms[i],
+                                            .skeleton = model->getSkeleton()});
     }
 }
 
@@ -191,7 +190,8 @@ void RenderSystem::setTarget(const std::shared_ptr<Framebuffer> &fb) {
 
 void RenderSystem::setViewport(int x, int y, int w, int h) {
     if (w > 0 && h > 0) {
-        m_target->resize(w, h);
+        if (m_target)
+            m_target->resize(w, h);
         m_renderer->resize(w, h);
     }
 }

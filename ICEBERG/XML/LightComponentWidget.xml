@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<group>
+	<separatorText label="Light"/>
+	<table name="light_component_layout" columns="3">
+		<setupcolumn label="" width="0.2" flags="ImGuiTableColumnFlags_WidthStretch"/>
+		<setupcolumn label="" width="0.8" flags="ImGuiTableColumnFlags_WidthStretch"/>
+		<setupcolumn label="" width="60" flags="ImGuiTableColumnFlags_WidthFixed"/>
+		<row>
+			<column>
+				<text label="Type"/>
+			</column>
+			<column>
+				<combo id="light_type_combo" preview_value="Point Light">
+					<selectable id="point_light" label="Point Light" selected="true"/>
+					<selectable id="directional_light" label="Directional Light" selected="false"/>
+					<selectable id="spot_light" label="Spot Light" selected="false"/>
+				</combo>
+			</column>
+			<column>
+				<button id="btn_remove" label="Remove"/>
+			</column>
+		</row>
+		<row>
+			<column>
+				<text label="Distance"/>
+			</column>
+			<column>
+				<InputFloat label="##light_distance_dropoff" dynamic="float_distance_dropoff" step="0.01" format="%.6f"/>
+			</column>
+		</row>
+	</table>
+</group>

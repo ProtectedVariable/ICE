@@ -75,7 +75,7 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
         cmd.model_matrix = drawable.model_matrix;
         cmd.depthTest = true;
         cmd.faceCulling = true;
-        //TODO: Bones
+        cmd.bones = drawable.skeleton.bones;
         m_render_commands.push_back(cmd);
     }
 

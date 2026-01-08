@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<group>
+	<separatorText label="Transform"/>
+	<text label="Position"/>
+	<placeholder id="position_vec"/>
+	<text label="Rotation"/>
+	<placeholder id="rotation_vec"/>
+	<text label="Scale"/>
+	<placeholder id="scale_vec"/>
+</group>

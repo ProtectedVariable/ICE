@@ -74,7 +74,7 @@ Eigen::Matrix4f AnimationSystem::interpolatePosition(double timeInTicks, const B
     }
 
     size_t startIndex = findKeyIndex(timeInTicks, track.positions);
-    size_t nextIndex = startIndex + 1;
+    size_t nextIndex = std::min(startIndex + 1, track.positions.size() - 1);
 
     const auto& startKey = track.positions[startIndex];
     const auto& nextKey = track.positions[nextIndex];
@@ -105,7 +105,7 @@ Eigen::Matrix4f AnimationSystem::interpolateScale(double timeInTicks, const Bone
     }
 
     size_t startIndex = findKeyIndex(timeInTicks, track.scales);
-    size_t nextIndex = startIndex + 1;
+    size_t nextIndex = std::min(startIndex + 1, track.scales.size() - 1);
 
     const auto& startKey = track.scales[startIndex];
     const auto& nextKey = track.scales[nextIndex];
@@ -132,11 +132,11 @@ Eigen::Matrix4f AnimationSystem::interpolateRotation(double time, const BoneAnim
         return rotation_matrix;
     }
 
-    size_t startIdx = findKeyIndex(time, track.rotations);
-    size_t nextIdx = startIdx + 1;
+    size_t startIndex = findKeyIndex(time, track.rotations);
+    size_t nextIndex = std::min(startIndex + 1, track.rotations.size() - 1);
 
-    const auto& startKey = track.rotations[startIdx];
-    const auto& nextKey = track.rotations[nextIdx];
+    const auto& startKey = track.rotations[startIndex];
+    const auto& nextKey = track.rotations[nextIndex];
 
     double totalTime = nextKey.timeStamp - startKey.timeStamp;
     double factor = (time - startKey.timeStamp) / totalTime;

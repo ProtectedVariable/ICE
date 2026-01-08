@@ -34,6 +34,6 @@ include(FetchContent)
 FetchContent_Declare(
   DearImXML
   GIT_REPOSITORY https://github.com/ProtectedVariable/DearImXML.git
-  GIT_TAG build-lib
+  GIT_TAG development
 )
 FetchContent_MakeAvailable(DearImXML)

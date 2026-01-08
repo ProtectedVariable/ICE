@@ -1,9 +1,12 @@
 #pragma once
 #include <imgui.h>
-#include <TransformComponent.h>
 
+#include "AnimationComponentWidget.h"
 #include "Components/InputText.h"
 #include "Components/UniformInputs.h"
+#include "LightComponentWidget.h"
+#include "RenderComponentWidget.h"
+#include "TransformComponentWidget.h"
 #include "Widget.h"
 
 class InspectorWidget : public Widget {
@@ -20,44 +23,10 @@ class InspectorWidget : public Widget {
         ImGui::Text("Entity name");
         m_input_entity_name.render();
 
-        if (m_tc) {
-            ImGui::SeparatorText("Transform");
-            ImGui::BeginGroup();
-            for (auto& input : m_tc_inputs) {
-                ImGui::Text("%s", input.getLabel().c_str());
-                input.render();
-            }
-            ImGui::EndGroup();
-        }
-        if (m_rc) {
-            ImGui::PushID("rc");
-            ImGui::SeparatorText("Render");
-            ImGui::BeginGroup();
-            if (ImGui::Button("Remove")) {
-                callback("remove_render_component_clicked");
-            }
-            for (auto& input : m_rc_inputs) {
-                ImGui::Text("%s", input.getLabel().c_str());
-                input.render();
-            }
-            ImGui::EndGroup();
-            ImGui::PopID();
-        }
-        if (m_lc) {
-            ImGui::PushID("lc");
-            ImGui::SeparatorText("Light");
-            ImGui::BeginGroup();
-            if (ImGui::Button("Remove")) {
-                callback("remove_light_component_clicked");
-            }
-            m_lc_type_combo.render();
-            for (auto& input : m_lc_inputs) {
-                ImGui::Text("%s", input.getLabel().c_str());
-                input.render();
-            }
-            ImGui::EndGroup();
-            ImGui::PopID();
-        }
+        m_tc_widget.render();
+        m_rc_widget.render();
+        m_lc_widget.render();
+        m_ac_widget.render();
 
         if (ImGui::Button("Add Component...")) {
             callback("add_component_clicked");
@@ -69,57 +38,20 @@ class InspectorWidget : public Widget {
 
     void setEntityName(const std::string& name) { m_input_entity_name.setText(name); }
 
-    void setTransformComponent(ICE::TransformComponent* tc) {
-        m_tc = tc;
-        m_tc_inputs.clear();
-        if (tc) {
-            m_tc_inputs.emplace_back("Position", tc->getPosition());
-            m_tc_inputs.back().setForceVectorNumeric(true);
-            m_tc_inputs.back().onValueChanged([this](const ICE::UniformValue& v) { m_tc->setPosition(std::get<Eigen::Vector3f>(v)); });
-            m_tc_inputs.emplace_back("Rotation", tc->getRotation());
-            m_tc_inputs.back().setForceVectorNumeric(true);
-            m_tc_inputs.back().onValueChanged([this](const ICE::UniformValue& v) { m_tc->setRotation(std::get<Eigen::Vector3f>(v)); });
-            m_tc_inputs.emplace_back("Scale", tc->getScale());
-            m_tc_inputs.back().setForceVectorNumeric(true);
-            m_tc_inputs.back().onValueChanged([this](const ICE::UniformValue& v) { m_tc->setScale(std::get<Eigen::Vector3f>(v)); });
-        }
+    void setTransformComponent(ICE::TransformComponent* tc) { m_tc_widget.setTransformComponent(tc); }
+    void setLightComponent(ICE::LightComponent* lc) { m_lc_widget.setLightComponent(lc); }
+    void setAnimationComponent(ICE::AnimationComponent* ac, const std::unordered_map<std::string, ICE::Animation>& animations) {
+        m_ac_widget.setAnimationComponent(ac, animations);
     }
-
     void setRenderComponent(ICE::RenderComponent* rc, const std::vector<std::string>& meshes_paths, const std::vector<ICE::AssetUID>& meshes_ids) {
-        m_rc = rc;
-        m_rc_inputs.clear();
-        if (rc) {
-            m_rc_inputs.reserve(2);
-            UniformInputs in_mesh("Mesh", rc->model);
-            in_mesh.onValueChanged([this](const ICE::UniformValue& v) { m_rc->model = std::get<ICE::AssetUID>(v); });
-            in_mesh.setAssetComboList(meshes_paths, meshes_ids);
-            m_rc_inputs.push_back(in_mesh);
-        }
-    }
-
-    void setLightComponent(ICE::LightComponent* lc) {
-        m_lc = lc;
-        m_lc_inputs.clear();
-        if (lc) {
-            m_lc_type_combo.setSelected(lc->type);
-            m_lc_type_combo.onSelectionChanged([this](const std::string&, int idx) { m_lc->type = static_cast<ICE::LightType>(idx); });
-            m_lc_inputs.emplace_back("Color", m_lc->color);
-            m_lc_inputs.back().onValueChanged([this](const ICE::UniformValue& v) { m_lc->color = std::get<Eigen::Vector3f>(v); });
-            m_lc_inputs.emplace_back("Distance Dropoff", m_lc->distance_dropoff);
-            m_lc_inputs.back().onValueChanged([this](const ICE::UniformValue& v) { m_lc->distance_dropoff = std::get<float>(v); });
-        }
+        m_rc_widget.setRenderComponent(rc, meshes_paths, meshes_ids);
     }
 
    private:
-    ICE::TransformComponent* m_tc = nullptr;
-    std::vector<UniformInputs> m_tc_inputs;
-
-    ICE::RenderComponent* m_rc = nullptr;
-    std::vector<UniformInputs> m_rc_inputs;
-
-    ICE::LightComponent* m_lc = nullptr;
-    std::vector<UniformInputs> m_lc_inputs;
-    ComboBox m_lc_type_combo{"Light Type", {"Point Light", "Directional Light", "Spot Light"}};
+    TransformComponentWidget m_tc_widget;
+    RenderComponentWidget m_rc_widget;
+    LightComponentWidget m_lc_widget;
+    AnimationComponentWidget m_ac_widget;
 
     InputText m_input_entity_name{"##inspector_entity_name", ""};
 };

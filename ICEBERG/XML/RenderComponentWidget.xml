@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<group>
+	<separatorText label="Render"/>
+	<table name="render_component_layout" columns="3">
+		<setupcolumn label="" width="0.2" flags="ImGuiTableColumnFlags_WidthStretch"/>
+		<setupcolumn label="" width="0.8" flags="ImGuiTableColumnFlags_WidthStretch"/>
+		<setupcolumn label="" width="60" flags="ImGuiTableColumnFlags_WidthFixed"/>
+		<row>
+			<column>
+				<text label="Model"/>
+			</column>
+			<column>
+				<placeholder id="models_combo" />
+			</column>
+			<column>
+				<button id="btn_remove" label="Remove"/>
+			</column>
+		</row>
+	</table>
+</group>

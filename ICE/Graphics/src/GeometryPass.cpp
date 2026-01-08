@@ -29,8 +29,12 @@ void GeometryPass::execute() {
 
         if (mesh->usesBones()) {
             for (const auto& [boneID, offsetMatrix] : mesh->getSkinningData().boneOffsetMatrices) {
+                Eigen::Matrix4f bone_transform = Eigen::Matrix4f::Identity();
+                if (boneID < command.bones.size()) {
+                    bone_transform = command.bones[boneID].finalTransformation;
+                }
                 current_shader->loadMat4("bonesOffsetMatrices[" + std::to_string(boneID) + "]", offsetMatrix);
-                current_shader->loadMat4("bonesTransformMatrices[" + std::to_string(boneID) + "]", command.bones[boneID].finalTransformation);
+                current_shader->loadMat4("bonesTransformMatrices[" + std::to_string(boneID) + "]", bone_transform);
             }
         }
 

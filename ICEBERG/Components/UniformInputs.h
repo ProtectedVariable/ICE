@@ -60,7 +60,7 @@ class UniformInputs {
     }
     void render(ICE::AssetUID id) { m_asset_combo.render(); }
     void render(float &f) {
-        if (ImGui::InputFloat(m_label.c_str(), &f)) {
+        if (ImGui::InputFloat(m_label.c_str(), &f, 0.01f, 0.1f, "%.6f")) {
             m_callback(f);
         }
     }

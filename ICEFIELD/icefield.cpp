@@ -36,7 +36,8 @@ int main(void) {
     engine.getAssetBank()->addAsset<ICE::Model>("Adventurer", {engine.getProject()->getBaseDirectory() / "Assets" / "Models" / "Adventurer.glb"});
 
     auto entity = scene->createEntity();
-    scene->getRegistry()->addComponent<TransformComponent>(entity, TransformComponent({0, 1000, 0}, Eigen::Vector3f::Zero(), Eigen::Vector3f(0.1, 0.1, 0.1)));
+    scene->getRegistry()->addComponent<TransformComponent>(entity,
+                                                           TransformComponent({0, 1000, 0}, Eigen::Vector3f::Zero(), Eigen::Vector3f(0.1, 0.1, 0.1)));
     scene->getRegistry()->addComponent<LightComponent>(entity, LightComponent(LightType::PointLight, {1, 1, 1}));
 
     auto mesh_id_2 = engine.getAssetBank()->getUID(AssetPath::WithTypePrefix<Model>("Adventurer"));
@@ -46,6 +47,12 @@ int main(void) {
         entity2, TransformComponent(Eigen::Vector3f::Zero(), Eigen::Vector3f(0, 0, 0), Eigen::Vector3f::Constant(1)));
     scene->getRegistry()->addComponent<RenderComponent>(entity2, RenderComponent(mesh_id_2));
     scene->getRegistry()->addComponent<AnimationComponent>(entity2, AnimationComponent{.currentAnimation = "Walk", .loop = true});
+
+    auto entity3 = scene->createEntity();
+    scene->getRegistry()->addComponent<TransformComponent>(
+        entity3, TransformComponent(Eigen::Vector3f(1, 0, 0), Eigen::Vector3f(0, 0, 0), Eigen::Vector3f::Constant(1)));
+    scene->getRegistry()->addComponent<RenderComponent>(entity3, RenderComponent(mesh_id_2));
+    scene->getRegistry()->addComponent<AnimationComponent>(entity3, AnimationComponent{.currentAnimation = "Run", .loop = true});
 
     auto camera = std::make_shared<PerspectiveCamera>(60.0, 16.0 / 9.0, 0.01, 10000.0);
     camera->backward(5);

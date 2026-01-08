@@ -45,7 +45,9 @@ void Inspector::setSelectedEntity(ICE::Entity e, bool force_refesh) {
 
     auto registry = m_engine->getProject()->getCurrentScene()->getRegistry();
     ui.setEntityName(m_engine->getProject()->getCurrentScene()->getAlias(e));
+    ui.setTransformComponent(nullptr);
     ui.setLightComponent(nullptr);
+    ui.setAnimationComponent(nullptr, {});
     ui.setRenderComponent(nullptr, {}, {});
 
     if (registry->entityHasComponent<ICE::TransformComponent>(e)) {
@@ -66,6 +68,11 @@ void Inspector::setSelectedEntity(ICE::Entity e, bool force_refesh) {
         }
 
         ui.setRenderComponent(rc, meshes_paths, meshes_ids);
+        if (registry->entityHasComponent<ICE::AnimationComponent>(e)) {
+            auto ac = registry->getComponent<ICE::AnimationComponent>(e);
+            auto anims = m_engine->getAssetBank()->getAsset<ICE::Model>(rc->model)->getAnimations();
+            ui.setAnimationComponent(ac, anims);
+        }
     }
     if (registry->entityHasComponent<ICE::LightComponent>(e)) {
         auto lc = registry->getComponent<ICE::LightComponent>(e);
