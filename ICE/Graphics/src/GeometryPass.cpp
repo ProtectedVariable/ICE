@@ -51,10 +51,12 @@ void GeometryPass::execute() {
                     auto v = std::get<AssetUID>(value);
                     if (textures.contains(v)) {
                         auto& tex = textures.at(v);
-                        tex->bind(texture_count);
-                        shader->loadInt(name, texture_count);
+                        if (tex) {
+                            tex->bind(texture_count);
+                            shader->loadInt(name, texture_count);
+                            texture_count++;
+                        }
                     }
-                    texture_count++;
                 } else if (std::holds_alternative<Eigen::Vector2f>(value)) {
                     auto& v = std::get<Eigen::Vector2f>(value);
                     shader->loadFloat2(name, v);

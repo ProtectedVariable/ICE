@@ -8,9 +8,9 @@ Assets::Assets(const std::shared_ptr<ICE::ICEEngine>& engine, const std::shared_
       m_g_factory(g_factory),
       m_renderer(engine->getApi(), g_factory, engine->getAssetBank()),
       ui(m_asset_categories,
-         m_engine->getAssetBank()->getAsset<ICE::Texture2D>(ICE::AssetPath::WithTypePrefix<ICE::Texture2D>("Editor/folder"))->getTexture()) {
+         m_engine->getAssetBank()->getAsset<ICE::Texture2D>(ICE::AssetPath::WithTypePrefix<ICE::Texture2D>("Editor/folder"))->getTexture()),
+      m_material_editor(engine) {
     rebuildViewer();
-    ui.registerCallback("material_edit", [this](std::string name) { m_material_dialog.open(); });
     ui.registerCallback("material_duplicate", [this](std::string name) {
         auto id = m_engine->getAssetBank()->getUID("Materials/" + name);
         auto mat_copy = std::make_shared<ICE::Material>(*m_engine->getAssetBank()->getAsset<ICE::Material>(id));
@@ -102,15 +102,15 @@ void Assets::rebuildViewer() {
 void Assets::handleClick(const AssetData& data) {
     auto asset_ptr = m_engine->getAssetBank()->getAsset(m_engine->getAssetBank()->getUID(m_current_preview.value().asset_path));
     if (auto m = std::dynamic_pointer_cast<ICE::Texture2D>(asset_ptr); m) {
-        return; //TODO: Maybe popup window with the texture
+        return;  //TODO: Maybe popup window with the texture
     } else if (auto m = std::dynamic_pointer_cast<ICE::TextureCube>(asset_ptr); m) {
-        return; //TODO: Maybe popup window with the texture
+        return;  //TODO: Maybe popup window with the texture
     } else if (auto m = std::dynamic_pointer_cast<ICE::Shader>(asset_ptr); m) {
         return;  //TODO: Shader editor
     } else if (auto m = std::dynamic_pointer_cast<ICE::Model>(asset_ptr); m) {
-        return; // Probably no action
+        return;  // Probably no action
     } else if (auto m = std::dynamic_pointer_cast<ICE::Material>(asset_ptr); m) {
-        m_material_dialog.open();
+        m_material_editor.open(data.asset_path);
     }
 }
 
@@ -138,9 +138,8 @@ bool Assets::update() {
         ui.setPreviewTexture(m_renderer.getPreview(asset_ptr, m_current_preview.value().asset_path, m_t).first);
     }
     ui.render();
-    m_material_dialog.render();
-    //if (m_material_widget.accepted()) {
-    //    rebuildViewer();
-    //}
+    if (m_material_editor.update()) {
+        rebuildViewer();
+    }
     return m_done;
 }

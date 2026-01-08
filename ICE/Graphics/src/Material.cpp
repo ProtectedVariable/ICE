@@ -21,6 +21,20 @@ bool Material::isTransparent() const {
     return m_transparent;
 }
 
+void Material::renameUniform(const std::string& previous_name, const std::string& new_name) {
+    if (m_uniforms.contains(previous_name)) {
+        auto& val = m_uniforms[previous_name];
+        m_uniforms.try_emplace(new_name, val);
+        m_uniforms.erase(previous_name);
+    }
+}
+
+void Material::removeUniform(const std::string& name) {
+    if (m_uniforms.contains(name)) {
+        m_uniforms.erase(name);
+    }
+}
+
 std::unordered_map<std::string, UniformValue> Material::getAllUniforms() const {
     return m_uniforms;
 }
