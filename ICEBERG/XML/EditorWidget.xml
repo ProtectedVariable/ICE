@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<begin name="ICE Editor" flags="ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove">
+	<mainmenubar>
+		<menu label="File">
+			<menu label="New...">
+				<menuitem label="Scene" />
+				<menuitem label="Material" />
+				<menuitem label="Shader" />
+			</menu>
+			<menu label="Open...">
+				<menuitem label="Scene" />
+			</menu>
+			<menu label="Import...">
+				<menuitem label="Model" />
+				<menuitem label="Material" />
+				<menuitem label="Texture2D" />
+				<menuitem label="Cubemap" />
+				<menuitem label="Shader" />
+			</menu>
+			<menuitem label="Save" shortcut="Ctrl+S"/>
+			<menuitem label="Exit" shortcut="Alt+F4"/>
+		</menu>
+	</mainmenubar>
+	<placeholder id="dockspace" />
+</begin>

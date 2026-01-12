@@ -62,8 +62,9 @@ std::pair<void*, bool> AssetsRenderer::getPreview(const std::shared_ptr<ICE::Ass
             material = m_bank->getAsset<ICE::Material>(materials[i]);
         }
         auto shader = m_bank->getAsset<ICE::Shader>(material->getShader());
-        renderer.submitDrawable(
-            ICE::Drawable{.mesh = meshes[i], .material = material, .shader = shader, .textures = textures, .model_matrix = transforms[i]});
+        if (shader)
+            renderer.submitDrawable(
+                ICE::Drawable{.mesh = meshes[i], .material = material, .shader = shader, .textures = textures, .model_matrix = transforms[i]});
     }
     renderer.submitLight(
         ICE::Light{.position = {-2, 2, 2}, .rotation = {0, 0, 0}, .color = {1, 1, 1}, .distance_dropoff = 0, .type = ICE::LightType::PointLight});
