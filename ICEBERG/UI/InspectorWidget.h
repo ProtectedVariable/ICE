@@ -17,7 +17,6 @@ class InspectorWidget : public Widget {
         m_input_entity_name.onEdit([this](const std::string&, const std::string& text) { callback("entity_name_changed", text); });
         int flags = ImGuiWindowFlags_NoCollapse;
         flags |= ImGuiWindowFlags_NoNavFocus;
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
         ImGui::Begin("Inspector", 0, flags);
 
         ImGui::Text("Entity name");
@@ -31,9 +30,7 @@ class InspectorWidget : public Widget {
         if (ImGui::Button("Add Component...")) {
             callback("add_component_clicked");
         }
-
         ImGui::End();
-        ImGui::PopStyleVar();
     }
 
     void setEntityName(const std::string& name) { m_input_entity_name.setText(name); }

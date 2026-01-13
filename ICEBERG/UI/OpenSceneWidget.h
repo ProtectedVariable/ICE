@@ -23,7 +23,6 @@ class OpenSceneWidget : public Widget {
             m_open = false;
         }
 
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
         if (ImGui::BeginPopupModal("Scene Selection", 0, ImGuiWindowFlags_AlwaysAutoResize)) {
             m_scene_name_combo.render();
             if (ImGui::Button("Accept")) {
@@ -35,7 +34,6 @@ class OpenSceneWidget : public Widget {
             }
             ImGui::EndPopup();
         }
-        ImGui::PopStyleVar();
         ImGui::PopID();
     }
 

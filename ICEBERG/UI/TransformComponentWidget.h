@@ -34,9 +34,7 @@ class TransformComponentWidget : public Widget, ImXML::XMLEventHandler {
 
     void render() override {
         if (m_tc) {
-            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
             m_xml_renderer.render(m_xml_tree, *this);
-            ImGui::PopStyleVar();
         }
     }
 

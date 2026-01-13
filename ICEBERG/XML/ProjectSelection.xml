@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<begin name="ICE Engine" flags="ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoCollapse">
+<begin name="ICE Engine" flags="ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove">
 	<table name="header_table" columns="4">
 		<setupcolumn label="" width="0.5" flags="ImGuiTableColumnFlags_WidthStretch"/>
 		<setupcolumn label="" width="0.3" flags="ImGuiTableColumnFlags_WidthStretch"/>

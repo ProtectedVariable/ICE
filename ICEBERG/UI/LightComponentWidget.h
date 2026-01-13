@@ -43,9 +43,7 @@ class LightComponentWidget : public Widget, ImXML::XMLEventHandler {
 
     void render() override {
         if (m_lc) {
-            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
             m_xml_renderer.render(m_xml_tree, *this);
-            ImGui::PopStyleVar();
             m_lc->distance_dropoff = m_distance_dropoff;
         }
     }

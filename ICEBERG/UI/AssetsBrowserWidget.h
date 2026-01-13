@@ -36,7 +36,7 @@ class AssetsBrowserWidget : public Widget, ImXML::XMLEventHandler {
     void onEvent(ImXML::XMLNode& node) override {}
 
     void render() override {
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
         m_xml_renderer.render(m_xml_tree, *this);
         ImGui::PopStyleVar();
     }

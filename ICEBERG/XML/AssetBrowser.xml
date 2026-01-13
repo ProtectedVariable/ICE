@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <begin name="Asset Browser" flags="ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoNavFocus">
-	<table name="asset_browser_layout" columns="3">
+	<table name="asset_browser_layout" columns="3" flags="ImGuiTableFlags_PadOuterX | ImGuiTableFlags_BordersInnerV">
 		<setupcolumn label="Category" width="0.1" flags="ImGuiTableColumnFlags_WidthStretch"/>
 		<setupcolumn label="Content" width="0.9" flags="ImGuiTableColumnFlags_WidthStretch"/>
 		<setupcolumn label="Preview" width="256" flags="ImGuiTableColumnFlags_WidthFixed"/>

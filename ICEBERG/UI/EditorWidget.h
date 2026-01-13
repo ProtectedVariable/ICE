@@ -46,11 +46,7 @@ class EditorWidget : public Widget, ImXML::XMLEventHandler {
         ImGui::SetNextWindowPos(viewport->Pos);
         ImGui::SetNextWindowSize(viewport->Size);
         ImGui::SetNextWindowViewport(viewport->ID);
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
         m_xml_renderer.render(m_xml_tree, *this);
-        ImGui::PopStyleVar();
-        ImGui::PopStyleVar();
     }
 
    private:
