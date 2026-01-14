@@ -23,11 +23,11 @@ class LightComponentWidget : public Widget, ImXML::XMLEventHandler {
         if (node.arg<std::string>("id") == "light_type_combo") {
             node.args["preview_value"] = m_light_types[light_type_id];
         } else if (node.arg<std::string>("id") == "point_light") {
-            node.args["selected"] = light_type_id == 0 ? "true" : false;
+            node.args["selected"] = light_type_id == 0 ? "true" : "false";
         } else if (node.arg<std::string>("id") == "directional_light") {
-            node.args["selected"] = light_type_id == 1 ? "true" : false;
+            node.args["selected"] = light_type_id == 1 ? "true" : "false";
         } else if (node.arg<std::string>("id") == "spot_light") {
-            node.args["selected"] = light_type_id == 2 ? "true" : false;
+            node.args["selected"] = light_type_id == 2 ? "true" : "false";
         }
     }
     void onNodeEnd(ImXML::XMLNode& node) override {}

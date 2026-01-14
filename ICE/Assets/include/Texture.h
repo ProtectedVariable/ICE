@@ -4,10 +4,9 @@
 
 #ifndef ICE_TEXTURE_H
 #define ICE_TEXTURE_H
-#include <stb/stb_image.h>
-
 #include <Asset.h>
 #include <Logger.h>
+#include <stb/stb_image.h>
 
 #include <cstdint>
 #include <string>
@@ -22,6 +21,7 @@ enum class TextureType { Tex2D = 0, CubeMap = 1 };
 class Texture : public Asset {
    public:
     virtual void bind(uint32_t slot = 0) const = 0;
+    virtual const void* data() const = 0;
     virtual void setData(void* data, uint32_t size) = 0;
 
     virtual TextureFormat getFormat() const = 0;
@@ -33,9 +33,10 @@ class Texture : public Asset {
 
     virtual TextureType getTextureType() const = 0;
 
+   protected:
     static void* getDataFromFile(const std::string file, int* width, int* height, int* channels, int force = STBI_default) {
         stbi_uc* data = stbi_load(file.c_str(), width, height, channels, force);
-        if(data == nullptr) {
+        if (data == nullptr) {
             Logger::Log(Logger::ERROR, "Graphics", "Texture %s could not load: %s", file.c_str(), stbi_failure_reason());
         }
         return data;

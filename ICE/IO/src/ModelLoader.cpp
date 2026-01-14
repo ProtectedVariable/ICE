@@ -123,36 +123,6 @@ std::shared_ptr<Mesh> ModelLoader::extractMesh(const aiMesh *mesh, const std::st
         mesh_->setSkinningData(skinning_data);
     }
 
-    auto vertexArray = graphics_factory->createVertexArray();
-
-    auto vertexBuffer = graphics_factory->createVertexBuffer();
-    auto normalsBuffer = graphics_factory->createVertexBuffer();
-    auto uvBuffer = graphics_factory->createVertexBuffer();
-    auto tangentBuffer = graphics_factory->createVertexBuffer();
-    auto biTangentBuffer = graphics_factory->createVertexBuffer();
-    auto boneIDBuffer = graphics_factory->createVertexBuffer();
-    auto boneWeightBuffer = graphics_factory->createVertexBuffer();
-    auto indexBuffer = graphics_factory->createIndexBuffer();
-
-    vertexBuffer->putData(BufferUtils::CreateFloatBuffer(data.vertices), 3 * data.vertices.size() * sizeof(float));
-    normalsBuffer->putData(BufferUtils::CreateFloatBuffer(data.normals), 3 * data.normals.size() * sizeof(float));
-    tangentBuffer->putData(BufferUtils::CreateFloatBuffer(data.tangents), 3 * data.tangents.size() * sizeof(float));
-    biTangentBuffer->putData(BufferUtils::CreateFloatBuffer(data.bitangents), 3 * data.bitangents.size() * sizeof(float));
-    boneIDBuffer->putData(BufferUtils::CreateIntBuffer(data.boneIDs), 4 * data.boneIDs.size() * sizeof(int));
-    boneWeightBuffer->putData(BufferUtils::CreateFloatBuffer(data.boneWeights), 4 * data.boneWeights.size() * sizeof(float));
-    uvBuffer->putData(BufferUtils::CreateFloatBuffer(data.uvCoords), 2 * data.uvCoords.size() * sizeof(float));
-    indexBuffer->putData(BufferUtils::CreateIntBuffer(data.indices), 3 * data.indices.size() * sizeof(int));
-
-    vertexArray->pushVertexBuffer(vertexBuffer, 0, 3);
-    vertexArray->pushVertexBuffer(normalsBuffer, 1, 3);
-    vertexArray->pushVertexBuffer(uvBuffer, 2, 2);
-    vertexArray->pushVertexBuffer(tangentBuffer, 3, 3);
-    vertexArray->pushVertexBuffer(biTangentBuffer, 4, 3);
-    vertexArray->pushVertexBuffer(boneIDBuffer, 5, 4);
-    vertexArray->pushVertexBuffer(boneWeightBuffer, 6, 4);
-    vertexArray->setIndexBuffer(indexBuffer);
-
-    mesh_->setVertexArray(vertexArray);
     return mesh_;
 }
 

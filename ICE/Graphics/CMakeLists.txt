@@ -9,10 +9,8 @@ target_sources(${PROJECT_NAME} PRIVATE
     src/PerspectiveCamera.cpp
     src/OrthographicCamera.cpp
     src/ForwardRenderer.cpp
-    src/Material.cpp
     src/Mesh.cpp
-    src/Model.cpp
-    src/GeometryPass.cpp)
+    src/GeometryPass.cpp "include/GPUMesh.h" "include/GPUTexture.h")
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC

@@ -10,9 +10,9 @@ void GeometryPass::execute() {
     m_framebuffer->bind();
     m_api->setViewport(0, 0, m_framebuffer->getFormat().width, m_framebuffer->getFormat().height);
     m_api->clear();
-    std::shared_ptr<Shader> current_shader;
+    std::shared_ptr<ShaderProgram> current_shader;
     std::shared_ptr<Material> current_material;
-    std::shared_ptr<Mesh> current_mesh;
+    std::shared_ptr<GPUMesh> current_mesh;
 
     for (const auto& command : *m_render_queue) {
         auto& shader = command.shader;
@@ -27,6 +27,7 @@ void GeometryPass::execute() {
             current_shader = shader;
         }
 
+        /*
         if (mesh->usesBones()) {
             for (const auto& [boneID, offsetMatrix] : mesh->getSkinningData().boneOffsetMatrices) {
                 Eigen::Matrix4f bone_transform = Eigen::Matrix4f::Identity();
@@ -36,7 +37,7 @@ void GeometryPass::execute() {
                 current_shader->loadMat4("bonesOffsetMatrices[" + std::to_string(boneID) + "]", offsetMatrix);
                 current_shader->loadMat4("bonesTransformMatrices[" + std::to_string(boneID) + "]", bone_transform);
             }
-        }
+        }*/
 
         if (material != current_material) {
             auto& textures = command.textures;

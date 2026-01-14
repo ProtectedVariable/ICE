@@ -7,12 +7,12 @@
 
 #include <GL/gl3w.h>
 #include <GLFW/glfw3.h>
-#include <Shader.h>
+#include <ShaderProgram.h>
 #include <unordered_map>
 #include <string>
 
 namespace ICE {
-    class OpenGLShader : public Shader {
+    class OpenGLShader : public ShaderProgram {
     public:
         void bind() const override;
 

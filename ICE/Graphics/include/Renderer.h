@@ -8,6 +8,7 @@
 #include <Entity.h>
 #include <GL/gl3w.h>
 #include <GLFW/glfw3.h>
+#include <GPUMesh.h>
 
 #include "Camera.h"
 #include "Context.h"
@@ -43,16 +44,16 @@ struct alignas(16) CameraUBO {
 };
 
 struct Skybox {
-    std::shared_ptr<Mesh> cube_mesh;
-    std::shared_ptr<Shader> shader;
-    std::unordered_map<AssetUID, std::shared_ptr<Texture>> textures;
+    std::shared_ptr<GPUMesh> cube_mesh;
+    std::shared_ptr<ShaderProgram> shader;
+    std::unordered_map<AssetUID, std::shared_ptr<GPUTexture>> textures;
 };
 
 struct Drawable {
-    std::shared_ptr<Mesh> mesh;
+    std::shared_ptr<GPUMesh> mesh;
     std::shared_ptr<Material> material;
-    std::shared_ptr<Shader> shader;
-    std::unordered_map<AssetUID, std::shared_ptr<Texture>> textures;
+    std::shared_ptr<ShaderProgram> shader;
+    std::unordered_map<AssetUID, std::shared_ptr<GPUTexture>> textures;
     Eigen::Matrix4f model_matrix;
     Model::Skeleton skeleton;
 };
@@ -70,7 +71,7 @@ class Renderer {
     virtual void submitSkybox(const Skybox& e) = 0;
     virtual void submitDrawable(const Drawable& e) = 0;
     virtual void submitLight(const Light& e) = 0;
-    virtual void prepareFrame(Camera &camera) = 0;
+    virtual void prepareFrame(Camera& camera) = 0;
     virtual std::shared_ptr<Framebuffer> render() = 0;
     virtual void endFrame() = 0;
     virtual void resize(uint32_t width, uint32_t height) = 0;

@@ -6,6 +6,7 @@
 #define ICE_OPENGLTEXTURE_H
 
 #include <GL/gl3w.h>
+#include <GPUTexture.h>
 #include <Texture.h>
 
 #include <string>
@@ -63,65 +64,24 @@ constexpr int textureFormatToChannels(TextureFormat format) {
     }
 }
 
-class OpenGLTexture2D : public Texture2D {
+class OpenGLTexture2D : public GPUTexture {
    public:
-    OpenGLTexture2D(const std::string &file);
-    OpenGLTexture2D(const void *data, size_t w, size_t h, TextureFormat fmt);
+    OpenGLTexture2D(const Texture2D &tex);
 
     void bind(uint32_t slot) const override;
 
-    TextureFormat getFormat() const override;
-
-    uint32_t getWidth() const override;
-    uint32_t getHeight() const override;
-
-    TextureWrap getWrap() const override;
-
-    void setData(void *data, uint32_t size) override;
-
-    void *getTexture() const override;
-
-    TextureType getTextureType() const override;
-
    private:
-    void loadData(const void *data, size_t w, size_t h, TextureFormat fmt);
-
-    std::string file;
     uint32_t id;
-    uint32_t width, height;
-    TextureFormat format;
-    TextureWrap wrap;
-    GLenum storageFormat;
-    GLenum dataFormat;
 };
 
-class OpenGLTextureCube : public TextureCube {
+class OpenGLTextureCube : public GPUTexture {
    public:
-    OpenGLTextureCube(const std::string &file);
+    OpenGLTextureCube(const TextureCube &tex);
 
     void bind(uint32_t slot) const override;
 
-    TextureFormat getFormat() const override;
-
-    uint32_t getWidth() const override;
-    uint32_t getHeight() const override;
-
-    TextureWrap getWrap() const override;
-
-    void setData(void *data, uint32_t size) override;
-
-    void *getTexture() const override;
-
-    TextureType getTextureType() const override;
-
    private:
-    std::string file;
     uint32_t id;
-    uint32_t width, height;
-    TextureFormat format;
-    TextureWrap wrap;
-    GLenum storageFormat;
-    GLenum dataFormat;
 };
 }  // namespace ICE
 
