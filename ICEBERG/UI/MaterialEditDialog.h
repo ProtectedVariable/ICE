@@ -44,7 +44,7 @@ class MaterialEditDialog : public Dialog, ImXML::XMLEventHandler {
         m_uniform_names.back()->onEdit([this](std::string prev_name, std::string new_name) { m_material->renameUniform(prev_name, new_name); });
         m_uniform_types.back()->onSelectionChanged([this, id = ctr](const std::string&, int index) {
             ICE::UniformValue val;
-            switch (id) {
+            switch (index) {
                 case 0:
                     val = ICE::AssetUID(0);
                     break;

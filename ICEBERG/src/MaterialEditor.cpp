@@ -10,7 +10,7 @@ MaterialEditor::MaterialEditor(const std::shared_ptr<ICE::ICEEngine> &engine)
 }
 
 void MaterialEditor::open(const ICE::AssetPath &path) {
-    material_path = path;
+    m_material_path = path;
     auto mtl = m_engine->getAssetBank()->getAsset<ICE::Material>(path);
     auto shaders = m_engine->getAssetBank()->getAll<ICE::Shader>();
 
@@ -34,6 +34,8 @@ void MaterialEditor::open(const ICE::AssetPath &path) {
 
     if (mtl) {
         m_current_material = std::make_shared<ICE::Material>(*mtl);
+    } else {
+        m_current_material = std::make_shared<ICE::Material>(false);
     }
     ui.setShaderList(shaders_paths, selected_shader);
     ui.setTextureList(textures_list);
@@ -53,12 +55,18 @@ bool MaterialEditor::update() {
         if (ui.getResult() == DialogResult::Ok) {
             m_done = true;
             m_is_open = false;
-            ICE::AssetPath new_path = material_path;
-            new_path.setName(ui.getName());
             auto mtl = ui.getMaterial();
-            mtl.removeUniform(""); //We use empty name as "delete me"
-            *m_engine->getAssetBank()->getAsset<ICE::Material>(material_path) = mtl;
-            m_engine->getAssetBank()->renameAsset(material_path, new_path);
+            mtl.removeUniform("");  //We use empty name as "delete me"
+
+            if (m_material_path.toString().empty()) {
+                m_material_path = ICE::AssetPath::WithTypePrefix<ICE::Material>(ui.getName());
+                m_engine->getAssetBank()->addAsset(m_material_path, std::make_shared<ICE::Material>(mtl));
+            } else {
+                ICE::AssetPath new_path = m_material_path;
+                new_path.setName(ui.getName());
+                *m_engine->getAssetBank()->getAsset<ICE::Material>(m_material_path) = mtl;
+                m_engine->getAssetBank()->renameAsset(m_material_path, new_path);
+            }
         }
     }
     return m_done;

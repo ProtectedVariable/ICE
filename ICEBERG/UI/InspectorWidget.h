@@ -11,31 +11,37 @@
 
 class InspectorWidget : public Widget {
    public:
-    InspectorWidget() {}
+    InspectorWidget() {
+        m_input_entity_name.onEdit([this](const std::string&, const std::string& text) { callback("entity_name_changed", text); });
+    }
 
     void render() override {
-        m_input_entity_name.onEdit([this](const std::string&, const std::string& text) { callback("entity_name_changed", text); });
         int flags = ImGuiWindowFlags_NoCollapse;
         flags |= ImGuiWindowFlags_NoNavFocus;
-        ImGui::Begin("Inspector", 0, flags);
+        if (ImGui::Begin("Inspector", 0, flags)) {
+            if (m_entity_selected) {
+                ImGui::Text("Entity name");
+                m_input_entity_name.render();
 
-        ImGui::Text("Entity name");
-        m_input_entity_name.render();
+                m_tc_widget.render();
+                m_rc_widget.render();
+                m_lc_widget.render();
+                m_ac_widget.render();
 
-        m_tc_widget.render();
-        m_rc_widget.render();
-        m_lc_widget.render();
-        m_ac_widget.render();
-
-        if (ImGui::Button("Add Component...")) {
-            callback("add_component_clicked");
+                if (ImGui::Button("Add Component...")) {
+                    callback("add_component_clicked");
+                }
+            }
+            ImGui::End();
         }
-        ImGui::End();
     }
 
     void setEntityName(const std::string& name) { m_input_entity_name.setText(name); }
 
-    void setTransformComponent(ICE::TransformComponent* tc) { m_tc_widget.setTransformComponent(tc); }
+    void setTransformComponent(ICE::TransformComponent* tc) {
+        m_entity_selected = (tc != nullptr);
+        m_tc_widget.setTransformComponent(tc);
+    }
     void setLightComponent(ICE::LightComponent* lc) { m_lc_widget.setLightComponent(lc); }
     void setAnimationComponent(ICE::AnimationComponent* ac, const std::unordered_map<std::string, ICE::Animation>& animations) {
         m_ac_widget.setAnimationComponent(ac, animations);
@@ -49,6 +55,8 @@ class InspectorWidget : public Widget {
     RenderComponentWidget m_rc_widget;
     LightComponentWidget m_lc_widget;
     AnimationComponentWidget m_ac_widget;
+
+    bool m_entity_selected = false;
 
     InputText m_input_entity_name{"##inspector_entity_name", ""};
 };

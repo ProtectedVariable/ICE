@@ -15,6 +15,7 @@ class Window {
 
     virtual void* getHandle() const = 0;
     virtual bool shouldClose() = 0;
+    virtual void close() = 0;
     virtual std::pair<std::shared_ptr<MouseHandler>, std::shared_ptr<KeyboardHandler>> getInputHandlers() const = 0;
     virtual void pollEvents() = 0;
     virtual void swapBuffers() = 0;

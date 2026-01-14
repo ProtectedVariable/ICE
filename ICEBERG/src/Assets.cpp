@@ -57,7 +57,6 @@ Assets::Assets(const std::shared_ptr<ICE::ICEEngine>& engine, const std::shared_
         }
     });
 
-    ui.setCurrentView(m_asset_views[m_current_category_index]);
 }
 
 void Assets::rebuildViewer() {
@@ -97,6 +96,7 @@ void Assets::rebuildViewer() {
             }
         }
     }
+    ui.setCurrentView(m_asset_views[m_current_category_index]);
 }
 
 void Assets::handleClick(const AssetData& data) {

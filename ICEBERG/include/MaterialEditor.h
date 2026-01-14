@@ -22,6 +22,6 @@ class MaterialEditor : public Controller {
     std::shared_ptr<ICE::ICEEngine> m_engine;
     AssetsRenderer m_renderer;
     std::shared_ptr<ICE::Material> m_current_material;
-    ICE::AssetPath material_path{""};
+    ICE::AssetPath m_material_path{""};
     float t = 0;
 };

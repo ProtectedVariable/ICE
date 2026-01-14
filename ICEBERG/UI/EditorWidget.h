@@ -36,10 +36,19 @@ class EditorWidget : public Widget, ImXML::XMLEventHandler {
             }
 
             ImGui::DockSpace(dockspace_id);
+        } else if (node.type == ImXML::ImGuiEnum::MAINMENUBAR) {
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(4, 4));
         }
     }
-    void onNodeEnd(ImXML::XMLNode& node) override {}
-    void onEvent(ImXML::XMLNode& node) override {}
+    void onNodeEnd(ImXML::XMLNode& node) override {
+        if (node.type == ImXML::ImGuiEnum::MAINMENUBAR) {
+            ImGui::PopStyleVar();
+        }
+    }
+    void onEvent(ImXML::XMLNode& node) override {
+        auto id = node.arg<std::string>("id");
+        callback(id);
+    }
 
     void render() override {
         ImGuiViewport* viewport = ImGui::GetMainViewport();

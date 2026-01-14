@@ -53,6 +53,10 @@ bool GLFWWindow::shouldClose() {
     return glfwWindowShouldClose(m_handle);
 }
 
+void GLFWWindow::close() {
+    glfwSetWindowShouldClose(m_handle, GLFW_TRUE);
+}
+
 void GLFWWindow::pollEvents() {
     glfwPollEvents();
 }

@@ -80,6 +80,10 @@ void ICEEngine::setRenderFramebufferInternal(bool use_internal) {
     }
 }
 
+std::shared_ptr<Window> ICEEngine::getWindow() const {
+    return m_window;
+}
+
 void ICEEngine::setProject(const std::shared_ptr<Project> &project) {
     this->project = project;
     this->camera->getPosition() = project->getCameraPosition();

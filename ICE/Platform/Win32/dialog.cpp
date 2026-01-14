@@ -11,28 +11,42 @@
 #include <crtdbg.h>
 #include <combaseapi.h>
 
-const std::string open_native_dialog(std::string const& filter) {
+const std::string open_native_dialog(const std::vector<FileFilter>& filters)
+{
+    char filename[MAX_PATH] = { 0 };
 
-	char filename[MAX_PATH];
+    // Build filter string: "Description1 (*.ext1;*.ext2)\0*.ext1;*.ext2\0Description2 (*.ext3)\0*.ext3\0\0"
+    std::string filterStr;
+    for (const auto& filter : filters)
+    {
+        // Show both description and extension pattern in the filter name
+        filterStr += filter.description;
+        filterStr += " (";
+        filterStr += filter.extension;
+        filterStr += ")";
+        filterStr += '\0';
+        filterStr += filter.extension;
+        filterStr += '\0';
+    }
+    filterStr += '\0'; // Double null-terminated
 
-	OPENFILENAME ofn;
-	ZeroMemory(&filename, sizeof(filename));
-	ZeroMemory(&ofn, sizeof(ofn));
-	ofn.lStructSize = sizeof(ofn);
-	ofn.hwndOwner = NULL;  // If you have a window to center over, put its HANDLE here
-	//"Filter\0*.PDF\0";
-	std::string mfilter("Filter\0*.", 8);
-	ofn.lpstrFilter = (mfilter + filter + std::string("\0\0\0", 2)).c_str();
-	ofn.lpstrFile = filename;
-	ofn.nMaxFile = MAX_PATH;
-	ofn.lpstrTitle = _T("Select a file");
-	ofn.Flags = OFN_DONTADDTORECENT | OFN_FILEMUSTEXIST;
+    OPENFILENAMEA ofn;
+    ZeroMemory(&ofn, sizeof(ofn));
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = NULL;
+    ofn.lpstrFilter = filters.empty() ? NULL : filterStr.c_str();
+    ofn.lpstrFile = filename;
+    ofn.nMaxFile = MAX_PATH;
+    ofn.lpstrTitle = "Select a file";
+    ofn.Flags = OFN_DONTADDTORECENT | OFN_FILEMUSTEXIST;
 
-	if (GetOpenFileName(&ofn))
-	{
-		return std::string(filename);
-	}
-	return std::string();
+    if (GetOpenFileNameA(&ofn))
+    {
+        // Ensure null-termination
+        filename[MAX_PATH - 1] = '\0';
+        return std::string(filename);
+    }
+    return std::string();
 }
 
 const std::string open_native_folder_dialog() {

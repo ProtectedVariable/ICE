@@ -45,7 +45,7 @@ class ProjectSelectionWidget : public Widget, ImXML::XMLEventHandler {
         if (node.arg<std::string>("id") == "btn_create_project") {
             m_new_project_popup.open();
         } else if (node.arg<std::string>("id") == "btn_add_project") {
-            auto path = open_native_dialog("*.ice");
+            auto path = open_native_dialog({{"ICE Projects", "*.ice"}});
             callback("load_clicked", path);
         }
     }

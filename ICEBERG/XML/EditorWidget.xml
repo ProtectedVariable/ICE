@@ -4,22 +4,22 @@
 	<mainmenubar>
 		<menu label="File">
 			<menu label="New...">
-				<menuitem label="Scene" />
-				<menuitem label="Material" />
-				<menuitem label="Shader" />
+				<menuitem id="new_scene_menu" label="Scene" />
+				<menuitem id="new_material_menu" label="Material" />
+				<menuitem id="new_shader_menu" label="Shader" />
 			</menu>
 			<menu label="Open...">
-				<menuitem label="Scene" />
+				<menuitem id="open_scene_menu" label="Scene" />
 			</menu>
 			<menu label="Import...">
-				<menuitem label="Model" />
-				<menuitem label="Material" />
-				<menuitem label="Texture2D" />
-				<menuitem label="Cubemap" />
-				<menuitem label="Shader" />
+				<menuitem id="import_model_menu" label="Model" />
+				<menuitem id="import_material_menu" label="Material" />
+				<menuitem id="import_texture2d_menu" label="Texture2D" />
+				<menuitem id="import_cubemap_menu" label="Cubemap" />
+				<menuitem id="import_shader_menu" label="Shader" />
 			</menu>
-			<menuitem label="Save" shortcut="Ctrl+S"/>
-			<menuitem label="Exit" shortcut="Alt+F4"/>
+			<menuitem id="save_menu" label="Save" shortcut="Ctrl+S"/>
+			<menuitem id="exit_menu" label="Exit" shortcut="Alt+F4"/>
 		</menu>
 	</mainmenubar>
 	<placeholder id="dockspace" />
