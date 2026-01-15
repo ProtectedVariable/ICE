@@ -24,7 +24,7 @@ class ModelLoader : public IAssetLoader<Model> {
 
     int processNode(const aiNode *node, std::vector<Model::Node> &nodes, Model::Skeleton &skeleton, std::unordered_set<std::string> &used_names,
                     const Eigen::Matrix4f &parent_transform);
-    std::shared_ptr<Mesh> extractMesh(const aiMesh *mesh, const std::string &model_name, const aiScene *scene, Model::Skeleton &skeleton);
+    AssetUID extractMesh(const aiMesh *mesh, const std::string &model_name, const aiScene *scene, Model::Skeleton &skeleton);
     AssetUID extractMaterial(const aiMaterial *material, const std::string &model_name, const aiScene *scene);
     AssetUID extractTexture(const aiMaterial *material, const std::string &tex_path, const aiScene *scene, aiTextureType type);
     void extractBoneData(const aiMesh *mesh, const aiScene *scene, MeshData &data, SkinningData &skinning_data, Model::Skeleton &skeleton);

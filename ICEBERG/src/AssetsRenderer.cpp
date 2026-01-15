@@ -34,7 +34,13 @@ std::pair<void*, bool> AssetsRenderer::getPreview(const std::shared_ptr<ICE::Ass
         meshes.push_back(m_bank->getMesh(ICE::AssetPath::WithTypePrefix<ICE::Mesh>("sphere")));
         transforms.push_back(rotation);
     } else if (auto m = std::dynamic_pointer_cast<ICE::Model>(asset); m) {
-        m->traverse(meshes, materials, transforms);
+        std::vector<ICE::AssetUID> meshes_id;
+        std::vector<ICE::AssetUID> materials_id;
+        m->traverse(meshes_id, materials_id, transforms, rotation);
+        for (int i = 0; i < meshes_id.size(); i++) {
+            meshes.push_back(m_bank->getMesh(meshes_id[i]));
+            materials.push_back(m_bank->getMaterial(materials_id[i]));
+        }
     } else {
         return {nullptr, false};
     }

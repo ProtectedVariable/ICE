@@ -23,7 +23,7 @@ std::shared_ptr<Model> ModelLoader::load(const std::vector<std::filesystem::path
                           aiProcess_OptimizeGraph | aiProcess_FlipUVs | aiProcess_ValidateDataStructure | aiProcess_SortByPType
                               | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_LimitBoneWeights);
 
-    std::vector<std::shared_ptr<Mesh>> meshes;
+    std::vector<AssetUID> meshes;
     std::vector<AssetUID> materials;
     std::vector<Model::Node> nodes;
     Model::Skeleton skeleton;
@@ -34,7 +34,6 @@ std::shared_ptr<Model> ModelLoader::load(const std::vector<std::filesystem::path
         auto model_name = file[0].filename().stem().string();
         meshes.push_back(extractMesh(mesh, model_name, scene, skeleton));
         materials.push_back(extractMaterial(material, model_name, scene));
-        meshes.back()->setSources(file);
     }
     std::unordered_set<std::string> used_node_names;
     processNode(scene->mRootNode, nodes, skeleton, used_node_names, Eigen::Matrix4f::Identity());
@@ -85,7 +84,7 @@ int ModelLoader::processNode(const aiNode *ainode, std::vector<Model::Node> &nod
     return insert_pos;
 }
 
-std::shared_ptr<Mesh> ModelLoader::extractMesh(const aiMesh *mesh, const std::string &model_name, const aiScene *scene, Model::Skeleton &skeleton) {
+AssetUID ModelLoader::extractMesh(const aiMesh *mesh, const std::string &model_name, const aiScene *scene, Model::Skeleton &skeleton) {
     MeshData data;
 
     for (int i = 0; i < mesh->mNumVertices; i++) {
@@ -123,7 +122,17 @@ std::shared_ptr<Mesh> ModelLoader::extractMesh(const aiMesh *mesh, const std::st
         mesh_->setSkinningData(skinning_data);
     }
 
-    return mesh_;
+    AssetUID mesh_id = 0;
+    AssetPath mesh_path = AssetPath::WithTypePrefix<Mesh>(model_name + "/" + mesh->mName.C_Str());
+    if (mesh_id = ref_bank.getUID(mesh_path); mesh_id != 0) {
+        ref_bank.removeAsset(mesh_path);
+        ref_bank.addAssetWithSpecificUID(mesh_path, mesh_, mesh_id);
+    } else {
+        ref_bank.addAsset(mesh_path, mesh_);
+        mesh_id = ref_bank.getUID(mesh_path);
+    }
+
+    return mesh_id;
 }
 
 AssetUID ModelLoader::extractMaterial(const aiMaterial *material, const std::string &model_name, const aiScene *scene) {
@@ -292,7 +301,7 @@ std::unordered_map<std::string, Animation> ModelLoader::extractAnimations(const 
             a.tracks[boneName] = std::move(track);
         }
         std::string anim_name = anim->mName.C_Str();
-        
+
         out.try_emplace(anim_name.substr(anim_name.find_first_of('|') + 1), std::move(a));
     }
     return out;
