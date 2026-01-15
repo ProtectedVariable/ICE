@@ -22,6 +22,7 @@ target_link_libraries(${PROJECT_NAME}
     graphics_api
     assimp
     platform
+    nlohmann_json
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC

@@ -7,7 +7,7 @@
 
 
 #include <Eigen/Core>
-#include <json/json.h>
+#include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
 namespace ICE {

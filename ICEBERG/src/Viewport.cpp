@@ -33,6 +33,7 @@ Viewport::Viewport(const std::shared_ptr<ICE::ICEEngine> &engine, const std::fun
         m_engine->getApi()->setClearColor(0, 0, 0, 0);
         m_engine->getApi()->clear();
 
+        /*
         auto camera = m_engine->getCamera();
         m_engine->getAssetBank()->getAsset<ICE::Shader>("__ice__picking_shader")->bind();
         m_engine->getAssetBank()->getAsset<ICE::Shader>("__ice__picking_shader")->loadMat4("projection", camera->getProjection());
@@ -60,6 +61,7 @@ Viewport::Viewport(const std::shared_ptr<ICE::ICEEngine> &engine, const std::fun
         e += color.y() << 8;
         e += color.z() << 16;
         m_entity_picked_callback(e);
+        */
     });
     ui.registerCallback("resize", [this](float width, float height) {
         m_engine->getCamera()->resize(width, height);

@@ -41,9 +41,6 @@ class OpenGLFactory : public GraphicsFactory {
     std::shared_ptr<ShaderProgram> createShader(const Shader& shader) const override { return std::make_shared<OpenGLShader>(shader); }
 
     std::shared_ptr<GPUTexture> createTexture2D(const Texture2D& texture) const override { return std::make_shared<OpenGLTexture2D>(texture); }
-    std::shared_ptr<GPUTexture> createTexture2D(const void* data, size_t w, size_t h, TextureFormat fmt) const override {
-        return std::make_shared<OpenGLTexture2D>(data, w, h, fmt);
-    }
 
     std::shared_ptr<GPUTexture> createTextureCube(const TextureCube& texture) const override { return std::make_shared<OpenGLTextureCube>(texture); }
 };

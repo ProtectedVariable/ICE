@@ -10,8 +10,31 @@
 #include <fstream>
 
 namespace ICE {
+
+OpenGLShader::OpenGLShader(const Shader &shader_asset) {
+    m_programID = glCreateProgram();
+    Logger::Log(Logger::VERBOSE, "Graphics", "Compiling shader...");
+
+    for (const auto& [stage, source] : shader_asset.getSources()) {
+        compileAndAttachStage(stage, source);
+    }
+
+    glLinkProgram(m_programID);
+    GLint linkStatus = 0;
+    glGetProgramiv(m_programID, GL_LINK_STATUS, &linkStatus);
+    if (linkStatus == GL_FALSE) {
+        Logger::Log(Logger::FATAL, "Graphics", "Error while linking shader");
+        GLint maxLength = 0;
+        glGetProgramiv(m_programID, GL_INFO_LOG_LENGTH, &maxLength);
+
+        std::vector<GLchar> errorLog(maxLength);
+        glGetProgramInfoLog(m_programID, maxLength, &maxLength, &errorLog[0]);
+        Logger::Log(Logger::FATAL, "Graphics", "Shader linking error: %s", errorLog.data());
+    }
+}
+
 void OpenGLShader::bind() const {
-    glUseProgram(programID);
+    glUseProgram(m_programID);
 }
 
 void OpenGLShader::unbind() const {
@@ -47,11 +70,11 @@ void OpenGLShader::loadMat4(const std::string &name, Eigen::Matrix4f mat) {
 }
 
 GLint OpenGLShader::getLocation(const std::string &name) {
-    if (this->locations.find(name) == this->locations.end()) {
-        GLint location = glGetUniformLocation(programID, name.c_str());
-        locations[name] = static_cast<unsigned int>(location);
+    if (!m_locations.contains(name)) {
+        GLint location = glGetUniformLocation(m_programID, name.c_str());
+        m_locations[name] = static_cast<unsigned int>(location);
     }
-    return locations[name];
+    return m_locations[name];
 }
 
 bool compileShader(GLenum type, const std::string &source, GLint *shader) {
@@ -77,48 +100,31 @@ bool compileShader(GLenum type, const std::string &source, GLint *shader) {
     return compileStatus == GL_TRUE;
 }
 
-//TODO: Another ctor for tesselation control and evaluation shaders
-OpenGLShader::OpenGLShader(const std::string &vertex_src, const std::string &geo_src, const std::string &fragment_src) {
-    //TODO: Better tracing in case of errors, cleanup
-    this->programID = glCreateProgram();
-
-    GLint vertexShader;
-    Logger::Log(Logger::VERBOSE, "Graphics", "Compiling vertex shader...");
-    if (!compileShader(GL_VERTEX_SHADER, vertex_src, &vertexShader)) {
-        Logger::Log(Logger::FATAL, "Graphics", "Error while compiling vertex shader");
+void OpenGLShader::compileAndAttachStage(ShaderStage stage, const std::string &source) {
+    GLint shader;
+    Logger::Log(Logger::VERBOSE, "Graphics", "\t + Compiling shader stage...");
+    if (!compileShader(stageToGLStage(stage), source, &shader)) {
+        Logger::Log(Logger::FATAL, "Graphics", "Error while compiling shader stage");
     }
-    glAttachShader(programID, vertexShader);
+    glAttachShader(m_programID, shader);
+}
 
-    GLint fragmentShader;
-    Logger::Log(Logger::VERBOSE, "Graphics", "Compiling fragment shader...");
-    if (!compileShader(GL_FRAGMENT_SHADER, fragment_src, &fragmentShader)) {
-        Logger::Log(Logger::FATAL, "Graphics", "Error while compiling fragment shader");
-    }
-    glAttachShader(programID, fragmentShader);
 
-    if (!geo_src.empty()) {
-        GLint geoShader;
-        Logger::Log(Logger::VERBOSE, "Graphics", "Compiling geometry shader...");
-        if (!compileShader(GL_GEOMETRY_SHADER, geo_src, &geoShader)) {
-            Logger::Log(Logger::FATAL, "Graphics", "Error while compiling geometry shader");
-        }
-        glAttachShader(programID, geoShader);
-    }
-
-    glLinkProgram(programID);
-    GLint linkStatus = 0;
-    glGetProgramiv(programID, GL_LINK_STATUS, &linkStatus);
-    if (linkStatus == GL_FALSE) {
-        Logger::Log(Logger::FATAL, "Graphics", "Error while linking shader");
-        GLint maxLength = 0;
-        glGetProgramiv(programID, GL_INFO_LOG_LENGTH, &maxLength);
-
-        std::vector<GLchar> errorLog(maxLength);
-        glGetProgramInfoLog(programID, maxLength, &maxLength, &errorLog[0]);
-        Logger::Log(Logger::FATAL, "Graphics", "Shader linking error: %s", errorLog.data());
+constexpr GLenum OpenGLShader::stageToGLStage(ShaderStage stage) {
+    switch (stage) {
+        case ShaderStage::Vertex:
+            return GL_VERTEX_SHADER;
+        case ShaderStage::Fragment:
+            return GL_FRAGMENT_SHADER;
+        case ShaderStage::Geometry:
+            return GL_GEOMETRY_SHADER;
+        case ShaderStage::TessControl:
+            return GL_TESS_CONTROL_SHADER;
+        case ShaderStage::TessEval:
+            return GL_TESS_EVALUATION_SHADER;
+        case ShaderStage::Compute:
+            return GL_COMPUTE_SHADER;
     }
 }
 
-OpenGLShader::OpenGLShader(const std::string &vertex_src, const std::string &fragment_src) : OpenGLShader(vertex_src, "", fragment_src) {
-}
 }  // namespace ICE

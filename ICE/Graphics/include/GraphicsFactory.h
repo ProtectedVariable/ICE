@@ -34,7 +34,6 @@ class GraphicsFactory {
     virtual std::shared_ptr<ShaderProgram> createShader(const Shader& shader) const = 0;
 
     virtual std::shared_ptr<GPUTexture> createTexture2D(const Texture2D &texture) const = 0;
-    virtual std::shared_ptr<GPUTexture> createTexture2D(const void* data, size_t w, size_t h, TextureFormat fmt) const = 0;
 
     virtual std::shared_ptr<GPUTexture> createTextureCube(const TextureCube& texture) const = 0;
 };

@@ -8,7 +8,7 @@ Assets::Assets(const std::shared_ptr<ICE::ICEEngine>& engine, const std::shared_
       m_g_factory(g_factory),
       m_renderer(engine->getApi(), g_factory, engine->getAssetBank()),
       ui(m_asset_categories,
-         m_engine->getAssetBank()->getAsset<ICE::Texture2D>(ICE::AssetPath::WithTypePrefix<ICE::Texture2D>("Editor/folder"))->getTexture()),
+         m_engine->getGPURegistry()->getTexture2D(ICE::AssetPath::WithTypePrefix<ICE::Texture2D>("Editor/folder"))->ptr()),
       m_material_editor(engine) {
     rebuildViewer();
     ui.registerCallback("material_duplicate", [this](std::string name) {

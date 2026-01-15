@@ -15,8 +15,9 @@ error "Missing the <filesystem> header."
 #endif
 #include <AssetBank.h>
 #include <Camera.h>
+#include <GPURegistry.h>
 #include <Scene.h>
-#include <json/json.h>
+#include <nlohmann/json.hpp>
 
 #include <string>
 #include <vector>
@@ -43,6 +44,7 @@ class Project {
 
     std::shared_ptr<AssetBank> getAssetBank();
     void setAssetBank(const std::shared_ptr<AssetBank>& assetBank);
+    std::shared_ptr<GPURegistry> getGPURegistry();
 
     void addScene(const Scene& scene);
     void setCurrentScene(const std::shared_ptr<Scene>& scene);
@@ -70,7 +72,7 @@ class Project {
                 std::string source = entry;
                 sources.push_back(m_base_directory / source);
             }
-            assetBank->addAssetWithSpecificUID<T>(asset_path, sources, uid);
+            m_asset_bank->addAssetWithSpecificUID<T>(asset_path, sources, uid);
         }
     }
 
@@ -87,12 +89,13 @@ class Project {
     fs::path m_shaders_directory;
     fs::path m_textures_directory;
     fs::path m_cubemaps_directory;
-    std::string name;
+    std::string m_name;
 
-    std::vector<std::shared_ptr<Scene>> scenes;
+    std::vector<std::shared_ptr<Scene>> m_scenes;
     std::shared_ptr<Scene> m_current_scene;
 
-    std::shared_ptr<AssetBank> assetBank;
+    std::shared_ptr<AssetBank> m_asset_bank;
+    std::shared_ptr<GPURegistry> m_gpu_registry;
 
     Eigen::Vector3f cameraPosition, cameraRotation;
 };

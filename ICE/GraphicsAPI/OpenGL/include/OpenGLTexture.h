@@ -69,9 +69,10 @@ class OpenGLTexture2D : public GPUTexture {
     OpenGLTexture2D(const Texture2D &tex);
 
     void bind(uint32_t slot) const override;
+    int id() const override;
 
    private:
-    uint32_t id;
+    uint32_t m_id;
 };
 
 class OpenGLTextureCube : public GPUTexture {
@@ -79,9 +80,10 @@ class OpenGLTextureCube : public GPUTexture {
     OpenGLTextureCube(const TextureCube &tex);
 
     void bind(uint32_t slot) const override;
+    int id() const override;
 
    private:
-    uint32_t id;
+    uint32_t m_id;
 };
 }  // namespace ICE
 

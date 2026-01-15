@@ -29,6 +29,7 @@ class ICEEngine {
     std::shared_ptr<Camera> getCamera();
 
     std::shared_ptr<AssetBank> getAssetBank();
+    std::shared_ptr<GPURegistry> getGPURegistry();
 
     Entity getSelected() const;
 
@@ -65,6 +66,5 @@ class ICEEngine {
     std::chrono::steady_clock::time_point lastFrameTime;
 
     EngineConfig config;
-    Registry registry;
 };
 }  // namespace ICE

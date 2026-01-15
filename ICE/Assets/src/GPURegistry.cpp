@@ -3,23 +3,34 @@
 #include <BufferUtils.h>
 
 namespace ICE {
-GPURegistry::GPURegistry(const std::shared_ptr<GraphicsFactory> &factory) : m_graphics_factory(factory) {
+GPURegistry::GPURegistry(const std::shared_ptr<GraphicsFactory> &factory, const std::shared_ptr<AssetBank> &bank)
+    : m_graphics_factory(factory),
+      m_asset_bank(bank) {
 }
 
-std::shared_ptr<ShaderProgram> GPURegistry::getShader(AssetUID id, const std::shared_ptr<Shader> &shader_asset) {
+std::shared_ptr<ShaderProgram> GPURegistry::getShader(AssetUID id) {
     if (m_shader_programs.contains(id)) {
         return m_shader_programs[id];
     } else {
+        auto shader_asset = m_asset_bank->getAsset<Shader>(id);
+        if (!shader_asset) {
+            return nullptr;
+        }
         auto program = m_graphics_factory->createShader(*shader_asset);
         m_shader_programs[id] = program;
         return program;
     }
 }
 
-std::shared_ptr<GPUMesh> GPURegistry::getMesh(AssetUID id, const std::shared_ptr<Mesh> &mesh_asset) {
+std::shared_ptr<GPUMesh> GPURegistry::getMesh(AssetUID id) {
     if (m_gpu_meshes.contains(id)) {
         return m_gpu_meshes[id];
     } else {
+        auto mesh_asset = m_asset_bank->getAsset<Mesh>(id);
+        if (!mesh_asset) {
+            return nullptr;
+        }
+
         auto vertexArray = m_graphics_factory->createVertexArray();
 
         auto vertexBuffer = m_graphics_factory->createVertexBuffer();
@@ -56,20 +67,29 @@ std::shared_ptr<GPUMesh> GPURegistry::getMesh(AssetUID id, const std::shared_ptr
     }
 }
 
-std::shared_ptr<GPUTexture> GPURegistry::getTexture2D(AssetUID id, const std::shared_ptr<Texture2D> &tex_asset) {
+std::shared_ptr<GPUTexture> GPURegistry::getTexture2D(AssetUID id) {
     if (m_gpu_tex2d.contains(id)) {
         return m_gpu_tex2d[id];
     } else {
+        auto tex_asset = m_asset_bank->getAsset<Texture2D>(id);
+        if (!tex_asset) {
+            return nullptr;
+        }
+
         auto gpu_texture = m_graphics_factory->createTexture2D(*tex_asset);
         m_gpu_tex2d[id] = gpu_texture;
         return gpu_texture;
     }
 }
 
-std::shared_ptr<GPUTexture> GPURegistry::getCubemap(AssetUID id, const std::shared_ptr<TextureCube> &tex_asset) {
+std::shared_ptr<GPUTexture> GPURegistry::getCubemap(AssetUID id) {
     if (m_gpu_cubemaps.contains(id)) {
         return m_gpu_cubemaps[id];
     } else {
+        auto tex_asset = m_asset_bank->getAsset<TextureCube>(id);
+        if (!tex_asset) {
+            return nullptr;
+        }
         auto gpu_texture = m_graphics_factory->createTextureCube(*tex_asset);
         m_gpu_cubemaps[id] = gpu_texture;
         return gpu_texture;

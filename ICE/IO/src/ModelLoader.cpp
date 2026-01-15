@@ -211,7 +211,7 @@ AssetUID ModelLoader::extractTexture(const aiMaterial *material, const std::stri
             } else {
                 data2 = data;
             }
-            auto texture_ice = m_graphics_factory->createTexture2D(data2, width, height, getTextureFormat(type, channels));
+            auto texture_ice = std::make_shared<Texture2D>(data2, width, height, getTextureFormat(type, channels));
             if (tex_id = ref_bank.getUID(AssetPath::WithTypePrefix<Texture2D>(tex_path)); tex_id != 0) {
                 ref_bank.removeAsset(AssetPath::WithTypePrefix<Texture2D>(tex_path));
                 ref_bank.addAssetWithSpecificUID(AssetPath::WithTypePrefix<Texture2D>(tex_path), texture_ice, tex_id);

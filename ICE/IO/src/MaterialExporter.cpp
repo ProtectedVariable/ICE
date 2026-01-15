@@ -1,6 +1,6 @@
 #include "MaterialExporter.h"
 
-#include <json/json.h>
+#include <nlohmann/json.hpp>
 #include <fstream>
 #include <variant>
 #include <span>

@@ -11,7 +11,7 @@
 namespace ICE {
 class MaterialLoader : public IAssetLoader<Material> {
    public:
-    MaterialLoader() : IAssetLoader<Material>(nullptr) {}
+    MaterialLoader() = default;
     std::shared_ptr<Material> load(const std::vector<std::filesystem::path> &files) override;
 };
 }  // namespace ICE

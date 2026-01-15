@@ -18,10 +18,11 @@
 #include "MaterialExporter.h"
 
 namespace ICE {
-Project::Project(const fs::path &base_directory, const std::string &name)
-    : m_base_directory(base_directory / name),
-      name(name),
-      assetBank(std::make_shared<AssetBank>(std::make_shared<OpenGLFactory>())) {
+Project::Project(const fs::path &base_directory, const std::string &m_name)
+    : m_base_directory(base_directory / m_name),
+      m_name(m_name),
+      m_asset_bank(std::make_shared<AssetBank>()),
+      m_gpu_registry(std::make_shared<GPURegistry>(std::make_shared<OpenGLFactory>(), m_asset_bank)) {
     cameraPosition.setZero();
     cameraRotation.setZero();
     constexpr std::string_view assets_folder = "Assets";
@@ -40,22 +41,22 @@ bool Project::CreateDirectories() {
     } catch (std::filesystem::filesystem_error &e) {
         Logger::Log(Logger::FATAL, "IO", "Could not copy default assets: %s", e.what());
     }
-    assetBank->addAsset<Shader>("solid", {m_shaders_directory / "skinning.vs", m_shaders_directory / "solid.fs"});
-    assetBank->addAsset<Shader>("phong", {m_shaders_directory / "skinning.vs", m_shaders_directory / "phong.fs"});
-    assetBank->addAsset<Shader>("normal", {m_shaders_directory / "skinning.vs", m_shaders_directory / "normal.fs"});
-    assetBank->addAsset<Shader>("pbr", {m_shaders_directory / "skinning.vs", m_shaders_directory / "pbr.fs"});
-    assetBank->addAsset<Shader>("lastpass", {m_shaders_directory / "lastpass.vs", m_shaders_directory / "lastpass.fs"});
-    assetBank->addAsset<Shader>("__ice__picking_shader", {m_shaders_directory / "skinning.vs", m_shaders_directory / "picking.fs"});
+    m_asset_bank->addAsset<Shader>("solid", {m_shaders_directory / "skinning.vs", m_shaders_directory / "solid.fs"});
+    m_asset_bank->addAsset<Shader>("phong", {m_shaders_directory / "skinning.vs", m_shaders_directory / "phong.fs"});
+    m_asset_bank->addAsset<Shader>("normal", {m_shaders_directory / "skinning.vs", m_shaders_directory / "normal.fs"});
+    m_asset_bank->addAsset<Shader>("pbr", {m_shaders_directory / "skinning.vs", m_shaders_directory / "pbr.fs"});
+    m_asset_bank->addAsset<Shader>("lastpass", {m_shaders_directory / "lastpass.vs", m_shaders_directory / "lastpass.fs"});
+    m_asset_bank->addAsset<Shader>("__ice__picking_shader", {m_shaders_directory / "skinning.vs", m_shaders_directory / "picking.fs"});
 
-    assetBank->addAsset<Material>("base_mat", {m_materials_directory / "base_mat.icm"});
+    m_asset_bank->addAsset<Material>("base_mat", {m_materials_directory / "base_mat.icm"});
 
-    assetBank->addAsset<Model>("cube", {m_meshes_directory / "cube.obj"});
-    assetBank->addAsset<Model>("sphere", {m_meshes_directory / "sphere.obj"});
+    m_asset_bank->addAsset<Model>("cube", {m_meshes_directory / "cube.obj"});
+    m_asset_bank->addAsset<Model>("sphere", {m_meshes_directory / "sphere.obj"});
 
-    assetBank->addAsset<Texture2D>("Editor/folder", {m_textures_directory / "Editor" / "folder.png"});
-    assetBank->addAsset<Texture2D>("Editor/shader", {m_textures_directory / "Editor" / "shader.png"});
+    m_asset_bank->addAsset<Texture2D>("Editor/folder", {m_textures_directory / "Editor" / "folder.png"});
+    m_asset_bank->addAsset<Texture2D>("Editor/shader", {m_textures_directory / "Editor" / "shader.png"});
 
-    scenes.push_back(std::make_shared<Scene>("MainScene"));
+    m_scenes.push_back(std::make_shared<Scene>("MainScene"));
     setCurrentScene(getScenes()[0]);
     return true;
 }
@@ -65,34 +66,34 @@ fs::path Project::getBaseDirectory() const {
 }
 
 std::string Project::getName() const {
-    return name;
+    return m_name;
 }
 
 void Project::writeToFile(const std::shared_ptr<Camera> &editorCamera) {
     std::ofstream outstream;
-    outstream.open(m_base_directory / (name + ".ice"));
+    outstream.open(m_base_directory / (m_name + ".ice"));
     json j;
 
     j["camera_position"] = dumpVec3(editorCamera->getPosition());
     j["camera_rotation"] = dumpVec3(editorCamera->getRotation());
 
     std::vector<json> vec;
-    for (const auto &s : scenes) {
+    for (const auto &s : m_scenes) {
         vec.push_back(s->getName());
     }
     j["scenes"] = vec;
     vec.clear();
 
-    for (const auto &[asset_id, mesh] : assetBank->getAll<Model>()) {
+    for (const auto &[asset_id, mesh] : m_asset_bank->getAll<Model>()) {
         vec.push_back(dumpAsset(asset_id, mesh));
     }
     j["models"] = vec;
     vec.clear();
 
-    for (const auto &[asset_id, material] : assetBank->getAll<Material>()) {
-        auto mtlName = assetBank->getName(asset_id).getName();
+    for (const auto &[asset_id, material] : m_asset_bank->getAll<Material>()) {
+        auto mtlName = m_asset_bank->getName(asset_id).getName();
 
-        fs::path path = m_materials_directory.parent_path() / (assetBank->getName(asset_id).prefix() + mtlName + ".icm");
+        fs::path path = m_materials_directory.parent_path() / (m_asset_bank->getName(asset_id).prefix() + mtlName + ".icm");
         fs::create_directories(path.parent_path());
         MaterialExporter().writeToJson(path, *material);
 
@@ -103,19 +104,19 @@ void Project::writeToFile(const std::shared_ptr<Camera> &editorCamera) {
     j["materials"] = vec;
     vec.clear();
 
-    for (const auto &[asset_id, shader] : assetBank->getAll<Shader>()) {
+    for (const auto &[asset_id, shader] : m_asset_bank->getAll<Shader>()) {
         vec.push_back(dumpAsset(asset_id, shader));
     }
     j["shaders"] = vec;
     vec.clear();
 
-    for (const auto &[asset_id, texture] : assetBank->getAll<Texture2D>()) {
+    for (const auto &[asset_id, texture] : m_asset_bank->getAll<Texture2D>()) {
         vec.push_back(dumpAsset(asset_id, texture));
     }
     j["textures2D"] = vec;
     vec.clear();
 
-    for (const auto &[asset_id, texture] : assetBank->getAll<TextureCube>()) {
+    for (const auto &[asset_id, texture] : m_asset_bank->getAll<TextureCube>()) {
         vec.push_back(dumpAsset(asset_id, texture));
     }
     j["cubeMaps"] = vec;
@@ -123,16 +124,16 @@ void Project::writeToFile(const std::shared_ptr<Camera> &editorCamera) {
     outstream << j.dump(4);
     outstream.close();
 
-    for (const auto &s : scenes) {
+    for (const auto &s : m_scenes) {
         outstream.open(m_scenes_directory / (s->getName() + ".ics"));
         j.clear();
 
-        j["name"] = s->getName();
+        j["m_name"] = s->getName();
         json entities = json::array();
         for (auto e : s->getRegistry()->getEntities()) {
             json entity;
             entity["id"] = e;
-            entity["name"] = s->getAlias(e);
+            entity["m_name"] = s->getAlias(e);
             entity["parent"] = s->getGraph()->getParentID(e);
 
             if (s->getRegistry()->entityHasComponent<RenderComponent>(e)) {
@@ -165,7 +166,7 @@ void Project::writeToFile(const std::shared_ptr<Camera> &editorCamera) {
 }
 
 json Project::dumpAsset(AssetUID uid, const std::shared_ptr<Asset> &asset) {
-    auto asset_path = assetBank->getName(uid);
+    auto asset_path = m_asset_bank->getName(uid);
     json tmp;
     auto paths = asset->getSources();
     std::vector<std::string> sources(paths.size());
@@ -180,7 +181,7 @@ json Project::dumpAsset(AssetUID uid, const std::shared_ptr<Asset> &asset) {
 }
 
 void Project::loadFromFile() {
-    std::ifstream infile = std::ifstream(m_base_directory / (name + ".ice"));
+    std::ifstream infile = std::ifstream(m_base_directory / (m_name + ".ice"));
     json j;
     infile >> j;
     infile.close();
@@ -207,12 +208,12 @@ void Project::loadFromFile() {
         infile >> scenejson;
         infile.close();
 
-        Scene scene = Scene(scenejson["name"]);
+        Scene scene = Scene(scenejson["m_name"]);
 
         for (json jentity : scenejson["entities"]) {
             Entity e = jentity["id"];
             Entity parent = jentity["parent"];
-            std::string alias = jentity["name"];
+            std::string alias = jentity["m_name"];
 
             scene.addEntity(e, alias, 0);
 
@@ -262,7 +263,7 @@ bool Project::renameAsset(const AssetPath &oldName, const AssetPath &newName) {
     if (newName.getName() == "" || newName.prefix() != oldName.prefix()) {
         return false;
     }
-    if (assetBank->renameAsset(oldName, newName)) {
+    if (m_asset_bank->renameAsset(oldName, newName)) {
         auto path = m_base_directory / "Assets";
         for (const auto &file : getFilesInDir(path / oldName.prefix())) {
             if (file.substr(0, file.find_last_of(".")) == oldName.getName()) {
@@ -288,23 +289,27 @@ std::vector<std::string> Project::getFilesInDir(const fs::path &folder) {
 }
 
 std::vector<std::shared_ptr<Scene>> Project::getScenes() {
-    return scenes;
+    return m_scenes;
 }
 
 void Project::setScenes(const std::vector<std::shared_ptr<Scene>> &scenes) {
-    Project::scenes = scenes;
+    m_scenes = scenes;
+}
+
+std::shared_ptr<GPURegistry> Project::getGPURegistry() {
+    return m_gpu_registry;
 }
 
 std::shared_ptr<AssetBank> Project::getAssetBank() {
-    return assetBank;
+    return m_asset_bank;
 }
 
-void Project::setAssetBank(const std::shared_ptr<AssetBank> &assetBank) {
-    Project::assetBank = assetBank;
+void Project::setAssetBank(const std::shared_ptr<AssetBank> &asset_bank) {
+    m_asset_bank = asset_bank;
 }
 
 void Project::addScene(const Scene &scene) {
-    scenes.push_back(std::make_shared<Scene>(scene));
+    m_scenes.push_back(std::make_shared<Scene>(scene));
 }
 
 void Project::setCurrentScene(const std::shared_ptr<Scene> &scene) {

@@ -11,7 +11,8 @@ target_sources(${PROJECT_NAME} PRIVATE
         src/Shader.cpp
         src/Model.cpp
         src/Material.cpp
-        src/GPURegistry.cpp)
+        src/GPURegistry.cpp 
+        src/Texture.cpp)
 
 target_link_libraries(${PROJECT_NAME} 
     PUBLIC 

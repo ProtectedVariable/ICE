@@ -7,6 +7,7 @@ std::pair<void*, bool> AssetsRenderer::createThumbnail(const std::shared_ptr<ICE
 }
 
 std::pair<void*, bool> AssetsRenderer::getPreview(const std::shared_ptr<ICE::Asset>& asset, const std::string& asset_path, float t) {
+    /*
     if (auto m = std::dynamic_pointer_cast<ICE::Texture2D>(asset); m) {
         return {m->getTexture(), false};
     } else if (auto m = std::dynamic_pointer_cast<ICE::TextureCube>(asset); m) {
@@ -74,4 +75,6 @@ std::pair<void*, bool> AssetsRenderer::getPreview(const std::shared_ptr<ICE::Ass
     renderer.endFrame();
 
     return {static_cast<char*>(0) + fb->getTexture(), true};
+    */
+    return {nullptr, false};
 }

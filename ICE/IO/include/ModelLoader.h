@@ -18,10 +18,7 @@ class AssetBank;
 
 class ModelLoader : public IAssetLoader<Model> {
    public:
-    ModelLoader(const std::shared_ptr<GraphicsFactory> &factory, AssetBank &bank)
-        : ref_bank(bank),
-          m_graphics_factory(factory),
-          IAssetLoader<Model>(factory) {}
+    ModelLoader(AssetBank &bank) : ref_bank(bank) {}
 
     std::shared_ptr<Model> load(const std::vector<std::filesystem::path> &file) override;
 
@@ -42,6 +39,5 @@ class ModelLoader : public IAssetLoader<Model> {
     constexpr TextureFormat getTextureFormat(aiTextureType type, int channels);
 
     AssetBank &ref_bank;
-    std::shared_ptr<GraphicsFactory> m_graphics_factory;
 };
 }  // namespace ICE

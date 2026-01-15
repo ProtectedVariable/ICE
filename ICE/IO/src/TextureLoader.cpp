@@ -13,14 +13,14 @@ std::shared_ptr<Texture2D> Texture2DLoader::load(const std::vector<std::filesyst
     if (file.empty()) {
         return nullptr;
     }
-    auto texture = std::make_shared<Texture2D>();
+    auto texture = std::make_shared<Texture2D>(file[0].string());
     texture->setSources(file);
     return texture;
 }
 
 std::shared_ptr<TextureCube> TextureCubeLoader::load(const std::vector<std::filesystem::path> &file) {
     Logger::Log(Logger::VERBOSE, "IO", "Loading cubemap...");
-    auto texture = std::make_shared<TextureCube>();
+    auto texture = std::make_shared<TextureCube>(file[0].string());
     texture->setSources(file);
     return texture;
 }
