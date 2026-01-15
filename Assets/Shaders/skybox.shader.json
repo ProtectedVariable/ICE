@@ -1,0 +1,10 @@
+[
+  {
+    "stage": "vertex",
+    "source": "glsl/skybox.vs"
+  },
+  {
+    "stage": "fragment",
+    "source": "glsl/skybox.fs"
+  }
+]

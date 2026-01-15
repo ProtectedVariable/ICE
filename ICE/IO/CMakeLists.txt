@@ -13,7 +13,7 @@ target_sources(${PROJECT_NAME} PRIVATE
 	src/ModelLoader.cpp
     src/ShaderLoader.cpp
     src/MaterialLoader.cpp
-)
+    src/ShaderExporter.cpp)
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC

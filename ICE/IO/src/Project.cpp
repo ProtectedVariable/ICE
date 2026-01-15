@@ -16,6 +16,7 @@
 #include <iostream>
 
 #include "MaterialExporter.h"
+#include "ShaderExporter.h"
 
 namespace ICE {
 Project::Project(const fs::path &base_directory, const std::string &m_name)
@@ -41,14 +42,14 @@ bool Project::CreateDirectories() {
     } catch (std::filesystem::filesystem_error &e) {
         Logger::Log(Logger::FATAL, "IO", "Could not copy default assets: %s", e.what());
     }
-    m_asset_bank->addAsset<Shader>("solid", {m_shaders_directory / "skinning.vs", m_shaders_directory / "solid.fs"});
-    m_asset_bank->addAsset<Shader>("phong", {m_shaders_directory / "skinning.vs", m_shaders_directory / "phong.fs"});
-    m_asset_bank->addAsset<Shader>("normal", {m_shaders_directory / "skinning.vs", m_shaders_directory / "normal.fs"});
-    m_asset_bank->addAsset<Shader>("pbr", {m_shaders_directory / "skinning.vs", m_shaders_directory / "pbr.fs"});
-    m_asset_bank->addAsset<Shader>("lastpass", {m_shaders_directory / "lastpass.vs", m_shaders_directory / "lastpass.fs"});
-    m_asset_bank->addAsset<Shader>("__ice__picking_shader", {m_shaders_directory / "skinning.vs", m_shaders_directory / "picking.fs"});
+    m_asset_bank->addAsset<Shader>("solid", {m_shaders_directory / "solid.shader.json"});
+    m_asset_bank->addAsset<Shader>("phong", {m_shaders_directory / "phong.shader.json"});
+    m_asset_bank->addAsset<Shader>("normal", {m_shaders_directory / "normal.shader.json"});
+    m_asset_bank->addAsset<Shader>("pbr", {m_shaders_directory / "pbr.shader.json"});
+    m_asset_bank->addAsset<Shader>("lastpass", {m_shaders_directory / "lastpass.shader.json"});
+    m_asset_bank->addAsset<Shader>("__ice__picking_shader", {m_shaders_directory / "picking.shader.json"});
 
-    m_asset_bank->addAsset<Material>("base_mat", {m_materials_directory / "base_mat.icm"});
+    m_asset_bank->addAsset<Material>("base_mat", {m_materials_directory / "base_mat.material.json"});
 
     m_asset_bank->addAsset<Model>("cube", {m_meshes_directory / "cube.obj"});
     m_asset_bank->addAsset<Model>("sphere", {m_meshes_directory / "sphere.obj"});
@@ -93,7 +94,7 @@ void Project::writeToFile(const std::shared_ptr<Camera> &editorCamera) {
     for (const auto &[asset_id, material] : m_asset_bank->getAll<Material>()) {
         auto mtlName = m_asset_bank->getName(asset_id).getName();
 
-        fs::path path = m_materials_directory.parent_path() / (m_asset_bank->getName(asset_id).prefix() + mtlName + ".icm");
+        fs::path path = m_materials_directory.parent_path() / (m_asset_bank->getName(asset_id).prefix() + mtlName + ".material.json");
         fs::create_directories(path.parent_path());
         MaterialExporter().writeToJson(path, *material);
 
@@ -105,6 +106,14 @@ void Project::writeToFile(const std::shared_ptr<Camera> &editorCamera) {
     vec.clear();
 
     for (const auto &[asset_id, shader] : m_asset_bank->getAll<Shader>()) {
+        auto mtlName = m_asset_bank->getName(asset_id).getName();
+
+        fs::path path = m_shaders_directory.parent_path() / (m_asset_bank->getName(asset_id).prefix() + mtlName + ".shader.json");
+        fs::create_directories(path.parent_path());
+        ShaderExporter().writeToJson(path, *shader);
+
+        shader->setSources({path});
+
         vec.push_back(dumpAsset(asset_id, shader));
     }
     j["shaders"] = vec;
