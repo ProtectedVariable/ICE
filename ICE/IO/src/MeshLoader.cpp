@@ -19,7 +19,6 @@ std::shared_ptr<Mesh> MeshLoader::load(const std::vector<std::filesystem::path> 
     }
 
     Assimp::Importer importer;
-
     const aiScene *scene = importer.ReadFile(file[0].string(),
                                              aiProcess_FlipUVs | aiProcess_ValidateDataStructure | aiProcess_SortByPType | aiProcess_GenSmoothNormals
                                                  | aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_PreTransformVertices);

@@ -16,7 +16,7 @@ void ShaderExporter::writeToJson(const std::filesystem::path &path, const Shader
     for (const auto& [stage, source] : shader.getSources()) {
         j.push_back({
             {"stage", stageToString(stage)},
-            {"file", source}});
+            {"source", source.first}});
     }
     outstream << j.dump(4);
     outstream.close();

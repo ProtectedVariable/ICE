@@ -26,7 +26,9 @@ std::shared_ptr<Shader> ShaderLoader::load(const std::vector<std::filesystem::pa
     for (const auto &stage_source : json) {
         auto stage = stageFromString(stage_source["stage"]);
         auto file = stage_source["source"].get<std::string>();
-        shader_sources[stage] = readAndResolveIncludes(files[0].parent_path() / file);
+        auto file_path = (files[0].parent_path() / file).string();
+        auto source_code = readAndResolveIncludes(file_path);
+        shader_sources[stage] = {file, source_code};
     }
 
     auto shader = std::make_shared<Shader>(shader_sources);
