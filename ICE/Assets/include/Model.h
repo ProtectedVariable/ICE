@@ -25,19 +25,19 @@ class Model : public Asset {
         Eigen::Matrix4f globalInverseTransform;
     };
 
-    Model(const std::vector<Node> &nodes, const std::vector<std::shared_ptr<ICE::Mesh>> &meshes, const std::vector<ICE::AssetUID> &materials);
+    Model(const std::vector<Node> &nodes, const std::vector<AssetUID> &meshes, const std::vector<ICE::AssetUID> &materials);
 
     std::vector<Node> getNodes() const { return m_nodes; }
     std::vector<Node> &getNodes() { return m_nodes; }
-    std::vector<std::shared_ptr<ICE::Mesh>> getMeshes() const { return m_meshes; }
-    std::vector<ICE::AssetUID> getMaterialsIDs() const { return m_materials; }
+    std::vector<AssetUID> getMeshes() const { return m_meshes; }
+    std::vector<AssetUID> getMaterialsIDs() const { return m_materials; }
     AABB getBoundingBox() const { return m_boundingbox; }
     std::unordered_map<std::string, Animation> getAnimations() const { return m_animations; }
     Skeleton &getSkeleton() { return m_skeleton; }
     void setSkeleton(const Skeleton &skeleton) { m_skeleton = skeleton; }
     void setAnimations(const std::unordered_map<std::string, Animation> &animations) { m_animations = animations; }
 
-    void traverse(std::vector<std::shared_ptr<Mesh>> &meshes, std::vector<AssetUID> &materials, std::vector<Eigen::Matrix4f> &transforms,
+    void traverse(std::vector<AssetUID> &meshes, std::vector<AssetUID> &materials, std::vector<Eigen::Matrix4f> &transforms,
                   const Eigen::Matrix4f &base_transform = Eigen::Matrix4f::Identity());
 
     AssetType getType() const override { return AssetType::EModel; }
@@ -45,8 +45,8 @@ class Model : public Asset {
 
    private:
     std::vector<Node> m_nodes;
-    std::vector<std::shared_ptr<ICE::Mesh>> m_meshes;
-    std::vector<ICE::AssetUID> m_materials;
+    std::vector<AssetUID> m_meshes;
+    std::vector<AssetUID> m_materials;
     std::unordered_map<std::string, Animation> m_animations;
     Skeleton m_skeleton;
     AABB m_boundingbox{{0, 0, 0}, {0, 0, 0}};

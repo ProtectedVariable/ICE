@@ -11,7 +11,7 @@
 namespace ICE {
 enum ShaderStage { Vertex, Fragment, Geometry, TessControl, TessEval, Compute };
 
-// Map of shader stages to their source code
+// Map of shader stages to their source code {filename, source}
 using ShaderSource = std::unordered_map<ShaderStage, std::pair<std::string, std::string>>;
 
 class Shader : public Asset {

@@ -7,34 +7,40 @@ std::pair<void*, bool> AssetsRenderer::createThumbnail(const std::shared_ptr<ICE
 }
 
 std::pair<void*, bool> AssetsRenderer::getPreview(const std::shared_ptr<ICE::Asset>& asset, const std::string& asset_path, float t) {
-    /*
-    if (auto m = std::dynamic_pointer_cast<ICE::Texture2D>(asset); m) {
-        return {m->getTexture(), false};
-    } else if (auto m = std::dynamic_pointer_cast<ICE::TextureCube>(asset); m) {
-        return {nullptr, false};  //TODO
-    } else if (auto m = std::dynamic_pointer_cast<ICE::Shader>(asset); m) {
-        return {m_bank->getAsset<ICE::Texture2D>(ICE::AssetPath::WithTypePrefix<ICE::Texture2D>("Editor/shader"))->getTexture(), false};
-    }
-
-    auto model = m_bank->getAsset<ICE::Model>(ICE::AssetPath::WithTypePrefix<ICE::Model>("sphere"));
-    auto material = m_bank->getAsset<ICE::Material>(ICE::AssetPath::WithTypePrefix<ICE::Material>("base_mat"));
-    bool override_material = false;
-
-    if (auto m = std::dynamic_pointer_cast<ICE::Model>(asset); m) {
-        model = m;
-    } else if (auto m = std::dynamic_pointer_cast<ICE::Material>(asset); m) {
-        material = m;
-        override_material = true;
-    } else {
-        return {nullptr, false};
-    }
-
+    std::vector<std::shared_ptr<ICE::GPUMesh>> meshes;
+    std::vector<std::shared_ptr<ICE::Material>> materials;
+    std::vector<Eigen::Matrix4f> transforms;
     bool thumbnail = (t == std::numeric_limits<float>::infinity());
 
     auto key = thumbnail ? "thumb_" + asset_path : "preview_" + asset_path;
     if (thumbnail) {
         t = 45;
     }
+
+    Eigen::Matrix4f rotation = ICE::rotationMatrix({0, t, 0});
+
+    if (auto m = std::dynamic_pointer_cast<ICE::Texture2D>(asset); m) {
+        return {m_bank->getTexture2D(asset_path)->ptr(), false};
+    } else if (auto m = std::dynamic_pointer_cast<ICE::TextureCube>(asset); m) {
+        return {nullptr, false};  //TODO
+    } else if (auto m = std::dynamic_pointer_cast<ICE::Shader>(asset); m) {
+        return {m_bank->getTexture2D(ICE::AssetPath::WithTypePrefix<ICE::Texture2D>("Editor/shader"))->ptr(), false};
+    } else if (auto m = std::dynamic_pointer_cast<ICE::Mesh>(asset); m) {
+        meshes.push_back(m_bank->getMesh(asset_path));
+        materials.push_back(m_bank->getMaterial(ICE::AssetPath::WithTypePrefix<ICE::Material>("base_mat")));
+        transforms.push_back(rotation);
+    } else if (auto m = std::dynamic_pointer_cast<ICE::Material>(asset); m) {
+        materials.push_back(m);
+        meshes.push_back(m_bank->getMesh(ICE::AssetPath::WithTypePrefix<ICE::Mesh>("sphere")));
+        transforms.push_back(rotation);
+    } else if (auto m = std::dynamic_pointer_cast<ICE::Model>(asset); m) {
+        m->traverse(meshes, materials, transforms);
+    } else {
+        return {nullptr, false};
+    }
+
+
+  
     if (!m_renderers.contains(key)) {
         m_renderers.try_emplace(key, m_api, m_factory);
         m_renderers.at(key).resize(256, 256);
@@ -46,26 +52,18 @@ std::pair<void*, bool> AssetsRenderer::getPreview(const std::shared_ptr<ICE::Ass
     camera->pitch(-30);
 
     auto& renderer = m_renderers.at(key);
-    std::vector<std::shared_ptr<ICE::Mesh>> meshes;
-    std::vector<ICE::AssetUID> materials;
-    std::vector<Eigen::Matrix4f> transforms;
-
-    model->traverse(meshes, materials, transforms, ICE::rotationMatrix({0, t, 0}));
-    std::unordered_map<ICE::AssetUID, std::shared_ptr<ICE::Texture>> textures;
-    for (const auto& [k, v] : material->getAllUniforms()) {
-        if (std::holds_alternative<ICE::AssetUID>(v)) {
-            auto id = std::get<ICE::AssetUID>(v);
-            textures.try_emplace(id, m_bank->getAsset<ICE::Texture2D>(id));
-        }
-    }
     for (int i = 0; i < meshes.size(); i++) {
-        if (!override_material) {
-            material = m_bank->getAsset<ICE::Material>(materials[i]);
+        std::unordered_map<ICE::AssetUID, std::shared_ptr<ICE::GPUTexture>> textures;
+        for (const auto& [k, v] : materials[i]->getAllUniforms()) {
+            if (std::holds_alternative<ICE::AssetUID>(v)) {
+                auto id = std::get<ICE::AssetUID>(v);
+                textures.try_emplace(id, m_bank->getTexture2D(id));
+            }
         }
-        auto shader = m_bank->getAsset<ICE::Shader>(material->getShader());
+        auto shader = m_bank->getShader(materials[i]->getShader());
         if (shader)
             renderer.submitDrawable(
-                ICE::Drawable{.mesh = meshes[i], .material = material, .shader = shader, .textures = textures, .model_matrix = transforms[i]});
+                ICE::Drawable{.mesh = meshes[i], .material = materials[i], .shader = shader, .textures = textures, .model_matrix = transforms[i]});
     }
     renderer.submitLight(
         ICE::Light{.position = {-2, 2, 2}, .rotation = {0, 0, 0}, .color = {1, 1, 1}, .distance_dropoff = 0, .type = ICE::LightType::PointLight});
@@ -75,6 +73,4 @@ std::pair<void*, bool> AssetsRenderer::getPreview(const std::shared_ptr<ICE::Ass
     renderer.endFrame();
 
     return {static_cast<char*>(0) + fb->getTexture(), true};
-    */
-    return {nullptr, false};
 }

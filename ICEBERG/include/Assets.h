@@ -19,7 +19,7 @@ class Assets : public Controller {
 
     void createSubfolderView(AssetView *parent_view, const std::vector<std::string> &path, const Thumbnail &thumbnail, const std::string &full_path);
 
-    const std::vector<std::string> m_asset_categories = {"Models", "Materials", "Textures2D", "TextureCubes", "Shaders", "Others"};
+    const std::vector<std::string> m_asset_categories = {"Models", "Meshes", "Materials", "Textures2D", "TextureCubes", "Shaders", "Others"};
 
     std::vector<AssetView> m_asset_views;
     int m_current_category_index = 0;

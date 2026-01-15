@@ -1,16 +1,16 @@
 #include "Model.h"
 
 namespace ICE {
-Model::Model(const std::vector<Node> &nodes, const std::vector<std::shared_ptr<ICE::Mesh>> &meshes, const std::vector<ICE::AssetUID> &materials)
+Model::Model(const std::vector<Node> &nodes, const std::vector<AssetUID> &meshes, const std::vector<AssetUID> &materials)
     : m_nodes(nodes),
       m_meshes(meshes),
       m_materials(materials) {
-    for (const auto &mesh : meshes) {
+    /* for (const auto &mesh : meshes) {
         m_boundingbox = m_boundingbox.unionWith(mesh->getBoundingBox());
-    }
+    }*/
 }
 
-void Model::traverse(std::vector<std::shared_ptr<Mesh>> &meshes, std::vector<AssetUID> &materials, std::vector<Eigen::Matrix4f> &transforms,
+void Model::traverse(std::vector<AssetUID> &meshes, std::vector<AssetUID> &materials, std::vector<Eigen::Matrix4f> &transforms,
                      const Eigen::Matrix4f &base_transform) {
     std::function<void(int, const Eigen::Matrix4f &)> recursive_traversal = [&](int node_idx, const Eigen::Matrix4f &transform) {
         auto &node = m_nodes.at(node_idx);
@@ -22,11 +22,12 @@ void Model::traverse(std::vector<std::shared_ptr<Mesh>> &meshes, std::vector<Ass
             auto mesh = m_meshes.at(i);
 
             Eigen::Matrix4f node_transform;
-            if (mesh->usesBones()) {
+            /* if (mesh->usesBones()) {
                 node_transform = transform;
             } else {
                 node_transform = transform * node.animatedTransform;
-            }
+            }*/
+            node_transform = transform * node.animatedTransform;
 
             meshes.push_back(mesh);
             materials.push_back(mtl_id);

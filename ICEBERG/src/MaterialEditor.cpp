@@ -2,7 +2,7 @@
 
 MaterialEditor::MaterialEditor(const std::shared_ptr<ICE::ICEEngine> &engine)
     : m_engine(engine),
-      m_renderer(engine->getApi(), m_engine->getGraphicsFactory(), m_engine->getAssetBank()) {
+      m_renderer(engine->getApi(), m_engine->getGraphicsFactory(), m_engine->getGPURegistry()) {
     ui.registerCallback("shader_selected", [this](int index) {
         if (index >= 0 && index < m_shaders.size())
             m_current_material->setShader(m_shaders[index]);

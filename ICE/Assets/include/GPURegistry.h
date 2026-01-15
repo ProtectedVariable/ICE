@@ -19,6 +19,7 @@ class GPURegistry {
     GPURegistry(const std::shared_ptr<GraphicsFactory> &factory, const std::shared_ptr<AssetBank> &bank);
 
     AssetUID getUID(const AssetPath &path) const { return m_asset_bank->getUID(path); }
+    std::shared_ptr<Material> getMaterial(const AssetPath &path) { return m_asset_bank->getAsset<Material>(getUID(path)); }
     std::shared_ptr<Material> getMaterial(AssetUID id) { return m_asset_bank->getAsset<Material>(id); }
     std::shared_ptr<ShaderProgram> getShader(AssetUID id);
     std::shared_ptr<ShaderProgram> getShader(const AssetPath &path) { return getShader(getUID(path)); }

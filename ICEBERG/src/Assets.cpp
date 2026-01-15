@@ -6,7 +6,7 @@
 Assets::Assets(const std::shared_ptr<ICE::ICEEngine>& engine, const std::shared_ptr<ICE::GraphicsFactory>& g_factory)
     : m_engine(engine),
       m_g_factory(g_factory),
-      m_renderer(engine->getApi(), g_factory, engine->getAssetBank()),
+      m_renderer(engine->getApi(), g_factory, engine->getGPURegistry()),
       ui(m_asset_categories,
          m_engine->getGPURegistry()->getTexture2D(ICE::AssetPath::WithTypePrefix<ICE::Texture2D>("Editor/folder"))->ptr()),
       m_material_editor(engine) {
@@ -76,6 +76,8 @@ void Assets::rebuildViewer() {
         std::string category;
         if (std::dynamic_pointer_cast<ICE::Model>(entry.asset)) {
             category = "Models";
+        } else if (std::dynamic_pointer_cast<ICE::Mesh>(entry.asset)) {
+            category = "Meshes";
         } else if (std::dynamic_pointer_cast<ICE::Material>(entry.asset)) {
             category = "Materials";
         } else if (std::dynamic_pointer_cast<ICE::Texture2D>(entry.asset)) {
