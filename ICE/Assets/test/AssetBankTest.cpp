@@ -5,14 +5,11 @@
 #include <gtest/gtest.h>
 
 #include "AssetBank.h"
-#include "NoneGraphicsFactory.h"
 
 using namespace ICE;
 
-
 TEST(AssetBankTest, AddedAssetsCanBeRetrieved) {
-    NoneGraphicsFactory g_fac;
-    AssetBank ab(std::make_shared<NoneGraphicsFactory>(g_fac));
+    AssetBank ab;
     auto mtl = std::make_shared<Material>();
     ab.addAsset<Material>("a_ice_test_mtl", mtl);
     ASSERT_EQ(ab.getAsset<Material>("a_ice_test_mtl"), mtl);
@@ -23,19 +20,19 @@ TEST(AssetBankTest, AddedAssetsCanBeRetrieved) {
     ASSERT_EQ(ab.getAsset<Mesh>("a_ice_test_mesh"), mesh);
     ASSERT_EQ(ab.getAsset<Mesh>("lel"), nullptr);
 
-    auto tex = g_fac.createTexture2D("Not needed for this");
+    auto tex = std::make_shared<Texture2D>(nullptr, 0, 0, ICE::TextureFormat::SRGB8);
     ab.addAsset<Texture2D>("a_ice_test_tex", tex);
     ASSERT_EQ(ab.getAsset<Texture2D>("a_ice_test_tex"), tex);
     ASSERT_EQ(ab.getAsset<Texture2D>("lil"), nullptr);
 
-    auto shader = g_fac.createShader("", "");
+    auto shader = std::make_shared<Shader>();
     ab.addAsset<Shader>("a_ice_test_shader", shader);
     ASSERT_EQ(ab.getAsset<Shader>("a_ice_test_shader"), shader);
     ASSERT_EQ(ab.getAsset<Shader>("lul"), nullptr);
 }
 
 TEST(AssetBankTest, AssetsCanBeRenamed) {
-    AssetBank ab(std::make_shared<NoneGraphicsFactory>());
+    AssetBank ab;
     auto mtl = std::make_shared<Material>();
     ab.addAsset<Material>("a_ice_test_mtl", mtl);
     ASSERT_EQ(ab.getAsset<Material>("a_ice_test_mtl"), mtl);
@@ -47,7 +44,7 @@ TEST(AssetBankTest, AssetsCanBeRenamed) {
 }
 
 TEST(AssetBankTest, GetNameReturnsCorrectName) {
-    AssetBank ab(std::make_shared<NoneGraphicsFactory>());
+    AssetBank ab;
     auto mtl = std::make_shared<Material>();
     ab.addAsset<Material>("a_ice_test_mtl", mtl);
     ASSERT_EQ(AssetPath("Materials/a_ice_test_mtl"), ab.getName(ab.getUID(AssetPath("Materials/a_ice_test_mtl"))));
@@ -55,7 +52,7 @@ TEST(AssetBankTest, GetNameReturnsCorrectName) {
 }
 
 TEST(AssetBankTest, NameInUseBehavesCorrectly) {
-    AssetBank ab(std::make_shared<NoneGraphicsFactory>());
+    AssetBank ab;
     auto mtl = std::make_shared<Material>();
     ab.addAsset<Material>("a_ice_test_mtl", mtl);
     ASSERT_TRUE(ab.nameInUse(AssetPath::WithTypePrefix<Material>("a_ice_test_mtl")));
