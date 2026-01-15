@@ -84,6 +84,7 @@ class Project {
 
     fs::path m_base_directory;
     fs::path m_scenes_directory;
+    fs::path m_models_directory;
     fs::path m_meshes_directory;
     fs::path m_materials_directory;
     fs::path m_shaders_directory;

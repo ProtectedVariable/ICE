@@ -14,8 +14,8 @@ void AnimationSystem::update(double dt) {
             continue;
 
         anim->currentTime += dt * anim->speed;
-
-        auto model = m_asset_bank->getAsset<Model>(rc->model);
+        /*
+        auto model = m_asset_bank->getAsset<Mesh>(rc->mesh);
         auto animation = model->getAnimations().at(anim->currentAnimation);
 
         if (anim->currentTime > animation.duration) {
@@ -27,6 +27,7 @@ void AnimationSystem::update(double dt) {
             }
         }
         updateSkeleton(model, anim->currentTime, animation);
+        */
     }
 }
 

@@ -8,6 +8,7 @@
 #include <Model.h>
 
 #include "MaterialLoader.h"
+#include "MeshLoader.h"
 #include "ModelLoader.h"
 #include "ShaderLoader.h"
 #include "TextureLoader.h"
@@ -20,6 +21,7 @@ AssetBank::AssetBank() {
     loader.AddLoader<Model>(std::make_shared<ModelLoader>(*this));
     loader.AddLoader<Shader>(std::make_shared<ShaderLoader>());
     loader.AddLoader<Material>(std::make_shared<MaterialLoader>());
+    loader.AddLoader<Mesh>(std::make_shared<MeshLoader>());
 }
 
 bool AssetBank::nameInUse(const AssetPath &name) {

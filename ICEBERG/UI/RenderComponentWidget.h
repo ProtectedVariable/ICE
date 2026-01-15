@@ -30,18 +30,24 @@ class RenderComponentWidget : public Widget, ImXML::XMLEventHandler {
         }
     }
 
-    void setRenderComponent(ICE::RenderComponent* rc, const std::vector<std::string>& meshes_paths, const std::vector<ICE::AssetUID>& meshes_ids) {
+    void setRenderComponent(ICE::RenderComponent* rc, const std::vector<std::string>& meshes_paths, const std::vector<ICE::AssetUID>& meshes_ids,
+                            const std::vector<std::string>& materials_paths, const std::vector<ICE::AssetUID>& materials_ids) {
         m_rc = rc;
         if (m_rc) {
-            m_models_combo.setValue(rc->model);
+            m_models_combo.setValue(rc->mesh);
             m_models_combo.setAssetComboList(meshes_paths, meshes_ids);
-            m_models_combo.onValueChanged([this](const ICE::UniformValue& v) { m_rc->model = std::get<ICE::AssetUID>(v); });
+            m_models_combo.onValueChanged([this](const ICE::UniformValue& v) { m_rc->mesh = std::get<ICE::AssetUID>(v); });
+
+            m_material_combo.setValue(rc->material);
+            m_material_combo.setAssetComboList(meshes_paths, meshes_ids);
+            m_material_combo.onValueChanged([this](const ICE::UniformValue& v) { m_rc->material = std::get<ICE::AssetUID>(v); });
         }
     }
 
    private:
     ICE::RenderComponent* m_rc = nullptr;
     UniformInputs m_models_combo{"##models_combo", 0};
+    UniformInputs m_material_combo{"##materials_combo", 0};
 
     ImXML::XMLTree m_xml_tree;
     ImXML::XMLRenderer m_xml_renderer;

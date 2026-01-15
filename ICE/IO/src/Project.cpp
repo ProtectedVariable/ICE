@@ -31,7 +31,8 @@ Project::Project(const fs::path &base_directory, const std::string &m_name)
     m_shaders_directory = m_base_directory / assets_folder / "Shaders";
     m_textures_directory = m_base_directory / assets_folder / "Textures";
     m_cubemaps_directory = m_base_directory / assets_folder / "Cubemaps";
-    m_meshes_directory = m_base_directory / assets_folder / "Models";
+    m_models_directory = m_base_directory / assets_folder / "Models";
+    m_meshes_directory = m_base_directory / assets_folder / "Meshes";
     m_scenes_directory = m_base_directory / "Scenes";
 }
 
@@ -51,8 +52,8 @@ bool Project::CreateDirectories() {
 
     m_asset_bank->addAsset<Material>("base_mat", {m_materials_directory / "base_mat.material.json"});
 
-    m_asset_bank->addAsset<Model>("cube", {m_meshes_directory / "cube.obj"});
-    m_asset_bank->addAsset<Model>("sphere", {m_meshes_directory / "sphere.obj"});
+    m_asset_bank->addAsset<Mesh>("cube", {m_meshes_directory / "cube.obj"});
+    m_asset_bank->addAsset<Mesh>("sphere", {m_meshes_directory / "sphere.obj"});
 
     m_asset_bank->addAsset<Texture2D>("Editor/folder", {m_textures_directory / "Editor" / "folder.png"});
     m_asset_bank->addAsset<Texture2D>("Editor/shader", {m_textures_directory / "Editor" / "shader.png"});
@@ -89,6 +90,12 @@ void Project::writeToFile(const std::shared_ptr<Camera> &editorCamera) {
         vec.push_back(dumpAsset(asset_id, mesh));
     }
     j["models"] = vec;
+    vec.clear();
+
+    for (const auto &[asset_id, mesh] : m_asset_bank->getAll<Mesh>()) {
+        vec.push_back(dumpAsset(asset_id, mesh));
+    }
+    j["meshes"] = vec;
     vec.clear();
 
     for (const auto &[asset_id, material] : m_asset_bank->getAll<Material>()) {
@@ -148,7 +155,8 @@ void Project::writeToFile(const std::shared_ptr<Camera> &editorCamera) {
             if (s->getRegistry()->entityHasComponent<RenderComponent>(e)) {
                 RenderComponent rc = *s->getRegistry()->getComponent<RenderComponent>(e);
                 json renderjson;
-                renderjson["model"] = rc.model;
+                renderjson["mesh"] = rc.mesh;
+                renderjson["material"] = rc.material;
                 entity["renderComponent"] = renderjson;
             }
             if (s->getRegistry()->entityHasComponent<TransformComponent>(e)) {
@@ -196,7 +204,8 @@ void Project::loadFromFile() {
     infile.close();
 
     std::vector<std::string> sceneNames = j["scenes"];
-    json meshes = j["models"];
+    json models = j["models"];
+    json meshes = j["meshes"];
     json material = j["materials"];
     json shader = j["shaders"];
     json texture = j["textures2D"];
@@ -209,7 +218,8 @@ void Project::loadFromFile() {
     loadAssetsOfType<Texture2D>(texture);
     loadAssetsOfType<TextureCube>(cubeMap);
     loadAssetsOfType<Material>(material);
-    loadAssetsOfType<Model>(meshes);
+    loadAssetsOfType<Mesh>(meshes);
+    loadAssetsOfType<Model>(models);
 
     for (const auto &s : sceneNames) {
         infile = std::ifstream(m_scenes_directory / (s + ".ics"));
@@ -234,7 +244,7 @@ void Project::loadFromFile() {
             }
             if (!jentity["renderComponent"].is_null()) {
                 json rj = jentity["renderComponent"];
-                RenderComponent rc(rj["model"]);
+                RenderComponent rc(rj["mesh"], rj["material"]);
                 scene.getRegistry()->addComponent(e, rc);
             }
             if (!jentity["lightComponent"].is_null()) {

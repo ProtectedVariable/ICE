@@ -9,7 +9,7 @@ namespace ICE {
 AABB::AABB(const Eigen::Vector3f &min, const Eigen::Vector3f &max) : min(min), max(max) {
 }
 AABB::AABB(const std::vector<Eigen::Vector3f> &points) : AABB(points[0], points[0]) {
-    for (auto v : points) {
+    for (const auto &v : points) {
         min = min.cwiseMin(v);
         max = max.cwiseMax(v);
     }

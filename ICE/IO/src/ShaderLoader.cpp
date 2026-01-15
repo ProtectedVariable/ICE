@@ -17,7 +17,10 @@ std::shared_ptr<Shader> ShaderLoader::load(const std::vector<std::filesystem::pa
         throw ICEException("No files provided for shader");
     }
 
-    auto json = nlohmann::json::parse(std::ifstream(files[0]));
+    nlohmann::json json;
+    std::ifstream infile = std::ifstream(files[0]);
+    infile >> json;
+    infile.close();
 
     ShaderSource shader_sources;
     for (const auto &stage_source : json) {
