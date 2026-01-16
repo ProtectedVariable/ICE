@@ -19,6 +19,8 @@ class RenderComponentWidget : public Widget, ImXML::XMLEventHandler {
     void onNodeBegin(ImXML::XMLNode& node) override {
         if (node.arg<std::string>("id") == "models_combo") {
             m_models_combo.render();
+        } else if (node.arg<std::string>("id") == "materials_combo") {
+            m_material_combo.render();
         }
     }
     void onNodeEnd(ImXML::XMLNode& node) override {}
@@ -39,7 +41,7 @@ class RenderComponentWidget : public Widget, ImXML::XMLEventHandler {
             m_models_combo.onValueChanged([this](const ICE::UniformValue& v) { m_rc->mesh = std::get<ICE::AssetUID>(v); });
 
             m_material_combo.setValue(rc->material);
-            m_material_combo.setAssetComboList(meshes_paths, meshes_ids);
+            m_material_combo.setAssetComboList(materials_paths, materials_ids);
             m_material_combo.onValueChanged([this](const ICE::UniformValue& v) { m_rc->material = std::get<ICE::AssetUID>(v); });
         }
     }

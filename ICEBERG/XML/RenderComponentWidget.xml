@@ -8,10 +8,18 @@
 		<setupcolumn label="" width="60" flags="ImGuiTableColumnFlags_WidthFixed"/>
 		<row>
 			<column>
-				<text label="Model"/>
+				<text label="Mesh"/>
 			</column>
 			<column>
 				<placeholder id="models_combo" />
+			</column>
+		</row>
+		<row>
+			<column>
+				<text label="Material"/>
+			</column>
+			<column>
+				<placeholder id="materials_combo" />
 			</column>
 			<column>
 				<button id="btn_remove" label="Remove"/>

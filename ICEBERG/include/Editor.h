@@ -48,7 +48,7 @@ class Editor : public Controller {
     std::unique_ptr<Hierarchy> m_hierarchy;
     std::unique_ptr<Inspector> m_inspector;
     std::unique_ptr<Assets> m_assets;
-    ICE::Entity m_selected_entity;
+    ICE::Entity m_selected_entity = 0;
     bool m_entity_transform_changed = false;
 
     //Popups

@@ -33,21 +33,21 @@ Viewport::Viewport(const std::shared_ptr<ICE::ICEEngine> &engine, const std::fun
         m_engine->getApi()->setClearColor(0, 0, 0, 0);
         m_engine->getApi()->clear();
 
-        /*
         auto camera = m_engine->getCamera();
-        m_engine->getAssetBank()->getAsset<ICE::Shader>("__ice__picking_shader")->bind();
-        m_engine->getAssetBank()->getAsset<ICE::Shader>("__ice__picking_shader")->loadMat4("projection", camera->getProjection());
-        m_engine->getAssetBank()->getAsset<ICE::Shader>("__ice__picking_shader")->loadMat4("view", camera->lookThrough());
+        auto shader = m_engine->getGPURegistry()->getShader(ICE::AssetPath::WithTypePrefix<ICE::Shader>("__ice__picking_shader"));
+
+        shader->bind();
+
         auto registry = m_engine->getProject()->getCurrentScene()->getRegistry();
         for (auto e : registry->getEntities()) {
             if (registry->entityHasComponent<ICE::RenderComponent>(e) && registry->entityHasComponent<ICE::TransformComponent>(e)) {
 
                 auto tc = registry->getComponent<ICE::TransformComponent>(e);
                 auto rc = registry->getComponent<ICE::RenderComponent>(e);
-                m_engine->getAssetBank()->getAsset<ICE::Shader>("__ice__picking_shader")->loadMat4("model", tc->getModelMatrix());
-                m_engine->getAssetBank()->getAsset<ICE::Shader>("__ice__picking_shader")->loadInt("objectID", e);
-                auto model = m_engine->getAssetBank()->getAsset<ICE::Model>(rc->model);
-                for (const auto &mesh : model->getMeshes()) {
+                shader->loadMat4("model", tc->getModelMatrix());
+                shader->loadInt("objectID", e);
+                auto mesh = m_engine->getGPURegistry()->getMesh(rc->mesh);
+                if (mesh) {
                     mesh->getVertexArray()->bind();
                     mesh->getVertexArray()->getIndexBuffer()->bind();
                     m_engine->getApi()->renderVertexArray(mesh->getVertexArray());
@@ -60,8 +60,8 @@ Viewport::Viewport(const std::shared_ptr<ICE::ICEEngine> &engine, const std::fun
         e += color.x();
         e += color.y() << 8;
         e += color.z() << 16;
-        m_entity_picked_callback(e);
-        */
+        if (e != 0)
+            m_entity_picked_callback(e);
     });
     ui.registerCallback("resize", [this](float width, float height) {
         m_engine->getCamera()->resize(width, height);
