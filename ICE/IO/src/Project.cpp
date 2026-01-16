@@ -256,7 +256,7 @@ void Project::loadFromFile() {
         for (json jentity : scenejson["entities"]) {
             Entity e = jentity["id"];
             Entity parent = jentity["parent"];
-            scene.getGraph()->setParent(e, parent, true);
+            scene.getGraph()->setParent(e, parent);
         }
         addScene(scene);
         //TODO: it would be better to save the current scene index

@@ -44,7 +44,7 @@ Viewport::Viewport(const std::shared_ptr<ICE::ICEEngine> &engine, const std::fun
 
                 auto tc = registry->getComponent<ICE::TransformComponent>(e);
                 auto rc = registry->getComponent<ICE::RenderComponent>(e);
-                shader->loadMat4("model", tc->getModelMatrix());
+                shader->loadMat4("model", tc->getWorldMatrix());
                 shader->loadInt("objectID", e);
                 auto mesh = m_engine->getGPURegistry()->getMesh(rc->mesh);
                 if (mesh) {
@@ -76,26 +76,33 @@ bool Viewport::update() {
     ui.setTexture(static_cast<char *>(0) + m_engine->getInternalFramebuffer()->getTexture());
     ui.render();
 
-    ImGuizmo::Enable(true);
     if (m_selected_entity != 0) {
-        auto tc = m_engine->getProject()->getCurrentScene()->getRegistry()->getComponent<ICE::TransformComponent>(m_selected_entity);
-        Eigen::Matrix4f delta_matrix;
-        delta_matrix.setZero();
-        ImGuizmo::Manipulate(m_engine->getCamera()->lookThrough().transpose().data(), m_engine->getCamera()->getProjection().data(), m_guizmo_mode,
-                             ImGuizmo::WORLD, tc->getModelMatrix().data(), delta_matrix.data());
-        auto deltaT = Eigen::Vector3f(0, 0, 0);
-        auto deltaR = Eigen::Vector3f(0, 0, 0);
-        auto deltaS = Eigen::Vector3f(0, 0, 0);
+        auto registry = m_engine->getProject()->getCurrentScene()->getRegistry();
+        auto tc = registry->getComponent<ICE::TransformComponent>(m_selected_entity);
 
-        ImGuizmo::DecomposeMatrixToComponents(delta_matrix.data(), deltaT.data(), deltaR.data(), deltaS.data());
-        if (m_guizmo_mode == ImGuizmo::TRANSLATE) {
-            tc->position() += deltaT;
-        } else if (m_guizmo_mode == ImGuizmo::ROTATE) {
-            tc->rotation() += deltaR;
-        } else if (m_guizmo_mode == ImGuizmo::SCALE) {
-            tc->scale() += (deltaS - Eigen::Vector3f(1, 1, 1));
+        ICE::Entity parentID = m_engine->getProject()->getCurrentScene()->getGraph()->getParentID(m_selected_entity);
+        Eigen::Matrix4f parentWorldMatrix = Eigen::Matrix4f::Identity();
+
+        if (parentID != 0) {
+            auto ptc = registry->getComponent<ICE::TransformComponent>(parentID);
+            parentWorldMatrix = ptc->getWorldMatrix();
         }
-        if (ImGuizmo::IsUsingAny()) {
+
+        Eigen::Matrix4f currentWorldMatrix = tc->getWorldMatrix().eval();
+
+        ImGuizmo::Manipulate(m_engine->getCamera()->lookThrough().data(), m_engine->getCamera()->getProjection().data(), m_guizmo_mode,
+                             ImGuizmo::WORLD, currentWorldMatrix.data());
+
+        if (ImGuizmo::IsUsing()) {
+            Eigen::Matrix4f newLocalMatrix = parentWorldMatrix.inverse() * currentWorldMatrix;
+
+            Eigen::Vector3f pos, rot, sca;
+            ImGuizmo::DecomposeMatrixToComponents(newLocalMatrix.data(), pos.data(), rot.data(), sca.data());
+
+            tc->setPosition(pos);
+            tc->setRotation(rot);  
+            tc->setScale(sca);
+
             m_entity_transformed_callback();
         }
     }

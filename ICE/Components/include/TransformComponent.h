@@ -28,6 +28,18 @@ struct TransformComponent : public Component {
         return m_model_matrix;
     }
 
+    Eigen::Matrix4f getWorldMatrix() const {
+        if (m_dirty) {
+            m_world_matrix = m_parent_matrix * getModelMatrix();
+        }
+        return m_world_matrix;
+    }
+
+    void updateParentMatrix(const Eigen::Matrix4f &parent_matrix) {
+        m_parent_matrix = parent_matrix;
+        m_world_matrix = parent_matrix * getModelMatrix();
+    }
+
     Eigen::Vector3f &position() {
         m_dirty = true;
         return m_position;
@@ -57,6 +69,8 @@ struct TransformComponent : public Component {
    private:
     Eigen::Vector3f m_position, m_rotation, m_scale;
     mutable Eigen::Matrix4f m_model_matrix;
+    mutable Eigen::Matrix4f m_parent_matrix = Eigen::Matrix4f::Identity();
+    mutable Eigen::Matrix4f m_world_matrix = Eigen::Matrix4f::Identity();
     mutable bool m_dirty = true;
 };
 }  // namespace ICE

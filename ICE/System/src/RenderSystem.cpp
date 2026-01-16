@@ -53,9 +53,11 @@ void RenderSystem::update(double delta) {
         if (!mesh || !material || !shader)
             continue;
 
+        auto model_mat = tc->getWorldMatrix();
+
         auto aabb = m_asset_bank->getMeshAABB(rc->mesh);
-        Eigen::Vector3f min = (tc->getModelMatrix() * Eigen::Vector4f(aabb.getMin().x(), aabb.getMin().y(), aabb.getMin().z(), 1.0)).head<3>();
-        Eigen::Vector3f max = (tc->getModelMatrix() * Eigen::Vector4f(aabb.getMax().x(), aabb.getMax().y(), aabb.getMax().z(), 1.0)).head<3>();
+        Eigen::Vector3f min = (model_mat * Eigen::Vector4f(aabb.getMin().x(), aabb.getMin().y(), aabb.getMin().z(), 1.0)).head<3>();
+        Eigen::Vector3f max = (model_mat * Eigen::Vector4f(aabb.getMax().x(), aabb.getMax().y(), aabb.getMax().z(), 1.0)).head<3>();
         aabb = AABB(std::vector<Eigen::Vector3f>{min, max});
         if (!isAABBInFrustum(frustum, aabb)) {
             continue;
@@ -70,8 +72,7 @@ void RenderSystem::update(double delta) {
                 }
             }
         }
-        m_renderer->submitDrawable(
-            Drawable{.mesh = mesh, .material = material, .shader = shader, .textures = texs, .model_matrix = tc->getModelMatrix()});
+        m_renderer->submitDrawable(Drawable{.mesh = mesh, .material = material, .shader = shader, .textures = texs, .model_matrix = model_mat});
     }
 
     for (int i = 0; i < m_lights.size(); i++) {
