@@ -91,16 +91,27 @@ bool Viewport::update() {
         Eigen::Matrix4f currentWorldMatrix = tc->getWorldMatrix().eval();
 
         ImGuizmo::Manipulate(m_engine->getCamera()->lookThrough().data(), m_engine->getCamera()->getProjection().data(), m_guizmo_mode,
-                             ImGuizmo::WORLD, currentWorldMatrix.data());
+                             ImGuizmo::LOCAL, currentWorldMatrix.data());
 
         if (ImGuizmo::IsUsing()) {
             Eigen::Matrix4f newLocalMatrix = parentWorldMatrix.inverse() * currentWorldMatrix;
 
-            Eigen::Vector3f pos, rot, sca;
-            ImGuizmo::DecomposeMatrixToComponents(newLocalMatrix.data(), pos.data(), rot.data(), sca.data());
+            Eigen::Vector3f pos = newLocalMatrix.block<3, 1>(0, 3);
+
+            Eigen::Vector3f sca;
+            sca.x() = newLocalMatrix.block<3, 1>(0, 0).norm();
+            sca.y() = newLocalMatrix.block<3, 1>(0, 1).norm();
+            sca.z() = newLocalMatrix.block<3, 1>(0, 2).norm();
+
+            Eigen::Matrix3f rotMat = newLocalMatrix.block<3, 3>(0, 0);
+            rotMat.col(0) /= sca.x();
+            rotMat.col(1) /= sca.y();
+            rotMat.col(2) /= sca.z();
+
+            Eigen::Quaternionf rot(rotMat);
 
             tc->setPosition(pos);
-            tc->setRotation(rot);  
+            tc->setRotation(rot);
             tc->setScale(sca);
 
             m_entity_transformed_callback();

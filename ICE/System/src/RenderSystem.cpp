@@ -83,7 +83,7 @@ void RenderSystem::update(double delta) {
         auto tc = m_registry->getComponent<TransformComponent>(light);
 
         m_renderer->submitLight(Light{.position = tc->getPosition(),
-                                      .rotation = tc->getRotation(),
+                                      .rotation = tc->getRotationEulerDeg(),
                                       .color = lc->color,
                                       .distance_dropoff = lc->distance_dropoff,
                                       .type = lc->type});

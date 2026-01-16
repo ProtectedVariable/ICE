@@ -163,7 +163,7 @@ void Project::writeToFile(const std::shared_ptr<Camera> &editorCamera) {
                 TransformComponent tc = *s->getRegistry()->getComponent<TransformComponent>(e);
                 json transformjson;
                 transformjson["position"] = dumpVec3(tc.getPosition());
-                transformjson["rotation"] = dumpVec3(tc.getRotation());
+                transformjson["rotation"] = dumpVec3(tc.getRotationEulerDeg());
                 transformjson["scale"] = dumpVec3(tc.getScale());
                 entity["transformComponent"] = transformjson;
             }

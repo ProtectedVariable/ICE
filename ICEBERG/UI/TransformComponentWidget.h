@@ -43,8 +43,8 @@ class TransformComponentWidget : public Widget, ImXML::XMLEventHandler {
         if (tc) {
             m_transform_input.setValue(tc->getPosition());
             m_transform_input.onValueChanged([this](const ICE::UniformValue& v) { m_tc->setPosition(std::get<Eigen::Vector3f>(v)); });
-            m_rotation_input.setValue(tc->getRotation());
-            m_rotation_input.onValueChanged([this](const ICE::UniformValue& v) { m_tc->setRotation(std::get<Eigen::Vector3f>(v)); });
+            m_rotation_input.setValue(tc->getRotationEulerDeg());
+            m_rotation_input.onValueChanged([this](const ICE::UniformValue& v) { m_tc->setRotationEulerDeg(std::get<Eigen::Vector3f>(v)); });
             m_scale_input.setValue(tc->getScale());
             m_scale_input.onValueChanged([this](const ICE::UniformValue& v) { m_tc->setScale(std::get<Eigen::Vector3f>(v)); });
         }
