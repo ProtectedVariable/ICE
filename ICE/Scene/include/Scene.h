@@ -28,6 +28,8 @@ class Scene {
 
     std::shared_ptr<Registry> getRegistry() const;
     Entity createEntity();
+    Entity spawnTree(AssetUID model_id, const std::shared_ptr<AssetBank>& bank);
+
     void addEntity(Entity e, const std::string& alias, Entity parent);
     void removeEntity(Entity e);
     bool hasEntity(Entity e);

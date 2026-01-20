@@ -7,10 +7,10 @@
 #include <memory>
 #include <unordered_map>
 
-#include "Material.h"
 #include "GPUMesh.h"
-#include "ShaderProgram.h"
+#include "Material.h"
 #include "Model.h"
+#include "ShaderProgram.h"
 
 namespace ICE {
 struct RenderCommand {
@@ -20,7 +20,7 @@ struct RenderCommand {
     std::unordered_map<AssetUID, std::shared_ptr<GPUTexture>> textures;
     Eigen::Matrix4f model_matrix;
 
-    std::vector<Model::BoneInfo> bones;
+    std::vector<Eigen::Matrix4f> bones;
 
     bool faceCulling = true;
     bool depthTest = true;

@@ -21,6 +21,30 @@ struct TransformComponent : public Component {
         setRotationEulerDeg(rot);
     }
 
+   TransformComponent(const Eigen::Matrix4f& matrix) {
+        m_position = matrix.block<3, 1>(0, 3);
+
+        Eigen::Vector3f vX = matrix.block<3, 1>(0, 0);
+        Eigen::Vector3f vY = matrix.block<3, 1>(0, 1);
+        Eigen::Vector3f vZ = matrix.block<3, 1>(0, 2);
+
+        m_scale << vX.norm(), vY.norm(), vZ.norm();
+
+        if (matrix.block<3, 3>(0, 0).determinant() < 0) {
+            m_scale.x() *= -1.0f;
+            vX *= -1.0f;  // Flip the axis for rotation calculation
+        }
+
+        vX.normalize();
+        vY.normalize();
+        vZ.normalize();
+
+        Eigen::Matrix3f rot_matrix;
+        rot_matrix << vX, vY, vZ;
+
+        m_rotation = Eigen::Quaternionf(rot_matrix);
+    }
+
     Eigen::Vector3f getPosition() const { return m_position; }
     Eigen::Quaternionf getRotation() const { return m_rotation; }
     Eigen::Vector3f getScale() const { return m_scale; }

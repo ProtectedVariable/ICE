@@ -40,23 +40,13 @@ int main(void) {
                                                            TransformComponent({0, 1000, 0}, Eigen::Vector3f::Zero(), Eigen::Vector3f(0.1, 0.1, 0.1)));
     scene->getRegistry()->addComponent<LightComponent>(entity, LightComponent(LightType::PointLight, {1, 1, 1}));
 
-    auto mesh_id_2 = engine.getAssetBank()->getUID(AssetPath::WithTypePrefix<Model>("Adventurer"));
-
-    auto entity2 = scene->createEntity();
-    scene->getRegistry()->addComponent<TransformComponent>(
-        entity2, TransformComponent(Eigen::Vector3f::Zero(), Eigen::Vector3f(0, 0, 0), Eigen::Vector3f::Constant(1)));
-    scene->getRegistry()->addComponent<RenderComponent>(entity2, RenderComponent(mesh_id_2));
+    auto model_id = engine.getAssetBank()->getUID(AssetPath::WithTypePrefix<Model>("Adventurer"));
+    auto entity2 = scene->spawnTree(model_id, engine.getAssetBank());
     scene->getRegistry()->addComponent<AnimationComponent>(entity2, AnimationComponent{.currentAnimation = "Walk", .loop = true});
 
-    auto entity3 = scene->createEntity();
-    scene->getRegistry()->addComponent<TransformComponent>(
-        entity3, TransformComponent(Eigen::Vector3f(1, 0, 0), Eigen::Vector3f(0, 0, 0), Eigen::Vector3f::Constant(1)));
-    scene->getRegistry()->addComponent<RenderComponent>(entity3, RenderComponent(mesh_id_2));
-    scene->getRegistry()->addComponent<AnimationComponent>(entity3, AnimationComponent{.currentAnimation = "Run", .loop = true});
-
     auto camera = std::make_shared<PerspectiveCamera>(60.0, 16.0 / 9.0, 0.01, 10000.0);
-    camera->backward(5);
-    camera->up(5);
+    camera->backward(50);
+    camera->up(50);
     camera->pitch(-30);
     scene->getRegistry()->getSystem<RenderSystem>()->setCamera(camera);
 
@@ -66,7 +56,7 @@ int main(void) {
 
         engine.step();
 
-        scene->getRegistry()->getComponent<TransformComponent>(entity2)->rotation().y() += 0.1f;
+        scene->getRegistry()->getComponent<TransformComponent>(entity2)->setRotationEulerDeg({0, i / 10.0f, 0});
 
         //Render system duty
         int display_w, display_h;

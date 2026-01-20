@@ -16,13 +16,14 @@ class Model : public Asset {
     };
 
     struct BoneInfo {
-        Eigen::Matrix4f finalTransformation;
+        Eigen::Matrix4f finalTransform;
     };
 
     struct Skeleton {
         std::unordered_map<std::string, int> boneMapping;
         std::vector<BoneInfo> bones;
         Eigen::Matrix4f globalInverseTransform;
+        std::vector<Eigen::Matrix4f> inverseBindMatrices;
     };
 
     Model(const std::vector<Node> &nodes, const std::vector<AssetUID> &meshes, const std::vector<ICE::AssetUID> &materials);

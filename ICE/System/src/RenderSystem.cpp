@@ -63,6 +63,12 @@ void RenderSystem::update(double delta) {
             continue;
         }
 
+        std::vector<Eigen::Matrix4f> bone_matrices;
+        if (m_registry->entityHasComponent<SkinningComponent>(e)) {
+            auto pose = m_registry->getComponent<SkeletonPoseComponent>(m_registry->getComponent<SkinningComponent>(e)->skeleton_entity);
+            bone_matrices = pose->final_bone_matrices;
+        }
+
         std::unordered_map<AssetUID, std::shared_ptr<GPUTexture>> texs;
         for (const auto &[name, value] : material->getAllUniforms()) {
             if (std::holds_alternative<AssetUID>(value)) {
@@ -72,7 +78,12 @@ void RenderSystem::update(double delta) {
                 }
             }
         }
-        m_renderer->submitDrawable(Drawable{.mesh = mesh, .material = material, .shader = shader, .textures = texs, .model_matrix = model_mat});
+        m_renderer->submitDrawable(Drawable{.mesh = mesh,
+                                            .material = material,
+                                            .shader = shader,
+                                            .textures = texs,
+                                            .model_matrix = model_mat,
+                                            .bone_matrices = bone_matrices});
     }
 
     for (int i = 0; i < m_lights.size(); i++) {

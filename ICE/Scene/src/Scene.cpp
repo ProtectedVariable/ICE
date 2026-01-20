@@ -45,6 +45,52 @@ Entity Scene::createEntity() {
     return e;
 }
 
+Entity Scene::spawnTree(AssetUID model_id, const std::shared_ptr<AssetBank> &bank) {
+    auto model = bank->getAsset<Model>(model_id);
+    auto nodes = model->getNodes();
+    auto meshes = model->getMeshes();
+    auto materialIDs = model->getMaterialsIDs();
+
+    std::function<Entity(int, Entity, Entity)> spawnNode = [&](int nodeIndex, Entity parent, Entity skeleton) -> Entity {
+        auto &node = nodes[nodeIndex];
+
+        Entity nodeEntity = createEntity();
+        if (skeleton == -1) {
+            skeleton = nodeEntity;
+        }
+        setAlias(nodeEntity, node.name);
+        m_graph->setParent(nodeEntity, parent);
+        registry->addComponent<TransformComponent>(nodeEntity, TransformComponent(node.localTransform));
+
+        for (int meshIdx : node.meshIndices) {
+            Entity meshEntity = createEntity();
+            setAlias(meshEntity, node.name + "_mesh_" + std::to_string(meshIdx));
+
+            m_graph->setParent(meshEntity, nodeEntity);
+            registry->addComponent<TransformComponent>(meshEntity, TransformComponent(Eigen::Matrix4f::Identity().eval()));
+            registry->addComponent<SkinningComponent>(meshEntity, SkinningComponent{.skeleton_entity = skeleton});
+            registry->addComponent<RenderComponent>(meshEntity, RenderComponent(meshes[meshIdx], materialIDs[meshIdx]));
+        }
+
+        for (int childIndex : node.children) {
+            spawnNode(childIndex, nodeEntity, skeleton);
+        }
+
+        return nodeEntity;
+    };
+
+    auto root = spawnNode(0, 0, -1);
+
+    if (model->getSkeleton().bones.size() > 0) {
+        registry->addComponent<SkeletonPoseComponent>(root,
+                                                      SkeletonPoseComponent{.skeletonModel = model_id,
+                                                                            .final_bone_matrices = std::vector<Eigen::Matrix4f>(
+                                                                                model->getSkeleton().bones.size(), Eigen::Matrix4f::Identity())});
+    }
+
+    return root;
+}
+
 void Scene::addEntity(Entity e, const std::string &alias, Entity parent) {
     m_graph->addEntity(e);
     m_graph->setParent(e, parent);

@@ -1,11 +1,9 @@
 #pragma once
 
-#include <Component.h> 
+#include <Component.h>
 
 namespace ICE {
 struct SkinningComponent : public Component {
-    std::vector<Entity> bone_entities;
-    std::vector<Eigen::Matrix4f> inverse_bind_matrices;
-
+    Entity skeleton_entity = 0;
 };
 }  // namespace ICE

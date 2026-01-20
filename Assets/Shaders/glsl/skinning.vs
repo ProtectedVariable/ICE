@@ -14,7 +14,6 @@ layout (location = 6) in vec4 bone_weights;
 
 uniform mat4 model;
 uniform mat4 bonesTransformMatrices[MAX_BONES];
-uniform mat4 bonesOffsetMatrices[MAX_BONES];
 
 out vec3 fnormal;
 out vec3 ftangent;
@@ -46,7 +45,7 @@ void main() {
 				break; 
 			}
 			
-			mat4 finalBonesMatrix = bonesTransformMatrices[bone_ids[i]] * bonesOffsetMatrices[bone_ids[i]];
+			mat4 finalBonesMatrix = bonesTransformMatrices[bone_ids[i]];
 			
 			totalPosition += finalBonesMatrix * vec4(vertex, 1.0f) * bone_weights[i];
 			

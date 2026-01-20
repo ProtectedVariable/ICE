@@ -9,13 +9,13 @@ AnimationSystem::AnimationSystem(const std::shared_ptr<Registry>& reg, const std
 void AnimationSystem::update(double dt) {
     for (auto e : entities) {
         auto anim = m_registry->getComponent<AnimationComponent>(e);
-        auto rc = m_registry->getComponent<RenderComponent>(e);
+        auto pose = m_registry->getComponent<SkeletonPoseComponent>(e);
         if (!anim->playing)
             continue;
 
         anim->currentTime += dt * anim->speed;
-        /*
-        auto model = m_asset_bank->getAsset<Mesh>(rc->mesh);
+
+        auto model = m_asset_bank->getAsset<Model>(pose->skeletonModel);
         auto animation = model->getAnimations().at(anim->currentAnimation);
 
         if (anim->currentTime > animation.duration) {
@@ -26,18 +26,17 @@ void AnimationSystem::update(double dt) {
                 anim->playing = false;
             }
         }
-        updateSkeleton(model, anim->currentTime, animation);
-        */
+        updateSkeleton(model, anim->currentTime, pose, animation);
     }
 }
 
-void AnimationSystem::updateSkeleton(const std::shared_ptr<Model>& model, double time, const Animation& anim) {
+void AnimationSystem::updateSkeleton(const std::shared_ptr<Model>& model, double time, SkeletonPoseComponent* pose, const Animation& anim) {
     auto& all_nodes = model->getNodes();
-    applyTransforms(&all_nodes[0], Eigen::Matrix4f::Identity(), model->getSkeleton(), time, anim, all_nodes);
+    applyTransforms(&all_nodes[0], Eigen::Matrix4f::Identity(), model->getSkeleton(), time, pose, anim, all_nodes);
 }
 
-void AnimationSystem::applyTransforms(Model::Node* node, const Eigen::Matrix4f& parentTransform, Model::Skeleton& skeleton, double time,
-                                      const Animation& anim, std::vector<Model::Node>& allModelNodes) {
+void AnimationSystem::applyTransforms(const Model::Node* node, const Eigen::Matrix4f& parentTransform, const Model::Skeleton& skeleton, double time,
+                                      SkeletonPoseComponent* pose, const Animation& anim, const std::vector<Model::Node>& allModelNodes) {
     Eigen::Matrix4f nodeLocalTransform = node->localTransform;
     std::string nodeName = node->name;
     Eigen::Matrix4f globalTransform;
@@ -52,15 +51,15 @@ void AnimationSystem::applyTransforms(Model::Node* node, const Eigen::Matrix4f& 
     }
 
     globalTransform = parentTransform * nodeLocalTransform;
-    node->animatedTransform = globalTransform;
+    //node->animatedTransform = globalTransform;
 
     if (skeleton.boneMapping.contains(nodeName)) {
         int boneID = skeleton.boneMapping.at(nodeName);
-        skeleton.bones[boneID].finalTransformation = skeleton.globalInverseTransform * globalTransform;
+        pose->final_bone_matrices[boneID] = skeleton.globalInverseTransform * globalTransform * skeleton.inverseBindMatrices[boneID];
     }
 
     for (int childIndex : node->children) {
-        applyTransforms(&allModelNodes[childIndex], globalTransform, skeleton, time, anim, allModelNodes);
+        applyTransforms(&allModelNodes[childIndex], globalTransform, skeleton, time, pose, anim, allModelNodes);
     }
 }
 

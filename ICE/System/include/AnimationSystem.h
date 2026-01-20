@@ -15,7 +15,7 @@ class AnimationSystem : public System {
     std::vector<Signature> getSignatures(const ComponentManager& comp_manager) const override {
         Signature signature;
         signature.set(comp_manager.getComponentType<AnimationComponent>());
-        signature.set(comp_manager.getComponentType<RenderComponent>());
+        signature.set(comp_manager.getComponentType<SkeletonPoseComponent>());
         return {signature};
     }
 
@@ -30,7 +30,7 @@ class AnimationSystem : public System {
         return keys.size() - 1;
     }
 
-    void updateSkeleton(const std::shared_ptr<Model>& model, double time, const Animation& anim);
+    void updateSkeleton(const std::shared_ptr<Model>& model, double time, SkeletonPoseComponent* pose, const Animation& anim);
 
     Eigen::Matrix4f interpolatePosition(double timeInTicks, const BoneAnimation& track);
 
@@ -38,8 +38,8 @@ class AnimationSystem : public System {
 
     Eigen::Matrix4f interpolateRotation(double time, const BoneAnimation& track);
 
-    void applyTransforms(Model::Node* node, const Eigen::Matrix4f& parentTransform, Model::Skeleton& skeleton, double time, const Animation& anim,
-                         std::vector<Model::Node>& allModelNodes);
+    void applyTransforms(const Model::Node* node, const Eigen::Matrix4f& parentTransform, const Model::Skeleton& skeleton, double time,
+                         SkeletonPoseComponent* pose, const Animation& anim, const std::vector<Model::Node>& allModelNodes);
 
     std::shared_ptr<Registry> m_registry;
     std::shared_ptr<AssetBank> m_asset_bank;

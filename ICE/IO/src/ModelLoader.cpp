@@ -71,7 +71,7 @@ int ModelLoader::processNode(const aiNode *ainode, std::vector<Model::Node> &nod
 
     if (skeleton.boneMapping.contains(name)) {
         int boneID = skeleton.boneMapping.at(name);
-        skeleton.bones[boneID].finalTransformation = skeleton.globalInverseTransform * node.animatedTransform;
+        skeleton.bones[boneID].finalTransform = skeleton.globalInverseTransform * node.animatedTransform;
     }
 
     nodes.push_back(node);
@@ -112,16 +112,11 @@ AssetUID ModelLoader::extractMesh(const aiMesh *mesh, const std::string &model_n
         data.indices.emplace_back(f.mIndices[0], f.mIndices[1], f.mIndices[2]);
     }
 
-    SkinningData skinning_data;
     if (mesh->HasBones()) {
-        extractBoneData(mesh, scene, data, skinning_data, skeleton);
+        extractBoneData(mesh, scene, data, skeleton);
     }
 
     auto mesh_ = std::make_shared<Mesh>(data);
-    if (skinning_data.boneOffsetMatrices.size() > 0) {
-        mesh_->setSkinningData(skinning_data);
-    }
-
     AssetUID mesh_id = 0;
     AssetPath mesh_path = AssetPath::WithTypePrefix<Mesh>(model_name + "/" + mesh->mName.C_Str());
     if (mesh_id = ref_bank.getUID(mesh_path); mesh_id != 0) {
@@ -236,7 +231,7 @@ AssetUID ModelLoader::extractTexture(const aiMaterial *material, const std::stri
     return tex_id;
 }
 
-void ModelLoader::extractBoneData(const aiMesh *mesh, const aiScene *scene, MeshData &data, SkinningData &skinning_data, Model::Skeleton &skeleton) {
+void ModelLoader::extractBoneData(const aiMesh *mesh, const aiScene *scene, MeshData &data, Model::Skeleton &skeleton) {
     for (unsigned int boneIndex = 0; boneIndex < mesh->mNumBones; ++boneIndex) {
         std::string boneName = mesh->mBones[boneIndex]->mName.C_Str();
         int boneID = -1;
@@ -244,14 +239,13 @@ void ModelLoader::extractBoneData(const aiMesh *mesh, const aiScene *scene, Mesh
         if (!skeleton.boneMapping.contains(boneName)) {
             boneID = skeleton.boneMapping.size();
             skeleton.boneMapping[boneName] = boneID;
-            Model::BoneInfo newBoneInfo = {.finalTransformation = Eigen::Matrix4f::Identity()};
+            Model::BoneInfo newBoneInfo = {.finalTransform = Eigen::Matrix4f::Identity()};
             skeleton.bones.push_back(newBoneInfo);
+            skeleton.inverseBindMatrices.push_back(aiMat4ToEigen(mesh->mBones[boneIndex]->mOffsetMatrix));
         } else {
             //Bone Already Exists
             boneID = skeleton.boneMapping.at(boneName);
         }
-
-        skinning_data.boneOffsetMatrices.try_emplace(boneID, aiMat4ToEigen(mesh->mBones[boneIndex]->mOffsetMatrix));
 
         aiVertexWeight *weights = mesh->mBones[boneIndex]->mWeights;
         unsigned int numWeights = mesh->mBones[boneIndex]->mNumWeights;
