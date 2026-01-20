@@ -45,8 +45,8 @@ int main(void) {
     scene->getRegistry()->addComponent<AnimationComponent>(entity2, AnimationComponent{.currentAnimation = "Walk", .loop = true});
 
     auto camera = std::make_shared<PerspectiveCamera>(60.0, 16.0 / 9.0, 0.01, 10000.0);
-    camera->backward(50);
-    camera->up(50);
+    camera->backward(5);
+    camera->up(5);
     camera->pitch(-30);
     scene->getRegistry()->getSystem<RenderSystem>()->setCamera(camera);
 

@@ -65,8 +65,10 @@ void RenderSystem::update(double delta) {
 
         std::vector<Eigen::Matrix4f> bone_matrices;
         if (m_registry->entityHasComponent<SkinningComponent>(e)) {
-            auto pose = m_registry->getComponent<SkeletonPoseComponent>(m_registry->getComponent<SkinningComponent>(e)->skeleton_entity);
+            auto skeleton_entity = m_registry->getComponent<SkinningComponent>(e)->skeleton_entity;
+            auto pose = m_registry->getComponent<SkeletonPoseComponent>(skeleton_entity);
             bone_matrices = pose->final_bone_matrices;
+            model_mat = m_registry->getComponent<TransformComponent>(e)->getModelMatrix();
         }
 
         std::unordered_map<AssetUID, std::shared_ptr<GPUTexture>> texs;
