@@ -20,7 +20,7 @@ struct RenderCommand {
     std::unordered_map<AssetUID, std::shared_ptr<GPUTexture>> textures;
     Eigen::Matrix4f model_matrix;
 
-    std::vector<Eigen::Matrix4f> bones;
+    std::unordered_map<int, Eigen::Matrix4f> bones;
 
     bool faceCulling = true;
     bool depthTest = true;

@@ -61,7 +61,6 @@ int ModelLoader::processNode(const aiNode *ainode, std::vector<Model::Node> &nod
 
     aiMatrix4x4 local = ainode->mTransformation;
     node.localTransform = aiMat4ToEigen(local);
-    node.animatedTransform = parent_transform * node.localTransform;
 
     for (unsigned int i = 0; i < ainode->mNumMeshes; ++i) {
         unsigned int mesh_idx = ainode->mMeshes[i];
@@ -69,16 +68,11 @@ int ModelLoader::processNode(const aiNode *ainode, std::vector<Model::Node> &nod
     }
     auto insert_pos = nodes.size();
 
-    if (skeleton.boneMapping.contains(name)) {
-        int boneID = skeleton.boneMapping.at(name);
-        skeleton.bones[boneID].finalTransform = skeleton.globalInverseTransform * node.animatedTransform;
-    }
-
     nodes.push_back(node);
 
     for (unsigned int c = 0; c < ainode->mNumChildren; ++c) {
         const aiNode *child = ainode->mChildren[c];
-        int child_pos = processNode(child, nodes, skeleton, used_names, node.animatedTransform);
+        int child_pos = processNode(child, nodes, skeleton, used_names, parent_transform * node.localTransform);
         nodes.at(insert_pos).children.push_back(child_pos);
     }
     return insert_pos;
@@ -112,11 +106,15 @@ AssetUID ModelLoader::extractMesh(const aiMesh *mesh, const std::string &model_n
         data.indices.emplace_back(f.mIndices[0], f.mIndices[1], f.mIndices[2]);
     }
 
+    std::unordered_map<int, Eigen::Matrix4f> inverseBindMatrices;
     if (mesh->HasBones()) {
-        extractBoneData(mesh, scene, data, skeleton);
+        inverseBindMatrices = extractBoneData(mesh, data, skeleton);
+    }
+    auto mesh_ = std::make_shared<Mesh>(std::move(data));
+    for (const auto &[boneID, ibm] : inverseBindMatrices) {
+        mesh_->setIBM(boneID, ibm);
     }
 
-    auto mesh_ = std::make_shared<Mesh>(data);
     AssetUID mesh_id = 0;
     AssetPath mesh_path = AssetPath::WithTypePrefix<Mesh>(model_name + "/" + mesh->mName.C_Str());
     if (mesh_id = ref_bank.getUID(mesh_path); mesh_id != 0) {
@@ -231,7 +229,8 @@ AssetUID ModelLoader::extractTexture(const aiMaterial *material, const std::stri
     return tex_id;
 }
 
-void ModelLoader::extractBoneData(const aiMesh *mesh, const aiScene *scene, MeshData &data, Model::Skeleton &skeleton) {
+std::unordered_map<int, Eigen::Matrix4f> ModelLoader::extractBoneData(const aiMesh *mesh, MeshData &data, Model::Skeleton &skeleton) {
+    std::unordered_map<int, Eigen::Matrix4f> inverseBindMatrices;
     for (unsigned int boneIndex = 0; boneIndex < mesh->mNumBones; ++boneIndex) {
         std::string boneName = mesh->mBones[boneIndex]->mName.C_Str();
         int boneID = -1;
@@ -239,13 +238,12 @@ void ModelLoader::extractBoneData(const aiMesh *mesh, const aiScene *scene, Mesh
         if (!skeleton.boneMapping.contains(boneName)) {
             boneID = skeleton.boneMapping.size();
             skeleton.boneMapping[boneName] = boneID;
-            Model::BoneInfo newBoneInfo = {.finalTransform = Eigen::Matrix4f::Identity()};
-            skeleton.bones.push_back(newBoneInfo);
-            skeleton.inverseBindMatrices.push_back(aiMat4ToEigen(mesh->mBones[boneIndex]->mOffsetMatrix));
         } else {
             //Bone Already Exists
             boneID = skeleton.boneMapping.at(boneName);
         }
+
+        inverseBindMatrices.try_emplace(boneID, aiMat4ToEigen(mesh->mBones[boneIndex]->mOffsetMatrix));
 
         aiVertexWeight *weights = mesh->mBones[boneIndex]->mWeights;
         unsigned int numWeights = mesh->mBones[boneIndex]->mNumWeights;
@@ -263,6 +261,7 @@ void ModelLoader::extractBoneData(const aiMesh *mesh, const aiScene *scene, Mesh
             }
         }
     }
+    return inverseBindMatrices;
 }
 
 std::unordered_map<std::string, Animation> ModelLoader::extractAnimations(const aiScene *scene, Model::Skeleton &skeleton) {

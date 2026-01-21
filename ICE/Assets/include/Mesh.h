@@ -29,6 +29,10 @@ struct MeshData {
     std::vector<Eigen::Vector3i> indices;
 };
 
+struct SkinningData {
+    std::unordered_map<int, Eigen::Matrix4f> inverseBindMatrices;  //BoneID -> Inverse Bind Matrix
+};
+
 class Mesh : public Asset {
    public:
     Mesh(const MeshData &data);
@@ -46,11 +50,15 @@ class Mesh : public Asset {
 
     const AABB &getBoundingBox() const;
 
+    const SkinningData &getSkinningData() const { return m_skinningData; }
+    void setIBM(int boneID, const Eigen::Matrix4f &ibm) { m_skinningData.inverseBindMatrices[boneID] = ibm; }
+
     std::string getTypeName() const override;
     AssetType getType() const override;
 
    private:
     MeshData m_data;
+    SkinningData m_skinningData;
     AABB boundingBox;
 };
 }  // namespace ICE

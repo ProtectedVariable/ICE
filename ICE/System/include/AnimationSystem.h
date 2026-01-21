@@ -31,12 +31,12 @@ class AnimationSystem : public System {
     }
 
     void updateSkeleton(const std::shared_ptr<Model>& model, double time, SkeletonPoseComponent* pose, const Animation& anim);
+    void finalizePose();
+    Eigen::Vector3f interpolatePosition(double timeInTicks, const BoneAnimation& track);
 
-    Eigen::Matrix4f interpolatePosition(double timeInTicks, const BoneAnimation& track);
+    Eigen::Vector3f interpolateScale(double timeInTicks, const BoneAnimation& track);
 
-    Eigen::Matrix4f interpolateScale(double timeInTicks, const BoneAnimation& track);
-
-    Eigen::Matrix4f interpolateRotation(double time, const BoneAnimation& track);
+    Eigen::Quaternionf interpolateRotation(double time, const BoneAnimation& track);
 
     void applyTransforms(const Model::Node* node, const Eigen::Matrix4f& parentTransform, const Model::Skeleton& skeleton, double time,
                          SkeletonPoseComponent* pose, const Animation& anim, const std::vector<Model::Node>& allModelNodes);

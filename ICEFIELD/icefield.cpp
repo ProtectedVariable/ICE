@@ -37,12 +37,16 @@ int main(void) {
 
     auto entity = scene->createEntity();
     scene->getRegistry()->addComponent<TransformComponent>(entity,
-                                                           TransformComponent({0, 1000, 0}, Eigen::Vector3f::Zero(), Eigen::Vector3f(0.1, 0.1, 0.1)));
+                                                           TransformComponent({0, 100, 0}, Eigen::Vector3f::Zero(), Eigen::Vector3f(0.1, 0.1, 0.1)));
     scene->getRegistry()->addComponent<LightComponent>(entity, LightComponent(LightType::PointLight, {1, 1, 1}));
 
     auto model_id = engine.getAssetBank()->getUID(AssetPath::WithTypePrefix<Model>("Adventurer"));
     auto entity2 = scene->spawnTree(model_id, engine.getAssetBank());
     scene->getRegistry()->addComponent<AnimationComponent>(entity2, AnimationComponent{.currentAnimation = "Walk", .loop = true});
+
+    auto entity3 = scene->spawnTree(model_id, engine.getAssetBank());
+    scene->getRegistry()->getComponent<TransformComponent>(entity3)->setPosition({1, 0, 0});
+    scene->getRegistry()->addComponent<AnimationComponent>(entity3, AnimationComponent{.currentAnimation = "Run", .loop = true});
 
     auto camera = std::make_shared<PerspectiveCamera>(60.0, 16.0 / 9.0, 0.01, 10000.0);
     camera->backward(5);

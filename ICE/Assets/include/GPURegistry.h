@@ -24,6 +24,7 @@ class GPURegistry {
     std::shared_ptr<ShaderProgram> getShader(AssetUID id);
     std::shared_ptr<ShaderProgram> getShader(const AssetPath &path) { return getShader(getUID(path)); }
     AABB getMeshAABB(AssetUID id) { return m_asset_bank->getAsset<Mesh>(id)->getBoundingBox(); }
+    const SkinningData &getMeshSkinningData(AssetUID id) { return m_asset_bank->getAsset<Mesh>(id)->getSkinningData(); }
     std::shared_ptr<GPUMesh> getMesh(AssetUID id);
     std::shared_ptr<GPUMesh> getMesh(const AssetPath &path) { return getMesh(getUID(path)); }
     std::shared_ptr<GPUTexture> getTexture2D(AssetUID id);

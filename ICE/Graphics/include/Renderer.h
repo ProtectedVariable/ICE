@@ -55,7 +55,7 @@ struct Drawable {
     std::shared_ptr<ShaderProgram> shader;
     std::unordered_map<AssetUID, std::shared_ptr<GPUTexture>> textures;
     Eigen::Matrix4f model_matrix;
-    std::vector<Eigen::Matrix4f> bone_matrices;
+    std::unordered_map<int, Eigen::Matrix4f> bone_matrices;
 };
 
 struct Light {

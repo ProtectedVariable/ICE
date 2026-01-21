@@ -9,21 +9,14 @@ class Model : public Asset {
    public:
     struct Node {
         std::string name;
-        Eigen::Matrix4f localTransform;     // default transform
-        Eigen::Matrix4f animatedTransform;  // For mesh-only animation (no bones)
-        std::vector<size_t> meshIndices;    // Meshes used by this node
-        std::vector<int> children;          // Node indices
-    };
-
-    struct BoneInfo {
-        Eigen::Matrix4f finalTransform;
+        Eigen::Matrix4f localTransform;   // default transform
+        std::vector<size_t> meshIndices;  // Meshes used by this node
+        std::vector<int> children;        // Node indices
     };
 
     struct Skeleton {
         std::unordered_map<std::string, int> boneMapping;
-        std::vector<BoneInfo> bones;
         Eigen::Matrix4f globalInverseTransform;
-        std::vector<Eigen::Matrix4f> inverseBindMatrices;
     };
 
     Model(const std::vector<Node> &nodes, const std::vector<AssetUID> &meshes, const std::vector<ICE::AssetUID> &materials);

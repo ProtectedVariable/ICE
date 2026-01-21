@@ -28,10 +28,8 @@ void GeometryPass::execute() {
         }
 
         if (!command.bones.empty()) {
-            for (int i = 0; i < command.bones.size(); i++) {
-                Eigen::Matrix4f bone_transform = Eigen::Matrix4f::Identity();
-                bone_transform = command.bones[i];
-                current_shader->loadMat4("bonesTransformMatrices[" + std::to_string(i) + "]", bone_transform);
+            for (const auto& [id, matrix] : command.bones) {
+                current_shader->loadMat4("bonesTransformMatrices[" + std::to_string(id) + "]", matrix);
             }
         }
 

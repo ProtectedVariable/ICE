@@ -22,12 +22,7 @@ void Model::traverse(std::vector<AssetUID> &meshes, std::vector<AssetUID> &mater
             auto mesh = m_meshes.at(i);
 
             Eigen::Matrix4f node_transform;
-            /* if (mesh->usesBones()) {
-                node_transform = transform;
-            } else {
-                node_transform = transform * node.animatedTransform;
-            }*/
-            node_transform = transform * node.animatedTransform;
+            node_transform = transform * node.localTransform;
 
             meshes.push_back(mesh);
             materials.push_back(mtl_id);

@@ -50,6 +50,7 @@ Entity Scene::spawnTree(AssetUID model_id, const std::shared_ptr<AssetBank> &ban
     auto nodes = model->getNodes();
     auto meshes = model->getMeshes();
     auto materialIDs = model->getMaterialsIDs();
+    std::unordered_map<std::string, Entity> bone_entity;
 
     std::function<Entity(int, Entity, Entity)> spawnNode = [&](int nodeIndex, Entity parent, Entity skeleton) -> Entity {
         auto &node = nodes[nodeIndex];
@@ -59,6 +60,9 @@ Entity Scene::spawnTree(AssetUID model_id, const std::shared_ptr<AssetBank> &ban
             skeleton = nodeEntity;
         }
         setAlias(nodeEntity, node.name);
+        if (model->getSkeleton().boneMapping.contains(node.name)) {
+            bone_entity[node.name] = nodeEntity;
+        }
         m_graph->setParent(nodeEntity, parent);
         registry->addComponent<TransformComponent>(nodeEntity, TransformComponent(node.localTransform));
 
@@ -81,11 +85,12 @@ Entity Scene::spawnTree(AssetUID model_id, const std::shared_ptr<AssetBank> &ban
 
     auto root = spawnNode(0, 0, -1);
 
-    if (model->getSkeleton().bones.size() > 0) {
+    if (!model->getSkeleton().boneMapping.empty()) {
         registry->addComponent<SkeletonPoseComponent>(root,
                                                       SkeletonPoseComponent{.skeletonModel = model_id,
-                                                                            .final_bone_matrices = std::vector<Eigen::Matrix4f>(
-                                                                                model->getSkeleton().bones.size(), Eigen::Matrix4f::Identity())});
+                                                                            .bone_transform = std::vector<Eigen::Matrix4f>(
+                                                                                model->getSkeleton().boneMapping.size(), Eigen::Matrix4f::Identity()),
+                                                                            .bone_entity = bone_entity});
     }
 
     return root;
