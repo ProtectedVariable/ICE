@@ -9,11 +9,11 @@
 
 namespace ICE {
 RenderSystem::RenderSystem(const std::shared_ptr<RendererAPI> &api, const std::shared_ptr<GraphicsFactory> &factory,
-                           const std::shared_ptr<Registry> &reg, const std::shared_ptr<AssetBank> &bank)
+                           const std::shared_ptr<Registry> &reg, const std::shared_ptr<GPURegistry> &gpu_bank)
     : m_api(api),
       m_factory(factory),
       m_registry(reg),
-      m_asset_bank(bank) {
+      m_gpu_bank(gpu_bank) {
     m_quad_vao = factory->createVertexArray();
     auto quad_vertex_vbo = factory->createVertexBuffer();
     quad_vertex_vbo->putData(full_quad_v.data(), full_quad_v.size() * sizeof(float));
@@ -32,10 +32,10 @@ void RenderSystem::update(double delta) {
     auto proj_mat = m_camera->getProjection();
 
     if (m_skybox != NO_ASSET_ID) {
-        auto shader = m_asset_bank->getAsset<Shader>("__ice_skybox_shader");
+        auto shader = m_gpu_bank->getShader(AssetPath::WithTypePrefix<Shader>("__ice_skybox_shader"));
         auto skybox = m_registry->getComponent<SkyboxComponent>(m_skybox);
-        auto mesh = m_asset_bank->getAsset<Model>("cube")->getMeshes().at(0);
-        auto tex = m_asset_bank->getAsset<TextureCube>(skybox->texture);
+        auto mesh = m_gpu_bank->getMesh(AssetPath::WithTypePrefix<Mesh>("cube"));
+        auto tex = m_gpu_bank->getCubemap(skybox->texture);
         m_renderer->submitSkybox(Skybox{
             .cube_mesh = mesh,
             .shader = shader,
@@ -47,19 +47,49 @@ void RenderSystem::update(double delta) {
     for (const auto &e : m_render_queue) {
         auto rc = m_registry->getComponent<RenderComponent>(e);
         auto tc = m_registry->getComponent<TransformComponent>(e);
-        auto model = m_asset_bank->getAsset<Model>(rc->model);
-        if (!model)
+        auto mesh = m_gpu_bank->getMesh(rc->mesh);
+        auto material = m_gpu_bank->getMaterial(rc->material);
+        auto shader = m_gpu_bank->getShader(material->getShader());
+        if (!mesh || !material || !shader)
             continue;
 
-        auto aabb = model->getBoundingBox();
-        Eigen::Vector3f min = (tc->getModelMatrix() * Eigen::Vector4f(aabb.getMin().x(), aabb.getMin().y(), aabb.getMin().z(), 1.0)).head<3>();
-        Eigen::Vector3f max = (tc->getModelMatrix() * Eigen::Vector4f(aabb.getMax().x(), aabb.getMax().y(), aabb.getMax().z(), 1.0)).head<3>();
+        auto model_mat = tc->getWorldMatrix();
+
+        auto aabb = m_gpu_bank->getMeshAABB(rc->mesh);
+        Eigen::Vector3f min = (model_mat * Eigen::Vector4f(aabb.getMin().x(), aabb.getMin().y(), aabb.getMin().z(), 1.0)).head<3>();
+        Eigen::Vector3f max = (model_mat * Eigen::Vector4f(aabb.getMax().x(), aabb.getMax().y(), aabb.getMax().z(), 1.0)).head<3>();
         aabb = AABB(std::vector<Eigen::Vector3f>{min, max});
         if (!isAABBInFrustum(frustum, aabb)) {
             continue;
         }
 
-        submitModel(model, tc->getModelMatrix());
+        std::unordered_map<int, Eigen::Matrix4f> bone_matrices;
+        if (m_registry->entityHasComponent<SkinningComponent>(e)) {
+            const auto &skinning = m_gpu_bank->getMeshSkinningData(rc->mesh);
+            auto skeleton_entity = m_registry->getComponent<SkinningComponent>(e)->skeleton_entity;
+            auto pose = m_registry->getComponent<SkeletonPoseComponent>(skeleton_entity);
+            for (const auto &[id, ibm] : skinning.inverseBindMatrices) {
+                bone_matrices.try_emplace(id, pose->bone_transform[id] * ibm);
+            }
+
+            model_mat = m_registry->getComponent<TransformComponent>(skeleton_entity)->getWorldMatrix();
+        }
+
+        std::unordered_map<AssetUID, std::shared_ptr<GPUTexture>> texs;
+        for (const auto &[name, value] : material->getAllUniforms()) {
+            if (std::holds_alternative<AssetUID>(value)) {
+                auto v = std::get<AssetUID>(value);
+                if (auto tex = m_gpu_bank->getTexture2D(v); tex) {
+                    texs.try_emplace(v, tex);
+                }
+            }
+        }
+        m_renderer->submitDrawable(Drawable{.mesh = mesh,
+                                            .material = material,
+                                            .shader = shader,
+                                            .textures = texs,
+                                            .model_matrix = model_mat,
+                                            .bone_matrices = bone_matrices});
     }
 
     for (int i = 0; i < m_lights.size(); i++) {
@@ -70,7 +100,7 @@ void RenderSystem::update(double delta) {
         auto tc = m_registry->getComponent<TransformComponent>(light);
 
         m_renderer->submitLight(Light{.position = tc->getPosition(),
-                                      .rotation = tc->getRotation(),
+                                      .rotation = tc->getRotationEulerDeg(),
                                       .color = lc->color,
                                       .distance_dropoff = lc->distance_dropoff,
                                       .type = lc->type});
@@ -88,7 +118,7 @@ void RenderSystem::update(double delta) {
     }
 
     m_api->clear();
-    auto shader = m_asset_bank->getAsset<Shader>(AssetPath::WithTypePrefix<Shader>("lastpass"));
+    auto shader = m_gpu_bank->getShader(AssetPath::WithTypePrefix<Shader>("lastpass"));
 
     shader->bind();
     rendered_fb->bindAttachment(0);
@@ -96,49 +126,6 @@ void RenderSystem::update(double delta) {
     m_quad_vao->bind();
     m_quad_vao->getIndexBuffer()->bind();
     m_api->renderVertexArray(m_quad_vao);
-}
-
-void RenderSystem::submitModel(const std::shared_ptr<Model> &model, const Eigen::Matrix4f &model_matrix) {
-
-    std::vector<std::shared_ptr<Mesh>> meshes;
-    std::vector<AssetUID> materials;
-    std::vector<Eigen::Matrix4f> transforms;
-
-    model->traverse(meshes, materials, transforms, model_matrix);
-
-    for (int i = 0; i < meshes.size(); i++) {
-        auto mtl_id = materials.at(i);
-        auto mesh = meshes.at(i);
-        auto material = m_asset_bank->getAsset<Material>(mtl_id);
-        if (!material) {
-            continue;
-        }
-        auto shader = m_asset_bank->getAsset<Shader>(material->getShader());
-        if (!shader) {
-            continue;
-        }
-
-        if (!mesh) {
-            continue;
-        }
-
-        std::unordered_map<AssetUID, std::shared_ptr<Texture>> texs;
-        for (const auto &[name, value] : material->getAllUniforms()) {
-            if (std::holds_alternative<AssetUID>(value)) {
-                auto v = std::get<AssetUID>(value);
-                if (auto tex = m_asset_bank->getAsset<Texture2D>(v); tex) {
-                    texs.try_emplace(v, tex);
-                }
-            }
-        }
-
-        m_renderer->submitDrawable(Drawable{.mesh = mesh,
-                                            .material = material,
-                                            .shader = shader,
-                                            .textures = texs,
-                                            .model_matrix = transforms[i],
-                                            .skeleton = model->getSkeleton()});
-    }
 }
 
 void RenderSystem::onEntityAdded(Entity e) {

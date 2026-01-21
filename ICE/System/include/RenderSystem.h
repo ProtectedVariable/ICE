@@ -5,6 +5,7 @@
 
 #include <Camera.h>
 #include <Framebuffer.h>
+#include <GPURegistry.h>
 #include <LightComponent.h>
 #include <RenderComponent.h>
 #include <Renderer.h>
@@ -19,7 +20,7 @@ class Registry;
 class RenderSystem : public System {
    public:
     RenderSystem(const std::shared_ptr<RendererAPI> &api, const std::shared_ptr<GraphicsFactory> &factory, const std::shared_ptr<Registry> &reg,
-                 const std::shared_ptr<AssetBank> &bank);
+                 const std::shared_ptr<GPURegistry> &gpu_bank);
 
     void onEntityAdded(Entity e) override;
     void onEntityRemoved(Entity e) override;
@@ -59,7 +60,7 @@ class RenderSystem : public System {
     std::shared_ptr<RendererAPI> m_api;
     std::shared_ptr<GraphicsFactory> m_factory;
     std::shared_ptr<Registry> m_registry;
-    std::shared_ptr<AssetBank> m_asset_bank;
+    std::shared_ptr<GPURegistry> m_gpu_bank;
 
     std::shared_ptr<VertexArray> m_quad_vao;
 };

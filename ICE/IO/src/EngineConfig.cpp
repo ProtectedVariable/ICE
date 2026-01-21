@@ -5,10 +5,10 @@
 #include "EngineConfig.h"
 
 #include <Logger.h>
-#include <json/json.h>
 
 #include <fstream>
 #include <iostream>
+#include <nlohmann/json.hpp>
 #include <string>
 
 namespace ICE {

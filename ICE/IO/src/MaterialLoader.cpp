@@ -5,7 +5,7 @@
 #include "MaterialLoader.h"
 
 #include <JsonParser.h>
-#include <json/json.h>
+#include <nlohmann/json.hpp>
 
 #include <fstream>
 

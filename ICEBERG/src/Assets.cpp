@@ -6,9 +6,9 @@
 Assets::Assets(const std::shared_ptr<ICE::ICEEngine>& engine, const std::shared_ptr<ICE::GraphicsFactory>& g_factory)
     : m_engine(engine),
       m_g_factory(g_factory),
-      m_renderer(engine->getApi(), g_factory, engine->getAssetBank()),
+      m_renderer(engine->getApi(), g_factory, engine->getGPURegistry()),
       ui(m_asset_categories,
-         m_engine->getAssetBank()->getAsset<ICE::Texture2D>(ICE::AssetPath::WithTypePrefix<ICE::Texture2D>("Editor/folder"))->getTexture()),
+         m_engine->getGPURegistry()->getTexture2D(ICE::AssetPath::WithTypePrefix<ICE::Texture2D>("Editor/folder"))->ptr()),
       m_material_editor(engine) {
     rebuildViewer();
     ui.registerCallback("material_duplicate", [this](std::string name) {
@@ -61,9 +61,11 @@ Assets::Assets(const std::shared_ptr<ICE::ICEEngine>& engine, const std::shared_
 
 void Assets::rebuildViewer() {
     m_asset_views.clear();
+    int i = 0;
     for (const auto& category : m_asset_categories) {
         AssetView folder_view;
         folder_view.folder_name = category;
+        folder_view.type = static_cast<ICE::AssetType>(i++);
         m_asset_views.push_back(folder_view);
     }
 
@@ -76,6 +78,8 @@ void Assets::rebuildViewer() {
         std::string category;
         if (std::dynamic_pointer_cast<ICE::Model>(entry.asset)) {
             category = "Models";
+        } else if (std::dynamic_pointer_cast<ICE::Mesh>(entry.asset)) {
+            category = "Meshes";
         } else if (std::dynamic_pointer_cast<ICE::Material>(entry.asset)) {
             category = "Materials";
         } else if (std::dynamic_pointer_cast<ICE::Texture2D>(entry.asset)) {
@@ -126,7 +130,7 @@ void Assets::createSubfolderView(AssetView* parent_view, const std::vector<std::
             return;
         }
     }
-    parent_view->subfolders.push_back(AssetView{.parent = parent_view, .folder_name = path[0], .assets = {}, .subfolders = {}});
+    parent_view->subfolders.push_back(AssetView{.parent = parent_view, .folder_name = path[0], .assets = {}, .subfolders = {}, .type = parent_view->type});
     createSubfolderView(&(parent_view->subfolders.back()), std::vector<std::string>(path.begin() + 1, path.end()), thumbnail, full_path);
 }
 

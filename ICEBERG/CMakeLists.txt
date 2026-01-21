@@ -14,6 +14,7 @@ add_executable(${PROJECT_NAME}
     src/AssetsRenderer.cpp
     src/Dialog.cpp
     src/MaterialEditor.cpp
+    src/ShaderEditor.cpp
     ${IMGUI_SRC}
     ${IMGUIZMO_SRC}
     ${GL3W_SRC} 

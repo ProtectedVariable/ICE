@@ -37,3 +37,13 @@ FetchContent_Declare(
   GIT_TAG development
 )
 FetchContent_MakeAvailable(DearImXML)
+
+message(STATUS "Fetching nlohmann_json...")
+set(JSON_BuildTests OFF CACHE INTERNAL "")
+FetchContent_Declare(
+    json
+    GIT_REPOSITORY https://github.com/nlohmann/json
+    GIT_TAG v3.11.2
+    GIT_SHALLOW TRUE
+    GIT_PROGRESS TRUE)
+FetchContent_MakeAvailable(json)

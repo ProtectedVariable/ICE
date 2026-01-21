@@ -29,6 +29,15 @@ class ViewportWidget : public Widget {
         const float window_width = ImGui::GetContentRegionAvail().x;
         const float window_height = ImGui::GetContentRegionAvail().y;
         ImGui::Image(texture_ptr, {window_width, window_height}, ImVec2(0, 1), ImVec2(1, 0));
+        if (ImGui::BeginDragDropTarget()) {
+            ImGuiDragDropFlags target_flags = 0;
+            if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("DND_ASSET_MODEL", target_flags)) {
+                auto path = (char*) payload->Data;
+                callback("spawnTree", path);
+            }
+            ImGui::EndDragDropTarget();
+        }
+
 
         auto drag = ImGui::GetMouseDragDelta(0);
         if (ImGui::IsWindowHovered()) {

@@ -13,11 +13,8 @@ namespace ICE {
 template<typename T>
 class IAssetLoader {
    public:
-    IAssetLoader(const std::shared_ptr<GraphicsFactory> &factory) : graphics_factory(factory) {}
+    IAssetLoader() = default;
 
     virtual std::shared_ptr<T> load(const std::vector<std::filesystem::path> &files) = 0;
-
-   protected:
-    std::shared_ptr<GraphicsFactory> graphics_factory;
 };
 }  // namespace ICE

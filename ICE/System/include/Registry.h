@@ -12,6 +12,8 @@
 #include <LightComponent.h>
 #include <RenderComponent.h>
 #include <RenderSystem.h>
+#include <SkeletonPoseComponent.h>
+#include <SkinningComponent.h>
 #include <SkyboxComponent.h>
 #include <System.h>
 #include <TransformComponent.h>
@@ -28,6 +30,8 @@ class Registry {
         componentManager.registerComponent<CameraComponent>();
         componentManager.registerComponent<SkyboxComponent>();
         componentManager.registerComponent<AnimationComponent>();
+        componentManager.registerComponent<SkeletonPoseComponent>();
+        componentManager.registerComponent<SkinningComponent>();
     }
     ~Registry() = default;
 

@@ -13,6 +13,7 @@ namespace ICE {
 
 std::unordered_map<std::type_index, std::string> AssetPath::typenames = {{typeid(Texture2D), "Textures"},
                                                                          {typeid(TextureCube), "CubeMaps"},
+                                                                         {typeid(Mesh), "Meshes"},
                                                                          {typeid(Model), "Models"},
                                                                          {typeid(Material), "Materials"},
                                                                          {typeid(Shader), "Shaders"}};

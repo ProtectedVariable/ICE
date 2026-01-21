@@ -9,6 +9,8 @@
 #include <Logger.h>
 #include <PerspectiveCamera.h>
 #include <TransformComponent.h>
+#include <AnimationSystem.h>
+#include <SceneGraphSystem.h>
 
 namespace ICE {
 ICEEngine::ICEEngine() : camera(std::make_shared<PerspectiveCamera>(60, 16.f / 9.f, 0.1f, 100000)), config(EngineConfig::LoadFromFile()) {
@@ -43,10 +45,14 @@ void ICEEngine::step() {
 
 void ICEEngine::setupScene(const std::shared_ptr<Camera> &camera_) {
     auto renderer = std::make_shared<ForwardRenderer>(api, m_graphics_factory);
-    auto rs = std::make_shared<RenderSystem>(api, m_graphics_factory, project->getCurrentScene()->getRegistry(), project->getAssetBank());
+    auto rs = std::make_shared<RenderSystem>(api, m_graphics_factory, project->getCurrentScene()->getRegistry(), project->getGPURegistry());
+    auto as = std::make_shared<AnimationSystem>(project->getCurrentScene()->getRegistry(), project->getAssetBank());
+    auto sgs = std::make_shared<SceneGraphSystem>(project->getCurrentScene());
     rs->setCamera(camera_);
     rs->setRenderer(renderer);
     project->getCurrentScene()->getRegistry()->addSystem(rs);
+    project->getCurrentScene()->getRegistry()->addSystem(as);
+    project->getCurrentScene()->getRegistry()->addSystem(sgs);
     camera = camera_;
     auto [w, h] = m_window->getSize();
     renderer->resize(w, h);
@@ -59,6 +65,11 @@ std::shared_ptr<Camera> ICEEngine::getCamera() {
 std::shared_ptr<AssetBank> ICEEngine::getAssetBank() {
     return project->getAssetBank();
 }
+
+std::shared_ptr<GPURegistry> ICEEngine::getGPURegistry() {
+    return project->getGPURegistry();
+}
+
 
 std::shared_ptr<RendererAPI> ICEEngine::getApi() const {
     return api;

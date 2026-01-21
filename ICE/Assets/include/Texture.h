@@ -2,12 +2,10 @@
 // Created by Thomas Ibanez on 22.12.20.
 //
 
-#ifndef ICE_TEXTURE_H
-#define ICE_TEXTURE_H
-#include <stb/stb_image.h>
-
+#pragma once
 #include <Asset.h>
 #include <Logger.h>
+#include <stb/stb_image.h>
 
 #include <cstdint>
 #include <string>
@@ -21,31 +19,40 @@ enum class TextureType { Tex2D = 0, CubeMap = 1 };
 
 class Texture : public Asset {
    public:
-    virtual void bind(uint32_t slot = 0) const = 0;
-    virtual void setData(void* data, uint32_t size) = 0;
+    virtual ~Texture() {
+        if (data_ != nullptr) {
+            stbi_image_free(data_);
+            data_ = nullptr;
+        }
+    }
+    const void* data() const { return data_; }
 
-    virtual TextureFormat getFormat() const = 0;
+    TextureFormat getFormat() const { return m_format; }
+    TextureWrap getWrap() const { return m_wrap; }
 
-    virtual uint32_t getWidth() const = 0;
-    virtual uint32_t getHeight() const = 0;
+    uint32_t getWidth() const { return m_width; }
+    uint32_t getHeight() const { return m_height; }
 
-    virtual void* getTexture() const = 0;
-
-    virtual TextureType getTextureType() const = 0;
-
+   protected:
     static void* getDataFromFile(const std::string file, int* width, int* height, int* channels, int force = STBI_default) {
         stbi_uc* data = stbi_load(file.c_str(), width, height, channels, force);
-        if(data == nullptr) {
+        if (data == nullptr) {
             Logger::Log(Logger::ERROR, "Graphics", "Texture %s could not load: %s", file.c_str(), stbi_failure_reason());
         }
         return data;
     }
+
+    void* data_ = nullptr;
+    TextureWrap m_wrap = TextureWrap::Repeat;
+    TextureFormat m_format = TextureFormat::None;
+    int m_width = 0;
+    int m_height = 0;
 };
 
 class Texture2D : public Texture {
    public:
-    virtual TextureWrap getWrap() const = 0;
-    virtual TextureType getTextureType() const = 0;
+    Texture2D(const std::string& path);
+    Texture2D(void* data, int width, int height, TextureFormat fmt);
 
     virtual AssetType getType() const override { return AssetType::ETex2D; }
     virtual std::string getTypeName() const override { return "Texture2D"; }
@@ -53,12 +60,10 @@ class Texture2D : public Texture {
 
 class TextureCube : public Texture {
    public:
-    virtual TextureWrap getWrap() const = 0;
-    virtual TextureType getTextureType() const = 0;
+    TextureCube(const std::string& path);
+    TextureCube(void* data, int width, int height, TextureFormat fmt);
 
     virtual AssetType getType() const override { return AssetType::ETexCube; }
     virtual std::string getTypeName() const override { return "TextureCube"; }
 };
 }  // namespace ICE
-
-#endif  //ICE_TEXTURE_H

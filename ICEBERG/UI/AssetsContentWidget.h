@@ -22,6 +22,7 @@ struct AssetView {
     std::string folder_name;
     std::vector<AssetData> assets;
     std::vector<AssetView> subfolders;
+    ICE::AssetType type;
 };
 
 class AssetsContentWidget : public Widget {
@@ -41,7 +42,7 @@ class AssetsContentWidget : public Widget {
         if (ImGui::BeginTable("FileBrowserTable", columnCount)) {
             int itemIndex = 0;
 
-            auto renderItem = [&](const std::string& label, const Thumbnail &tb) {
+            auto renderItem = [&](const std::string& label, const std::string& path, const Thumbnail& tb) {
                 itemIndex++;
                 ImGui::TableNextColumn();
                 ImGui::PushID(itemIndex);
@@ -57,6 +58,14 @@ class AssetsContentWidget : public Widget {
                 ImGui::TextWrapped("%s", label.c_str());
                 ImGui::PopTextWrapPos();
                 ImGui::EndGroup();
+                if (path != "..") {
+                    if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceNoDisableHover | ImGuiDragDropFlags_SourceAllowNullID)) {
+                        ImGui::SetDragDropPayload(m_DND_name.c_str(), path.c_str(), path.size() + 1);
+                        ImGui::Text("%s", label.c_str());
+                        ImGui::EndDragDropSource();
+                    }
+                }
+
                 if (itemIndex != m_selected_item) {
                     ImGui::PopStyleColor();
                 }
@@ -72,13 +81,13 @@ class AssetsContentWidget : public Widget {
             };
 
             if (m_current_view.parent != nullptr) {
-                renderItem("..", {m_folder_texture, false});
+                renderItem("..", "..", {m_folder_texture, false});
             }
             for (const auto& folder : m_current_view.subfolders)
-                renderItem(folder.folder_name, {m_folder_texture, false});
+                renderItem(folder.folder_name, folder.folder_name, {m_folder_texture, false});
 
             for (const auto& asset : m_current_view.assets)
-                renderItem(asset.name, asset.thumbnail);
+                renderItem(asset.name, asset.asset_path, asset.thumbnail);
 
             ImGui::EndTable();
         }
@@ -87,6 +96,30 @@ class AssetsContentWidget : public Widget {
     void setCurrentView(const AssetView& view) {
         m_current_view = view;
         m_selected_item = -1;
+        m_current_type = view.type;
+        switch (view.type) {
+            case ICE::AssetType::EModel:
+                m_DND_name = "DND_ASSET_MODEL";
+                break;
+            case ICE::AssetType::EMesh:
+                m_DND_name = "DND_ASSET_MESH";
+                break;
+            case ICE::AssetType::EMaterial:
+                m_DND_name = "DND_ASSET_MATERIAL";
+                break;
+            case ICE::AssetType::EShader:
+                m_DND_name = "DND_ASSET_SHADER";
+                break;
+            case ICE::AssetType::ETex2D:
+                m_DND_name = "DND_ASSET_TEXTURE2D";
+                break;
+            case ICE::AssetType::ETexCube:
+                m_DND_name = "DND_ASSET_TEXTURECUBE";
+                break;
+            default:
+                m_DND_name = "DND_ASSET_UNKNOWN";
+                break;
+        }
     }
     AssetView getCurrentView() const { return m_current_view; }
 
@@ -94,4 +127,6 @@ class AssetsContentWidget : public Widget {
     void* m_folder_texture;
     AssetView m_current_view;
     int m_selected_item = -1;
+    ICE::AssetType m_current_type = ICE::AssetType::EModel;
+    std::string m_DND_name = "DND_ASSET_MODEL";
 };

@@ -48,7 +48,7 @@ void Inspector::setSelectedEntity(ICE::Entity e, bool force_refesh) {
     ui.setTransformComponent(nullptr);
     ui.setLightComponent(nullptr);
     ui.setAnimationComponent(nullptr, {});
-    ui.setRenderComponent(nullptr, {}, {});
+    ui.setRenderComponent(nullptr, {}, {}, {}, {});
 
     if (registry->entityHasComponent<ICE::TransformComponent>(e)) {
         auto tc = registry->getComponent<ICE::TransformComponent>(e);
@@ -57,7 +57,7 @@ void Inspector::setSelectedEntity(ICE::Entity e, bool force_refesh) {
     if (registry->entityHasComponent<ICE::RenderComponent>(e)) {
         auto rc = registry->getComponent<ICE::RenderComponent>(e);
 
-        auto meshes = m_engine->getAssetBank()->getAll<ICE::Model>();
+        auto meshes = m_engine->getAssetBank()->getAll<ICE::Mesh>();
 
         std::vector<std::string> meshes_paths;
         std::vector<ICE::AssetUID> meshes_ids;
@@ -67,12 +67,23 @@ void Inspector::setSelectedEntity(ICE::Entity e, bool force_refesh) {
             meshes_paths.push_back(m_engine->getAssetBank()->getName(id).toString());
         }
 
-        ui.setRenderComponent(rc, meshes_paths, meshes_ids);
-        if (registry->entityHasComponent<ICE::AnimationComponent>(e)) {
-            auto ac = registry->getComponent<ICE::AnimationComponent>(e);
-            auto anims = m_engine->getAssetBank()->getAsset<ICE::Model>(rc->model)->getAnimations();
-            ui.setAnimationComponent(ac, anims);
+        auto materials = m_engine->getAssetBank()->getAll<ICE::Material>();
+
+        std::vector<std::string> materials_paths;
+        std::vector<ICE::AssetUID> materials_ids;
+
+        for (const auto& [id, m] : materials) {
+            materials_ids.push_back(id);
+            materials_paths.push_back(m_engine->getAssetBank()->getName(id).toString());
         }
+
+        ui.setRenderComponent(rc, meshes_paths, meshes_ids, materials_paths, materials_ids);
+    }
+    if (registry->entityHasComponent<ICE::AnimationComponent>(e) && registry->entityHasComponent<ICE::SkeletonPoseComponent>(e)) {
+        auto ac = registry->getComponent<ICE::AnimationComponent>(e);
+        auto spc = registry->getComponent<ICE::SkeletonPoseComponent>(e);
+        auto anims = m_engine->getAssetBank()->getAsset<ICE::Model>(spc->skeletonModel)->getAnimations();
+        ui.setAnimationComponent(ac, anims);
     }
     if (registry->entityHasComponent<ICE::LightComponent>(e)) {
         auto lc = registry->getComponent<ICE::LightComponent>(e);

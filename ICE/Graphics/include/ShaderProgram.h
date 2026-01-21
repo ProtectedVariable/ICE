@@ -1,17 +1,10 @@
-//
-// Created by Thomas Ibanez on 20.11.20.
-//
-
-#ifndef ICE_SHADER_H
-#define ICE_SHADER_H
-
-#include <Asset.h>
+#pragma once
 
 #include <Eigen/Dense>
 #include <string>
 
 namespace ICE {
-class Shader : public Asset {
+class ShaderProgram {
    public:
     virtual void bind() const = 0;
     virtual void unbind() const = 0;
@@ -25,11 +18,5 @@ class Shader : public Asset {
     virtual void loadFloat4(const std::string &name, Eigen::Vector4f vec) = 0;
 
     virtual void loadMat4(const std::string &name, Eigen::Matrix4f mat) = 0;
-
-    std::string getTypeName() const override { return "Shader"; };
-
-    AssetType getType() const override { return AssetType::EShader; };
 };
 }  // namespace ICE
-
-#endif  //ICE_SHADER_H

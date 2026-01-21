@@ -1,0 +1,10 @@
+[
+  {
+    "stage": "vertex",
+    "source": "glsl/lastpass.vs"
+  },
+  {
+    "stage": "fragment",
+    "source": "glsl/lastpass.fs"
+  }
+]

@@ -46,8 +46,9 @@ class InspectorWidget : public Widget {
     void setAnimationComponent(ICE::AnimationComponent* ac, const std::unordered_map<std::string, ICE::Animation>& animations) {
         m_ac_widget.setAnimationComponent(ac, animations);
     }
-    void setRenderComponent(ICE::RenderComponent* rc, const std::vector<std::string>& meshes_paths, const std::vector<ICE::AssetUID>& meshes_ids) {
-        m_rc_widget.setRenderComponent(rc, meshes_paths, meshes_ids);
+    void setRenderComponent(ICE::RenderComponent* rc, const std::vector<std::string>& meshes_paths, const std::vector<ICE::AssetUID>& meshes_ids,
+                            const std::vector<std::string>& material_paths, const std::vector<ICE::AssetUID>& material_ids) {
+        m_rc_widget.setRenderComponent(rc, meshes_paths, meshes_ids, material_paths, material_ids);
     }
 
    private:

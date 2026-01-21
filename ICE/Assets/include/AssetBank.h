@@ -30,7 +30,7 @@ struct AssetBankEntry {
 
 class AssetBank {
    public:
-    AssetBank(const std::shared_ptr<GraphicsFactory>& factory);
+    AssetBank();
 
     template<typename T>
     std::shared_ptr<T> getAsset(AssetUID uid) {
@@ -167,6 +167,5 @@ class AssetBank {
     std::unordered_map<AssetPath, AssetUID> nameMapping;
     std::unordered_map<AssetUID, AssetBankEntry> resources;
     AssetLoader loader;
-    std::shared_ptr<GraphicsFactory> graphics_factory;
 };
 }  // namespace ICE
