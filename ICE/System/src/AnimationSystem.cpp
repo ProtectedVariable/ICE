@@ -16,6 +16,9 @@ void AnimationSystem::update(double dt) {
         anim->currentTime += dt * anim->speed;
 
         auto model = m_asset_bank->getAsset<Model>(pose->skeletonModel);
+        if (!model->getAnimations().contains(anim->currentAnimation)) {
+            continue;
+        }
         auto animation = model->getAnimations().at(anim->currentAnimation);
 
         if (anim->currentTime > animation.duration) {

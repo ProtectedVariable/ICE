@@ -78,11 +78,12 @@ void Inspector::setSelectedEntity(ICE::Entity e, bool force_refesh) {
         }
 
         ui.setRenderComponent(rc, meshes_paths, meshes_ids, materials_paths, materials_ids);
-        /* if (registry->entityHasComponent<ICE::AnimationComponent>(e)) {
-            auto ac = registry->getComponent<ICE::AnimationComponent>(e);
-            auto anims = m_engine->getAssetBank()->getAsset<ICE::Model>(rc->model)->getAnimations();
-            ui.setAnimationComponent(ac, anims);
-        }*/
+    }
+    if (registry->entityHasComponent<ICE::AnimationComponent>(e) && registry->entityHasComponent<ICE::SkeletonPoseComponent>(e)) {
+        auto ac = registry->getComponent<ICE::AnimationComponent>(e);
+        auto spc = registry->getComponent<ICE::SkeletonPoseComponent>(e);
+        auto anims = m_engine->getAssetBank()->getAsset<ICE::Model>(spc->skeletonModel)->getAnimations();
+        ui.setAnimationComponent(ac, anims);
     }
     if (registry->entityHasComponent<ICE::LightComponent>(e)) {
         auto lc = registry->getComponent<ICE::LightComponent>(e);
