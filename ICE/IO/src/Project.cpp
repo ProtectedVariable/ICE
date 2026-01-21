@@ -174,6 +174,34 @@ void Project::writeToFile(const std::shared_ptr<Camera> &editorCamera) {
                 lightjson["type"] = lc.type;
                 entity["lightComponent"] = lightjson;
             }
+            if (s->getRegistry()->entityHasComponent<AnimationComponent>(e)) {
+                AnimationComponent ac = *s->getRegistry()->getComponent<AnimationComponent>(e);
+                json animjson;
+                animjson["currentAnimation"] = ac.currentAnimation;
+                animjson["currentTime"] = ac.currentTime;
+                animjson["speed"] = ac.speed;
+                animjson["playing"] = ac.playing;
+                animjson["loop"] = ac.loop;
+                entity["animationComponent"] = animjson;
+            }
+            if (s->getRegistry()->entityHasComponent<SkeletonPoseComponent>(e)) {
+                SkeletonPoseComponent sc = *s->getRegistry()->getComponent<SkeletonPoseComponent>(e);
+                json spjson;
+                spjson["skeletonModel"] = sc.skeletonModel;
+                spjson["bone_entity"] = sc.bone_entity;
+                std::vector<json> bone_transforms;
+                for (const auto& tr : sc.bone_transform) {
+                    bone_transforms.push_back(JsonParser::dumpMat4(tr));
+                }
+                spjson["bone_transforms"] = bone_transforms;
+                entity["skeletonPoseComponent"] = spjson;
+            }
+            if (s->getRegistry()->entityHasComponent<SkinningComponent>(e)) {
+                SkinningComponent sc = *s->getRegistry()->getComponent<SkinningComponent>(e);
+                json scjson;
+                scjson["skeleton_entity"] = sc.skeleton_entity;
+                entity["skinningComponent"] = scjson;
+            }
             entities.push_back(entity);
         }
         j["entities"] = entities;
@@ -251,6 +279,34 @@ void Project::loadFromFile() {
                 json lj = jentity["lightComponent"];
                 LightComponent lc(static_cast<LightType>((int) lj["type"]), JsonParser::parseVec3(lj["color"]));
                 scene.getRegistry()->addComponent(e, lc);
+            }
+            if (!jentity["animationComponent"].is_null()) {
+                json aj = jentity["animationComponent"];
+                AnimationComponent ac;
+                ac.currentAnimation = aj["currentAnimation"];
+                ac.currentTime = aj["currentTime"];
+                ac.speed = aj["speed"];
+                ac.playing = aj["playing"];
+                ac.loop = aj["loop"];
+                scene.getRegistry()->addComponent(e, ac);
+            }
+            if (!jentity["skeletonPoseComponent"].is_null()) {
+                json sj = jentity["skeletonPoseComponent"];
+                SkeletonPoseComponent sc;
+                sc.skeletonModel = sj["skeletonModel"];
+                sc.bone_entity = sj["bone_entity"].get<std::unordered_map<std::string, Entity>>();
+                std::vector<Eigen::Matrix4f> bone_transforms;
+                for (const auto& jt : sj["bone_transforms"]) {
+                    bone_transforms.push_back(JsonParser().readMat4(jt));
+                }
+                sc.bone_transform = bone_transforms;
+                scene.getRegistry()->addComponent(e, sc);
+            }
+            if (!jentity["skinningComponent"].is_null()) {
+                json skj = jentity["skinningComponent"];
+                SkinningComponent sc;
+                sc.skeleton_entity = skj["skeleton_entity"];
+                scene.getRegistry()->addComponent(e, sc);
             }
         }
         for (json jentity : scenejson["entities"]) {

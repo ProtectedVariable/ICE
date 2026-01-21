@@ -61,9 +61,11 @@ Assets::Assets(const std::shared_ptr<ICE::ICEEngine>& engine, const std::shared_
 
 void Assets::rebuildViewer() {
     m_asset_views.clear();
+    int i = 0;
     for (const auto& category : m_asset_categories) {
         AssetView folder_view;
         folder_view.folder_name = category;
+        folder_view.type = static_cast<ICE::AssetType>(i++);
         m_asset_views.push_back(folder_view);
     }
 
@@ -128,7 +130,7 @@ void Assets::createSubfolderView(AssetView* parent_view, const std::vector<std::
             return;
         }
     }
-    parent_view->subfolders.push_back(AssetView{.parent = parent_view, .folder_name = path[0], .assets = {}, .subfolders = {}});
+    parent_view->subfolders.push_back(AssetView{.parent = parent_view, .folder_name = path[0], .assets = {}, .subfolders = {}, .type = parent_view->type});
     createSubfolderView(&(parent_view->subfolders.back()), std::vector<std::string>(path.begin() + 1, path.end()), thumbnail, full_path);
 }
 

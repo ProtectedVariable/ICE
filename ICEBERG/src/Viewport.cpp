@@ -70,6 +70,14 @@ Viewport::Viewport(const std::shared_ptr<ICE::ICEEngine> &engine, const std::fun
     ui.registerCallback("translate_clicked", [this] { m_guizmo_mode = ImGuizmo::OPERATION::TRANSLATE; });
     ui.registerCallback("rotate_clicked", [this] { m_guizmo_mode = ImGuizmo::OPERATION::ROTATE; });
     ui.registerCallback("scale_clicked", [this] { m_guizmo_mode = ImGuizmo::OPERATION::SCALE; });
+
+    ui.registerCallback("spawnTree", [this](char* path) {
+        auto uid = m_engine->getProject()->getAssetBank()->getUID(std::string(path));
+        if (uid == NO_ASSET_ID)
+            return;
+        ICE::Entity e = m_engine->getProject()->getCurrentScene()->spawnTree(uid, m_engine->getAssetBank());
+        m_entity_picked_callback(e);
+    });
 }
 
 bool Viewport::update() {
