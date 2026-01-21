@@ -65,7 +65,10 @@ Entity Scene::spawnTree(AssetUID model_id, const std::shared_ptr<AssetBank> &ban
         }
         m_graph->setParent(nodeEntity, parent);
         registry->addComponent<TransformComponent>(nodeEntity, TransformComponent(node.localTransform));
-
+        if (parent != 0) {
+            auto parent_tc = registry->getComponent<TransformComponent>(parent);
+            registry->getComponent<TransformComponent>(nodeEntity)->updateParentMatrix(parent_tc->getWorldMatrix());
+        }
         for (int meshIdx : node.meshIndices) {
             Entity meshEntity = createEntity();
             setAlias(meshEntity, node.name + "_mesh_" + std::to_string(meshIdx));
@@ -91,6 +94,13 @@ Entity Scene::spawnTree(AssetUID model_id, const std::shared_ptr<AssetBank> &ban
                                                                             .bone_transform = std::vector<Eigen::Matrix4f>(
                                                                                 model->getSkeleton().boneMapping.size(), Eigen::Matrix4f::Identity()),
                                                                             .bone_entity = bone_entity});
+        auto pose = registry->getComponent<SkeletonPoseComponent>(root);
+        for (const auto &[name, id] : model->getSkeleton().boneMapping) {
+            Entity boneEntity = pose->bone_entity.at(name);
+
+            Eigen::Matrix4f boneWorld = registry->getComponent<TransformComponent>(boneEntity)->getWorldMatrix();
+            pose->bone_transform[id] = boneWorld;
+        }
     }
 
     return root;
