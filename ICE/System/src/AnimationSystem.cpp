@@ -64,7 +64,7 @@ void AnimationSystem::finalizePose() {
             Entity boneEntity = pose->bone_entity.at(name);
 
             Eigen::Matrix4f boneWorld = m_registry->getComponent<TransformComponent>(boneEntity)->getWorldMatrix();
-            pose->bone_transform[id] = boneWorld;
+            pose->bone_transform[id] = modelWorldInv * boneWorld;
         }
     }
 }
