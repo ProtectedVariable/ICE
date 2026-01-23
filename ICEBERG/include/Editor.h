@@ -3,8 +3,8 @@
 #include <ICEEngine.h>
 #include <UI/EditorWidget.h>
 #include <UI/MaterialEditDialog.h>
-#include <UI/NewSceneWidget.h>
-#include <UI/OpenSceneWidget.h>
+#include <UI/NewSceneDialog.h>
+#include <UI/OpenSceneDialog.h>
 #include <dialog.h>
 
 #include <memory>
@@ -41,6 +41,8 @@ class Editor : public Controller {
         return false;
     }
 
+    void loadScene(int index);
+
     std::shared_ptr<ICE::ICEEngine> m_engine;
     bool m_done = false;
     EditorWidget ui;
@@ -53,6 +55,6 @@ class Editor : public Controller {
 
     //Popups
     MaterialEditor m_material_popup;
-    NewSceneWidget m_scene_popup;
-    OpenSceneWidget m_open_scene_popup;
+    NewSceneDialog m_scene_popup;
+    OpenSceneDialog m_open_scene_popup;
 };

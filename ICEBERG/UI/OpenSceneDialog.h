@@ -3,11 +3,11 @@
 
 #include "Components/ComboBox.h"
 #include "Components/InputText.h"
-#include "Widget.h"
+#include "Dialog.h"
 
-class OpenSceneWidget : public Widget {
+class OpenSceneDialog : public Dialog {
    public:
-    OpenSceneWidget(const std::shared_ptr<ICE::ICEEngine>& engine) : m_engine(engine), m_scene_name_combo("Scene", {}) {
+    OpenSceneDialog(const std::shared_ptr<ICE::ICEEngine>& engine) : m_engine(engine), m_scene_name_combo("###SceneNameCombo", {}) {
         std::vector<std::string> scenes_names;
         for (const auto& s : m_engine->getProject()->getScenes()) {
             scenes_names.push_back(s->getName());
@@ -18,19 +18,20 @@ class OpenSceneWidget : public Widget {
 
     void render() override {
         ImGui::PushID("scene_open");
-        if (m_open) {
+        if (isOpenRequested()) {
             ImGui::OpenPopup("Scene Selection");
-            m_open = false;
         }
 
         if (ImGui::BeginPopupModal("Scene Selection", 0, ImGuiWindowFlags_AlwaysAutoResize)) {
+            ImGui::Text("Select a scene to open:");
+            ImGui::SameLine();
             m_scene_name_combo.render();
             if (ImGui::Button("Accept")) {
-                m_accepted = true;
-                ImGui::CloseCurrentPopup();
+                done(DialogResult::Ok);
             }
+            ImGui::SameLine();
             if (ImGui::Button("Cancel")) {
-                ImGui::CloseCurrentPopup();
+                done(DialogResult::Cancel);
             }
             ImGui::EndPopup();
         }
@@ -39,19 +40,8 @@ class OpenSceneWidget : public Widget {
 
     int getSelectedIndex() { return m_scene_name_combo.getSelectedIndex(); }
 
-    void open() { m_open = true; }
-
-    bool accepted() {
-        if (m_accepted) {
-            m_accepted = false;
-            return true;
-        }
-        return false;
-    }
 
    private:
-    bool m_open = false;
-    bool m_accepted = false;
     std::shared_ptr<ICE::ICEEngine> m_engine;
     ComboBox m_scene_name_combo;
 };

@@ -5,24 +5,28 @@
 #include <TransformComponent.h>
 
 #include "Components/InputText.h"
-#include "Widget.h"
+#include "Dialog.h"
 
-class NewSceneWidget : public Widget {
+class NewSceneDialog : public Dialog {
    public:
-    NewSceneWidget(const std::shared_ptr<ICE::ICEEngine>& engine) : m_engine(engine) {}
+    NewSceneDialog(const std::shared_ptr<ICE::ICEEngine>& engine) : m_engine(engine) {}
 
     void render() override {
         ImGui::PushID("scene_edit");
-        if (m_open) {
+        if (isOpenRequested()) {
             ImGui::OpenPopup("Scene Editor");
-            m_open = false;
         }
 
         if (ImGui::BeginPopupModal("Scene Editor", 0, ImGuiWindowFlags_AlwaysAutoResize)) {
+            ImGui::Text("Scene name:");
+            ImGui::SameLine();
             m_scene_name_in.render();
             if (ImGui::Button("Accept")) {
-                m_accepted = true;
-                ImGui::CloseCurrentPopup();
+                done(DialogResult::Ok);
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Cancel")) {
+                done(DialogResult::Cancel);
             }
             ImGui::EndPopup();
         }
@@ -31,20 +35,9 @@ class NewSceneWidget : public Widget {
 
     std::string getSceneName() { return m_scene_name_in.getText(); }
 
-    void open() { m_open = true; }
-
-    bool accepted() {
-        if (m_accepted) {
-            m_accepted = false;
-            return true;
-        }
-        return false;
-    }
 
    private:
-    bool m_open = false;
     char m_name[512] = {0};
-    bool m_accepted = false;
     std::shared_ptr<ICE::ICEEngine> m_engine;
-    InputText m_scene_name_in{"Scene name", "New scene"};
+    InputText m_scene_name_in{"###Scene name", "New scene"};
 };

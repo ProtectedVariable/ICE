@@ -5,8 +5,10 @@ Inspector::Inspector(const std::shared_ptr<ICE::ICEEngine>& engine) : m_engine(e
         m_engine->getProject()->getCurrentScene()->setAlias(m_selected_entity, text);
         m_entity_has_changed++;
     });
-    ui.registerCallback("add_component_clicked",
-                        [this] { m_add_component_popup.open(m_engine->getProject()->getCurrentScene()->getRegistry(), m_selected_entity); });
+    ui.registerCallback("add_component_clicked", [this] {
+        m_add_component_popup.setData(m_engine->getProject()->getCurrentScene()->getRegistry(), m_selected_entity);
+        m_add_component_popup.open();
+    });
     ui.registerCallback("remove_light_component_clicked", [this] {
         m_engine->getProject()->getCurrentScene()->getRegistry()->removeComponent<ICE::LightComponent>(m_selected_entity);
         setSelectedEntity(m_selected_entity, true);
@@ -18,11 +20,14 @@ Inspector::Inspector(const std::shared_ptr<ICE::ICEEngine>& engine) : m_engine(e
 }
 
 bool Inspector::update() {
-    m_add_component_popup.render();
     ui.render();
-    if (m_add_component_popup.accepted()) {
-        setSelectedEntity(m_selected_entity, true);
+    if (m_add_component_popup.isOpen()) {
+        m_add_component_popup.render();
+        if (m_add_component_popup.getResult() == DialogResult::Ok) {
+            setSelectedEntity(m_selected_entity, true);
+        }
     }
+
     return m_done;
 }
 

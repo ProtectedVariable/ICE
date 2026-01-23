@@ -50,24 +50,28 @@ bool Editor::update() {
     if (m_material_popup.update()) {
         m_assets->rebuildViewer();
     }
-    m_scene_popup.render();
-    m_open_scene_popup.render();
 
-    if (m_scene_popup.accepted()) {
-        m_engine->getProject()->addScene(ICE::Scene(m_scene_popup.getSceneName()));
-        m_engine->getProject()->setCurrentScene(m_engine->getProject()->getScenes().back());
-        m_engine->setupScene(m_engine->getCamera());
-        m_hierarchy->setSelectedEntity(0);
-        m_viewport->setSelectedEntity(0);
-        m_inspector->setSelectedEntity(0);
-    }
-    if (m_open_scene_popup.accepted()) {
-        m_engine->getProject()->setCurrentScene(m_engine->getProject()->getScenes()[m_open_scene_popup.getSelectedIndex()]);
-        m_engine->setupScene(m_engine->getCamera());
-        m_hierarchy->setSelectedEntity(0);
-        m_viewport->setSelectedEntity(0);
-        m_inspector->setSelectedEntity(0);
+    if (m_scene_popup.isOpen()) {
+        m_scene_popup.render();
+        if (m_scene_popup.getResult() == DialogResult::Ok) {
+            m_engine->getProject()->addScene(ICE::Scene(m_scene_popup.getSceneName()));
+            loadScene(m_engine->getProject()->getScenes().size() - 1);
+        }
     }
 
+    if (m_open_scene_popup.isOpen()) {
+        m_open_scene_popup.render();
+        if (m_open_scene_popup.getResult() == DialogResult::Ok) {
+            loadScene(m_open_scene_popup.getSelectedIndex());
+        }
+    }
     return m_done;
+}
+
+void Editor::loadScene(int index) {
+    m_engine->getProject()->setCurrentScene(m_engine->getProject()->getScenes().at(index));
+    m_engine->setupScene(m_engine->getCamera());
+    m_hierarchy->setSelectedEntity(0);
+    m_viewport->setSelectedEntity(0);
+    m_inspector->setSelectedEntity(0);
 }
