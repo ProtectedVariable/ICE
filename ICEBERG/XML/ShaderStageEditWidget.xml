@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<TabItem label="???">
+	<table name="main_layout" columns="2">
+		<setupcolumn label="Source" width="0.9" flags="ImGuiTableColumnFlags_WidthStretch"/>
+		<setupcolumn label="File" width="0.1" flags="ImGuiTableColumnFlags_WidthStretch"/>
+		<header/>
+		<row>
+			<column>
+				<InputTextMultiline label="###ShaderStageSource" dynamic="str_shader_source"/>
+			</column>
+			<column>
+				<text label="File:" />
+				<sameline/>
+				<inputtext label="###ShaderStageFile" dynamic="str_shader_file"/>
+
+				<text labe="Load file:" />
+				<sameline/>
+				<placeholder id="shaders_load_combo"/>
+				<sameline/>
+				<button label="Load" id="btn_load_shader_file"/>
+
+				<button label="Delete Stage" id="btn_delete_stage"/>
+			</column>
+		</row>
+	</table>
+</TabItem>

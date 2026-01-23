@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<BeginPopupModal name="Shader Editor" flags="ImGuiWindowFlags_NoCollapse">
+	<table name="top_layout" columns="2">
+		<setupcolumn label="" width="0.5" flags="ImGuiTableColumnFlags_WidthStretch"/>
+		<setupcolumn label="" width="0.5" flags="ImGuiTableColumnFlags_WidthStretch"/>
+		<row>
+			<column>
+				<text label="Shader name"/>
+			</column>
+			<column>
+				<inputtext label="###Shadername" dynamic="str_shader_name"/>
+			</column>
+		</row>
+	</table>
+	<TabBar id="stages_tabs">
+		<placeholder id="stages_widgets" />
+	</TabBar>
+	<table name="bottom_layout" columns="3">
+		<setupcolumn label="" width="1" flags="ImGuiTableColumnFlags_WidthStretch"/>
+		<setupcolumn label="" width="60" flags="ImGuiTableColumnFlags_WidthFixed"/>
+		<setupcolumn label="" width="60" flags="ImGuiTableColumnFlags_WidthFixed"/>
+		<row>
+			<column>
+			</column>
+			<column>
+				<button label="Save" id="btn_shader_save"/>
+			</column>
+			<column>
+				<button label="Cancel" id="btn_shader_save"/>
+			</column>
+		</row>
+	</table>
+</BeginPopupModal>

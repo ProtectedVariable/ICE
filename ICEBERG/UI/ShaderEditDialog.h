@@ -14,11 +14,15 @@
 #include "Components/InputText.h"
 #include "Components/UniformInputs.h"
 #include "Dialog.h"
+#include "ShaderStageEditWidget.h"
 
 class ShaderEditDialog : public Dialog, ImXML::XMLEventHandler {
    public:
-    ShaderEditDialog() : m_xml_tree(ImXML::XMLReader().read("XML/MaterialEditPopup.xml")) {
+    ShaderEditDialog() : m_xml_tree(ImXML::XMLReader().read("XML/ShaderEditDialog.xml")) {
         m_xml_renderer.addDynamicBind("str_shader_name", {m_shader_name, 512, ImXML::Chars});
+
+        m_widgets.try_emplace(ICE::ShaderStage::Vertex, ShaderStageEditWidget(ICE::ShaderStage::Vertex));
+        m_widgets.try_emplace(ICE::ShaderStage::Fragment, ShaderStageEditWidget(ICE::ShaderStage::Fragment));
     }
 
     std::string getName() const { return std::string(m_shader_name); }
@@ -26,23 +30,18 @@ class ShaderEditDialog : public Dialog, ImXML::XMLEventHandler {
     void render() override {
         ImGui::PushID(m_dialog_id);
         if (isOpenRequested())
-            ImGui::OpenPopup("Material Editor");
-        //m_xml_renderer.render(m_xml_tree, *this);
-        if (ImGui::BeginTabBar("test", ImGuiTabBarFlags_NoCloseWithMiddleMouseButton)) {
-            if (ImGui::BeginTabItem("Vertex Stage")) {
-                ImGui::Text("Vertex Shader Code Editor Here");
-                ImGui::EndTabItem();
-            }
-            if (ImGui::BeginTabItem("Fragment Stage")) {
-                ImGui::Text("Fragment Shader Code Editor Here");
-                ImGui::EndTabItem();
-            }
-            ImGui::EndTabBar();
-        }
+            ImGui::OpenPopup("Shader Editor");
+        m_xml_renderer.render(m_xml_tree, *this);
         ImGui::PopID();
     }
 
-    void onNodeBegin(ImXML::XMLNode& node) override {}
+    void onNodeBegin(ImXML::XMLNode& node) override {
+        if (node.arg<std::string>("id") == "stages_widgets") {
+            for (auto& [stage, widget] : m_widgets) {
+                widget.render();
+            }
+        }
+    }
     void onNodeEnd(ImXML::XMLNode& node) override {}
     void onEvent(ImXML::XMLNode& node) override {
         if (node.arg<std::string>("id") == "btn_apply") {
@@ -59,4 +58,6 @@ class ShaderEditDialog : public Dialog, ImXML::XMLEventHandler {
 
     ImXML::XMLTree m_xml_tree;
     ImXML::XMLRenderer m_xml_renderer;
+
+    std::unordered_map<ICE::ShaderStage, ShaderStageEditWidget> m_widgets;
 };

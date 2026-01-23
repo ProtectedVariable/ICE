@@ -4,8 +4,9 @@
 
 #include "AssetsRenderer.h"
 #include "Controller.h"
-#include "UI/AssetsBrowserWidget.h"
 #include "MaterialEditor.h"
+#include "ShaderEditor.h"
+#include "UI/AssetsBrowserWidget.h"
 
 class Assets : public Controller {
    public:
@@ -30,6 +31,7 @@ class Assets : public Controller {
     AssetsBrowserWidget ui;
     MaterialEditor m_material_editor;
     AssetsRenderer m_renderer;
+    ShaderEditDialog m_shader_editor;
 
     std::optional<AssetData> m_current_preview = std::nullopt;
 

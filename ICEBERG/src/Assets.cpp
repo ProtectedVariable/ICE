@@ -110,7 +110,7 @@ void Assets::handleClick(const AssetData& data) {
     } else if (auto m = std::dynamic_pointer_cast<ICE::TextureCube>(asset_ptr); m) {
         return;  //TODO: Maybe popup window with the texture
     } else if (auto m = std::dynamic_pointer_cast<ICE::Shader>(asset_ptr); m) {
-        return;  //TODO: Shader editor
+        m_shader_editor.open();
     } else if (auto m = std::dynamic_pointer_cast<ICE::Model>(asset_ptr); m) {
         return;  // Probably no action
     } else if (auto m = std::dynamic_pointer_cast<ICE::Material>(asset_ptr); m) {
@@ -144,6 +144,9 @@ bool Assets::update() {
     ui.render();
     if (m_material_editor.update()) {
         rebuildViewer();
+    }
+    if (m_shader_editor.isOpen()) {
+        m_shader_editor.render();
     }
     return m_done;
 }
