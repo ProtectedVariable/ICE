@@ -1,15 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <BeginPopupModal name="Shader Editor" flags="ImGuiWindowFlags_NoCollapse">
-	<table name="top_layout" columns="2">
+	<table name="top_layout" columns="3">
+		<setupcolumn label="" width="0.4" flags="ImGuiTableColumnFlags_WidthStretch"/>
 		<setupcolumn label="" width="0.5" flags="ImGuiTableColumnFlags_WidthStretch"/>
-		<setupcolumn label="" width="0.5" flags="ImGuiTableColumnFlags_WidthStretch"/>
+		<setupcolumn label="" width="0.1" flags="ImGuiTableColumnFlags_WidthStretch"/>
 		<row>
 			<column>
 				<text label="Shader name"/>
 			</column>
 			<column>
 				<inputtext label="###Shadername" dynamic="str_shader_name"/>
+			</column>
+			<column>
+				<button label="+ Add stage" id="btn_add_stage"/>
 			</column>
 		</row>
 	</table>

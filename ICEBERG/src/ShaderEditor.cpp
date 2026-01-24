@@ -15,7 +15,7 @@ void ShaderEditor::open(const ICE::AssetPath &path) {
     } else {
         m_current_shader = std::make_shared<ICE::Shader>();
     }
-    ui.setShader(m_current_shader, path.getName());
+    ui.setShader(m_current_shader, path.getName(), m_engine->getProject()->getBaseDirectory() / "Assets" / "Shaders");
     ui.open();
     m_is_open = true;
 }
@@ -54,6 +54,8 @@ bool ShaderEditor::update() {
                 new_path.setName(ui.getName());
                 *m_engine->getAssetBank()->getAsset<ICE::Shader>(m_shader_path) = *new_shader;
                 m_engine->getAssetBank()->renameAsset(m_shader_path, new_path);
+
+                //TODO: Invalidate shader to reload
             }
         } else if (ui.getResult() == DialogResult::Cancel) {
             m_is_open = false;

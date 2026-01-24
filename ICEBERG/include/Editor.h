@@ -55,6 +55,7 @@ class Editor : public Controller {
 
     //Popups
     MaterialEditor m_material_popup;
+    ShaderEditor m_shader_popup;
     NewSceneDialog m_scene_popup;
     OpenSceneDialog m_open_scene_popup;
 };

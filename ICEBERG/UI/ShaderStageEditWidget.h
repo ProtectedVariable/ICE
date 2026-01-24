@@ -17,7 +17,7 @@
 
 class ShaderStageEditWidget : public Widget, ImXML::XMLEventHandler {
    public:
-    ShaderStageEditWidget(ICE::ShaderStage stage) : m_stage(stage), m_xml_tree(ImXML::XMLReader().read("XML/ShaderStageEditWidget.xml")) {
+    ShaderStageEditWidget(const std::string stage) : m_stage(stage), m_xml_tree(ImXML::XMLReader().read("XML/ShaderStageEditWidget.xml")) {
         m_xml_renderer.addDynamicBind("str_shader_file", {m_shader_file, 512, ImXML::Chars});
         m_xml_renderer.addDynamicBind("str_shader_source", {m_shader_source, 65535, ImXML::Chars});
     }
@@ -37,7 +37,7 @@ class ShaderStageEditWidget : public Widget, ImXML::XMLEventHandler {
 
     void onNodeBegin(ImXML::XMLNode& node) override {
         if (node.type == ImXML::ImGuiEnum::TABITEM) {
-            node.args["label"] = m_stage_names.at(m_stage);
+            node.args["label"] = m_stage;
         } else if (node.type == ImXML::ImGuiEnum::INPUTTEXTMULTILINE) {
             ImVec2 avail = ImGui::GetContentRegionAvail();
             node.size = ImVec2(avail.x, avail.y - 50);
@@ -53,7 +53,7 @@ class ShaderStageEditWidget : public Widget, ImXML::XMLEventHandler {
                 strncpy_s(m_shader_source, buffer.str().c_str(), 65535);
             }
         } else if (node.arg<std::string>("id") == "btn_delete_stage") {
-            ImGui::SetTabItemClosed(m_stage_names.at(m_stage).c_str());
+            ImGui::SetTabItemClosed(m_stage.c_str());
         }
     }
 
@@ -64,19 +64,10 @@ class ShaderStageEditWidget : public Widget, ImXML::XMLEventHandler {
     char m_shader_file[512] = {0};
     char m_shader_source[65535] = {0};
 
-    ICE::ShaderStage m_stage;
+    std::string m_stage;
 
     std::filesystem::path m_parent_path;
 
     ImXML::XMLTree m_xml_tree;
     ImXML::XMLRenderer m_xml_renderer;
-
-    const std::unordered_map<ICE::ShaderStage, std::string> m_stage_names = {
-        {ICE::ShaderStage::Vertex, "Vertex"},
-        {ICE::ShaderStage::Fragment, "Fragment"},
-        {ICE::ShaderStage::Geometry, "Geometry"},
-        {ICE::ShaderStage::TessControl, "Tessellation Control"},
-        {ICE::ShaderStage::TessEval, "Tessellation Evaluation"},
-        {ICE::ShaderStage::Compute, "Compute"},
-    };
 };

@@ -6,7 +6,8 @@ Editor::Editor(const std::shared_ptr<ICE::ICEEngine>& engine, const std::shared_
     : m_engine(engine),
       m_scene_popup(engine),
       m_open_scene_popup(engine),
-      m_material_popup(engine) {
+      m_material_popup(engine),
+      m_shader_popup(engine) {
     m_viewport = std::make_unique<Viewport>(
         engine, [this]() { m_inspector->setSelectedEntity(m_hierarchy->getSelectedEntity(), true); },
         [this](ICE::Entity e) {
@@ -18,12 +19,11 @@ Editor::Editor(const std::shared_ptr<ICE::ICEEngine>& engine, const std::shared_
     m_assets = std::make_unique<Assets>(engine, g_factory);
     ui.registerCallback("open_scene_menu", [this] { m_open_scene_popup.open(); });
     ui.registerCallback("new_scene_menu", [this] { m_scene_popup.open(); });
-    ui.registerCallback("new_shader_menu", [this] {});
+    ui.registerCallback("new_shader_menu", [this] { m_shader_popup.open(ICE::AssetPath("")); });
     ui.registerCallback("new_material_menu", [this] { m_material_popup.open(ICE::AssetPath("")); });
     ui.registerCallback("import_material_menu", [this] { importAsset<ICE::Material>({{"ICE Material", "*.icm"}}); });
     ui.registerCallback("import_texture2d_menu", [this] { importAsset<ICE::Texture2D>({{"Images", "*.png;*.jpg;*.jpeg"}}); });
     ui.registerCallback("import_cubemap_menu", [this] { importAsset<ICE::TextureCube>({{"Images", "*.png;*.jpg;*.jpeg"}}); });
-    ui.registerCallback("import_shader_menu", [this] {});
     ui.registerCallback("import_model_menu", [this] { importAsset<ICE::Model>({{"Models", "*.glb;*.fbx;*.obj"}}); });
     ui.registerCallback("save_menu", [this] { m_engine->getProject()->writeToFile(m_engine->getCamera()); });
     ui.registerCallback("exit_menu", [this] {
@@ -48,6 +48,10 @@ bool Editor::update() {
     m_viewport->setSelectedEntity(m_selected_entity);
 
     if (m_material_popup.update()) {
+        m_assets->rebuildViewer();
+    }
+
+    if (m_shader_popup.update()) {
         m_assets->rebuildViewer();
     }
 

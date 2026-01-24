@@ -16,7 +16,6 @@
 				<menuitem id="import_material_menu" label="Material" />
 				<menuitem id="import_texture2d_menu" label="Texture2D" />
 				<menuitem id="import_cubemap_menu" label="Cubemap" />
-				<menuitem id="import_shader_menu" label="Shader" />
 			</menu>
 			<menuitem id="save_menu" label="Save" shortcut="Ctrl+S"/>
 			<menuitem id="exit_menu" label="Exit" shortcut="Alt+F4"/>
