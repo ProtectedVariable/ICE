@@ -1,6 +1,7 @@
 
 #define IMGUI_DEFINE_MATH_OPERATORS
 
+#include <FontAwesome/IconsFontAwesome5.h>
 #include <GL/gl3w.h>
 #include <GLFW/glfw3.h>
 #include <GLFWWindow.h>
@@ -91,6 +92,19 @@ int main(int argc, char const* argv[]) {
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
+
+    io.Fonts->AddFontDefault();
+
+    ImFontConfig config;
+    config.MergeMode = true;
+    config.PixelSnapH = true;
+    config.GlyphMinAdvanceX = 13.0f;
+    static const ImWchar icon_ranges[] = {ICON_MIN_FA, ICON_MAX_FA, 0};
+
+    io.Fonts->AddFontFromFileTTF("EditorAssets/Fonts/fa-regular-400.ttf", 13.0f, &config, icon_ranges);
+    io.Fonts->AddFontFromFileTTF("EditorAssets/Fonts/fa-solid-900.ttf", 13.0f, &config, icon_ranges);
+    io.Fonts->Build();
+
     ImGui_ImplGlfw_InitForOpenGL(static_cast<GLFWwindow*>(window->getHandle()), true);
     ImGui_ImplOpenGL3_Init("#version 420 core");
 

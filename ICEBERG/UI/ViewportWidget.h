@@ -1,4 +1,5 @@
 #pragma once
+#include <FontAwesome/IconsFontAwesome5.h>
 #include <ImGUI/ImGuizmo.h>
 #include <imgui.h>
 
@@ -13,15 +14,15 @@ class ViewportWidget : public Widget {
         flags |= ImGuiWindowFlags_NoNavFocus;
         ImGui::Begin("Viewport", 0, flags);
 
-        if (ImGui::Button("T")) {
+        if (ImGui::Button(ICON_FA_ARROWS_ALT)) {
             callback("translate_clicked");
         }
         ImGui::SameLine();
-        if (ImGui::Button("R")) {
+        if (ImGui::Button(ICON_FA_SYNC_ALT)) {
             callback("rotate_clicked");
         }
         ImGui::SameLine();
-        if (ImGui::Button("S")) {
+        if (ImGui::Button(ICON_FA_EXPAND_ALT)) {
             callback("scale_clicked");
         }
 
@@ -32,12 +33,11 @@ class ViewportWidget : public Widget {
         if (ImGui::BeginDragDropTarget()) {
             ImGuiDragDropFlags target_flags = 0;
             if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("DND_ASSET_MODEL", target_flags)) {
-                auto path = (char*) payload->Data;
+                auto path = (char *) payload->Data;
                 callback("spawnTree", path);
             }
             ImGui::EndDragDropTarget();
         }
-
 
         auto drag = ImGui::GetMouseDragDelta(0);
         if (ImGui::IsWindowHovered()) {
