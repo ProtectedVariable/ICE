@@ -1,5 +1,8 @@
 #include "ShaderEditor.h"
 
+#include "ShaderExporter.h"
+#include "ShaderLoader.h"
+
 ShaderEditor::ShaderEditor(const std::shared_ptr<ICE::ICEEngine> &engine) : m_engine(engine) {
 }
 
@@ -26,13 +29,30 @@ bool ShaderEditor::update() {
             m_done = true;
             m_is_open = false;
 
+            auto shader_root = m_engine->getProject()->getBaseDirectory() / "Assets" / "Shaders";
+            if (!m_current_shader->getSources().empty()) {
+                shader_root = m_current_shader->getSources().at(0).parent_path();
+            }
+            ICE::ShaderSource sources;
+            for (const auto &[stage, widget] : ui.getStageWidgets()) {
+                std::ofstream outstream;
+                outstream.open(shader_root / widget->getShaderFile());
+                outstream << widget->getShaderSource();
+                outstream.close();
+                sources.try_emplace(stage, std::make_pair(widget->getShaderFile(), widget->getShaderSource()));
+            }
+            ICE::Shader tmp_shader{sources};
+            ICE::ShaderExporter sh;
+            sh.writeToJson(shader_root / (ui.getName() + ".shader.json"), tmp_shader);
+
+            auto new_shader = ICE::ShaderLoader().load({shader_root / (ui.getName() + ".shader.json")});
             if (m_shader_path.toString().empty()) {
                 m_shader_path = ICE::AssetPath::WithTypePrefix<ICE::Shader>(ui.getName());
-                //m_engine->getAssetBank()->addAsset(m_shader_path, std::make_shared<ICE::Material>(mtl));
+                m_engine->getAssetBank()->addAsset(m_shader_path, new_shader);
             } else {
                 ICE::AssetPath new_path = m_shader_path;
                 new_path.setName(ui.getName());
-                //*m_engine->getAssetBank()->getAsset<ICE::Material>(m_shader_path) = mtl;
+                *m_engine->getAssetBank()->getAsset<ICE::Shader>(m_shader_path) = *new_shader;
                 m_engine->getAssetBank()->renameAsset(m_shader_path, new_path);
             }
         } else if (ui.getResult() == DialogResult::Cancel) {

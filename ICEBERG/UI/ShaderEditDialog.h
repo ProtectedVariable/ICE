@@ -27,14 +27,14 @@ class ShaderEditDialog : public Dialog, ImXML::XMLEventHandler {
         strncpy_s(m_shader_name, name.c_str(), 512);
         if (shader) {
             for (const auto& [stage, source] : shader->getStageSources()) {
-                m_widgets.try_emplace(stage, std::make_unique<ShaderStageEditWidget>(stage));
+                m_widgets.try_emplace(stage, std::make_shared<ShaderStageEditWidget>(stage));
                 m_widgets[stage]->setShaderSource(source, shader->getSources().at(0).parent_path());
             }
         }
     }
 
     std::string getName() const { return std::string(m_shader_name); }
-    std::unordered_map<ICE::ShaderStage, std::unique_ptr<ShaderStageEditWidget>> getStageWidgets() const { return m_widgets; }
+    std::unordered_map<ICE::ShaderStage, std::shared_ptr<ShaderStageEditWidget>> getStageWidgets() const { return m_widgets; }
 
     void render() override {
         ImGui::PushID(m_dialog_id);
@@ -53,11 +53,9 @@ class ShaderEditDialog : public Dialog, ImXML::XMLEventHandler {
     }
     void onNodeEnd(ImXML::XMLNode& node) override {}
     void onEvent(ImXML::XMLNode& node) override {
-        if (node.arg<std::string>("id") == "btn_apply") {
-            ImGui::CloseCurrentPopup();
+        if (node.arg<std::string>("id") == "btn_save") {
             done(DialogResult::Ok);
         } else if (node.arg<std::string>("id") == "btn_cancel") {
-            ImGui::CloseCurrentPopup();
             done(DialogResult::Cancel);
         }
     }
@@ -68,5 +66,5 @@ class ShaderEditDialog : public Dialog, ImXML::XMLEventHandler {
     ImXML::XMLTree m_xml_tree;
     ImXML::XMLRenderer m_xml_renderer;
 
-    std::unordered_map<ICE::ShaderStage, std::unique_ptr<ShaderStageEditWidget>> m_widgets;
+    std::unordered_map<ICE::ShaderStage, std::shared_ptr<ShaderStageEditWidget>> m_widgets;
 };

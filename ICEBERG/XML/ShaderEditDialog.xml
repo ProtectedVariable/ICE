@@ -24,10 +24,10 @@
 			<column>
 			</column>
 			<column>
-				<button label="Save" id="btn_shader_save"/>
+				<button label="Save" id="btn_save"/>
 			</column>
 			<column>
-				<button label="Cancel" id="btn_shader_save"/>
+				<button label="Cancel" id="btn_cancel"/>
 			</column>
 		</row>
 	</table>
