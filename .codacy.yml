@@ -1,0 +1,28 @@
+---
+# Codacy Configuration File
+# Documentation: https://docs.codacy.com/repositories-configure/codacy-configuration-file/
+
+# 1. Prevent Codacy from analyzing third-party code or build artifacts
+exclude_paths:
+  - "**/_deps/**"
+  - "**/build/**"
+  - "**/includes/**"
+
+engines:
+  cppcheck:
+    extra_lines:
+      - "--suppress=missingInclude"
+      - "--suppress=missingIncludeSystem"
+     
+      - "-I includes/"
+
+      - "--std=c++20"
+
+      - "--library=std"
+      - "--library=posix"
+      - "--library=googletest"
+
+      - "--suppress=unusedFunction"
+      - "--suppress=unmatchedSuppression"
+
+      - "--enable=warning,style,performance,portability"
