@@ -20,12 +20,21 @@ class ShaderEditDialog : public Dialog, ImXML::XMLEventHandler {
    public:
     ShaderEditDialog() : m_xml_tree(ImXML::XMLReader().read("XML/ShaderEditDialog.xml")) {
         m_xml_renderer.addDynamicBind("str_shader_name", {m_shader_name, 512, ImXML::Chars});
+    }
 
-        m_widgets.try_emplace(ICE::ShaderStage::Vertex, ShaderStageEditWidget(ICE::ShaderStage::Vertex));
-        m_widgets.try_emplace(ICE::ShaderStage::Fragment, ShaderStageEditWidget(ICE::ShaderStage::Fragment));
+    void setShader(const std::shared_ptr<ICE::Shader>& shader, const std::string& name) {
+        m_widgets.clear();
+        strncpy_s(m_shader_name, name.c_str(), 512);
+        if (shader) {
+            for (const auto& [stage, source] : shader->getStageSources()) {
+                m_widgets.try_emplace(stage, std::make_unique<ShaderStageEditWidget>(stage));
+                m_widgets[stage]->setShaderSource(source, shader->getSources().at(0).parent_path());
+            }
+        }
     }
 
     std::string getName() const { return std::string(m_shader_name); }
+    std::unordered_map<ICE::ShaderStage, std::unique_ptr<ShaderStageEditWidget>> getStageWidgets() const { return m_widgets; }
 
     void render() override {
         ImGui::PushID(m_dialog_id);
@@ -38,7 +47,7 @@ class ShaderEditDialog : public Dialog, ImXML::XMLEventHandler {
     void onNodeBegin(ImXML::XMLNode& node) override {
         if (node.arg<std::string>("id") == "stages_widgets") {
             for (auto& [stage, widget] : m_widgets) {
-                widget.render();
+                widget->render();
             }
         }
     }
@@ -59,5 +68,5 @@ class ShaderEditDialog : public Dialog, ImXML::XMLEventHandler {
     ImXML::XMLTree m_xml_tree;
     ImXML::XMLRenderer m_xml_renderer;
 
-    std::unordered_map<ICE::ShaderStage, ShaderStageEditWidget> m_widgets;
+    std::unordered_map<ICE::ShaderStage, std::unique_ptr<ShaderStageEditWidget>> m_widgets;
 };

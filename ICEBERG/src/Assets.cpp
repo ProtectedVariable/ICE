@@ -9,7 +9,8 @@ Assets::Assets(const std::shared_ptr<ICE::ICEEngine>& engine, const std::shared_
       m_renderer(engine->getApi(), g_factory, engine->getGPURegistry()),
       ui(m_asset_categories,
          m_engine->getGPURegistry()->getTexture2D(ICE::AssetPath::WithTypePrefix<ICE::Texture2D>("Editor/folder"))->ptr()),
-      m_material_editor(engine) {
+      m_material_editor(engine),
+      m_shader_editor(engine) {
     rebuildViewer();
     ui.registerCallback("material_duplicate", [this](std::string name) {
         auto id = m_engine->getAssetBank()->getUID("Materials/" + name);
@@ -110,7 +111,7 @@ void Assets::handleClick(const AssetData& data) {
     } else if (auto m = std::dynamic_pointer_cast<ICE::TextureCube>(asset_ptr); m) {
         return;  //TODO: Maybe popup window with the texture
     } else if (auto m = std::dynamic_pointer_cast<ICE::Shader>(asset_ptr); m) {
-        m_shader_editor.open();
+        m_shader_editor.open(data.asset_path);
     } else if (auto m = std::dynamic_pointer_cast<ICE::Model>(asset_ptr); m) {
         return;  // Probably no action
     } else if (auto m = std::dynamic_pointer_cast<ICE::Material>(asset_ptr); m) {
@@ -145,8 +146,8 @@ bool Assets::update() {
     if (m_material_editor.update()) {
         rebuildViewer();
     }
-    if (m_shader_editor.isOpen()) {
-        m_shader_editor.render();
+    if (m_shader_editor.update()) {
+        rebuildViewer();
     }
     return m_done;
 }

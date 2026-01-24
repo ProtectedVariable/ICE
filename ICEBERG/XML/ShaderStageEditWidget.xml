@@ -2,8 +2,8 @@
 
 <TabItem label="???">
 	<table name="main_layout" columns="2">
-		<setupcolumn label="Source" width="0.9" flags="ImGuiTableColumnFlags_WidthStretch"/>
-		<setupcolumn label="File" width="0.1" flags="ImGuiTableColumnFlags_WidthStretch"/>
+		<setupcolumn label="Source" width="0.7" flags="ImGuiTableColumnFlags_WidthStretch"/>
+		<setupcolumn label="File" width="0.3" flags="ImGuiTableColumnFlags_WidthStretch"/>
 		<header/>
 		<row>
 			<column>
@@ -14,10 +14,6 @@
 				<sameline/>
 				<inputtext label="###ShaderStageFile" dynamic="str_shader_file"/>
 
-				<text labe="Load file:" />
-				<sameline/>
-				<placeholder id="shaders_load_combo"/>
-				<sameline/>
 				<button label="Load" id="btn_load_shader_file"/>
 
 				<button label="Delete Stage" id="btn_delete_stage"/>

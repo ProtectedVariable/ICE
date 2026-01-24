@@ -15,7 +15,7 @@ OpenGLShader::OpenGLShader(const Shader &shader_asset) {
     m_programID = glCreateProgram();
     Logger::Log(Logger::VERBOSE, "Graphics", "Compiling shader...");
 
-    for (const auto& [stage, source] : shader_asset.getSources()) {
+    for (const auto& [stage, source] : shader_asset.getStageSources()) {
         compileAndAttachStage(stage, source.second);
     }
 

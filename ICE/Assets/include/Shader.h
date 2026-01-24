@@ -19,7 +19,7 @@ class Shader : public Asset {
     Shader() = default;
     Shader(const ShaderSource& sources) : m_sources(sources) {}
 
-    ShaderSource getSources() const { return m_sources; }
+    ShaderSource getStageSources() const { return m_sources; }
 
     std::string getTypeName() const override;
 

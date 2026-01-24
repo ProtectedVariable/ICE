@@ -31,7 +31,7 @@ class Assets : public Controller {
     AssetsBrowserWidget ui;
     MaterialEditor m_material_editor;
     AssetsRenderer m_renderer;
-    ShaderEditDialog m_shader_editor;
+    ShaderEditor m_shader_editor;
 
     std::optional<AssetData> m_current_preview = std::nullopt;
 
