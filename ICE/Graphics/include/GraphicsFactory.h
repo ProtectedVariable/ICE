@@ -9,6 +9,8 @@
 #include "Framebuffer.h"
 #include "GraphicsAPI.h"
 #include "Shader.h"
+#include "ShaderProgram.h"
+#include "GPUTexture.h"
 #include "Texture.h"
 #include "VertexArray.h"
 
@@ -29,14 +31,10 @@ class GraphicsFactory {
 
     virtual std::shared_ptr<UniformBuffer> createUniformBuffer(size_t size, size_t binding) const = 0;
 
-    virtual std::shared_ptr<Shader> createShader(const std::string& vertexFile, const std::string& fragmentFile) const = 0;
+    virtual std::shared_ptr<ShaderProgram> createShader(const Shader& shader) const = 0;
 
-    virtual std::shared_ptr<Shader> createShader(const std::string& vertexFile, const std::string& geometryFile,
-                                                 const std::string& fragmentFile) const = 0;
+    virtual std::shared_ptr<GPUTexture> createTexture2D(const Texture2D &texture) const = 0;
 
-    virtual std::shared_ptr<Texture2D> createTexture2D(const std::string& file) const = 0;
-    virtual std::shared_ptr<Texture2D> createTexture2D(const void* data, size_t w, size_t h, TextureFormat fmt) const = 0;
-
-    virtual std::shared_ptr<TextureCube> createTextureCube(const std::string& file) const = 0;
+    virtual std::shared_ptr<GPUTexture> createTextureCube(const TextureCube& texture) const = 0;
 };
 }  // namespace ICE

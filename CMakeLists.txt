@@ -22,10 +22,6 @@ include_directories(includes)
 set(IMGUI_SRC 
 	${CMAKE_CURRENT_SOURCE_DIR}/includes/ImGUI/imgui_impl_glfw.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/includes/ImGUI/imgui_impl_opengl3.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/includes/ImGUI/imgui.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/includes/ImGUI/imgui_widgets.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/includes/ImGUI/imgui_draw.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/includes/ImGUI/imgui_tables.cpp
 )
 
 set(IMGUIZMO_SRC

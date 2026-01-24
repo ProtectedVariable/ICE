@@ -6,9 +6,12 @@
 Assets::Assets(const std::shared_ptr<ICE::ICEEngine>& engine, const std::shared_ptr<ICE::GraphicsFactory>& g_factory)
     : m_engine(engine),
       m_g_factory(g_factory),
-      m_material_widget(engine) {
+      m_renderer(engine->getApi(), g_factory, engine->getGPURegistry()),
+      ui(m_asset_categories,
+         m_engine->getGPURegistry()->getTexture2D(ICE::AssetPath::WithTypePrefix<ICE::Texture2D>("Editor/folder"))->ptr()),
+      m_material_editor(engine),
+      m_shader_editor(engine) {
     rebuildViewer();
-    ui.registerCallback("material_edit", [this](std::string name) { m_material_widget.open(m_engine->getAssetBank()->getUID("Materials/" + name)); });
     ui.registerCallback("material_duplicate", [this](std::string name) {
         auto id = m_engine->getAssetBank()->getUID("Materials/" + name);
         auto mat_copy = std::make_shared<ICE::Material>(*m_engine->getAssetBank()->getAsset<ICE::Material>(id));
@@ -20,103 +23,130 @@ Assets::Assets(const std::shared_ptr<ICE::ICEEngine>& engine, const std::shared_
         m_engine->getAssetBank()->removeAsset(name);
         rebuildViewer();
     });
-}
 
-void* Assets::createThumbnail(const ICE::AssetBankEntry& entry) {
-    auto& asset = entry.asset;
-    if (auto m = std::dynamic_pointer_cast<ICE::Texture2D>(asset); m) {
-        return m->getTexture();
-    }
+    ui.registerCallback("asset_category_selected", [this](int index) {
+        m_current_category_index = index;
+        ui.setCurrentView(m_asset_views[m_current_category_index]);
+    });
 
-    auto model_uid = m_engine->getAssetBank()->getUID(ICE::AssetPath::WithTypePrefix<ICE::Model>("sphere"));
-    auto material_uid = m_engine->getAssetBank()->getUID(ICE::AssetPath("Materials/base_mat"));
-
-    auto self_uid = m_engine->getAssetBank()->getUID(entry.path);
-    if (auto m = std::dynamic_pointer_cast<ICE::Model>(asset); m) {
-        model_uid = self_uid;
-    } else if (auto m = std::dynamic_pointer_cast<ICE::Material>(asset); m) {
-        material_uid = self_uid;
-    } else {
-        //TODO return default icons
-        return nullptr;
-    }
-    auto model = m_engine->getAssetBank()->getAsset<ICE::Model>(model_uid);
-    auto material = m_engine->getAssetBank()->getAsset<ICE::Material>(material_uid);
-    auto shader = m_engine->getAssetBank()->getAsset<ICE::Shader>(material->getShader());
-
-    auto camera = std::make_shared<ICE::PerspectiveCamera>(60.0, 1.0, 0.01, 10000.0);
-    camera->backward(2);
-    camera->up(1);
-    camera->pitch(-30);
-
-    shader->bind();
-    shader->loadMat4("projection", camera->getProjection());
-    shader->loadMat4("view", camera->lookThrough());
-
-    ICE::GeometryPass pass(m_engine->getApi(), m_engine->getGraphicsFactory(), {256, 256, 1});
-    std::vector<ICE::RenderCommand> cmds;
-    std::unordered_map<ICE::AssetUID, std::shared_ptr<ICE::Texture>> textures;
-    for (const auto& [k, v] : material->getAllUniforms()) {
-        if (std::holds_alternative<ICE::AssetUID>(v)) {
-            auto id = std::get<ICE::AssetUID>(v);
-            textures.try_emplace(id, m_engine->getAssetBank()->getAsset<ICE::Texture2D>(id));
+    ui.registerCallback("item_clicked", [this](std::string label) {
+        auto current_view = ui.getCurrentView();
+        if (label == "..") {
+            ui.setCurrentView(*current_view.parent);
+        } else {
+            for (const auto& folder : current_view.subfolders) {
+                if (folder.folder_name == label) {
+                    ui.setCurrentView(folder);
+                    return;
+                }
+            }
+            for (const auto& asset : current_view.assets) {
+                if (asset.name == label) {
+                    handleClick(asset);
+                    return;
+                }
+            }
         }
-    }
-    for (const auto& mesh : model->getMeshes()) {
-        cmds.push_back(ICE::RenderCommand{.mesh = mesh,
-                                          .material = material,
-                                          .shader = shader,
-                                          .textures = textures,
-                                          .model_matrix = Eigen::Matrix4f::Identity()});
-    }
-    pass.submit(&cmds);
-    pass.execute();
+    });
+    ui.registerCallback("item_selected", [this](std::string label) {
+        auto current_view = ui.getCurrentView();
+        for (const auto& asset : current_view.assets) {
+            if (asset.name == label) {
+                m_current_preview.emplace(asset);
+                return;
+            }
+        }
+    });
 
-    return static_cast<char*>(0) + pass.getResult()->getTexture();
 }
 
 void Assets::rebuildViewer() {
-    ui.reset();
-
-    auto entries = m_engine->getAssetBank()->getAllEntries();
-    //Fill asset browser
-    std::unordered_map<std::string, std::shared_ptr<AssetView>> asset_roots;
-
-    for (const auto& entry : entries) {
-        auto root = entry.path.getPath()[0];
-        if (!asset_roots.contains(root)) {
-            asset_roots.try_emplace(root, std::make_shared<AssetView>(AssetView{root, {}, {}}));
-        }
-        std::shared_ptr<AssetView> parent = asset_roots[root];
-        for (const auto& subpath : entry.path.getPath()) {
-            if (subpath == root) {
-                continue;
-            }
-            for (const auto& subfolder : parent->subfolders) {
-                if (subfolder->folder_name == subpath) {
-                    parent = subfolder;
-                    break;
-                }
-            }
-            if (parent == asset_roots[root]) {
-                auto new_folder = std::make_shared<AssetView>(AssetView{subpath, {}, {}});
-                parent->subfolders.push_back(new_folder);
-                parent = new_folder;
-            }
-        }
-
-        parent->assets.emplace_back(entry.path.getName(), createThumbnail(entry));
+    m_asset_views.clear();
+    int i = 0;
+    for (const auto& category : m_asset_categories) {
+        AssetView folder_view;
+        folder_view.folder_name = category;
+        folder_view.type = static_cast<ICE::AssetType>(i++);
+        m_asset_views.push_back(folder_view);
     }
 
-    for (const auto& [name, assetview] : asset_roots) {
-        ui.addAssets(assetview);
+    auto asset_bank = m_engine->getAssetBank();
+    for (const auto& entry : asset_bank->getAllEntries()) {
+        Thumbnail thumbnail;
+        auto [ptr, flip] = m_renderer.createThumbnail(entry.asset, entry.path.toString());
+        thumbnail.ptr = ptr;
+        thumbnail.flip = flip;
+        std::string category;
+        if (std::dynamic_pointer_cast<ICE::Model>(entry.asset)) {
+            category = "Models";
+        } else if (std::dynamic_pointer_cast<ICE::Mesh>(entry.asset)) {
+            category = "Meshes";
+        } else if (std::dynamic_pointer_cast<ICE::Material>(entry.asset)) {
+            category = "Materials";
+        } else if (std::dynamic_pointer_cast<ICE::Texture2D>(entry.asset)) {
+            category = "Textures2D";
+        } else if (std::dynamic_pointer_cast<ICE::TextureCube>(entry.asset)) {
+            category = "TextureCubes";
+        } else if (std::dynamic_pointer_cast<ICE::Shader>(entry.asset)) {
+            category = "Shaders";
+        } else {
+            category = "Others";
+        }
+        for (auto& folder_view : m_asset_views) {
+            if (folder_view.folder_name == category) {
+                auto paths = entry.path.getPath();
+                paths.push_back(entry.path.getName());
+                createSubfolderView(&folder_view, std::vector<std::string>(paths.begin() + 1, paths.end()), thumbnail, entry.path.toString());
+                break;
+            }
+        }
+    }
+    ui.setCurrentView(m_asset_views[m_current_category_index]);
+}
+
+void Assets::handleClick(const AssetData& data) {
+    auto asset_ptr = m_engine->getAssetBank()->getAsset(m_engine->getAssetBank()->getUID(m_current_preview.value().asset_path));
+    if (auto m = std::dynamic_pointer_cast<ICE::Texture2D>(asset_ptr); m) {
+        return;  //TODO: Maybe popup window with the texture
+    } else if (auto m = std::dynamic_pointer_cast<ICE::TextureCube>(asset_ptr); m) {
+        return;  //TODO: Maybe popup window with the texture
+    } else if (auto m = std::dynamic_pointer_cast<ICE::Shader>(asset_ptr); m) {
+        m_shader_editor.open(data.asset_path);
+    } else if (auto m = std::dynamic_pointer_cast<ICE::Model>(asset_ptr); m) {
+        return;  // Probably no action
+    } else if (auto m = std::dynamic_pointer_cast<ICE::Material>(asset_ptr); m) {
+        m_material_editor.open(data.asset_path);
     }
 }
 
+void Assets::createSubfolderView(AssetView* parent_view, const std::vector<std::string>& path, const Thumbnail& thumbnail,
+                                 const std::string& full_path) {
+    if (path.size() == 1) {
+        parent_view->assets.push_back({path.back(), thumbnail, full_path});
+        return;
+    }
+    for (auto& folder : parent_view->subfolders) {
+        if (folder.folder_name == path[0]) {
+            createSubfolderView(&folder, std::vector<std::string>(path.begin() + 1, path.end()), thumbnail, full_path);
+            return;
+        }
+    }
+    parent_view->subfolders.push_back(AssetView{.parent = parent_view, .folder_name = path[0], .assets = {}, .subfolders = {}, .type = parent_view->type});
+    createSubfolderView(&(parent_view->subfolders.back()), std::vector<std::string>(path.begin() + 1, path.end()), thumbnail, full_path);
+}
+
 bool Assets::update() {
+    m_t += 0.1f;
+
+    if (m_current_preview.has_value()) {
+        auto asset_ptr = m_engine->getAssetBank()->getAsset(m_engine->getAssetBank()->getUID(m_current_preview.value().asset_path));
+        ui.setPreviewTexture(m_renderer.getPreview(asset_ptr, m_current_preview.value().asset_path, m_t).first);
+    }
     ui.render();
-    m_material_widget.render();
-    if (m_material_widget.accepted()) {
+    if (m_material_editor.update()) {
+        rebuildViewer();
+    }
+    if (m_shader_editor.update()) {
         rebuildViewer();
     }
     return m_done;

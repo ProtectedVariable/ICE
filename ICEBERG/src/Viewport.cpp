@@ -34,19 +34,20 @@ Viewport::Viewport(const std::shared_ptr<ICE::ICEEngine> &engine, const std::fun
         m_engine->getApi()->clear();
 
         auto camera = m_engine->getCamera();
-        m_engine->getAssetBank()->getAsset<ICE::Shader>("__ice__picking_shader")->bind();
-        m_engine->getAssetBank()->getAsset<ICE::Shader>("__ice__picking_shader")->loadMat4("projection", camera->getProjection());
-        m_engine->getAssetBank()->getAsset<ICE::Shader>("__ice__picking_shader")->loadMat4("view", camera->lookThrough());
+        auto shader = m_engine->getGPURegistry()->getShader(ICE::AssetPath::WithTypePrefix<ICE::Shader>("__ice__picking_shader"));
+
+        shader->bind();
+
         auto registry = m_engine->getProject()->getCurrentScene()->getRegistry();
         for (auto e : registry->getEntities()) {
             if (registry->entityHasComponent<ICE::RenderComponent>(e) && registry->entityHasComponent<ICE::TransformComponent>(e)) {
 
                 auto tc = registry->getComponent<ICE::TransformComponent>(e);
                 auto rc = registry->getComponent<ICE::RenderComponent>(e);
-                m_engine->getAssetBank()->getAsset<ICE::Shader>("__ice__picking_shader")->loadMat4("model", tc->getModelMatrix());
-                m_engine->getAssetBank()->getAsset<ICE::Shader>("__ice__picking_shader")->loadInt("objectID", e);
-                auto model = m_engine->getAssetBank()->getAsset<ICE::Model>(rc->model);
-                for (const auto &mesh : model->getMeshes()) {
+                shader->loadMat4("model", tc->getWorldMatrix());
+                shader->loadInt("objectID", e);
+                auto mesh = m_engine->getGPURegistry()->getMesh(rc->mesh);
+                if (mesh) {
                     mesh->getVertexArray()->bind();
                     mesh->getVertexArray()->getIndexBuffer()->bind();
                     m_engine->getApi()->renderVertexArray(mesh->getVertexArray());
@@ -59,7 +60,8 @@ Viewport::Viewport(const std::shared_ptr<ICE::ICEEngine> &engine, const std::fun
         e += color.x();
         e += color.y() << 8;
         e += color.z() << 16;
-        m_entity_picked_callback(e);
+        if (e != 0)
+            m_entity_picked_callback(e);
     });
     ui.registerCallback("resize", [this](float width, float height) {
         m_engine->getCamera()->resize(width, height);
@@ -68,32 +70,58 @@ Viewport::Viewport(const std::shared_ptr<ICE::ICEEngine> &engine, const std::fun
     ui.registerCallback("translate_clicked", [this] { m_guizmo_mode = ImGuizmo::OPERATION::TRANSLATE; });
     ui.registerCallback("rotate_clicked", [this] { m_guizmo_mode = ImGuizmo::OPERATION::ROTATE; });
     ui.registerCallback("scale_clicked", [this] { m_guizmo_mode = ImGuizmo::OPERATION::SCALE; });
+
+    ui.registerCallback("spawnTree", [this](char* path) {
+        auto uid = m_engine->getProject()->getAssetBank()->getUID(std::string(path));
+        if (uid == NO_ASSET_ID)
+            return;
+        ICE::Entity e = m_engine->getProject()->getCurrentScene()->spawnTree(uid, m_engine->getAssetBank());
+        m_entity_picked_callback(e);
+    });
 }
 
 bool Viewport::update() {
     ui.setTexture(static_cast<char *>(0) + m_engine->getInternalFramebuffer()->getTexture());
     ui.render();
 
-    ImGuizmo::Enable(true);
     if (m_selected_entity != 0) {
-        auto tc = m_engine->getProject()->getCurrentScene()->getRegistry()->getComponent<ICE::TransformComponent>(m_selected_entity);
-        Eigen::Matrix4f delta_matrix;
-        delta_matrix.setZero();
-        ImGuizmo::Manipulate(m_engine->getCamera()->lookThrough().transpose().data(), m_engine->getCamera()->getProjection().data(), m_guizmo_mode,
-                             ImGuizmo::WORLD, tc->getModelMatrix().data(), delta_matrix.data());
-        auto deltaT = Eigen::Vector3f(0, 0, 0);
-        auto deltaR = Eigen::Vector3f(0, 0, 0);
-        auto deltaS = Eigen::Vector3f(0, 0, 0);
+        auto registry = m_engine->getProject()->getCurrentScene()->getRegistry();
+        auto tc = registry->getComponent<ICE::TransformComponent>(m_selected_entity);
 
-        ImGuizmo::DecomposeMatrixToComponents(delta_matrix.data(), deltaT.data(), deltaR.data(), deltaS.data());
-        if (m_guizmo_mode == ImGuizmo::TRANSLATE) {
-            tc->position() += deltaT;
-        } else if (m_guizmo_mode == ImGuizmo::ROTATE) {
-            tc->rotation() += deltaR;
-        } else if (m_guizmo_mode == ImGuizmo::SCALE) {
-            tc->scale() += (deltaS - Eigen::Vector3f(1, 1, 1));
+        ICE::Entity parentID = m_engine->getProject()->getCurrentScene()->getGraph()->getParentID(m_selected_entity);
+        Eigen::Matrix4f parentWorldMatrix = Eigen::Matrix4f::Identity();
+
+        if (parentID != 0) {
+            auto ptc = registry->getComponent<ICE::TransformComponent>(parentID);
+            parentWorldMatrix = ptc->getWorldMatrix();
         }
-        if (ImGuizmo::IsUsingAny()) {
+
+        Eigen::Matrix4f currentWorldMatrix = tc->getWorldMatrix().eval();
+
+        ImGuizmo::Manipulate(m_engine->getCamera()->lookThrough().data(), m_engine->getCamera()->getProjection().data(), m_guizmo_mode,
+                             ImGuizmo::LOCAL, currentWorldMatrix.data());
+
+        if (ImGuizmo::IsUsing()) {
+            Eigen::Matrix4f newLocalMatrix = parentWorldMatrix.inverse() * currentWorldMatrix;
+
+            Eigen::Vector3f pos = newLocalMatrix.block<3, 1>(0, 3);
+
+            Eigen::Vector3f sca;
+            sca.x() = newLocalMatrix.block<3, 1>(0, 0).norm();
+            sca.y() = newLocalMatrix.block<3, 1>(0, 1).norm();
+            sca.z() = newLocalMatrix.block<3, 1>(0, 2).norm();
+
+            Eigen::Matrix3f rotMat = newLocalMatrix.block<3, 3>(0, 0);
+            rotMat.col(0) /= sca.x();
+            rotMat.col(1) /= sca.y();
+            rotMat.col(2) /= sca.z();
+
+            Eigen::Quaternionf rot(rotMat);
+
+            tc->setPosition(pos);
+            tc->setRotation(rot);
+            tc->setScale(sca);
+
             m_entity_transformed_callback();
         }
     }

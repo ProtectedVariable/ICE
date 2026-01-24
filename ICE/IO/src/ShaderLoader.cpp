@@ -8,25 +8,51 @@
 #include <Shader.h>
 
 #include <fstream>
+#include <nlohmann/json.hpp>
 #include <sstream>
 
 namespace ICE {
 std::shared_ptr<Shader> ShaderLoader::load(const std::vector<std::filesystem::path> &files) {
-    if (files.size() < 2) {
-        throw ICEException("Shaders must have at least 2 files");
+    if (files.empty()) {
+        throw ICEException("No files provided for shader");
     }
 
-    std::shared_ptr<Shader> shader;
-    if (files.size() == 2) {
-        shader = graphics_factory->createShader(readAndResolveIncludes(files[0]), readAndResolveIncludes(files[1]));
-    } else if (files.size() == 3) {
-        shader = graphics_factory->createShader(readAndResolveIncludes(files[0]), readAndResolveIncludes(files[1]), readAndResolveIncludes(files[2]));
-    } else {
-        throw ICEException("Too many files for shader");
+    nlohmann::json json;
+    std::ifstream infile = std::ifstream(files[0]);
+    infile >> json;
+    infile.close();
+
+    ShaderSource shader_sources;
+    for (const auto &stage_source : json) {
+        auto stage = stageFromString(stage_source["stage"]);
+        auto file = stage_source["source"].get<std::string>();
+        auto file_path = (files[0].parent_path() / file).string();
+        auto source_code = readAndResolveIncludes(file_path);
+        shader_sources[stage] = {file, source_code};
     }
+
+    auto shader = std::make_shared<Shader>(shader_sources);
 
     shader->setSources(files);
     return shader;
+}
+
+constexpr ShaderStage ShaderLoader::stageFromString(const std::string &str) {
+    if (str == "vertex") {
+        return ShaderStage::Vertex;
+    } else if (str == "fragment") {
+        return ShaderStage::Fragment;
+    } else if (str == "geometry") {
+        return ShaderStage::Geometry;
+    } else if (str == "tess_control") {
+        return ShaderStage::TessControl;
+    } else if (str == "tess_eval") {
+        return ShaderStage::TessEval;
+    } else if (str == "compute") {
+        return ShaderStage::Compute;
+    } else {
+        throw ICEException("Unknown shader stage: " + str);
+    }
 }
 
 std::string ShaderLoader::readAndResolveIncludes(const std::filesystem::path &file_path) {

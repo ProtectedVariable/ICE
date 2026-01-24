@@ -1,0 +1,10 @@
+[
+  {
+    "stage": "vertex",
+    "source": "glsl/skinning.vs"
+  },
+  {
+    "stage": "fragment",
+    "source": "glsl/pbr.fs"
+  }
+]

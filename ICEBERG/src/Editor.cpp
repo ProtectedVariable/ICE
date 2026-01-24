@@ -1,14 +1,13 @@
 #include "Editor.h"
 
-#include <dialog.h>
-
 #include <filesystem>
 
 Editor::Editor(const std::shared_ptr<ICE::ICEEngine>& engine, const std::shared_ptr<ICE::GraphicsFactory>& g_factory)
     : m_engine(engine),
-      m_material_popup(engine),
       m_scene_popup(engine),
-      m_open_scene_popup(engine) {
+      m_open_scene_popup(engine),
+      m_material_popup(engine),
+      m_shader_popup(engine) {
     m_viewport = std::make_unique<Viewport>(
         engine, [this]() { m_inspector->setSelectedEntity(m_hierarchy->getSelectedEntity(), true); },
         [this](ICE::Entity e) {
@@ -18,48 +17,18 @@ Editor::Editor(const std::shared_ptr<ICE::ICEEngine>& engine, const std::shared_
     m_hierarchy = std::make_unique<Hierarchy>(engine);
     m_inspector = std::make_unique<Inspector>(engine);
     m_assets = std::make_unique<Assets>(engine, g_factory);
-    ui.registerCallback("open_scene_clicked", [this] { m_open_scene_popup.open(); });
-    ui.registerCallback("new_scene_clicked", [this] { m_scene_popup.open(); });
-    ui.registerCallback("new_material_clicked", [this] {
-        auto material = std::make_shared<ICE::Material>();
-        auto path = ICE::AssetPath::WithTypePrefix<ICE::Material>("");
-        auto import_name = "New Material";
-        int i = 0;
-        do {
-            path.setName(import_name + std::to_string(i++));
-        } while (m_engine->getAssetBank()->nameInUse(path));
-        m_engine->getAssetBank()->addAsset(path, material);
-        m_material_popup.open(m_engine->getAssetBank()->getUID(path));
-    });
-    ui.registerCallback("import_mesh_clicked", [this] {
-        std::filesystem::path file = open_native_dialog("*.obj");
-        if (!file.empty()) {
-            std::string import_name = file.stem().string();
-            int i = 0;
-            do {
-                import_name + std::to_string(++i);
-            } while (m_engine->getAssetBank()->nameInUse(ICE::AssetPath::WithTypePrefix<ICE::Mesh>(import_name + std::to_string(i))));
-            import_name = import_name + std::to_string(i);
-            m_engine->getProject()->copyAssetFile("Models", import_name, file);
-            m_engine->getAssetBank()->addAsset<ICE::Model>(
-                import_name, {m_engine->getProject()->getBaseDirectory() / "Assets" / "Models" / (import_name + file.extension().string())});
-            m_assets->rebuildViewer();
-        }
-    });
-    ui.registerCallback("import_tex2d_clicked", [this] {
-        std::filesystem::path file = open_native_dialog("*.png");
-        if (!file.empty()) {
-            std::string import_name = file.stem().string();
-            int i = 0;
-            do {
-                import_name + std::to_string(++i);
-            } while (m_engine->getAssetBank()->nameInUse(ICE::AssetPath::WithTypePrefix<ICE::Texture2D>(import_name + std::to_string(i))));
-            import_name = import_name + std::to_string(i);
-            m_engine->getProject()->copyAssetFile("Textures", import_name, file);
-            m_engine->getAssetBank()->addAsset<ICE::Texture2D>(
-                import_name, {m_engine->getProject()->getBaseDirectory() / "Assets" / "Textures" / (import_name + file.extension().string())});
-            m_assets->rebuildViewer();
-        }
+    ui.registerCallback("open_scene_menu", [this] { m_open_scene_popup.open(); });
+    ui.registerCallback("new_scene_menu", [this] { m_scene_popup.open(); });
+    ui.registerCallback("new_shader_menu", [this] { m_shader_popup.open(ICE::AssetPath("")); });
+    ui.registerCallback("new_material_menu", [this] { m_material_popup.open(ICE::AssetPath("")); });
+    ui.registerCallback("import_material_menu", [this] { importAsset<ICE::Material>({{"ICE Material", "*.icm"}}); });
+    ui.registerCallback("import_texture2d_menu", [this] { importAsset<ICE::Texture2D>({{"Images", "*.png;*.jpg;*.jpeg"}}); });
+    ui.registerCallback("import_cubemap_menu", [this] { importAsset<ICE::TextureCube>({{"Images", "*.png;*.jpg;*.jpeg"}}); });
+    ui.registerCallback("import_model_menu", [this] { importAsset<ICE::Model>({{"Models", "*.glb;*.fbx;*.obj"}}); });
+    ui.registerCallback("save_menu", [this] { m_engine->getProject()->writeToFile(m_engine->getCamera()); });
+    ui.registerCallback("exit_menu", [this] {
+        m_engine->getProject()->writeToFile(m_engine->getCamera());
+        m_engine->getWindow()->close();
     });
 }
 
@@ -78,28 +47,35 @@ bool Editor::update() {
     }
     m_viewport->setSelectedEntity(m_selected_entity);
 
-    m_material_popup.render();
-    m_scene_popup.render();
-    m_open_scene_popup.render();
-
-    if (m_material_popup.accepted()) {
+    if (m_material_popup.update()) {
         m_assets->rebuildViewer();
     }
-    if (m_scene_popup.accepted()) {
-        m_engine->getProject()->addScene(ICE::Scene(m_scene_popup.getSceneName()));
-        m_engine->getProject()->setCurrentScene(m_engine->getProject()->getScenes().back());
-        m_engine->setupScene(m_engine->getCamera());
-        m_hierarchy->setSelectedEntity(0);
-        m_viewport->setSelectedEntity(0);
-        m_inspector->setSelectedEntity(0);
-    }
-    if (m_open_scene_popup.accepted()) {
-        m_engine->getProject()->setCurrentScene(m_engine->getProject()->getScenes()[m_open_scene_popup.getSelectedIndex()]);
-        m_engine->setupScene(m_engine->getCamera());
-        m_hierarchy->setSelectedEntity(0);
-        m_viewport->setSelectedEntity(0);
-        m_inspector->setSelectedEntity(0);
+
+    if (m_shader_popup.update()) {
+        m_assets->rebuildViewer();
     }
 
+    if (m_scene_popup.isOpen()) {
+        m_scene_popup.render();
+        if (m_scene_popup.getResult() == DialogResult::Ok) {
+            m_engine->getProject()->addScene(ICE::Scene(m_scene_popup.getSceneName()));
+            loadScene(m_engine->getProject()->getScenes().size() - 1);
+        }
+    }
+
+    if (m_open_scene_popup.isOpen()) {
+        m_open_scene_popup.render();
+        if (m_open_scene_popup.getResult() == DialogResult::Ok) {
+            loadScene(m_open_scene_popup.getSelectedIndex());
+        }
+    }
     return m_done;
+}
+
+void Editor::loadScene(int index) {
+    m_engine->getProject()->setCurrentScene(m_engine->getProject()->getScenes().at(index));
+    m_engine->setupScene(m_engine->getCamera());
+    m_hierarchy->setSelectedEntity(0);
+    m_viewport->setSelectedEntity(0);
+    m_inspector->setSelectedEntity(0);
 }

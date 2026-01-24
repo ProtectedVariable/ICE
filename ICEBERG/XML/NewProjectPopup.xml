@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<BeginPopupModal name="New Project" flags="ImGuiWindowFlags_NoCollapse">
+	<table name="main_layout" columns="3">
+		<setupcolumn label="" width="0.2" flags="ImGuiTableColumnFlags_WidthStretch"/>
+		<setupcolumn label="" width="0.6" flags="ImGuiTableColumnFlags_WidthStretch"/>
+		<setupcolumn label="" width="0.2" flags="ImGuiTableColumnFlags_WidthStretch"/>
+		<row>
+			<column>
+				<text label="Project name"/>
+			</column>
+			<column>
+				<inputtext label="###ProjectName" dynamic="str_project_name"/>
+			</column>
+			<column>
+			</column>
+		</row>
+		<row>
+			<column>
+				<text label="Directory"/>
+			</column>
+			<column>
+				<inputtext label="###ProjectDirectory" dynamic="str_project_directory"/>
+			</column>
+			<column>
+				<button id="btn_browse_directory" label="Browse..."/>
+			</column>
+		</row>
+		<row>
+			<column>
+			</column>
+			<column>
+				<button id="btn_cancel" label="Cancel"/>
+			</column>
+			<column>
+				<button id="btn_create" label="Create"/>
+			</column>
+		</row>
+	</table>
+</BeginPopupModal>

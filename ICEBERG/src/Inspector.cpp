@@ -5,8 +5,10 @@ Inspector::Inspector(const std::shared_ptr<ICE::ICEEngine>& engine) : m_engine(e
         m_engine->getProject()->getCurrentScene()->setAlias(m_selected_entity, text);
         m_entity_has_changed++;
     });
-    ui.registerCallback("add_component_clicked",
-                        [this] { m_add_component_popup.open(m_engine->getProject()->getCurrentScene()->getRegistry(), m_selected_entity); });
+    ui.registerCallback("add_component_clicked", [this] {
+        m_add_component_popup.setData(m_engine->getProject()->getCurrentScene()->getRegistry(), m_selected_entity);
+        m_add_component_popup.open();
+    });
     ui.registerCallback("remove_light_component_clicked", [this] {
         m_engine->getProject()->getCurrentScene()->getRegistry()->removeComponent<ICE::LightComponent>(m_selected_entity);
         setSelectedEntity(m_selected_entity, true);
@@ -18,11 +20,14 @@ Inspector::Inspector(const std::shared_ptr<ICE::ICEEngine>& engine) : m_engine(e
 }
 
 bool Inspector::update() {
-    m_add_component_popup.render();
     ui.render();
-    if (m_add_component_popup.accepted()) {
-        setSelectedEntity(m_selected_entity, true);
+    if (m_add_component_popup.isOpen()) {
+        m_add_component_popup.render();
+        if (m_add_component_popup.getResult() == DialogResult::Ok) {
+            setSelectedEntity(m_selected_entity, true);
+        }
     }
+
     return m_done;
 }
 
@@ -45,8 +50,10 @@ void Inspector::setSelectedEntity(ICE::Entity e, bool force_refesh) {
 
     auto registry = m_engine->getProject()->getCurrentScene()->getRegistry();
     ui.setEntityName(m_engine->getProject()->getCurrentScene()->getAlias(e));
+    ui.setTransformComponent(nullptr);
     ui.setLightComponent(nullptr);
-    ui.setRenderComponent(nullptr, {}, {});
+    ui.setAnimationComponent(nullptr, {});
+    ui.setRenderComponent(nullptr, {}, {}, {}, {});
 
     if (registry->entityHasComponent<ICE::TransformComponent>(e)) {
         auto tc = registry->getComponent<ICE::TransformComponent>(e);
@@ -55,7 +62,7 @@ void Inspector::setSelectedEntity(ICE::Entity e, bool force_refesh) {
     if (registry->entityHasComponent<ICE::RenderComponent>(e)) {
         auto rc = registry->getComponent<ICE::RenderComponent>(e);
 
-        auto meshes = m_engine->getAssetBank()->getAll<ICE::Model>();
+        auto meshes = m_engine->getAssetBank()->getAll<ICE::Mesh>();
 
         std::vector<std::string> meshes_paths;
         std::vector<ICE::AssetUID> meshes_ids;
@@ -65,7 +72,23 @@ void Inspector::setSelectedEntity(ICE::Entity e, bool force_refesh) {
             meshes_paths.push_back(m_engine->getAssetBank()->getName(id).toString());
         }
 
-        ui.setRenderComponent(rc, meshes_paths, meshes_ids);
+        auto materials = m_engine->getAssetBank()->getAll<ICE::Material>();
+
+        std::vector<std::string> materials_paths;
+        std::vector<ICE::AssetUID> materials_ids;
+
+        for (const auto& [id, m] : materials) {
+            materials_ids.push_back(id);
+            materials_paths.push_back(m_engine->getAssetBank()->getName(id).toString());
+        }
+
+        ui.setRenderComponent(rc, meshes_paths, meshes_ids, materials_paths, materials_ids);
+    }
+    if (registry->entityHasComponent<ICE::AnimationComponent>(e) && registry->entityHasComponent<ICE::SkeletonPoseComponent>(e)) {
+        auto ac = registry->getComponent<ICE::AnimationComponent>(e);
+        auto spc = registry->getComponent<ICE::SkeletonPoseComponent>(e);
+        auto anims = m_engine->getAssetBank()->getAsset<ICE::Model>(spc->skeletonModel)->getAnimations();
+        ui.setAnimationComponent(ac, anims);
     }
     if (registry->entityHasComponent<ICE::LightComponent>(e)) {
         auto lc = registry->getComponent<ICE::LightComponent>(e);

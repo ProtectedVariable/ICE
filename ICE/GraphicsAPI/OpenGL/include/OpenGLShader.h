@@ -8,42 +8,44 @@
 #include <GL/gl3w.h>
 #include <GLFW/glfw3.h>
 #include <Shader.h>
-#include <unordered_map>
+#include <ShaderProgram.h>
+
 #include <string>
+#include <unordered_map>
 
 namespace ICE {
-    class OpenGLShader : public Shader {
-    public:
-        void bind() const override;
+class OpenGLShader : public ShaderProgram {
+   public:
+    explicit OpenGLShader(const Shader &shader_asset);
 
-        void unbind() const override;
+    void bind() const override;
 
-        void loadInt(const std::string &name, int v) override;
+    void unbind() const override;
 
-        void loadInts(const std::string &name, int *array, uint32_t size) override;
+    void loadInt(const std::string &name, int v) override;
 
-        void loadFloat(const std::string &name, float v) override;
+    void loadInts(const std::string &name, int *array, uint32_t size) override;
 
-        void loadFloat2(const std::string &name, Eigen::Vector2f vec) override;
+    void loadFloat(const std::string &name, float v) override;
 
-        void loadFloat3(const std::string &name, Eigen::Vector3f vec) override;
+    void loadFloat2(const std::string &name, Eigen::Vector2f vec) override;
 
-        void loadFloat4(const std::string &name, Eigen::Vector4f vec) override;
+    void loadFloat3(const std::string &name, Eigen::Vector3f vec) override;
 
-        void loadMat4(const std::string &name, Eigen::Matrix4f mat) override;
+    void loadFloat4(const std::string &name, Eigen::Vector4f vec) override;
 
-        OpenGLShader(const std::string &vertexFile, const std::string &geoFile, const std::string &fragmentFile);
+    void loadMat4(const std::string &name, Eigen::Matrix4f mat) override;
 
-        OpenGLShader(const std::string &vertexFile, const std::string &fragmentFile);
+   private:
+    GLint getLocation(const std::string &name);
 
-    private:
+    void compileAndAttachStage(ShaderStage stage, const std::string &source);
 
-        GLint getLocation(const std::string &name);
+    constexpr GLenum stageToGLStage(ShaderStage stage);
 
-        uint32_t programID;
-        std::unordered_map<std::string, uint32_t> locations;
-    };
-}
+    uint32_t m_programID;
+    std::unordered_map<std::string, uint32_t> m_locations;
+};
+}  // namespace ICE
 
-
-#endif //ICE_OPENGLSHADER_H
+#endif  //ICE_OPENGLSHADER_H

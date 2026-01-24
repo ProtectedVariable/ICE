@@ -5,7 +5,7 @@
 #include <string>
 #include <gtk/gtk.h>
 
-const std::string open_native_dialog(std::string const& filter) {
+const std::string open_native_dialog(const std::vector<FileFilter> &filters) {
 
     GtkWidget *dialog;
 

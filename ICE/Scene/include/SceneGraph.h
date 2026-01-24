@@ -1,8 +1,10 @@
 #pragma once
-
 #include <Entity.h>
 
+#include <algorithm>
 #include <memory>
+#include <unordered_map>
+#include <vector>
 
 namespace ICE {
 
@@ -11,80 +13,92 @@ class SceneGraph {
     struct SceneNode {
         Entity entity{0};
         std::vector<std::shared_ptr<SceneNode>> children{};
+
+        // Use weak_ptr to avoid cyclic references (Parent owns Child, Child observes Parent)
+        std::weak_ptr<SceneNode> parent;
     };
 
     SceneGraph() : root(std::make_shared<SceneNode>()) { idToNode.try_emplace(0, root); }
 
     void addEntity(Entity e) {
-        auto sn = createSceneNode(e);
+        // Prevent adding duplicate entities
+        if (idToNode.find(e) != idToNode.end())
+            return;
+
+        auto sn = std::make_shared<SceneNode>();
+        sn->entity = e;
+        sn->parent = root;  // Default parent is root
+
         root->children.push_back(sn);
-        idToNode.insert({e, sn});
+        idToNode[e] = sn;
     }
 
     void removeEntity(Entity e) {
+        if (e == 0 || idToNode.find(e) == idToNode.end())
+            return;
+
         auto sn = idToNode[e];
-        auto parent = findParent(e, root);
-        auto it = std::find(parent->children.begin(), parent->children.end(), idToNode[e]);
-        parent->children.erase(it);
-        for (size_t i = 0; i < sn->children.size(); i++) {
-            parent->children.push_back(sn->children[i]);
+        auto parentPtr = sn->parent.lock();
+
+        if (parentPtr) {
+            // Remove 'sn' from its parent's list
+            auto& siblings = parentPtr->children;
+            siblings.erase(std::remove(siblings.begin(), siblings.end(), sn), siblings.end());
+
+            // Orphan handling: Reparent children to their grandparent
+            for (auto& child : sn->children) {
+                child->parent = parentPtr;  // Update child's parent pointer
+                parentPtr->children.push_back(child);
+            }
         }
-        sn->children.clear();
+
         idToNode.erase(e);
     }
 
-    void setParent(Entity e, Entity newParent, bool recurse) {
-        auto parent = findParent(e, root);
+    void setParent(Entity e, Entity newParentID) {
+        if (idToNode.find(e) == idToNode.end() || idToNode.find(newParentID) == idToNode.end())
+            return;
+        if (e == newParentID)
+            return;  // Can't parent to self
+
         auto sn = idToNode[e];
-        auto newparent_node = idToNode[newParent];
-        auto it = std::find(parent->children.begin(), parent->children.end(), sn);
-        parent->children.erase(it);
-        newparent_node->children.push_back(sn);
-        if (!recurse) {
-            for (size_t i = 0; i < sn->children.size(); i++) {
-                parent->children.push_back(sn->children[i]);
-            }
+        auto newParent = idToNode[newParentID];
+        auto oldParent = sn->parent.lock();
+
+        if (oldParent) {
+            auto& siblings = oldParent->children;
+            siblings.erase(std::remove(siblings.begin(), siblings.end(), sn), siblings.end());
         }
+
+        sn->parent = newParent;
+        newParent->children.push_back(sn);
     }
 
     Entity getParentID(Entity e) {
-        auto it = std::find(root->children.begin(), root->children.end(), idToNode[e]);
-        if (it != root->children.end()) {
-            return root->entity;
-        }
-        for (size_t i = 0; i < root->children.size(); i++) {
-            auto subtreeSearch = findParent(e, root->children[i]);
-            if (subtreeSearch != nullptr) {
-                return subtreeSearch->entity;
-            }
+        if (idToNode.find(e) == idToNode.end())
+            return 0;
+
+        auto parentPtr = idToNode[e]->parent.lock();
+        if (parentPtr) {
+            return parentPtr->entity;
         }
         return 0;
     }
 
-    std::shared_ptr<SceneNode> root;
-
-   private:
-    std::shared_ptr<SceneNode> findParent(Entity e, const std::shared_ptr<SceneNode> &root) {
-        auto it = std::find(root->children.begin(), root->children.end(), idToNode[e]);
-        if (it != root->children.end()) {
-            return root;
-        }
-        for (size_t i = 0; i < root->children.size(); i++) {
-            auto subtreeSearch = findParent(e, root->children[i]);
-            if (subtreeSearch != nullptr) {
-                return subtreeSearch;
+    const std::vector<Entity> getChildren(Entity e) {
+        std::vector<Entity> childrenIDs;
+        if (idToNode.find(e) != idToNode.end()) {
+            for (auto& child : idToNode[e]->children) {
+                childrenIDs.push_back(child->entity);
             }
         }
-        return nullptr;
+        return childrenIDs;
     }
 
-    std::shared_ptr<SceneNode> createSceneNode(Entity e) {
-        auto sn = std::make_shared<SceneNode>();
-        sn->entity = e;
-        return sn;
-    }
+    std::shared_ptr<SceneNode> getRoot() const { return root; }
 
-    std::unordered_map<Entity, std::string> m_entity_names;
+   private:
+    std::shared_ptr<SceneNode> root;
     std::unordered_map<Entity, std::shared_ptr<SceneNode>> idToNode;
 };
 }  // namespace ICE

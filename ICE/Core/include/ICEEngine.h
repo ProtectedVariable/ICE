@@ -29,6 +29,7 @@ class ICEEngine {
     std::shared_ptr<Camera> getCamera();
 
     std::shared_ptr<AssetBank> getAssetBank();
+    std::shared_ptr<GPURegistry> getGPURegistry();
 
     Entity getSelected() const;
 
@@ -49,6 +50,8 @@ class ICEEngine {
     std::shared_ptr<Framebuffer> getInternalFramebuffer() const;
     void setRenderFramebufferInternal(bool use_internal);
 
+    std::shared_ptr<Window> getWindow() const;
+
    private:
     std::shared_ptr<GraphicsFactory> m_graphics_factory;
     std::shared_ptr<Context> ctx;
@@ -63,6 +66,5 @@ class ICEEngine {
     std::chrono::steady_clock::time_point lastFrameTime;
 
     EngineConfig config;
-    Registry registry;
 };
 }  // namespace ICE

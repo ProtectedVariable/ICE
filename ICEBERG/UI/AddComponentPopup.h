@@ -1,69 +1,62 @@
 #pragma once
 
-#include <ImGUI/imgui.h>
 #include <Registry.h>
+#include <imgui.h>
 
 #include "Components/ComboBox.h"
+#include "Dialog.h"
 
-class AddComponentPopup {
+class AddComponentPopup : public Dialog {
    public:
-    AddComponentPopup() : m_components_combo("##add_component_combo", {"Render", "Light"}) {}
+    AddComponentPopup() : m_components_combo("##add_component_combo", {"Render", "Light", "Animation"}) {}
 
-    void open(const std::shared_ptr<ICE::Registry> &registry, ICE::Entity entity) {
+    void setData(const std::shared_ptr<ICE::Registry> &registry, ICE::Entity entity) {
         m_registry = registry;
         m_entity = entity;
-        m_open = true;
-
+        
         std::vector<std::string> values;
-        if(!registry->entityHasComponent<ICE::RenderComponent>(entity)) {
+        if (!registry->entityHasComponent<ICE::RenderComponent>(entity)) {
             values.push_back("Render Component");
         }
-        if(!registry->entityHasComponent<ICE::LightComponent>(entity)) {
+        if (!registry->entityHasComponent<ICE::LightComponent>(entity)) {
             values.push_back("Light Component");
+        }
+        if (!registry->entityHasComponent<ICE::AnimationComponent>(entity)) {
+            values.push_back("Animation Component");
         }
         m_components_combo.setValues(values);
     }
 
     void render() {
         ImGui::PushID("add_component_popup");
-        if (m_open) {
+        if (isOpenRequested()) {
             ImGui::OpenPopup("Add Component");
-            m_open = false;
         }
         ImGui::SetNextWindowSizeConstraints(ImVec2(0, 0), ImVec2(FLT_MAX, FLT_MAX));
         if (ImGui::BeginPopupModal("Add Component", 0, ImGuiWindowFlags_AlwaysAutoResize)) {
             m_components_combo.render();
             if (ImGui::Button("Add")) {
-                if(m_components_combo.getSelectedItem() == "Render Component")
-                    m_registry->addComponent(m_entity, ICE::RenderComponent(0));
-                    
-                if(m_components_combo.getSelectedItem() == "Light Component")
+                if (m_components_combo.getSelectedItem() == "Render Component")
+                    m_registry->addComponent(m_entity, ICE::RenderComponent(0, 0));
+
+                if (m_components_combo.getSelectedItem() == "Light Component")
                     m_registry->addComponent(m_entity, ICE::LightComponent(ICE::PointLight, Eigen::Vector3f(1, 1, 1)));
-                ImGui::CloseCurrentPopup();
-                m_accepted = true;
+
+                if (m_components_combo.getSelectedItem() == "Animation Component")
+                    m_registry->addComponent(m_entity, ICE::AnimationComponent{"", 0.0, 1.0, true, true});
+                done(DialogResult::Ok);
             }
             ImGui::SameLine();
-            if(ImGui::Button("Cancel")) {
-                ImGui::CloseCurrentPopup();
-
+            if (ImGui::Button("Cancel")) {
+                done(DialogResult::Cancel);
             }
             ImGui::EndPopup();
         }
         ImGui::PopID();
     }
 
-    bool accepted() {
-        if (m_accepted) {
-            m_accepted = false;
-            return true;
-        }
-        return false;
-    }
-
    private:
     ComboBox m_components_combo;
-    bool m_open = false;
-    bool m_accepted = false;
     std::shared_ptr<ICE::Registry> m_registry;
     ICE::Entity m_entity;
 };

@@ -6,8 +6,14 @@
 #define ICE_PLATEFORM_DIALOG_H
 
 #include <string>
+#include <vector>
 
-const std::string open_native_dialog(const std::string& filter);
+struct FileFilter {
+    std::string description;
+    std::string extension;
+};
+
+const std::string open_native_dialog(const std::vector<FileFilter>& filters);
 const std::string open_native_folder_dialog();
 
 #endif

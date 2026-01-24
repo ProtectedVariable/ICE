@@ -13,6 +13,8 @@ target_sources(${PROJECT_NAME} PRIVATE
 	src/ModelLoader.cpp
     src/ShaderLoader.cpp
     src/MaterialLoader.cpp
+    src/ShaderExporter.cpp 
+    src/MeshLoader.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}
@@ -22,6 +24,7 @@ target_link_libraries(${PROJECT_NAME}
     graphics_api
     assimp
     platform
+    nlohmann_json
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC

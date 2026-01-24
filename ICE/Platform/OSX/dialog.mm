@@ -1,7 +1,7 @@
 #include "dialog.h"
 #import <Cocoa/Cocoa.h>
 
-const std::string open_native_dialog(std::string const& filter) {
+const std::string open_native_dialog(const std::vector<FileFilter>& filters) {
     // Create the File Open Dialog class.
     NSOpenPanel* openDlg = [NSOpenPanel openPanel];
 

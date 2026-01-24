@@ -5,18 +5,16 @@
 #ifndef ICE_FILEUTILS_H
 #define ICE_FILEUTILS_H
 
-
-#include <string>
+#include "dialog.h"
 
 namespace ICE {
-    class FileUtils {
+class FileUtils {
 
-    public:
-        static const std::string openFileDialog(const std::string& filter);
-        static const std::string openFolderDialog();
-        static const std::string readFile(const std::string &path);
-    };
-}
+   public:
+    static const std::string openFileDialog(const std::vector<FileFilter> &filters);
+    static const std::string openFolderDialog();
+    static const std::string readFile(const std::string &path);
+};
+}  // namespace ICE
 
-
-#endif //ICE_FILEUTILS_H
+#endif  //ICE_FILEUTILS_H

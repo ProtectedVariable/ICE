@@ -30,14 +30,6 @@ const std::vector<Eigen::Vector3i> &Mesh::getIndices() const {
     return m_data.indices;
 }
 
-const std::shared_ptr<VertexArray> Mesh::getVertexArray() const {
-    return vertexArray;
-}
-
-void Mesh::setVertexArray(const std::shared_ptr<VertexArray> &vao) {
-    this->vertexArray = vao;
-}
-
 const AABB &Mesh::getBoundingBox() const {
     return boundingBox;
 }

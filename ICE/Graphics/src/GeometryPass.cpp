@@ -10,9 +10,9 @@ void GeometryPass::execute() {
     m_framebuffer->bind();
     m_api->setViewport(0, 0, m_framebuffer->getFormat().width, m_framebuffer->getFormat().height);
     m_api->clear();
-    std::shared_ptr<Shader> current_shader;
+    std::shared_ptr<ShaderProgram> current_shader;
     std::shared_ptr<Material> current_material;
-    std::shared_ptr<Mesh> current_mesh;
+    std::shared_ptr<GPUMesh> current_mesh;
 
     for (const auto& command : *m_render_queue) {
         auto& shader = command.shader;
@@ -27,9 +27,9 @@ void GeometryPass::execute() {
             current_shader = shader;
         }
 
-         if (mesh->usesBones()) {
-            for (const auto& [boneID, offsetMatrix] : mesh->getSkinningData().boneOffsetMatrices) {
-                 current_shader->loadMat4("bonesOffsetMatrices[" + std::to_string(boneID) + "]", offsetMatrix);
+        if (!command.bones.empty()) {
+            for (const auto& [id, matrix] : command.bones) {
+                current_shader->loadMat4("bonesTransformMatrices[" + std::to_string(id) + "]", matrix);
             }
         }
 
@@ -50,10 +50,12 @@ void GeometryPass::execute() {
                     auto v = std::get<AssetUID>(value);
                     if (textures.contains(v)) {
                         auto& tex = textures.at(v);
-                        tex->bind(texture_count);
-                        shader->loadInt(name, texture_count);
+                        if (tex) {
+                            tex->bind(texture_count);
+                            shader->loadInt(name, texture_count);
+                            texture_count++;
+                        }
                     }
-                    texture_count++;
                 } else if (std::holds_alternative<Eigen::Vector2f>(value)) {
                     auto& v = std::get<Eigen::Vector2f>(value);
                     shader->loadFloat2(name, v);

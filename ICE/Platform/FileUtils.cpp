@@ -8,11 +8,10 @@
 
 #include <fstream>
 
-#include "dialog.h"
 
 namespace ICE {
-const std::string FileUtils::openFileDialog(const std::string &filter) {
-    const std::string file = open_native_dialog(filter);
+const std::string FileUtils::openFileDialog(const std::vector<FileFilter> &filters) {
+    const std::string file = open_native_dialog(filters);
     Logger::Log(Logger::DEBUG, "Platform", "User selected file: %s", file.c_str());
     return file;
 }

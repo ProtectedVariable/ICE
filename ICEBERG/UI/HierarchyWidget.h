@@ -1,5 +1,5 @@
 #pragma once
-#include <ImGUI/imgui.h>
+#include <imgui.h>
 
 #include <memory>
 #include <string>
@@ -28,13 +28,11 @@ class HierarchyWidget : public Widget {
     void render() override {
         int flags = ImGuiWindowFlags_NoCollapse;
         flags |= ImGuiWindowFlags_NoNavFocus;
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
         ImGui::Begin("Hierarchy", 0, flags);
 
         renderTree(m_view);
 
         ImGui::End();
-        ImGui::PopStyleVar();
     }
 
    private:

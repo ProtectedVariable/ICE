@@ -1,0 +1,24 @@
+#pragma once
+
+#include <GPURegistry.h>
+#include <ForwardRenderer.h>
+
+#include <unordered_map>
+
+class AssetsRenderer {
+   public:
+    AssetsRenderer(const std::shared_ptr<ICE::RendererAPI>& api, const std::shared_ptr<ICE::GraphicsFactory>& factory,
+                   const std::shared_ptr<ICE::GPURegistry>& bank)
+        : m_api(api),
+          m_factory(factory),
+          m_bank(bank) {}
+
+    std::pair<void*, bool> createThumbnail(const std::shared_ptr<ICE::Asset>& asset, const std::string& path);
+    std::pair<void*, bool> getPreview(const std::shared_ptr<ICE::Asset>& asset, const std::string& path, float t);
+
+   private:
+    std::unordered_map<std::string, ICE::ForwardRenderer> m_renderers;
+    std::shared_ptr<ICE::RendererAPI> m_api;
+    std::shared_ptr<ICE::GraphicsFactory> m_factory;
+    std::shared_ptr<ICE::GPURegistry> m_bank;
+};

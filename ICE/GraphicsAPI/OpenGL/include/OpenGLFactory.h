@@ -38,20 +38,10 @@ class OpenGLFactory : public GraphicsFactory {
 
     std::shared_ptr<IndexBuffer> createIndexBuffer() const override { return std::make_shared<OpenGLIndexBuffer>(); }
 
-    std::shared_ptr<Shader> createShader(const std::string& vertex_src, const std::string& fragment_src) const override {
-        return createShader(vertex_src, "", fragment_src);
-    }
+    std::shared_ptr<ShaderProgram> createShader(const Shader& shader) const override { return std::make_shared<OpenGLShader>(shader); }
 
-    std::shared_ptr<Shader> createShader(const std::string& vertex_src, const std::string& geometry_src,
-                                         const std::string& fragment_src) const override {
-        return std::make_shared<OpenGLShader>(vertex_src, geometry_src, fragment_src);
-    }
+    std::shared_ptr<GPUTexture> createTexture2D(const Texture2D& texture) const override { return std::make_shared<OpenGLTexture2D>(texture); }
 
-    std::shared_ptr<Texture2D> createTexture2D(const std::string& file) const override { return std::make_shared<OpenGLTexture2D>(file); }
-    std::shared_ptr<Texture2D> createTexture2D(const void* data, size_t w, size_t h, TextureFormat fmt) const override {
-        return std::make_shared<OpenGLTexture2D>(data, w, h, fmt);
-    }
-
-    std::shared_ptr<TextureCube> createTextureCube(const std::string& file) const override { return std::make_shared<OpenGLTextureCube>(file); }
+    std::shared_ptr<GPUTexture> createTextureCube(const TextureCube& texture) const override { return std::make_shared<OpenGLTextureCube>(texture); }
 };
 }  // namespace ICE

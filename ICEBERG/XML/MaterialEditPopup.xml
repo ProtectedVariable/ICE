@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<BeginPopupModal name="Material Editor" flags="ImGuiWindowFlags_NoCollapse">
+	<table name="main_layout" columns="2">
+		<setupcolumn label="Data" width="1" flags="ImGuiTableColumnFlags_WidthStretch"/>
+		<setupcolumn label="Preview" width="256" flags="ImGuiTableColumnFlags_WidthFixed"/>
+		<header/>
+		<row>
+			<column>
+				<table name="data_layout" columns="2">
+					<setupcolumn label="" width="0.5" flags="ImGuiTableColumnFlags_WidthStretch"/>
+					<setupcolumn label="" width="0.5" flags="ImGuiTableColumnFlags_WidthStretch"/>
+					<row>
+						<column>
+							<text label="Material name"/>
+						</column>
+						<column>
+							<inputtext label="###mtlname" dynamic="str_material_name"/>
+						</column>
+					</row>
+					<row>
+						<column>
+							<text label="Opaque"/>
+						</column>
+						<column>
+							<checkbox label="###opaque" id="checkbox_opaque" dynamic="bool_opaque"/>
+						</column>
+					</row>
+					<row>
+						<column>
+							<text label="Shader"/>
+						</column>
+						<column>
+							<placeholder id="combo_shader_values"/>
+						</column>
+					</row>
+				</table>
+				<table name="uniform_layout" columns="3">
+					<setupcolumn label="Uniform name" width="0.3" flags="ImGuiTableColumnFlags_WidthStretch"/>
+					<setupcolumn label="Value" width="0.5" flags="ImGuiTableColumnFlags_WidthStretch"/>
+					<setupcolumn label="Type" width="0.2" flags="ImGuiTableColumnFlags_WidthStretch"/>
+					<header/>
+					<placeholder id="uniforms_table"/>
+					<row>
+						<column>
+							<button id="btn_add_uniform" label="+ Add Uniform"/>
+						</column>
+					</row>
+				</table>
+			</column>
+			<column>
+				<placeholder id="material_preview"/>
+			</column>
+		</row>
+		<row>
+			<column>
+				<button id="btn_cancel" label="Cancel"/>
+			</column>
+			<column>
+				<button id="btn_apply" label="Apply"/>
+			</column>
+		</row>
+	</table>
+</BeginPopupModal>

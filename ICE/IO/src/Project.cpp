@@ -16,12 +16,14 @@
 #include <iostream>
 
 #include "MaterialExporter.h"
+#include "ShaderExporter.h"
 
 namespace ICE {
-Project::Project(const fs::path &base_directory, const std::string &name)
-    : m_base_directory(base_directory / name),
-      name(name),
-      assetBank(std::make_shared<AssetBank>(std::make_shared<OpenGLFactory>())) {
+Project::Project(const fs::path &base_directory, const std::string &m_name)
+    : m_base_directory(base_directory / m_name),
+      m_name(m_name),
+      m_asset_bank(std::make_shared<AssetBank>()),
+      m_gpu_registry(std::make_shared<GPURegistry>(std::make_shared<OpenGLFactory>(), m_asset_bank)) {
     cameraPosition.setZero();
     cameraRotation.setZero();
     constexpr std::string_view assets_folder = "Assets";
@@ -29,31 +31,34 @@ Project::Project(const fs::path &base_directory, const std::string &name)
     m_shaders_directory = m_base_directory / assets_folder / "Shaders";
     m_textures_directory = m_base_directory / assets_folder / "Textures";
     m_cubemaps_directory = m_base_directory / assets_folder / "Cubemaps";
-    m_meshes_directory = m_base_directory / assets_folder / "Models";
+    m_models_directory = m_base_directory / assets_folder / "Models";
+    m_meshes_directory = m_base_directory / assets_folder / "Meshes";
     m_scenes_directory = m_base_directory / "Scenes";
 }
 
 bool Project::CreateDirectories() {
     fs::create_directories(m_scenes_directory);
     try {
-        fs::create_directories(m_base_directory / "Assets");
         fs::copy("Assets", m_base_directory / "Assets", fs::copy_options::recursive);
     } catch (std::filesystem::filesystem_error &e) {
         Logger::Log(Logger::FATAL, "IO", "Could not copy default assets: %s", e.what());
     }
-    assetBank->addAsset<Shader>("solid", {m_shaders_directory / "skinning.vs", m_shaders_directory / "solid.fs"});
-    assetBank->addAsset<Shader>("phong", {m_shaders_directory / "skinning.vs", m_shaders_directory / "phong.fs"});
-    assetBank->addAsset<Shader>("normal", {m_shaders_directory / "skinning.vs", m_shaders_directory / "normal.fs"});
-    assetBank->addAsset<Shader>("pbr", {m_shaders_directory / "skinning.vs", m_shaders_directory / "pbr.fs"});
-    assetBank->addAsset<Shader>("lastpass", {m_shaders_directory / "lastpass.vs", m_shaders_directory / "lastpass.fs"});
-    assetBank->addAsset<Shader>("__ice__picking_shader", {m_shaders_directory / "skinning.vs", m_shaders_directory / "picking.fs"});
+    m_asset_bank->addAsset<Shader>("solid", {m_shaders_directory / "solid.shader.json"});
+    m_asset_bank->addAsset<Shader>("phong", {m_shaders_directory / "phong.shader.json"});
+    m_asset_bank->addAsset<Shader>("normal", {m_shaders_directory / "normal.shader.json"});
+    m_asset_bank->addAsset<Shader>("pbr", {m_shaders_directory / "pbr.shader.json"});
+    m_asset_bank->addAsset<Shader>("lastpass", {m_shaders_directory / "lastpass.shader.json"});
+    m_asset_bank->addAsset<Shader>("__ice__picking_shader", {m_shaders_directory / "picking.shader.json"});
 
-    assetBank->addAsset<Material>("base_mat", {m_materials_directory / "base_mat.icm"});
+    m_asset_bank->addAsset<Material>("base_mat", {m_materials_directory / "base_mat.material.json"});
 
-    assetBank->addAsset<Model>("cube", {m_meshes_directory / "cube.obj"});
-    assetBank->addAsset<Model>("sphere", {m_meshes_directory / "sphere.obj"});
+    m_asset_bank->addAsset<Mesh>("cube", {m_meshes_directory / "cube.obj"});
+    m_asset_bank->addAsset<Mesh>("sphere", {m_meshes_directory / "sphere.obj"});
 
-    scenes.push_back(std::make_shared<Scene>("MainScene"));
+    m_asset_bank->addAsset<Texture2D>("Editor/folder", {m_textures_directory / "Editor" / "folder.png"});
+    m_asset_bank->addAsset<Texture2D>("Editor/shader", {m_textures_directory / "Editor" / "shader.png"});
+
+    m_scenes.push_back(std::make_shared<Scene>("MainScene"));
     setCurrentScene(getScenes()[0]);
     return true;
 }
@@ -63,34 +68,40 @@ fs::path Project::getBaseDirectory() const {
 }
 
 std::string Project::getName() const {
-    return name;
+    return m_name;
 }
 
 void Project::writeToFile(const std::shared_ptr<Camera> &editorCamera) {
     std::ofstream outstream;
-    outstream.open(m_base_directory / (name + ".ice"));
+    outstream.open(m_base_directory / (m_name + ".ice"));
     json j;
 
     j["camera_position"] = dumpVec3(editorCamera->getPosition());
     j["camera_rotation"] = dumpVec3(editorCamera->getRotation());
 
     std::vector<json> vec;
-    for (const auto &s : scenes) {
+    for (const auto &s : m_scenes) {
         vec.push_back(s->getName());
     }
     j["scenes"] = vec;
     vec.clear();
 
-    for (const auto &[asset_id, mesh] : assetBank->getAll<Model>()) {
+    for (const auto &[asset_id, mesh] : m_asset_bank->getAll<Model>()) {
         vec.push_back(dumpAsset(asset_id, mesh));
     }
     j["models"] = vec;
     vec.clear();
 
-    for (const auto &[asset_id, material] : assetBank->getAll<Material>()) {
-        auto mtlName = assetBank->getName(asset_id).getName();
+    for (const auto &[asset_id, mesh] : m_asset_bank->getAll<Mesh>()) {
+        vec.push_back(dumpAsset(asset_id, mesh));
+    }
+    j["meshes"] = vec;
+    vec.clear();
 
-        fs::path path = m_materials_directory.parent_path() / (assetBank->getName(asset_id).prefix() + mtlName + ".icm");
+    for (const auto &[asset_id, material] : m_asset_bank->getAll<Material>()) {
+        auto mtlName = m_asset_bank->getName(asset_id).getName();
+
+        fs::path path = m_materials_directory.parent_path() / (m_asset_bank->getName(asset_id).prefix() + mtlName + ".material.json");
         fs::create_directories(path.parent_path());
         MaterialExporter().writeToJson(path, *material);
 
@@ -101,19 +112,27 @@ void Project::writeToFile(const std::shared_ptr<Camera> &editorCamera) {
     j["materials"] = vec;
     vec.clear();
 
-    for (const auto &[asset_id, shader] : assetBank->getAll<Shader>()) {
+    for (const auto &[asset_id, shader] : m_asset_bank->getAll<Shader>()) {
+        auto mtlName = m_asset_bank->getName(asset_id).getName();
+
+        fs::path path = m_shaders_directory.parent_path() / (m_asset_bank->getName(asset_id).prefix() + mtlName + ".shader.json");
+        fs::create_directories(path.parent_path());
+        ShaderExporter().writeToJson(path, *shader);
+
+        shader->setSources({path});
+
         vec.push_back(dumpAsset(asset_id, shader));
     }
     j["shaders"] = vec;
     vec.clear();
 
-    for (const auto &[asset_id, texture] : assetBank->getAll<Texture2D>()) {
+    for (const auto &[asset_id, texture] : m_asset_bank->getAll<Texture2D>()) {
         vec.push_back(dumpAsset(asset_id, texture));
     }
     j["textures2D"] = vec;
     vec.clear();
 
-    for (const auto &[asset_id, texture] : assetBank->getAll<TextureCube>()) {
+    for (const auto &[asset_id, texture] : m_asset_bank->getAll<TextureCube>()) {
         vec.push_back(dumpAsset(asset_id, texture));
     }
     j["cubeMaps"] = vec;
@@ -121,29 +140,30 @@ void Project::writeToFile(const std::shared_ptr<Camera> &editorCamera) {
     outstream << j.dump(4);
     outstream.close();
 
-    for (const auto &s : scenes) {
+    for (const auto &s : m_scenes) {
         outstream.open(m_scenes_directory / (s->getName() + ".ics"));
         j.clear();
 
-        j["name"] = s->getName();
+        j["m_name"] = s->getName();
         json entities = json::array();
         for (auto e : s->getRegistry()->getEntities()) {
             json entity;
             entity["id"] = e;
-            entity["name"] = s->getAlias(e);
+            entity["m_name"] = s->getAlias(e);
             entity["parent"] = s->getGraph()->getParentID(e);
 
             if (s->getRegistry()->entityHasComponent<RenderComponent>(e)) {
                 RenderComponent rc = *s->getRegistry()->getComponent<RenderComponent>(e);
                 json renderjson;
-                renderjson["model"] = rc.model;
+                renderjson["mesh"] = rc.mesh;
+                renderjson["material"] = rc.material;
                 entity["renderComponent"] = renderjson;
             }
             if (s->getRegistry()->entityHasComponent<TransformComponent>(e)) {
                 TransformComponent tc = *s->getRegistry()->getComponent<TransformComponent>(e);
                 json transformjson;
                 transformjson["position"] = dumpVec3(tc.getPosition());
-                transformjson["rotation"] = dumpVec3(tc.getRotation());
+                transformjson["rotation"] = dumpVec3(tc.getRotationEulerDeg());
                 transformjson["scale"] = dumpVec3(tc.getScale());
                 entity["transformComponent"] = transformjson;
             }
@@ -154,6 +174,34 @@ void Project::writeToFile(const std::shared_ptr<Camera> &editorCamera) {
                 lightjson["type"] = lc.type;
                 entity["lightComponent"] = lightjson;
             }
+            if (s->getRegistry()->entityHasComponent<AnimationComponent>(e)) {
+                AnimationComponent ac = *s->getRegistry()->getComponent<AnimationComponent>(e);
+                json animjson;
+                animjson["currentAnimation"] = ac.currentAnimation;
+                animjson["currentTime"] = ac.currentTime;
+                animjson["speed"] = ac.speed;
+                animjson["playing"] = ac.playing;
+                animjson["loop"] = ac.loop;
+                entity["animationComponent"] = animjson;
+            }
+            if (s->getRegistry()->entityHasComponent<SkeletonPoseComponent>(e)) {
+                SkeletonPoseComponent sc = *s->getRegistry()->getComponent<SkeletonPoseComponent>(e);
+                json spjson;
+                spjson["skeletonModel"] = sc.skeletonModel;
+                spjson["bone_entity"] = sc.bone_entity;
+                std::vector<json> bone_transforms;
+                for (const auto& tr : sc.bone_transform) {
+                    bone_transforms.push_back(JsonParser::dumpMat4(tr));
+                }
+                spjson["bone_transforms"] = bone_transforms;
+                entity["skeletonPoseComponent"] = spjson;
+            }
+            if (s->getRegistry()->entityHasComponent<SkinningComponent>(e)) {
+                SkinningComponent sc = *s->getRegistry()->getComponent<SkinningComponent>(e);
+                json scjson;
+                scjson["skeleton_entity"] = sc.skeleton_entity;
+                entity["skinningComponent"] = scjson;
+            }
             entities.push_back(entity);
         }
         j["entities"] = entities;
@@ -163,7 +211,7 @@ void Project::writeToFile(const std::shared_ptr<Camera> &editorCamera) {
 }
 
 json Project::dumpAsset(AssetUID uid, const std::shared_ptr<Asset> &asset) {
-    auto asset_path = assetBank->getName(uid);
+    auto asset_path = m_asset_bank->getName(uid);
     json tmp;
     auto paths = asset->getSources();
     std::vector<std::string> sources(paths.size());
@@ -178,13 +226,14 @@ json Project::dumpAsset(AssetUID uid, const std::shared_ptr<Asset> &asset) {
 }
 
 void Project::loadFromFile() {
-    std::ifstream infile = std::ifstream(m_base_directory / (name + ".ice"));
+    std::ifstream infile = std::ifstream(m_base_directory / (m_name + ".ice"));
     json j;
     infile >> j;
     infile.close();
 
     std::vector<std::string> sceneNames = j["scenes"];
-    json meshes = j["models"];
+    json models = j["models"];
+    json meshes = j["meshes"];
     json material = j["materials"];
     json shader = j["shaders"];
     json texture = j["textures2D"];
@@ -197,7 +246,8 @@ void Project::loadFromFile() {
     loadAssetsOfType<Texture2D>(texture);
     loadAssetsOfType<TextureCube>(cubeMap);
     loadAssetsOfType<Material>(material);
-    loadAssetsOfType<Model>(meshes);
+    loadAssetsOfType<Mesh>(meshes);
+    loadAssetsOfType<Model>(models);
 
     for (const auto &s : sceneNames) {
         infile = std::ifstream(m_scenes_directory / (s + ".ics"));
@@ -205,12 +255,12 @@ void Project::loadFromFile() {
         infile >> scenejson;
         infile.close();
 
-        Scene scene = Scene(scenejson["name"]);
+        Scene scene = Scene(scenejson["m_name"]);
 
         for (json jentity : scenejson["entities"]) {
             Entity e = jentity["id"];
             Entity parent = jentity["parent"];
-            std::string alias = jentity["name"];
+            std::string alias = jentity["m_name"];
 
             scene.addEntity(e, alias, 0);
 
@@ -222,7 +272,7 @@ void Project::loadFromFile() {
             }
             if (!jentity["renderComponent"].is_null()) {
                 json rj = jentity["renderComponent"];
-                RenderComponent rc(rj["model"]);
+                RenderComponent rc(rj["mesh"], rj["material"]);
                 scene.getRegistry()->addComponent(e, rc);
             }
             if (!jentity["lightComponent"].is_null()) {
@@ -230,11 +280,39 @@ void Project::loadFromFile() {
                 LightComponent lc(static_cast<LightType>((int) lj["type"]), JsonParser::parseVec3(lj["color"]));
                 scene.getRegistry()->addComponent(e, lc);
             }
+            if (!jentity["animationComponent"].is_null()) {
+                json aj = jentity["animationComponent"];
+                AnimationComponent ac;
+                ac.currentAnimation = aj["currentAnimation"];
+                ac.currentTime = aj["currentTime"];
+                ac.speed = aj["speed"];
+                ac.playing = aj["playing"];
+                ac.loop = aj["loop"];
+                scene.getRegistry()->addComponent(e, ac);
+            }
+            if (!jentity["skeletonPoseComponent"].is_null()) {
+                json sj = jentity["skeletonPoseComponent"];
+                SkeletonPoseComponent sc;
+                sc.skeletonModel = sj["skeletonModel"];
+                sc.bone_entity = sj["bone_entity"].get<std::unordered_map<std::string, Entity>>();
+                std::vector<Eigen::Matrix4f> bone_transforms;
+                for (const auto& jt : sj["bone_transforms"]) {
+                    bone_transforms.push_back(JsonParser().readMat4(jt));
+                }
+                sc.bone_transform = bone_transforms;
+                scene.getRegistry()->addComponent(e, sc);
+            }
+            if (!jentity["skinningComponent"].is_null()) {
+                json skj = jentity["skinningComponent"];
+                SkinningComponent sc;
+                sc.skeleton_entity = skj["skeleton_entity"];
+                scene.getRegistry()->addComponent(e, sc);
+            }
         }
         for (json jentity : scenejson["entities"]) {
             Entity e = jentity["id"];
             Entity parent = jentity["parent"];
-            scene.getGraph()->setParent(e, parent, true);
+            scene.getGraph()->setParent(e, parent);
         }
         addScene(scene);
         //TODO: it would be better to save the current scene index
@@ -260,7 +338,7 @@ bool Project::renameAsset(const AssetPath &oldName, const AssetPath &newName) {
     if (newName.getName() == "" || newName.prefix() != oldName.prefix()) {
         return false;
     }
-    if (assetBank->renameAsset(oldName, newName)) {
+    if (m_asset_bank->renameAsset(oldName, newName)) {
         auto path = m_base_directory / "Assets";
         for (const auto &file : getFilesInDir(path / oldName.prefix())) {
             if (file.substr(0, file.find_last_of(".")) == oldName.getName()) {
@@ -286,23 +364,27 @@ std::vector<std::string> Project::getFilesInDir(const fs::path &folder) {
 }
 
 std::vector<std::shared_ptr<Scene>> Project::getScenes() {
-    return scenes;
+    return m_scenes;
 }
 
 void Project::setScenes(const std::vector<std::shared_ptr<Scene>> &scenes) {
-    Project::scenes = scenes;
+    m_scenes = scenes;
+}
+
+std::shared_ptr<GPURegistry> Project::getGPURegistry() {
+    return m_gpu_registry;
 }
 
 std::shared_ptr<AssetBank> Project::getAssetBank() {
-    return assetBank;
+    return m_asset_bank;
 }
 
-void Project::setAssetBank(const std::shared_ptr<AssetBank> &assetBank) {
-    Project::assetBank = assetBank;
+void Project::setAssetBank(const std::shared_ptr<AssetBank> &asset_bank) {
+    m_asset_bank = asset_bank;
 }
 
 void Project::addScene(const Scene &scene) {
-    scenes.push_back(std::make_shared<Scene>(scene));
+    m_scenes.push_back(std::make_shared<Scene>(scene));
 }
 
 void Project::setCurrentScene(const std::shared_ptr<Scene> &scene) {

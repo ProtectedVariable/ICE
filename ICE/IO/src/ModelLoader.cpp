@@ -23,7 +23,7 @@ std::shared_ptr<Model> ModelLoader::load(const std::vector<std::filesystem::path
                           aiProcess_OptimizeGraph | aiProcess_FlipUVs | aiProcess_ValidateDataStructure | aiProcess_SortByPType
                               | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_LimitBoneWeights);
 
-    std::vector<std::shared_ptr<Mesh>> meshes;
+    std::vector<AssetUID> meshes;
     std::vector<AssetUID> materials;
     std::vector<Model::Node> nodes;
     Model::Skeleton skeleton;
@@ -34,7 +34,6 @@ std::shared_ptr<Model> ModelLoader::load(const std::vector<std::filesystem::path
         auto model_name = file[0].filename().stem().string();
         meshes.push_back(extractMesh(mesh, model_name, scene, skeleton));
         materials.push_back(extractMaterial(material, model_name, scene));
-        meshes.back()->setSources(file);
     }
     std::unordered_set<std::string> used_node_names;
     processNode(scene->mRootNode, nodes, skeleton, used_node_names, Eigen::Matrix4f::Identity());
@@ -62,7 +61,6 @@ int ModelLoader::processNode(const aiNode *ainode, std::vector<Model::Node> &nod
 
     aiMatrix4x4 local = ainode->mTransformation;
     node.localTransform = aiMat4ToEigen(local);
-    node.animatedTransform = parent_transform * node.localTransform;
 
     for (unsigned int i = 0; i < ainode->mNumMeshes; ++i) {
         unsigned int mesh_idx = ainode->mMeshes[i];
@@ -70,22 +68,17 @@ int ModelLoader::processNode(const aiNode *ainode, std::vector<Model::Node> &nod
     }
     auto insert_pos = nodes.size();
 
-    if (skeleton.boneMapping.contains(name)) {
-        int boneID = skeleton.boneMapping.at(name);
-        skeleton.bones[boneID].finalTransformation = skeleton.globalInverseTransform * node.animatedTransform;
-    }
-
     nodes.push_back(node);
 
     for (unsigned int c = 0; c < ainode->mNumChildren; ++c) {
         const aiNode *child = ainode->mChildren[c];
-        int child_pos = processNode(child, nodes, skeleton, used_names, node.animatedTransform);
+        int child_pos = processNode(child, nodes, skeleton, used_names, parent_transform * node.localTransform);
         nodes.at(insert_pos).children.push_back(child_pos);
     }
     return insert_pos;
 }
 
-std::shared_ptr<Mesh> ModelLoader::extractMesh(const aiMesh *mesh, const std::string &model_name, const aiScene *scene, Model::Skeleton &skeleton) {
+AssetUID ModelLoader::extractMesh(const aiMesh *mesh, const std::string &model_name, const aiScene *scene, Model::Skeleton &skeleton) {
     MeshData data;
 
     for (int i = 0; i < mesh->mNumVertices; i++) {
@@ -113,47 +106,26 @@ std::shared_ptr<Mesh> ModelLoader::extractMesh(const aiMesh *mesh, const std::st
         data.indices.emplace_back(f.mIndices[0], f.mIndices[1], f.mIndices[2]);
     }
 
-    SkinningData skinning_data;
+    std::unordered_map<int, Eigen::Matrix4f> inverseBindMatrices;
     if (mesh->HasBones()) {
-        extractBoneData(mesh, scene, data, skinning_data, skeleton);
+        inverseBindMatrices = extractBoneData(mesh, data, skeleton);
+    }
+    auto mesh_ = std::make_shared<Mesh>(std::move(data));
+    for (const auto &[boneID, ibm] : inverseBindMatrices) {
+        mesh_->setIBM(boneID, ibm);
     }
 
-    auto mesh_ = std::make_shared<Mesh>(data);
-    if (skinning_data.boneOffsetMatrices.size() > 0) {
-        mesh_->setSkinningData(skinning_data);
+    AssetUID mesh_id = 0;
+    AssetPath mesh_path = AssetPath::WithTypePrefix<Mesh>(model_name + "/" + mesh->mName.C_Str());
+    if (mesh_id = ref_bank.getUID(mesh_path); mesh_id != 0) {
+        ref_bank.removeAsset(mesh_path);
+        ref_bank.addAssetWithSpecificUID(mesh_path, mesh_, mesh_id);
+    } else {
+        ref_bank.addAsset(mesh_path, mesh_);
+        mesh_id = ref_bank.getUID(mesh_path);
     }
 
-    auto vertexArray = graphics_factory->createVertexArray();
-
-    auto vertexBuffer = graphics_factory->createVertexBuffer();
-    auto normalsBuffer = graphics_factory->createVertexBuffer();
-    auto uvBuffer = graphics_factory->createVertexBuffer();
-    auto tangentBuffer = graphics_factory->createVertexBuffer();
-    auto biTangentBuffer = graphics_factory->createVertexBuffer();
-    auto boneIDBuffer = graphics_factory->createVertexBuffer();
-    auto boneWeightBuffer = graphics_factory->createVertexBuffer();
-    auto indexBuffer = graphics_factory->createIndexBuffer();
-
-    vertexBuffer->putData(BufferUtils::CreateFloatBuffer(data.vertices), 3 * data.vertices.size() * sizeof(float));
-    normalsBuffer->putData(BufferUtils::CreateFloatBuffer(data.normals), 3 * data.normals.size() * sizeof(float));
-    tangentBuffer->putData(BufferUtils::CreateFloatBuffer(data.tangents), 3 * data.tangents.size() * sizeof(float));
-    biTangentBuffer->putData(BufferUtils::CreateFloatBuffer(data.bitangents), 3 * data.bitangents.size() * sizeof(float));
-    boneIDBuffer->putData(BufferUtils::CreateIntBuffer(data.boneIDs), 4 * data.boneIDs.size() * sizeof(int));
-    boneWeightBuffer->putData(BufferUtils::CreateFloatBuffer(data.boneWeights), 4 * data.boneWeights.size() * sizeof(float));
-    uvBuffer->putData(BufferUtils::CreateFloatBuffer(data.uvCoords), 2 * data.uvCoords.size() * sizeof(float));
-    indexBuffer->putData(BufferUtils::CreateIntBuffer(data.indices), 3 * data.indices.size() * sizeof(int));
-
-    vertexArray->pushVertexBuffer(vertexBuffer, 0, 3);
-    vertexArray->pushVertexBuffer(normalsBuffer, 1, 3);
-    vertexArray->pushVertexBuffer(uvBuffer, 2, 2);
-    vertexArray->pushVertexBuffer(tangentBuffer, 3, 3);
-    vertexArray->pushVertexBuffer(biTangentBuffer, 4, 3);
-    vertexArray->pushVertexBuffer(boneIDBuffer, 5, 4);
-    vertexArray->pushVertexBuffer(boneWeightBuffer, 6, 4);
-    vertexArray->setIndexBuffer(indexBuffer);
-
-    mesh_->setVertexArray(vertexArray);
-    return mesh_;
+    return mesh_id;
 }
 
 AssetUID ModelLoader::extractMaterial(const aiMaterial *material, const std::string &model_name, const aiScene *scene) {
@@ -241,7 +213,7 @@ AssetUID ModelLoader::extractTexture(const aiMaterial *material, const std::stri
             } else {
                 data2 = data;
             }
-            auto texture_ice = m_graphics_factory->createTexture2D(data2, width, height, getTextureFormat(type, channels));
+            auto texture_ice = std::make_shared<Texture2D>(data2, width, height, getTextureFormat(type, channels));
             if (tex_id = ref_bank.getUID(AssetPath::WithTypePrefix<Texture2D>(tex_path)); tex_id != 0) {
                 ref_bank.removeAsset(AssetPath::WithTypePrefix<Texture2D>(tex_path));
                 ref_bank.addAssetWithSpecificUID(AssetPath::WithTypePrefix<Texture2D>(tex_path), texture_ice, tex_id);
@@ -257,7 +229,8 @@ AssetUID ModelLoader::extractTexture(const aiMaterial *material, const std::stri
     return tex_id;
 }
 
-void ModelLoader::extractBoneData(const aiMesh *mesh, const aiScene *scene, MeshData &data, SkinningData &skinning_data, Model::Skeleton &skeleton) {
+std::unordered_map<int, Eigen::Matrix4f> ModelLoader::extractBoneData(const aiMesh *mesh, MeshData &data, Model::Skeleton &skeleton) {
+    std::unordered_map<int, Eigen::Matrix4f> inverseBindMatrices;
     for (unsigned int boneIndex = 0; boneIndex < mesh->mNumBones; ++boneIndex) {
         std::string boneName = mesh->mBones[boneIndex]->mName.C_Str();
         int boneID = -1;
@@ -265,14 +238,12 @@ void ModelLoader::extractBoneData(const aiMesh *mesh, const aiScene *scene, Mesh
         if (!skeleton.boneMapping.contains(boneName)) {
             boneID = skeleton.boneMapping.size();
             skeleton.boneMapping[boneName] = boneID;
-            Model::BoneInfo newBoneInfo = {.finalTransformation = Eigen::Matrix4f::Identity()};
-            skeleton.bones.push_back(newBoneInfo);
         } else {
             //Bone Already Exists
             boneID = skeleton.boneMapping.at(boneName);
         }
 
-        skinning_data.boneOffsetMatrices.try_emplace(boneID, aiMat4ToEigen(mesh->mBones[boneIndex]->mOffsetMatrix));
+        inverseBindMatrices.try_emplace(boneID, aiMat4ToEigen(mesh->mBones[boneIndex]->mOffsetMatrix));
 
         aiVertexWeight *weights = mesh->mBones[boneIndex]->mWeights;
         unsigned int numWeights = mesh->mBones[boneIndex]->mNumWeights;
@@ -290,6 +261,7 @@ void ModelLoader::extractBoneData(const aiMesh *mesh, const aiScene *scene, Mesh
             }
         }
     }
+    return inverseBindMatrices;
 }
 
 std::unordered_map<std::string, Animation> ModelLoader::extractAnimations(const aiScene *scene, Model::Skeleton &skeleton) {
@@ -322,7 +294,7 @@ std::unordered_map<std::string, Animation> ModelLoader::extractAnimations(const 
             a.tracks[boneName] = std::move(track);
         }
         std::string anim_name = anim->mName.C_Str();
-        
+
         out.try_emplace(anim_name.substr(anim_name.find_first_of('|') + 1), std::move(a));
     }
     return out;

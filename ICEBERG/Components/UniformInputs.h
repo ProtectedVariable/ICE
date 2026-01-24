@@ -1,7 +1,7 @@
 #pragma once
 
-#include <ImGUI/imgui.h>
 #include <Material.h>
+#include <imgui.h>
 
 #include <functional>
 #include <string>
@@ -22,6 +22,12 @@ class UniformInputs {
     void setValue(const ICE::UniformValue &value) {
         m_value = value;
         m_callback(value);
+        if (std::holds_alternative<ICE::AssetUID>(m_value)) {
+            auto it = std::find(m_assets_ids.begin(), m_assets_ids.end(), std::get<ICE::AssetUID>(m_value));
+            if (it != m_assets_ids.end()) {
+                m_asset_combo.setSelected(std::distance(m_assets_ids.begin(), it));
+            }
+        }
     }
     ICE::UniformValue getValue() const { return m_value; }
 
@@ -34,9 +40,11 @@ class UniformInputs {
         m_asset_combo.setValues(path_with_none);
         m_assets_ids = {0};
         m_assets_ids.insert(m_assets_ids.end(), ids.begin(), ids.end());
-        auto it = std::find(m_assets_ids.begin(), m_assets_ids.end(), std::get<ICE::AssetUID>(m_value));
-        if (it != m_assets_ids.end()) {
-            m_asset_combo.setSelected(std::distance(m_assets_ids.begin(), it));
+        if (std::holds_alternative<ICE::AssetUID>(m_value)) {
+            auto it = std::find(m_assets_ids.begin(), m_assets_ids.end(), std::get<ICE::AssetUID>(m_value));
+            if (it != m_assets_ids.end()) {
+                m_asset_combo.setSelected(std::distance(m_assets_ids.begin(), it));
+            }
         }
         m_asset_combo.onSelectionChanged(
             [cb = this->m_callback, id_list = this->m_assets_ids](const std::string &, int index) { cb(id_list[index]); });
@@ -52,7 +60,7 @@ class UniformInputs {
     }
     void render(ICE::AssetUID id) { m_asset_combo.render(); }
     void render(float &f) {
-        if (ImGui::InputFloat(m_label.c_str(), &f)) {
+        if (ImGui::InputFloat(m_label.c_str(), &f, 0.01f, 0.1f, "%.6f")) {
             m_callback(f);
         }
     }

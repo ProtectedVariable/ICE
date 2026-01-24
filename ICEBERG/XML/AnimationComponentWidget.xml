@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<group>
+	<separatorText label="Animation"/>
+	<table name="animation_component_layout" columns="3">
+		<setupcolumn label="" width="0.2" flags="ImGuiTableColumnFlags_WidthStretch"/>
+		<setupcolumn label="" width="0.8" flags="ImGuiTableColumnFlags_WidthStretch"/>
+		<setupcolumn label="" width="60" flags="ImGuiTableColumnFlags_WidthFixed"/>
+		<row>
+			<column>
+				<text label="Animation"/>
+			</column>
+			<column>
+				<placeholder id="animation_combo" />
+			</column>
+			<column>
+				<button id="btn_remove" label="Remove"/>
+			</column>
+		</row>
+		<row>
+			<column>
+				<text label="Time"/>
+			</column>
+			<column>
+				<SliderFloat id="time_slider" label="##time_slider" dynamic="float_time"  min="0" max="1"/>
+			</column>
+		</row>
+		<row>
+			<column>
+				<text label="Speed"/>
+			</column>
+			<column>
+				<InputFloat label="##speed" dynamic="float_speed" step="0.25" format="%.3f"/>
+			</column>
+		</row>
+		<row>
+			<column>
+				<text label="Playing"/>
+			</column>
+			<column>
+				<checkbox label="###playing" id="checkbox_playing" dynamic="bool_playing"/>
+			</column>
+		</row>
+		<row>
+			<column>
+				<text label="Loop"/>
+			</column>
+			<column>
+				<checkbox label="###loop" id="checkbox_loop" dynamic="bool_loop"/>
+			</column>
+		</row>
+	</table>
+</group>

@@ -13,6 +13,7 @@ class GLFWWindow : public Window {
 
     void* getHandle() const override;
     bool shouldClose() override;
+    void close() override;
     std::pair<std::shared_ptr<MouseHandler>, std::shared_ptr<KeyboardHandler>> getInputHandlers() const override;
     void pollEvents() override;
     void swapBuffers() override;

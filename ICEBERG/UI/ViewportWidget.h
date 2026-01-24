@@ -1,6 +1,7 @@
 #pragma once
+#include <FontAwesome/IconsFontAwesome5.h>
 #include <ImGUI/ImGuizmo.h>
-#include <ImGUI/imgui.h>
+#include <imgui.h>
 
 #include "Widget.h"
 
@@ -13,15 +14,15 @@ class ViewportWidget : public Widget {
         flags |= ImGuiWindowFlags_NoNavFocus;
         ImGui::Begin("Viewport", 0, flags);
 
-        if (ImGui::Button("T")) {
+        if (ImGui::Button(ICON_FA_ARROWS_ALT)) {
             callback("translate_clicked");
         }
         ImGui::SameLine();
-        if (ImGui::Button("R")) {
+        if (ImGui::Button(ICON_FA_SYNC_ALT)) {
             callback("rotate_clicked");
         }
         ImGui::SameLine();
-        if (ImGui::Button("S")) {
+        if (ImGui::Button(ICON_FA_EXPAND_ALT)) {
             callback("scale_clicked");
         }
 
@@ -29,6 +30,14 @@ class ViewportWidget : public Widget {
         const float window_width = ImGui::GetContentRegionAvail().x;
         const float window_height = ImGui::GetContentRegionAvail().y;
         ImGui::Image(texture_ptr, {window_width, window_height}, ImVec2(0, 1), ImVec2(1, 0));
+        if (ImGui::BeginDragDropTarget()) {
+            ImGuiDragDropFlags target_flags = 0;
+            if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("DND_ASSET_MODEL", target_flags)) {
+                auto path = (char *) payload->Data;
+                callback("spawnTree", path);
+            }
+            ImGui::EndDragDropTarget();
+        }
 
         auto drag = ImGui::GetMouseDragDelta(0);
         if (ImGui::IsWindowHovered()) {

@@ -7,7 +7,12 @@ add_library(${PROJECT_NAME} STATIC)
 
 target_sources(${PROJECT_NAME} PRIVATE
         src/AssetBank.cpp
-		src/AssetPath.cpp)
+		src/AssetPath.cpp
+        src/Shader.cpp
+        src/Model.cpp
+        src/Material.cpp
+        src/GPURegistry.cpp 
+        src/Texture.cpp)
 
 target_link_libraries(${PROJECT_NAME} 
     PUBLIC 
