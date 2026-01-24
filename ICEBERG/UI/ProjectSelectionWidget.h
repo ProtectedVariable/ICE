@@ -54,6 +54,10 @@ class ProjectSelectionWidget : public Widget, ImXML::XMLEventHandler {
     void renderExistingProjects() {
         for (int i = 0; i < m_projects.size(); i++) {
             const auto& p = m_projects[i];
+            if (p.name.find(m_project_search) == std::string::npos &&
+                p.path.find(m_project_search) == std::string::npos) {
+                continue;
+            }
             ImGui::TableNextColumn();
             ImGui::PushID(i);
             ImGui::Selectable(p.name.c_str(), false, ImGuiSelectableFlags_SpanAllColumns);
