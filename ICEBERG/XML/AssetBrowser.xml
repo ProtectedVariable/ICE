@@ -8,13 +8,19 @@
 		<header/>
 		<row>
 			<column>
-				<placeholder id="asset_browser_category"/>
+				<child label="###categories">
+					<placeholder id="asset_browser_category"/>
+				</child>
 			</column>
 			<column>
-				<placeholder id="asset_browser_content"/>
+				<child label="###content">
+					<placeholder id="asset_browser_content"/>
+				</child>
 			</column>
 			<column>
-				<placeholder id="asset_browser_preview"/>
+				<child label="##preview">
+					<placeholder id="asset_browser_preview"/>
+				</child>
 			</column>
 		</row>
 	</table>
