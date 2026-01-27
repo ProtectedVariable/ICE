@@ -38,7 +38,7 @@ const std::string open_native_dialog(const std::vector<FileFilter>& filters)
     ofn.lpstrFile = filename;
     ofn.nMaxFile = MAX_PATH;
     ofn.lpstrTitle = "Select a file";
-    ofn.Flags = OFN_DONTADDTORECENT | OFN_FILEMUSTEXIST;
+    ofn.Flags = OFN_DONTADDTORECENT | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
 
     if (GetOpenFileNameA(&ofn))
     {

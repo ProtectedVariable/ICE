@@ -50,6 +50,7 @@ Entity Scene::spawnTree(AssetUID model_id, const std::shared_ptr<AssetBank> &ban
     auto nodes = model->getNodes();
     auto meshes = model->getMeshes();
     auto materialIDs = model->getMaterialsIDs();
+    auto useBones = !model->getSkeleton().boneMapping.empty();
     std::unordered_map<std::string, Entity> bone_entity;
 
     std::function<Entity(int, Entity, Entity)> spawnNode = [&](int nodeIndex, Entity parent, Entity skeleton) -> Entity {
@@ -75,8 +76,10 @@ Entity Scene::spawnTree(AssetUID model_id, const std::shared_ptr<AssetBank> &ban
 
             m_graph->setParent(meshEntity, nodeEntity);
             registry->addComponent<TransformComponent>(meshEntity, TransformComponent(Eigen::Matrix4f::Identity().eval()));
-            registry->addComponent<SkinningComponent>(meshEntity, SkinningComponent{.skeleton_entity = skeleton});
             registry->addComponent<RenderComponent>(meshEntity, RenderComponent(meshes[meshIdx], materialIDs[meshIdx]));
+            if (useBones) {
+                registry->addComponent<SkinningComponent>(meshEntity, SkinningComponent{.skeleton_entity = skeleton});
+            }
         }
 
         for (int childIndex : node.children) {
@@ -88,7 +91,7 @@ Entity Scene::spawnTree(AssetUID model_id, const std::shared_ptr<AssetBank> &ban
 
     auto root = spawnNode(0, 0, -1);
 
-    if (!model->getSkeleton().boneMapping.empty()) {
+    if (useBones) {
         registry->addComponent<SkeletonPoseComponent>(root,
                                                       SkeletonPoseComponent{.skeletonModel = model_id,
                                                                             .bone_transform = std::vector<Eigen::Matrix4f>(
