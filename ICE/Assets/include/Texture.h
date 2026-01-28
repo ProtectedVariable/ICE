@@ -21,7 +21,7 @@ class Texture : public Asset {
    public:
     virtual ~Texture() {
         if (data_ != nullptr) {
-            stbi_image_free(data_);
+            //stbi_image_free(data_); TODO: Might need need free-ing
             data_ = nullptr;
         }
     }
