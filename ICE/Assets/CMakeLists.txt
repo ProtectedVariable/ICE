@@ -10,6 +10,7 @@ target_sources(${PROJECT_NAME} PRIVATE
 		src/AssetPath.cpp
         src/Shader.cpp
         src/Model.cpp
+        src/Mesh.cpp
         src/Material.cpp
         src/GPURegistry.cpp 
         src/Texture.cpp)
@@ -20,6 +21,7 @@ target_link_libraries(${PROJECT_NAME}
     util
     io
     storage
+    math
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC

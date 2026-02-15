@@ -59,6 +59,6 @@ class Mesh : public Asset {
    private:
     MeshData m_data;
     SkinningData m_skinningData;
-    AABB boundingBox;
+    AABB boundingBox{Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero()};
 };
 }  // namespace ICE
