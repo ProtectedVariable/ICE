@@ -21,6 +21,8 @@ namespace ICE {
 
         void renderVertexArray(const std::shared_ptr<VertexArray> &va) const override;
 
+        void renderVertexArrayInstanced(const std::shared_ptr<VertexArray> &va, uint32_t instance_count) const override;
+
         void flush() const override;
 
         void finish() const override;

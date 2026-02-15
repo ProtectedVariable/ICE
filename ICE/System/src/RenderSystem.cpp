@@ -55,10 +55,26 @@ void RenderSystem::update(double delta) {
 
         auto model_mat = tc->getWorldMatrix();
 
+        // Transform AABB correctly by transforming all 8 corners
         auto aabb = m_gpu_bank->getMeshAABB(rc->mesh);
-        Eigen::Vector3f min = (model_mat * Eigen::Vector4f(aabb.getMin().x(), aabb.getMin().y(), aabb.getMin().z(), 1.0)).head<3>();
-        Eigen::Vector3f max = (model_mat * Eigen::Vector4f(aabb.getMax().x(), aabb.getMax().y(), aabb.getMax().z(), 1.0)).head<3>();
-        aabb = AABB(std::vector<Eigen::Vector3f>{min, max});
+        Eigen::Vector3f min_corner = aabb.getMin();
+        Eigen::Vector3f max_corner = aabb.getMax();
+        
+        // Generate all 8 corners of the AABB
+        std::vector<Eigen::Vector3f> transformed_corners;
+        transformed_corners.reserve(8);
+        for (int i = 0; i < 8; i++) {
+            Eigen::Vector3f corner(
+                (i & 1) ? max_corner.x() : min_corner.x(),
+                (i & 2) ? max_corner.y() : min_corner.y(),
+                (i & 4) ? max_corner.z() : min_corner.z()
+            );
+            Eigen::Vector4f world_corner = model_mat * Eigen::Vector4f(corner.x(), corner.y(), corner.z(), 1.0);
+            transformed_corners.push_back(world_corner.head<3>());
+        }
+        
+        // Recompute AABB from transformed corners
+        aabb = AABB(transformed_corners);
         if (!isAABBInFrustum(frustum, aabb)) {
             continue;
         }

@@ -18,6 +18,7 @@ class GeometryPass : public RenderPass {
 
    private:
     std::shared_ptr<RendererAPI> m_api;
+    std::shared_ptr<GraphicsFactory> m_factory;
     std::shared_ptr<Framebuffer> m_framebuffer;
     std::vector<RenderCommand>* m_render_queue;
 };

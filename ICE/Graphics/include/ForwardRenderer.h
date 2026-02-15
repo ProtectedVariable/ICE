@@ -14,6 +14,7 @@
 #include "Camera.h"
 #include "Framebuffer.h"
 #include "GeometryPass.h"
+#include "InstanceData.h"
 #include "RenderCommand.h"
 #include "Renderer.h"
 #include "RendererConfig.h"
@@ -51,6 +52,9 @@ class ForwardRenderer : public Renderer {
     std::optional<Skybox> m_skybox;
     std::vector<Drawable> m_drawables;
     std::vector<Light> m_lights;
+    
+    // Instance batching storage
+    std::unordered_map<uint64_t, std::vector<InstanceData>> m_instance_batches;
 
     RendererConfig config;
 };

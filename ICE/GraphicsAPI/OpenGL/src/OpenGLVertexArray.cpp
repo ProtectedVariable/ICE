@@ -34,6 +34,28 @@ void OpenGLVertexArray::pushVertexBuffer(const std::shared_ptr<VertexBuffer>& bu
     cnt = (position + 1) > cnt ? position + 1 : cnt;
 }
 
+void OpenGLVertexArray::pushVertexBuffer(const std::shared_ptr<VertexBuffer>& buffer, int position, int size, int divisor) {
+    this->bind();
+    buffer->bind();
+    
+    // For mat4, we need 4 vec4 attributes
+    if (size == 16) {  // mat4 = 4 * vec4
+        for (int i = 0; i < 4; i++) {
+            glEnableVertexAttribArray(position + i);
+            glVertexAttribPointer(position + i, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 16, (void*)(sizeof(float) * 4 * i));
+            glVertexAttribDivisor(position + i, divisor);
+        }
+        cnt = (position + 4) > cnt ? position + 4 : cnt;
+    } else {
+        glEnableVertexAttribArray(position);
+        glVertexAttribPointer(position, size, GL_FLOAT, false, 0, 0);
+        glVertexAttribDivisor(position, divisor);
+        cnt = (position + 1) > cnt ? position + 1 : cnt;
+    }
+    
+    this->buffers[position] = buffer;
+}
+
 void OpenGLVertexArray::setIndexBuffer(const std::shared_ptr<IndexBuffer>& buffer) {
     this->bind();
     buffer->bind();

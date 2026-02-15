@@ -13,6 +13,9 @@
 #include "ShaderProgram.h"
 
 namespace ICE {
+
+struct InstanceData;  // Forward declaration
+
 struct RenderCommand {
     std::shared_ptr<GPUMesh> mesh;
     std::shared_ptr<Material> material;
@@ -24,5 +27,11 @@ struct RenderCommand {
 
     bool faceCulling = true;
     bool depthTest = true;
+    
+    // Instancing support
+    bool is_instanced = false;
+    const std::vector<InstanceData>* instance_data = nullptr;
+    uint32_t instance_count = 1;
 };
 }  // namespace ICE
+

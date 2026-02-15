@@ -1,8 +1,9 @@
 #include "GeometryPass.h"
+#include "InstanceData.h"
 
 namespace ICE {
 GeometryPass::GeometryPass(const std::shared_ptr<RendererAPI>& api, const std::shared_ptr<GraphicsFactory>& factory, const FrameBufferFormat& format)
-    : m_api(api) {
+    : m_api(api), m_factory(factory) {
     m_framebuffer = factory->createFramebuffer(format);
 }
 
@@ -27,7 +28,9 @@ void GeometryPass::execute() {
             current_shader = shader;
         }
 
-        if (!command.bones.empty()) {
+        // Handle bone matrices (non-instanced only)
+        if (!command.is_instanced && !command.bones.empty()) {
+            // TODO: Use UBO instead of individual uploads for better performance
             for (const auto& [id, matrix] : command.bones) {
                 current_shader->loadMat4("bonesTransformMatrices[" + std::to_string(id) + "]", matrix);
             }
@@ -81,8 +84,24 @@ void GeometryPass::execute() {
             va->getIndexBuffer()->bind();
         }
 
-        shader->loadMat4("model", command.model_matrix);
-        m_api->renderVertexArray(mesh->getVertexArray());
+        // Instanced vs regular rendering
+        if (command.is_instanced && command.instance_data) {
+            // Create or update instance buffer
+            auto instance_buffer = m_factory->createVertexBuffer();
+            instance_buffer->putData(command.instance_data->data(), 
+                                    command.instance_count * sizeof(InstanceData));
+            
+            // Setup instance attributes (location 3-6 for mat4 model matrix)
+            auto va = mesh->getVertexArray();
+            va->pushVertexBuffer(instance_buffer, 3, 16, 1);  // mat4, divisor=1
+            
+            // Instanced draw call
+            m_api->renderVertexArrayInstanced(va, command.instance_count);
+        } else {
+            // Regular draw call
+            shader->loadMat4("model", command.model_matrix);
+            m_api->renderVertexArray(mesh->getVertexArray());
+        }
     }
 }
 

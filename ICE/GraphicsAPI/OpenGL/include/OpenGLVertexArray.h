@@ -24,6 +24,8 @@ namespace ICE {
 
         void pushVertexBuffer(const std::shared_ptr<VertexBuffer>& buffer, int position, int size) override;
 
+        void pushVertexBuffer(const std::shared_ptr<VertexBuffer>& buffer, int position, int size, int divisor) override;
+
         void setIndexBuffer(const std::shared_ptr<IndexBuffer>& buffer) override;
 
         int getIndexCount() const override;

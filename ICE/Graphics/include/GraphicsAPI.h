@@ -23,6 +23,7 @@ class RendererAPI {
     virtual void setClearColor(float r, float g, float b, float a) const = 0;
     virtual void clear() const = 0;
     virtual void renderVertexArray(const std::shared_ptr<VertexArray> &va) const = 0;
+    virtual void renderVertexArrayInstanced(const std::shared_ptr<VertexArray> &va, uint32_t instance_count) const = 0;
     virtual void flush() const = 0;
     virtual void finish() const = 0;
     virtual void setDepthTest(bool enable) const = 0;

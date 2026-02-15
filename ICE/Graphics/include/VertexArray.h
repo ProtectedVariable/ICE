@@ -20,6 +20,7 @@ class VertexArray {
     virtual void unbind() const = 0;
     virtual void pushVertexBuffer(const std::shared_ptr<VertexBuffer>& buffer, int size) = 0;
     virtual void pushVertexBuffer(const std::shared_ptr<VertexBuffer>& buffer, int position, int size) = 0;
+    virtual void pushVertexBuffer(const std::shared_ptr<VertexBuffer>& buffer, int position, int size, int divisor) = 0;  // For instancing
     virtual void setIndexBuffer(const std::shared_ptr<IndexBuffer>& buffer) = 0;
     virtual std::shared_ptr<IndexBuffer> getIndexBuffer() const = 0;
     virtual int getIndexCount() const = 0;

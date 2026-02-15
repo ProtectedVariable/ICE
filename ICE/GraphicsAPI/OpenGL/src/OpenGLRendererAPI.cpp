@@ -25,6 +25,10 @@ void OpenGLRendererAPI::renderVertexArray(const std::shared_ptr<VertexArray> &va
     glDrawElements(GL_TRIANGLES, va->getIndexCount(), GL_UNSIGNED_INT, 0);
 }
 
+void OpenGLRendererAPI::renderVertexArrayInstanced(const std::shared_ptr<VertexArray> &va, uint32_t instance_count) const {
+    glDrawElementsInstanced(GL_TRIANGLES, va->getIndexCount(), GL_UNSIGNED_INT, 0, instance_count);
+}
+
 void OpenGLRendererAPI::initialize() const {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
