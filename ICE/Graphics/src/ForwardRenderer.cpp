@@ -56,10 +56,10 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
 
     if (m_skybox.has_value()) {
         RenderCommand skybox_cmd;
-        skybox_cmd.mesh = m_skybox->cube_mesh;
+        skybox_cmd.mesh = m_skybox->cube_mesh.get();
         skybox_cmd.material = nullptr;
-        skybox_cmd.shader = m_skybox->shader;
-        skybox_cmd.textures = m_skybox->textures;
+        skybox_cmd.shader = m_skybox->shader.get();
+        skybox_cmd.textures = &m_skybox->textures;
         skybox_cmd.model_matrix = Eigen::Matrix4f::Identity();
         skybox_cmd.is_instanced = false;
         m_render_commands.push_back(skybox_cmd);
@@ -87,20 +87,23 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
     
     // Convert batches to render commands
     m_instance_batches.clear();  // Clear previous frame's instance data
-    
+    Eigen::Vector3f camera_pos = camera.getPosition();
+
     for (const auto& [key, batch] : instance_batches) {
         if (batch.size() == 1) {
             // Single instance - use regular rendering
             const auto* drawable = batch[0];
+            auto dist = (drawable->model_matrix.block<3, 1>(0, 3) - camera_pos).squaredNorm();
             RenderCommand cmd;
-            cmd.mesh = drawable->mesh;
-            cmd.material = drawable->material;
-            cmd.shader = drawable->shader;
-            cmd.textures = drawable->textures;
+            cmd.mesh = drawable->mesh.get();
+            cmd.material = drawable->material.get();
+            cmd.shader = drawable->shader.get();
+            cmd.textures = &drawable->textures;
             cmd.model_matrix = drawable->model_matrix;
             cmd.depthTest = true;
             cmd.faceCulling = true;
             cmd.is_instanced = false;
+            cmd.computeSortKey(cmd.material->isTransparent(), dist);
             m_render_commands.push_back(cmd);
         } else {
             // Multiple instances - use instanced rendering
@@ -117,10 +120,10 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
             
             const auto* first = batch[0];
             RenderCommand cmd;
-            cmd.mesh = first->mesh;
-            cmd.material = first->material;
-            cmd.shader = first->shader;
-            cmd.textures = first->textures;
+            cmd.mesh = first->mesh.get();
+            cmd.material = first->material.get();
+            cmd.shader = first->shader.get();
+            cmd.textures = &first->textures;
             cmd.depthTest = true;
             cmd.faceCulling = true;
             cmd.is_instanced = true;
@@ -133,53 +136,21 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
     // Add non-instanced drawables (skinned meshes)
     for (const auto* drawable : non_instanced_drawables) {
         RenderCommand cmd;
-        cmd.mesh = drawable->mesh;
-        cmd.material = drawable->material;
-        cmd.shader = drawable->shader;
-        cmd.textures = drawable->textures;
+        auto dist = (drawable->model_matrix.block<3, 1>(0, 3) - camera_pos).squaredNorm();
+        cmd.mesh = drawable->mesh.get();
+        cmd.material = drawable->material.get();
+        cmd.shader = drawable->shader.get();
+        cmd.textures = &drawable->textures;
         cmd.model_matrix = drawable->model_matrix;
         cmd.depthTest = true;
         cmd.faceCulling = true;
-        cmd.bones = drawable->bone_matrices;
+        cmd.bones = &drawable->bone_matrices;
         cmd.is_instanced = false;
+        cmd.computeSortKey(cmd.material->isTransparent(), dist);
         m_render_commands.push_back(cmd);
     }
 
-    // Improved sorting: opaque/transparent, then shader, then material, then depth
-    Eigen::Vector3f camera_pos = camera.getPosition();
-    std::sort(m_render_commands.begin(), m_render_commands.end(), 
-        [&camera_pos](const RenderCommand& a, const RenderCommand& b) {
-            bool a_transparent = a.material ? a.material->isTransparent() : false;
-            bool b_transparent = b.material ? b.material->isTransparent() : false;
-            
-            // 1. Opaque before transparent
-            if (a_transparent != b_transparent) {
-                return !a_transparent;  // opaque (false) < transparent (true)
-            }
-            
-            // 2. Sort by shader (minimize shader switches)
-            if (a.shader.get() != b.shader.get()) {
-                return a.shader.get() < b.shader.get();
-            }
-            
-            // 3. Sort by material (minimize material switches)
-            if (a.material.get() != b.material.get()) {
-                return a.material.get() < b.material.get();
-            }
-            
-            // 4. Sort by depth
-            if (!a_transparent) {
-                // Front-to-back for opaque (early-z optimization)
-                float dist_a = (a.model_matrix.block<3,1>(0,3) - camera_pos).squaredNorm();
-                float dist_b = (b.model_matrix.block<3,1>(0,3) - camera_pos).squaredNorm();
-                return dist_a < dist_b;
-            } else {
-                // Back-to-front for transparent (correct blending)
-                float dist_a = (a.model_matrix.block<3,1>(0,3) - camera_pos).squaredNorm();
-                float dist_b = (b.model_matrix.block<3,1>(0,3) - camera_pos).squaredNorm();
-                return dist_a > dist_b;
-            }
-        });
+    std::sort(m_render_commands.begin(), m_render_commands.end());
 
     m_geometry_pass.submit(&m_render_commands);
 }

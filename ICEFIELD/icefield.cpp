@@ -28,17 +28,19 @@ int main(void) {
     engine.setProject(project);
     project->getCurrentScene()->getRegistry()->addSystem(std::make_shared<AnimationSystem>(scene->getRegistry(), engine.getAssetBank()));
 
-    engine.getProject()->copyAssetFile("Models", "glock", "ImportAssets/glock.glb");
-    engine.getAssetBank()->addAsset<ICE::Model>("glock", {engine.getProject()->getBaseDirectory() / "Assets" / "Models" / "glock.glb"});
-    engine.getProject()->copyAssetFile("Models", "pistol", "ImportAssets/pistol.glb");
-    engine.getAssetBank()->addAsset<ICE::Model>("pistol", {engine.getProject()->getBaseDirectory() / "Assets" / "Models" / "pistol.glb"});
     engine.getProject()->copyAssetFile("Models", "Adventurer", "ImportAssets/Adventurer.glb");
     engine.getAssetBank()->addAsset<ICE::Model>("Adventurer", {engine.getProject()->getBaseDirectory() / "Assets" / "Models" / "Adventurer.glb"});
 
-    auto entity = scene->createEntity();
-    scene->getRegistry()->addComponent<TransformComponent>(entity,
-                                                           TransformComponent({0, 100, 0}, Eigen::Vector3f::Zero(), Eigen::Vector3f(0.1, 0.1, 0.1)));
-    scene->getRegistry()->addComponent<LightComponent>(entity, LightComponent(LightType::PointLight, {1, 1, 1}));
+    for (int i = 0; i < 10; i++) {
+        auto entity = scene->createEntity();
+        scene->getRegistry()->addComponent<TransformComponent>(
+            entity, TransformComponent({(float) i - 5, 0, 0}, Eigen::Vector3f::Zero(), Eigen::Vector3f::Constant(1.0)));
+        scene->getRegistry()->addComponent<LightComponent>(entity, LightComponent(LightType::PointLight, {1, 1, 1}));
+        scene->getRegistry()->addComponent<RenderComponent>(
+            entity,
+            RenderComponent(engine.getAssetBank()->getUID(AssetPath::WithTypePrefix<Mesh>("sphere")),
+                            engine.getAssetBank()->getUID(AssetPath::WithTypePrefix<Material>("base_mat"))));
+    }
 
     auto model_id = engine.getAssetBank()->getUID(AssetPath::WithTypePrefix<Model>("Adventurer"));
     auto entity2 = scene->spawnTree(model_id, engine.getAssetBank());

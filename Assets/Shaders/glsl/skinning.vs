@@ -11,8 +11,8 @@ layout (location = 3) in vec3 tangent;
 layout (location = 4) in vec3 bitangent;
 layout (location = 5) in ivec4 bone_ids;
 layout (location = 6) in vec4 bone_weights;
+layout (location = 7) in mat4 model;
 
-uniform mat4 model;
 uniform mat4 bonesTransformMatrices[MAX_BONES];
 
 out vec3 fnormal;
