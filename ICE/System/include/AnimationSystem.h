@@ -7,6 +7,13 @@
 #include "System.h"
 
 namespace ICE {
+
+struct BonePose {
+    Eigen::Vector3f position = Eigen::Vector3f::Zero();
+    Eigen::Quaternionf rotation = Eigen::Quaternionf::Identity();
+    Eigen::Vector3f scale = Eigen::Vector3f::Ones();
+};
+
 class AnimationSystem : public System {
    public:
     AnimationSystem(const std::shared_ptr<Registry>& reg, const std::shared_ptr<AssetBank>& bank);
@@ -32,10 +39,12 @@ class AnimationSystem : public System {
 
     void updateSkeleton(const std::shared_ptr<Model>& model, double time, SkeletonPoseComponent* pose, const Animation& anim);
     void finalizePose();
+
+    BonePose sampleBonePose(const std::string& boneName, const Animation& anim, double time, const std::shared_ptr<Model>& model);
+    static BonePose blendPoses(const BonePose& a, const BonePose& b, float factor);
+
     Eigen::Vector3f interpolatePosition(double timeInTicks, const BoneAnimation& track);
-
     Eigen::Vector3f interpolateScale(double timeInTicks, const BoneAnimation& track);
-
     Eigen::Quaternionf interpolateRotation(double time, const BoneAnimation& track);
 
     void applyTransforms(const Model::Node* node, const Eigen::Matrix4f& parentTransform, const Model::Skeleton& skeleton, double time,

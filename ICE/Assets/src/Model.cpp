@@ -37,4 +37,21 @@ void Model::traverse(std::vector<AssetUID> &meshes, std::vector<AssetUID> &mater
     recursive_traversal(0, base_transform);
 }
 
+void Model::buildNodeNameMap() {
+    if (m_nodeNameMapBuilt) return;
+    for (int i = 0; i < static_cast<int>(m_nodes.size()); ++i) {
+        m_nodeNameMap[m_nodes[i].name] = i;
+    }
+    m_nodeNameMapBuilt = true;
+}
+
+const Model::Node* Model::getNodeByName(const std::string &name) {
+    buildNodeNameMap();
+    auto it = m_nodeNameMap.find(name);
+    if (it != m_nodeNameMap.end()) {
+        return &m_nodes[it->second];
+    }
+    return nullptr;
+}
+
 }  // namespace ICE

@@ -13,41 +13,113 @@ void AnimationSystem::update(double dt) {
         if (!anim->playing)
             continue;
 
+        auto model = m_asset_bank->getAsset<Model>(pose->skeletonModel);
+        const auto& animations = model->getAnimations();
+
+        // Advance current animation time
         anim->currentTime += dt * anim->speed;
 
-        auto model = m_asset_bank->getAsset<Model>(pose->skeletonModel);
-        if (!model->getAnimations().contains(anim->currentAnimation)) {
+        if (!animations.contains(anim->currentAnimation)) {
             continue;
         }
-        auto animation = model->getAnimations().at(anim->currentAnimation);
+        const auto& currentAnim = animations.at(anim->currentAnimation);
 
-        if (anim->currentTime > animation.duration) {
+        if (anim->currentTime > currentAnim.duration) {
             if (anim->loop) {
-                anim->currentTime = std::fmod(anim->currentTime, animation.duration);
+                anim->currentTime = std::fmod(anim->currentTime, currentAnim.duration);
             } else {
-                anim->currentTime = animation.duration;
+                anim->currentTime = currentAnim.duration;
                 anim->playing = false;
             }
         }
-        updateSkeleton(model, anim->currentTime, pose, animation);
+
+        // Handle blending
+        if (anim->blending) {
+            anim->blendFactor += dt / anim->blendDuration;
+            if (anim->blendFactor >= 1.0) {
+                anim->blendFactor = 1.0;
+                anim->blending = false;
+            }
+
+            // Advance previous animation time as well
+            if (animations.contains(anim->previousAnimation)) {
+                const auto& prevAnim = animations.at(anim->previousAnimation);
+                anim->previousTime += dt * anim->speed;
+                if (anim->previousTime > prevAnim.duration) {
+                    anim->previousTime = std::fmod(anim->previousTime, prevAnim.duration);
+                }
+            }
+
+            // Blended update
+            const Animation* prevAnimPtr = nullptr;
+            if (animations.contains(anim->previousAnimation)) {
+                prevAnimPtr = &animations.at(anim->previousAnimation);
+            }
+
+            float blendT = static_cast<float>(anim->blendFactor);
+
+            for (auto const& [nodeName, nodeEntity] : pose->bone_entity) {
+                BonePose currentPose = sampleBonePose(nodeName, currentAnim, anim->currentTime, model);
+                BonePose prevPose;
+                if (prevAnimPtr) {
+                    prevPose = sampleBonePose(nodeName, *prevAnimPtr, anim->previousTime, model);
+                } else {
+                    prevPose = currentPose;
+                }
+
+                BonePose finalPose = blendPoses(prevPose, currentPose, blendT);
+
+                auto transform = m_registry->getComponent<TransformComponent>(nodeEntity);
+                transform->setPosition(finalPose.position);
+                transform->setRotation(finalPose.rotation);
+                transform->setScale(finalPose.scale);
+            }
+        } else {
+            // No blending — direct update
+            updateSkeleton(model, anim->currentTime, pose, currentAnim);
+        }
+
         finalizePose();
     }
 }
 
+BonePose AnimationSystem::sampleBonePose(const std::string& boneName, const Animation& anim, double time, const std::shared_ptr<Model>& model) {
+    BonePose pose;
+    if (anim.tracks.contains(boneName)) {
+        const auto& track = anim.tracks.at(boneName);
+        pose.position = interpolatePosition(time, track);
+        pose.rotation = interpolateRotation(time, track);
+        pose.scale = interpolateScale(time, track);
+    } else {
+        // Fall back to default node transform
+        const auto* node = model->getNodeByName(boneName);
+        if (node) {
+            TransformComponent defaultTransform(node->localTransform);
+            pose.position = defaultTransform.getPosition();
+            pose.rotation = defaultTransform.getRotation();
+            pose.scale = defaultTransform.getScale();
+        }
+    }
+    return pose;
+}
+
+BonePose AnimationSystem::blendPoses(const BonePose& a, const BonePose& b, float factor) {
+    BonePose result;
+    result.position = a.position + factor * (b.position - a.position);
+    result.rotation = a.rotation.slerp(factor, b.rotation);
+    result.rotation.normalize();
+    result.scale = a.scale + factor * (b.scale - a.scale);
+    return result;
+}
+
 void AnimationSystem::updateSkeleton(const std::shared_ptr<Model>& model, double time, SkeletonPoseComponent* pose, const Animation& anim) {
     for (auto const& [nodeName, nodeEntity] : pose->bone_entity) {
-        if (anim.tracks.contains(nodeName)) {
-            auto transform = m_registry->getComponent<TransformComponent>(nodeEntity);
-            const auto& track = anim.tracks.at(nodeName);
+        BonePose bonePose = sampleBonePose(nodeName, anim, time, model);
 
-            auto pos = interpolatePosition(time, track);
-            auto rot = interpolateRotation(time, track);
-            auto scale = interpolateScale(time, track);
-
-            transform->setPosition(pos);
-            transform->setRotation(rot);
-            transform->setScale(scale);
-        }
+        auto transform = m_registry->getComponent<TransformComponent>(nodeEntity);
+        transform->setPosition(bonePose.position);
+        transform->setRotation(bonePose.rotation);
+        transform->setScale(bonePose.scale);
     }
 }
 

@@ -35,15 +35,21 @@ class Model : public Asset {
     void traverse(std::vector<AssetUID> &meshes, std::vector<AssetUID> &materials, std::vector<Eigen::Matrix4f> &transforms,
                   const Eigen::Matrix4f &base_transform = Eigen::Matrix4f::Identity());
 
+    const Node* getNodeByName(const std::string &name);
+
     AssetType getType() const override { return AssetType::EModel; }
     std::string getTypeName() const override { return "Model"; }
 
    private:
+    void buildNodeNameMap();
+
     std::vector<Node> m_nodes;
     std::vector<AssetUID> m_meshes;
     std::vector<AssetUID> m_materials;
     std::unordered_map<std::string, Animation> m_animations;
     Skeleton m_skeleton;
     AABB m_boundingbox{{0, 0, 0}, {0, 0, 0}};
+    std::unordered_map<std::string, int> m_nodeNameMap;
+    bool m_nodeNameMapBuilt = false;
 };
 }  // namespace ICE

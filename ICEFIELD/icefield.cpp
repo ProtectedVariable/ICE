@@ -31,10 +31,11 @@ int main(void) {
     engine.getProject()->copyAssetFile("Models", "Adventurer", "ImportAssets/Adventurer.glb");
     engine.getAssetBank()->addAsset<ICE::Model>("Adventurer", {engine.getProject()->getBaseDirectory() / "Assets" / "Models" / "Adventurer.glb"});
 
+    
     for (int i = 0; i < 10; i++) {
         auto entity = scene->createEntity();
         scene->getRegistry()->addComponent<TransformComponent>(
-            entity, TransformComponent({(float) i - 5, 0, 0}, Eigen::Vector3f::Zero(), Eigen::Vector3f::Constant(1.0)));
+            entity, TransformComponent({(float) i - 5, 0, -5}, Eigen::Vector3f::Zero(), Eigen::Vector3f::Constant(1.0)));
         scene->getRegistry()->addComponent<LightComponent>(entity, LightComponent(LightType::PointLight, {1, 1, 1}));
         scene->getRegistry()->addComponent<RenderComponent>(
             entity,
@@ -63,6 +64,8 @@ int main(void) {
         engine.step();
 
         scene->getRegistry()->getComponent<TransformComponent>(entity2)->setRotationEulerDeg({0, i / 10.0f, 0});
+        if (i == 300)
+            scene->getRegistry()->getComponent<AnimationComponent>(entity3)->playAnimation("Idle", 300.0);
 
         //Render system duty
         int display_w, display_h;

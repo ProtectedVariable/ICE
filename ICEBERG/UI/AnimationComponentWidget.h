@@ -27,7 +27,10 @@ class AnimationComponentWidget : public Widget, ImXML::XMLEventHandler {
             if (ImGui::BeginCombo("##animation_combo", m_current_animation.c_str())) {
                 for (const auto& [key, anim] : m_animations) {
                     if (ImGui::Selectable(key.c_str(), key == m_current_animation)) {
-                        m_current_animation = key;
+                        if (key != m_current_animation) {
+                            m_current_animation = key;
+                            m_animation_changed = true;
+                        }
                     }
                 }
                 ImGui::EndCombo();
@@ -43,8 +46,24 @@ class AnimationComponentWidget : public Widget, ImXML::XMLEventHandler {
     void render() override {
         if (m_ac) {
             m_xml_renderer.render(m_xml_tree, *this);
-            m_ac->currentAnimation = m_current_animation;
-            m_ac->currentTime = m_time;
+
+            // Blend duration input
+            ImGui::InputFloat("Blend Duration (s)", &m_blend_duration, 0.05f, 0.5f, "%.2f");
+            if (m_blend_duration < 0.0f) m_blend_duration = 0.0f;
+
+            // Show blending status
+            if (m_ac->blending) {
+                ImGui::TextColored(ImVec4(0.3f, 0.8f, 1.0f, 1.0f), "Blending: %.0f%%", m_ac->blendFactor * 100.0);
+            }
+
+            // Apply changes
+            if (m_animation_changed) {
+                m_ac->playAnimation(m_current_animation, m_blend_duration);
+                m_animation_changed = false;
+                m_time = 0.0f;
+            } else {
+                m_ac->currentTime = m_time;
+            }
             m_ac->speed = m_speed;
             m_ac->playing = m_playing;
             m_ac->loop = m_loop;
@@ -70,14 +89,17 @@ class AnimationComponentWidget : public Widget, ImXML::XMLEventHandler {
     std::unordered_map<std::string, ICE::Animation> m_animations;
 
     std::string m_current_animation = "";
+    bool m_animation_changed = false;
 
     float m_max_time = 1.0;
 
     float m_time = 0.0;
     float m_speed = 1.0;
+    float m_blend_duration = 0.2f;
     bool m_playing;
     bool m_loop;
 
     ImXML::XMLTree m_xml_tree;
     ImXML::XMLRenderer m_xml_renderer;
 };
+
