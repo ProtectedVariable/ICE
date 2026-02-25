@@ -24,6 +24,15 @@
 
 namespace ICE {
 
+struct Plane {
+    Eigen::Vector3f normal;
+    float distance;
+};
+
+struct Frustum {
+    std::array<Plane, 6> planes;  // left, right, top, bottom, near, far
+};
+
 Eigen::Matrix4f rotationMatrix(Eigen::Vector3f angles, bool yaw_first = true);
 Eigen::Matrix4f translationMatrix(Eigen::Vector3f translation);
 Eigen::Matrix4f scaleMatrix(Eigen::Vector3f scale);
@@ -33,8 +42,9 @@ void decomposeMatrix(const Eigen::Matrix4f &M, Eigen::Vector3f &position, Eigen:
 Eigen::Vector3f orientation(int face, float x, float y);
 int clamp(int x, int a, int b);
 std::array<uint8_t *, 6> equirectangularToCubemap(uint8_t *inputPixels, int width, int height, float rotation = 180);
-std::array<Eigen::Vector4f, 6> extractFrustumPlanes(const Eigen::Matrix4f &PV);
-bool isAABBInFrustum(const std::array<Eigen::Vector4f, 6> &frustum, const AABB &aabb);
+Frustum extractFrustumPlanes(const Eigen::Matrix4f &PV);
+bool isAABBInFrustum(const Frustum &frustum, const AABB &aabb);
+bool isAABBInFrustum(const Frustum &frustum, const Eigen::Vector3f &center, const Eigen::Vector3f &extents);
 }  // namespace ICE
 
 #endif  //ICE_ICEMATH_H

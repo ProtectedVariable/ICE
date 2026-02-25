@@ -21,6 +21,7 @@ class AABB {
     AABB operator+(const AABB& other) const;
     AABB unionWith(const AABB& other) const;
     Eigen::Vector3f getCenter() const;
+    Eigen::Vector3f getExtent() const;
 
     const Eigen::Vector3f& getMin() const;
 

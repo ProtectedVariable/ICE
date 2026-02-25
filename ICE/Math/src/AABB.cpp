@@ -47,6 +47,10 @@ Eigen::Vector3f AABB::getCenter() const {
     return (min + max) / 2;
 }
 
+Eigen::Vector3f AABB::getExtent() const {
+    return (max - min) / 2;
+}
+
 const Eigen::Vector3f &AABB::getMin() const {
     return min;
 }

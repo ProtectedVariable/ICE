@@ -44,6 +44,7 @@ void RenderSystem::update(double delta) {
     }
 
     auto frustum = extractFrustumPlanes(proj_mat * view_mat);
+    Logger::Log(ICE::Logger::DEBUG, "Graphics", "Render Queue Size: %d", m_render_queue.size());
     for (const auto &e : m_render_queue) {
         auto rc = m_registry->getComponent<RenderComponent>(e);
         auto tc = m_registry->getComponent<TransformComponent>(e);
@@ -54,31 +55,22 @@ void RenderSystem::update(double delta) {
             continue;
 
         auto model_mat = tc->getWorldMatrix();
+        
+        auto local_aabb = m_gpu_bank->getMeshAABB(rc->mesh);
+        Eigen::Vector3f localCenter = local_aabb.getCenter();
+        Eigen::Vector3f localExtents = local_aabb.getExtent();
 
-        // Transform AABB correctly by transforming all 8 corners
-        auto aabb = m_gpu_bank->getMeshAABB(rc->mesh);
-        Eigen::Vector3f min_corner = aabb.getMin();
-        Eigen::Vector3f max_corner = aabb.getMax();
-        
-        // Generate all 8 corners of the AABB
-        std::vector<Eigen::Vector3f> transformed_corners;
-        transformed_corners.reserve(8);
-        for (int i = 0; i < 8; i++) {
-            Eigen::Vector3f corner(
-                (i & 1) ? max_corner.x() : min_corner.x(),
-                (i & 2) ? max_corner.y() : min_corner.y(),
-                (i & 4) ? max_corner.z() : min_corner.z()
-            );
-            Eigen::Vector4f world_corner = model_mat * Eigen::Vector4f(corner.x(), corner.y(), corner.z(), 1.0);
-            transformed_corners.push_back(world_corner.head<3>());
-        }
-        
-        // Recompute AABB from transformed corners
-        aabb = AABB(transformed_corners);
-        if (!isAABBInFrustum(frustum, aabb)) {
+        Eigen::Matrix3f R = model_mat.block<3, 3>(0, 0);
+        Eigen::Vector3f T = model_mat.block<3, 1>(0, 3);
+
+        Eigen::Vector3f worldCenter = R * localCenter + T;
+
+        Eigen::Matrix3f absR = R.cwiseAbs();
+        Eigen::Vector3f worldExtents = absR * localExtents;
+
+        if (!isAABBInFrustum(frustum, worldCenter, worldExtents))
             continue;
-        }
-
+            
         std::unordered_map<int, Eigen::Matrix4f> bone_matrices;
         if (m_registry->entityHasComponent<SkinningComponent>(e)) {
             const auto &skinning = m_gpu_bank->getMeshSkinningData(rc->mesh);
