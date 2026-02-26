@@ -184,6 +184,7 @@ Frustum extractFrustumPlanes(const Eigen::Matrix4f &PV) {
 
         plane.normal = n / length;
         plane.distance = p[3] / length;
+        plane.absNormal = plane.normal.cwiseAbs();
 
         return plane;
     };
@@ -217,9 +218,9 @@ bool isAABBInFrustum(const Frustum &frustum, const Eigen::Vector3f &center, cons
     for (int i = 0; i < 6; ++i) {
         const Plane &plane = frustum.planes[i];
 
-        const Eigen::Vector3f &n = plane.normal;
+        const Eigen::Vector3f &n = plane.absNormal;
 
-        float r = extents.x() * std::abs(n.x()) + extents.y() * std::abs(n.y()) + extents.z() * std::abs(n.z());
+        float r = extents.x() * n.x() + extents.y() * n.y() + extents.z() * n.z();
 
         float s = n.dot(center) + plane.distance;
 

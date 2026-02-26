@@ -26,6 +26,7 @@ namespace ICE {
 
 struct Plane {
     Eigen::Vector3f normal;
+    Eigen::Vector3f absNormal;
     float distance;
 };
 
