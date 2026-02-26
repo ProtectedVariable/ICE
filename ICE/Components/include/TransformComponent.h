@@ -21,7 +21,7 @@ struct TransformComponent : public Component {
         setRotationEulerDeg(rot);
     }
 
-   TransformComponent(const Eigen::Matrix4f& matrix) {
+    TransformComponent(const Eigen::Matrix4f& matrix) {
         m_position = matrix.block<3, 1>(0, 3);
 
         Eigen::Vector3f vX = matrix.block<3, 1>(0, 0);
@@ -79,46 +79,54 @@ struct TransformComponent : public Component {
     void updateParentMatrix(const Eigen::Matrix4f& parent_matrix) {
         m_parent_matrix = parent_matrix;
         m_world_matrix = parent_matrix * getModelMatrix();
+        m_version++;
     }
 
     Eigen::Vector3f& position() {
-        m_dirty = true;
+        markDirty();
         return m_position;
     }
 
     Eigen::Quaternionf& rotation() {
-        m_dirty = true;
+        markDirty();
         return m_rotation;
     }
 
     Eigen::Vector3f& scale() {
-        m_dirty = true;
+        markDirty();
         return m_scale;
     }
 
     void setPosition(const Eigen::Vector3f& position) {
-        m_dirty = true;
+        markDirty();
         m_position = position;
     }
 
     void setRotation(const Eigen::Quaternionf& rotation) {
-        m_dirty = true;
+        markDirty();
         m_rotation = rotation.normalized();
     }
 
     void setRotationEulerDeg(const Eigen::Vector3f& eulerDeg) {
-        m_dirty = true;
+        markDirty();
         Eigen::Vector3f rad = eulerDeg * M_PI / 180.0;
         m_rotation = Eigen::AngleAxisf(rad.x(), Eigen::Vector3f::UnitX()) * Eigen::AngleAxisf(rad.y(), Eigen::Vector3f::UnitY())
             * Eigen::AngleAxisf(rad.z(), Eigen::Vector3f::UnitZ());
     }
 
     void setScale(const Eigen::Vector3f& scale) {
-        m_dirty = true;
+        markDirty();
         m_scale = scale;
     }
 
+    uint32_t getVersion() { return m_version; }
+
    private:
+    void markDirty() {
+        m_dirty = true;
+        m_version++;
+    }
+
     Eigen::Vector3f m_position;
     Eigen::Quaternionf m_rotation;
     Eigen::Vector3f m_scale;
@@ -127,6 +135,7 @@ struct TransformComponent : public Component {
     mutable Eigen::Matrix4f m_parent_matrix = Eigen::Matrix4f::Identity();
     mutable Eigen::Matrix4f m_world_matrix = Eigen::Matrix4f::Identity();
     mutable bool m_dirty = true;
+    mutable uint32_t m_version = 0;
 };
 
 }  // namespace ICE

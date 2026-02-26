@@ -22,5 +22,6 @@ class SceneGraphSystem : public System {
 
    private:
     std::shared_ptr<Scene> m_scene;
+    std::unordered_map<Entity, uint32_t> m_transformVersions;
 };
 }  // namespace ICE

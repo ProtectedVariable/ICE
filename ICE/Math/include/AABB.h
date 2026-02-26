@@ -28,6 +28,9 @@ class AABB {
     const Eigen::Vector3f& getMax() const;
 
    private:
+    void precomputeCenterAndExtent();
+
     Eigen::Vector3f min, max;
+    Eigen::Vector3f center, extent;
 };
 }  // namespace ICE

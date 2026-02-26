@@ -7,12 +7,14 @@
 namespace ICE {
 
 AABB::AABB(const Eigen::Vector3f &min, const Eigen::Vector3f &max) : min(min), max(max) {
+    precomputeCenterAndExtent();
 }
 AABB::AABB(const std::vector<Eigen::Vector3f> &points) : AABB(points[0], points[0]) {
     for (const auto &v : points) {
         min = min.cwiseMin(v);
         max = max.cwiseMax(v);
     }
+    precomputeCenterAndExtent();
 }
 
 AABB AABB::scaledBy(const Eigen::Vector3f &scale) const {
@@ -44,11 +46,11 @@ AABB AABB::unionWith(const AABB &other) const {
 }
 
 Eigen::Vector3f AABB::getCenter() const {
-    return (min + max) / 2;
+    return center;
 }
 
 Eigen::Vector3f AABB::getExtent() const {
-    return (max - min) / 2;
+    return extent;
 }
 
 const Eigen::Vector3f &AABB::getMin() const {
@@ -57,5 +59,10 @@ const Eigen::Vector3f &AABB::getMin() const {
 
 const Eigen::Vector3f &AABB::getMax() const {
     return max;
+}
+
+void AABB::precomputeCenterAndExtent() {
+    center = (min + max) * 0.5f;
+    extent = (max - min) * 0.5f;
 }
 }  // namespace ICE

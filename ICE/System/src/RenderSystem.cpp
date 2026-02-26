@@ -46,31 +46,40 @@ void RenderSystem::update(double delta) {
     auto frustum = extractFrustumPlanes(proj_mat * view_mat);
     Logger::Log(ICE::Logger::DEBUG, "Graphics", "Render Queue Size: %d", m_render_queue.size());
     for (const auto &e : m_render_queue) {
-        auto rc = m_registry->getComponent<RenderComponent>(e);
         auto tc = m_registry->getComponent<TransformComponent>(e);
+        auto rc = m_registry->getComponent<RenderComponent>(e);
+
+        auto model_mat = tc->getWorldMatrix();
+
+        if (!m_culling_cache.contains(e) || m_culling_cache[e].lastTransformVersion != tc->getVersion() || m_culling_cache[e].lastMesh != rc->mesh) {
+            auto local_aabb = m_gpu_bank->getMeshAABB(rc->mesh);
+            Eigen::Vector3f localCenter = local_aabb.getCenter();
+            Eigen::Vector3f localExtents = local_aabb.getExtent();
+
+            Eigen::Matrix3f R = model_mat.block<3, 3>(0, 0);
+            Eigen::Vector3f T = model_mat.block<3, 1>(0, 3);
+
+            Eigen::Vector3f worldCenter = R * localCenter + T;
+
+            Eigen::Matrix3f absR = R.cwiseAbs();
+            Eigen::Vector3f worldExtents = absR * localExtents;
+
+            m_culling_cache[e] = CullingData{
+                .lastTransformVersion = tc->getVersion(),
+                .lastMesh = rc->mesh,
+                .worldCenter = worldCenter,
+                .worldExtents = worldExtents,
+            };
+        }
+        if (!isAABBInFrustum(frustum, m_culling_cache[e].worldCenter, m_culling_cache[e].worldExtents))
+            continue;
+
         auto mesh = m_gpu_bank->getMesh(rc->mesh);
         auto material = m_gpu_bank->getMaterial(rc->material);
         auto shader = m_gpu_bank->getShader(material->getShader());
         if (!mesh || !material || !shader)
             continue;
 
-        auto model_mat = tc->getWorldMatrix();
-        
-        auto local_aabb = m_gpu_bank->getMeshAABB(rc->mesh);
-        Eigen::Vector3f localCenter = local_aabb.getCenter();
-        Eigen::Vector3f localExtents = local_aabb.getExtent();
-
-        Eigen::Matrix3f R = model_mat.block<3, 3>(0, 0);
-        Eigen::Vector3f T = model_mat.block<3, 1>(0, 3);
-
-        Eigen::Vector3f worldCenter = R * localCenter + T;
-
-        Eigen::Matrix3f absR = R.cwiseAbs();
-        Eigen::Vector3f worldExtents = absR * localExtents;
-
-        if (!isAABBInFrustum(frustum, worldCenter, worldExtents))
-            continue;
-            
         std::unordered_map<int, Eigen::Matrix4f> bone_matrices;
         if (m_registry->entityHasComponent<SkinningComponent>(e)) {
             const auto &skinning = m_gpu_bank->getMeshSkinningData(rc->mesh);

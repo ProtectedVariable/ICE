@@ -17,6 +17,14 @@ namespace ICE {
 class Scene;
 class Registry;
 
+struct CullingData {
+    uint32_t lastTransformVersion = 0xFFFFFFFF;
+    AssetUID lastMesh = 0;
+
+    Eigen::Vector3f worldCenter;
+    Eigen::Vector3f worldExtents;
+};
+
 class RenderSystem : public System {
    public:
     RenderSystem(const std::shared_ptr<RendererAPI> &api, const std::shared_ptr<GraphicsFactory> &factory, const std::shared_ptr<Registry> &reg,
@@ -63,5 +71,7 @@ class RenderSystem : public System {
     std::shared_ptr<GPURegistry> m_gpu_bank;
 
     std::shared_ptr<VertexArray> m_quad_vao;
+
+    std::unordered_map<Entity, CullingData> m_culling_cache;
 };
 }  // namespace ICE
