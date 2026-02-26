@@ -44,7 +44,6 @@ void RenderSystem::update(double delta) {
     }
 
     auto frustum = extractFrustumPlanes(proj_mat * view_mat);
-    Logger::Log(ICE::Logger::DEBUG, "Graphics", "Render Queue Size: %d", m_render_queue.size());
     for (const auto &e : m_render_queue) {
         auto tc = m_registry->getComponent<TransformComponent>(e);
         auto rc = m_registry->getComponent<RenderComponent>(e);
