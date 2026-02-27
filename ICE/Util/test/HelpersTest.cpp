@@ -16,7 +16,7 @@ TEST_F(HelpersTest, EntityHelperBasicUsage) {
     auto registry = std::make_shared<Registry>();
     
     // Create an entity
-    Entity entity = registry->getEntityManager().createEntity();
+    Entity entity = registry->createEntity();
     
     // Add a transform component
     registry->addComponent<TransformComponent>(entity, 
@@ -42,7 +42,7 @@ TEST_F(HelpersTest, EntityHelperBasicUsage) {
 
 TEST_F(HelpersTest, EntityHelperHasComponent) {
     auto registry = std::make_shared<Registry>();
-    Entity entity = registry->getEntityManager().createEntity();
+    Entity entity = registry->createEntity();
     
     EntityHelper helper(entity, registry);
     
@@ -63,8 +63,7 @@ TEST_F(HelpersTest, EntityHelperInvalidEntity) {
     // Create helper with invalid entity (0)
     EntityHelper helper(0, registry);
     
-    // Should still be "valid" (has registry)
-    EXPECT_TRUE(helper.isValid());
+    EXPECT_FALSE(helper.isValid());
     EXPECT_EQ(helper.id(), 0);
 }
 
@@ -76,7 +75,6 @@ TEST_F(HelpersTest, EngineHelperNullSafety) {
     
     // Should return nullptr safely
     EXPECT_EQ(EngineHelper::getRegistry(engine), nullptr);
-    EXPECT_EQ(EngineHelper::getRegistryPtr(engine), nullptr);
     EXPECT_EQ(EngineHelper::getAssetBank(engine), nullptr);
     EXPECT_EQ(EngineHelper::getCurrentScene(engine), nullptr);
     EXPECT_EQ(EngineHelper::getCamera(engine), nullptr);

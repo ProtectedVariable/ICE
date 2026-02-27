@@ -35,7 +35,7 @@ int main(void) {
     for (int i = 0; i < 10; i++) {
         auto entity = scene->createEntity();
         scene->getRegistry()->addComponent<TransformComponent>(
-            entity, TransformComponent({(float) i - 5, 0, -5}, Eigen::Vector3f::Zero(), Eigen::Vector3f::Constant(1.0)));
+            entity, TransformComponent({(float) i - 5, 0, 0}, Eigen::Vector3f::Zero(), Eigen::Vector3f::Constant(1.0)));
         scene->getRegistry()->addComponent<LightComponent>(entity, LightComponent(LightType::PointLight, {1, 1, 1}));
         scene->getRegistry()->addComponent<RenderComponent>(
             entity,
@@ -43,6 +43,7 @@ int main(void) {
                             engine.getAssetBank()->getUID(AssetPath::WithTypePrefix<Material>("base_mat"))));
     }
 
+    /*
     auto model_id = engine.getAssetBank()->getUID(AssetPath::WithTypePrefix<Model>("Adventurer"));
     auto entity2 = scene->spawnTree(model_id, engine.getAssetBank());
     scene->getRegistry()->addComponent<AnimationComponent>(entity2, AnimationComponent{.currentAnimation = "Walk", .loop = true});
@@ -50,7 +51,7 @@ int main(void) {
     auto entity3 = scene->spawnTree(model_id, engine.getAssetBank());
     scene->getRegistry()->getComponent<TransformComponent>(entity3)->setPosition({1, 0, 0});
     scene->getRegistry()->addComponent<AnimationComponent>(entity3, AnimationComponent{.currentAnimation = "Run", .loop = true});
-
+    */
     auto camera = std::make_shared<PerspectiveCamera>(60.0, 16.0 / 9.0, 0.01, 10000.0);
     camera->backward(5);
     camera->up(5);
@@ -62,11 +63,11 @@ int main(void) {
         window->pollEvents();
 
         engine.step();
-
+        /*
         scene->getRegistry()->getComponent<TransformComponent>(entity2)->setRotationEulerDeg({0, i / 10.0f, 0});
         if (i == 300)
             scene->getRegistry()->getComponent<AnimationComponent>(entity3)->playAnimation("Idle", 300.0);
-
+*/
         //Render system duty
         int display_w, display_h;
         window->getFramebufferSize(&display_w, &display_h);

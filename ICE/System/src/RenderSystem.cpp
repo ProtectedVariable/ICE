@@ -70,6 +70,7 @@ void RenderSystem::update(double delta) {
                 .worldExtents = worldExtents,
             };
         }
+
         if (!isAABBInFrustum(frustum, m_culling_cache[e].worldCenter, m_culling_cache[e].worldExtents))
             continue;
 

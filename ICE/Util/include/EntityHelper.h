@@ -28,9 +28,6 @@ public:
     EntityHelper(Entity id, std::shared_ptr<Registry> registry)
         : m_id(id), m_registry(registry) {}
 
-    EntityHelper(Entity id, Registry* registry)
-        : m_id(id), m_registry_ptr(registry) {}
-
     // Component access shortcuts
     TransformComponent* transform() {
         return getRegistry()->getComponent<TransformComponent>(m_id);

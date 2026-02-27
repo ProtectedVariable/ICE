@@ -6,10 +6,11 @@
 
 namespace ICE {
 
-AABB::AABB(const Eigen::Vector3f &min, const Eigen::Vector3f &max) : min(min), max(max) {
-    precomputeCenterAndExtent();
+AABB::AABB(const Eigen::Vector3f &min, const Eigen::Vector3f &max) : AABB(std::vector<Eigen::Vector3f>{min, max}) {
 }
-AABB::AABB(const std::vector<Eigen::Vector3f> &points) : AABB(points[0], points[0]) {
+AABB::AABB(const std::vector<Eigen::Vector3f> &points) {
+    min = points[0];
+    max = points[0];
     for (const auto &v : points) {
         min = min.cwiseMin(v);
         max = max.cwiseMax(v);

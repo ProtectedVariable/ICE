@@ -200,18 +200,7 @@ Frustum extractFrustumPlanes(const Eigen::Matrix4f &PV) {
 }
 
 bool isAABBInFrustum(const Frustum &frustum, const AABB &aabb) {
-    for (int i = 0; i < 6; i++) {
-        Eigen::Vector3f positive(frustum.planes[i].normal(0) >= 0 ? aabb.getMax().x() : aabb.getMin().x(),
-                                 frustum.planes[i].normal(1) >= 0 ? aabb.getMax().y() : aabb.getMin().y(),
-                                 frustum.planes[i].normal(2) >= 0 ? aabb.getMax().z() : aabb.getMin().z());
-
-        if (frustum.planes[i].normal(0) * positive.x() + frustum.planes[i].normal(1) * positive.y() + frustum.planes[i].normal(2) * positive.z()
-                + frustum.planes[i].distance
-            < 0) {
-            return false;
-        }
-    }
-    return true;
+    return isAABBInFrustum(frustum, aabb.getCenter(), aabb.getExtent());
 }
 
 bool isAABBInFrustum(const Frustum &frustum, const Eigen::Vector3f &center, const Eigen::Vector3f &extents) {
@@ -222,7 +211,7 @@ bool isAABBInFrustum(const Frustum &frustum, const Eigen::Vector3f &center, cons
 
         float r = extents.x() * n.x() + extents.y() * n.y() + extents.z() * n.z();
 
-        float s = n.dot(center) + plane.distance;
+        float s = plane.normal.dot(center) + plane.distance;
 
         if (s + r < 0.0f)
             return false;
