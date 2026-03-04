@@ -60,12 +60,7 @@ class ComponentArray : public IComponentArray {
         size--;
     }
 
-    T* getData(Entity entity) {
-        assert(entityToIndexMap.find(entity) != entityToIndexMap.end() && "Retrieving non-existent component.");
-
-        // Return a reference to the entity's component
-        return &(componentArray[entityToIndexMap[entity]]);
-    }
+    T* getData(Entity entity) { return &(componentArray[entityToIndexMap[entity]]); }
 
     void entityDestroyed(Entity entity) override {
         if (entityToIndexMap.find(entity) != entityToIndexMap.end()) {
@@ -112,9 +107,6 @@ class ComponentManager {
     template<typename T>
     ComponentType getComponentType() const {
         auto const& type = typeid(T);
-
-        assert(componentTypes.find(type) != componentTypes.end() && "Component not registered before use.");
-
         // Return this component's type - used for creating signatures
         return componentTypes.at(type);
     }
@@ -127,8 +119,7 @@ class ComponentManager {
 
     template<typename T>
     void removeComponent(Entity entity) {
-        // Remove a component from the array for an entity
-        getComponentArray<T>()->removeData(entity);
+         getComponentArray<T>()->removeData(entity);
     }
 
     template<typename T>
@@ -161,9 +152,6 @@ class ComponentManager {
     template<typename T>
     std::shared_ptr<ComponentArray<T>> getComponentArray() {
         auto const& type = typeid(T);
-
-        assert(componentTypes.find(type) != componentTypes.end() && "Component not registered before use.");
-
         return std::static_pointer_cast<ComponentArray<T>>(componentArrays[type]);
     }
 };
