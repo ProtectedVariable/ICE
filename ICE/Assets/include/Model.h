@@ -27,7 +27,7 @@ class Model : public Asset {
     std::vector<AssetUID> getMeshes() const { return m_meshes; }
     std::vector<AssetUID> getMaterialsIDs() const { return m_materials; }
     AABB getBoundingBox() const { return m_boundingbox; }
-    std::unordered_map<std::string, Animation> getAnimations() const { return m_animations; }
+    const std::unordered_map<std::string, Animation>& getAnimations() const { return m_animations; }
     Skeleton &getSkeleton() { return m_skeleton; }
     void setSkeleton(const Skeleton &skeleton) { m_skeleton = skeleton; }
     void setAnimations(const std::unordered_map<std::string, Animation> &animations) { m_animations = animations; }
