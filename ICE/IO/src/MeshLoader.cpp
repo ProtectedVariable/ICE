@@ -5,7 +5,6 @@
 #include "MeshLoader.h"
 
 #include <AssetBank.h>
-#include <BufferUtils.h>
 #include <Material.h>
 #include <assert.h>
 #include <assimp/postprocess.h>

@@ -68,6 +68,7 @@ struct Light {
 
 class Renderer {
    public:
+    virtual ~Renderer() = default;
     virtual void submitSkybox(const Skybox& e) = 0;
     virtual void submitDrawable(const Drawable& e) = 0;
     virtual void submitLight(const Light& e) = 0;

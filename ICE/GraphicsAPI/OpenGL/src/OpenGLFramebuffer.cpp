@@ -69,6 +69,12 @@ OpenGLFramebuffer::OpenGLFramebuffer(FrameBufferFormat fmt) : Framebuffer(fmt) {
     unbind();
 }
 
+OpenGLFramebuffer::~OpenGLFramebuffer() {
+    glDeleteFramebuffers(1, &uid);
+    glDeleteTextures(1, &texture);
+    glDeleteRenderbuffers(1, &depth);
+}
+
 void OpenGLFramebuffer::bindAttachment(int slot) const {
     glActiveTexture(GL_TEXTURE0 + slot);
     glBindTexture(GL_TEXTURE_2D, texture);

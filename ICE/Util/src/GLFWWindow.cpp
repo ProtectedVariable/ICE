@@ -8,9 +8,14 @@
 
 namespace ICE {
 
+// Number of live GLFWWindow instances. GLFW is initialized on the first window and
+// terminated when the last one is destroyed.
+static int s_window_count = 0;
+
 GLFWWindow::GLFWWindow(int width, int height, const std::string& title) : m_width(width), m_height(height) {
-    if (!glfwInit())
+    if (s_window_count == 0 && !glfwInit())
         throw ICEException("Couldn't init GLFW");
+    s_window_count++;
 // Decide GL+GLSL versions
 #ifdef __APPLE__
     // GL 3.2 + GLSL 150
@@ -27,8 +32,11 @@ GLFWWindow::GLFWWindow(int width, int height, const std::string& title) : m_widt
 #endif
     // Create window with graphics context
     m_handle = glfwCreateWindow(width, height, title.c_str(), NULL, NULL);
-    if (m_handle == NULL)
+    if (m_handle == NULL) {
+        if (--s_window_count == 0)
+            glfwTerminate();
         throw ICEException("Couldn't create window");
+    }
 
     m_mouse_handler = std::make_shared<GLFWMouseHandler>(*this);
     m_keyboard_handler = std::make_shared<GLFWKeyboardHandler>(*this);
@@ -39,6 +47,15 @@ GLFWWindow::GLFWWindow(int width, int height, const std::string& title) : m_widt
         GLFWWindow* self = (GLFWWindow*) glfwGetWindowUserPointer(w);
         self->windowResized(width, height);
     });
+}
+
+GLFWWindow::~GLFWWindow() {
+    if (m_handle != nullptr) {
+        glfwDestroyWindow(m_handle);
+    }
+    if (--s_window_count == 0) {
+        glfwTerminate();
+    }
 }
 
 std::pair<std::shared_ptr<MouseHandler>, std::shared_ptr<KeyboardHandler>> GLFWWindow::getInputHandlers() const {

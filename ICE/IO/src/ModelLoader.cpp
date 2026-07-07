@@ -5,7 +5,6 @@
 #include "ModelLoader.h"
 
 #include <AssetBank.h>
-#include <BufferUtils.h>
 #include <Material.h>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>

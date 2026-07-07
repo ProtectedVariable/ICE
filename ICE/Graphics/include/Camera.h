@@ -11,6 +11,7 @@ enum ProjectionType { Perspective, Orthographic };
 
 class Camera {
    public:
+    virtual ~Camera() = default;
     virtual Eigen::Matrix4f lookThrough() = 0;
 
     virtual void forward(float delta) = 0;

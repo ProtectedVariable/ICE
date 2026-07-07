@@ -16,6 +16,7 @@ class IndexBuffer;
 
 class VertexArray {
    public:
+    virtual ~VertexArray() = default;
     virtual void bind() const = 0;
     virtual void unbind() const = 0;
     virtual void pushVertexBuffer(const std::shared_ptr<VertexBuffer>& buffer, int size) = 0;

@@ -6,7 +6,6 @@ message(STATUS "Building ${PROJECT_NAME} module")
 add_library(${PROJECT_NAME} STATIC)
 
 target_sources(${PROJECT_NAME} PRIVATE
-    src/BufferUtils.cpp
 	src/ICEException.cpp
 	src/Logger.cpp
 	src/WindowFactory.cpp

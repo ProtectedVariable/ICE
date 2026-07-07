@@ -17,6 +17,7 @@ enum GraphicsAPI {
 
 class RendererAPI {
    public:
+    virtual ~RendererAPI() = default;
     virtual void initialize() const = 0;
     virtual void bindDefaultFramebuffer() const = 0;
     virtual void setViewport(int x, int y, int width, int height) const = 0;

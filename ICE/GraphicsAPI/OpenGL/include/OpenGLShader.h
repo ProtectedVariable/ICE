@@ -17,6 +17,11 @@ namespace ICE {
 class OpenGLShader : public ShaderProgram {
    public:
     explicit OpenGLShader(const Shader &shader_asset);
+    ~OpenGLShader() override;
+
+    // Owns a GL program object; copying would double-delete it.
+    OpenGLShader(const OpenGLShader &) = delete;
+    OpenGLShader &operator=(const OpenGLShader &) = delete;
 
     void bind() const override;
 
@@ -39,7 +44,9 @@ class OpenGLShader : public ShaderProgram {
    private:
     GLint getLocation(const std::string &name);
 
-    void compileAndAttachStage(ShaderStage stage, const std::string &source);
+    // Compiles and attaches a stage, returning its GL shader name so the caller can
+    // detach and delete it after linking.
+    GLuint compileAndAttachStage(ShaderStage stage, const std::string &source);
 
     GLenum stageToGLStage(ShaderStage stage);
 

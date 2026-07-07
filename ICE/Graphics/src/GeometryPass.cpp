@@ -7,6 +7,7 @@ GeometryPass::GeometryPass(const std::shared_ptr<RendererAPI>& api, const std::s
     : m_api(api),
       m_factory(factory) {
     m_framebuffer = factory->createFramebuffer(format);
+    m_instance_buffer = factory->createVertexBuffer();
 }
 
 void GeometryPass::execute() {
@@ -86,21 +87,15 @@ void GeometryPass::execute() {
             va->getIndexBuffer()->bind();
         }
 
-        // Instanced vs regular rendering
-        //TODO: Do not recreate instance buffer every frame, update existing one instead
-        //TODO: If not instanced, is there performance drop
+        // Reuse the pass-owned instance buffer: upload this command's per-instance data
+        // and (re)bind it at attribute slot 7 of the current mesh's vertex array.
         auto va = mesh->getVertexArray();
         if (command.is_instanced && command.instance_data) {
-            auto instance_buffer = m_factory->createVertexBuffer();
-            instance_buffer->putData(command.instance_data->data(), command.instance_count * sizeof(InstanceData));
-
-            va->pushVertexBuffer(instance_buffer, 7, 16, 1);
+            m_instance_buffer->putData(command.instance_data->data(), command.instance_count * sizeof(InstanceData));
         } else {
-            auto instance_buffer = m_factory->createVertexBuffer();
-            instance_buffer->putData(command.model_matrix.data(), sizeof(Eigen::Matrix4f));
-
-            va->pushVertexBuffer(instance_buffer, 7, 16, 1);
+            m_instance_buffer->putData(command.model_matrix.data(), sizeof(Eigen::Matrix4f));
         }
+        va->pushVertexBuffer(m_instance_buffer, 7, 16, 1);
         m_api->renderVertexArrayInstanced(va, command.instance_count);
     }
 }

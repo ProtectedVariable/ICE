@@ -20,6 +20,9 @@ class GeometryPass : public RenderPass {
     std::shared_ptr<RendererAPI> m_api;
     std::shared_ptr<GraphicsFactory> m_factory;
     std::shared_ptr<Framebuffer> m_framebuffer;
+    // Reused every draw for per-instance data instead of allocating a fresh GL buffer
+    // per command per frame.
+    std::shared_ptr<VertexBuffer> m_instance_buffer;
     std::vector<RenderCommand>* m_render_queue;
 };
 }  // namespace ICE

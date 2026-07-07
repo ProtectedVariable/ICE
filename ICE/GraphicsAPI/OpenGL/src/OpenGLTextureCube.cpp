@@ -29,6 +29,10 @@ OpenGLTextureCube::OpenGLTextureCube(const TextureCube &texture_asset) {
 }
 
 
+OpenGLTextureCube::~OpenGLTextureCube() {
+    glDeleteTextures(1, &m_id);
+}
+
 int OpenGLTextureCube::id() const {
     return m_id;
 }
