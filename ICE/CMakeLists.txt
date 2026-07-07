@@ -39,14 +39,19 @@ elseif(WIN32)
 		${ICE_LIBS}
 	)
 else()
-	find_package(GTK REQUIRED)
-	include_directories(${GTK3_INCLUDE_DIRS})
-	link_directories(${GTK3_LIBRARY_DIRS})
+	# 1. Find the pkg-config tool (required to locate GTK on Linux)
+	find_package(PkgConfig REQUIRED)
 
-	add_definitions(${GTK3_CFLAGS_OTHER})
+	# 2. Use pkg-config to find GTK 3 and populate the GTK3_* variables
+	pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
 
+	# 3. Find OpenGL
 	find_package(OpenGL REQUIRED)
-	include_directories(${OPENGL_INCLUDE_DIRS})
+
+	# 4. Modern CMake: Link everything directly to your target 
+	#    (Avoid global include_directories/link_directories where possible)
+	target_include_directories(${PROJECT_NAME} PRIVATE ${GTK3_INCLUDE_DIRS} ${OPENGL_INCLUDE_DIRS})
+	target_compile_options(${PROJECT_NAME} PRIVATE ${GTK3_CFLAGS_OTHER})
 
 	target_link_libraries(${PROJECT_NAME} 
 		INTERFACE 
