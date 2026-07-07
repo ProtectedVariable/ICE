@@ -137,6 +137,8 @@ GLenum OpenGLShader::stageToGLStage(ShaderStage stage) {
         case ShaderStage::Compute:
             return GL_COMPUTE_SHADER;
     }
+    Logger::Log(Logger::FATAL, "Graphics", "Unknown shader stage %d", static_cast<int>(stage));
+    return GL_VERTEX_SHADER;
 }
 
 }  // namespace ICE

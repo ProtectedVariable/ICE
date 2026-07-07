@@ -60,7 +60,20 @@ class ComponentArray : public IComponentArray {
         size--;
     }
 
-    T* getData(Entity entity) { return &(componentArray[entityToIndexMap[entity]]); }
+    // Returns nullptr (instead of silently aliasing another entity's slot) when the
+    // entity has no component of this type. operator[] on the index map used to insert
+    // index 0 for a missing key, handing back entity #0's component -- a silent-corruption
+    // bug. Callers that require the component should use getData and check the result.
+    T* tryGetData(Entity entity) {
+        auto it = entityToIndexMap.find(entity);
+        return it == entityToIndexMap.end() ? nullptr : &(componentArray[it->second]);
+    }
+
+    T* getData(Entity entity) {
+        T* data = tryGetData(entity);
+        assert(data != nullptr && "getData: entity has no component of this type.");
+        return data;
+    }
 
     void entityDestroyed(Entity entity) override {
         if (entityToIndexMap.find(entity) != entityToIndexMap.end()) {
@@ -83,7 +96,7 @@ class ComponentArray : public IComponentArray {
     std::unordered_map<size_t, Entity> indexToEntityMap;
 
     // Total size of valid entries in the array.
-    size_t size;
+    size_t size = 0;
 };
 
 class ComponentManager {
@@ -128,6 +141,17 @@ class ComponentManager {
         return getComponentArray<T>()->getData(entity);
     }
 
+    // Returns nullptr if the type is not registered or the entity has no such component,
+    // instead of asserting/throwing. For callers that legitimately probe for a component.
+    template<typename T>
+    T* tryGetComponent(Entity entity) {
+        auto it = componentArrays.find(typeid(T));
+        if (it == componentArrays.end()) {
+            return nullptr;
+        }
+        return std::static_pointer_cast<ComponentArray<T>>(it->second)->tryGetData(entity);
+    }
+
     void entityDestroyed(Entity entity) {
         // Notify each component array that an entity has been destroyed
         // If it has a component for that entity, it will remove it
@@ -151,8 +175,9 @@ class ComponentManager {
     // Convenience function to get the statically casted pointer to the ComponentArray of type T.
     template<typename T>
     std::shared_ptr<ComponentArray<T>> getComponentArray() {
-        auto const& type = typeid(T);
-        return std::static_pointer_cast<ComponentArray<T>>(componentArrays[type]);
+        // .at() throws std::out_of_range for an unregistered component type instead of
+        // operator[] inserting a null shared_ptr that later null-derefs.
+        return std::static_pointer_cast<ComponentArray<T>>(componentArrays.at(typeid(T)));
     }
 };
 }  // namespace ICE

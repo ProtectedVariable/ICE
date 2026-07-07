@@ -1,5 +1,3 @@
-#define STB_IMAGE_IMPLEMENTATION
-
 #include <AssetBank.h>
 #include <gtest/gtest.h>
 

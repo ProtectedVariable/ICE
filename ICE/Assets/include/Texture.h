@@ -62,7 +62,10 @@ class Texture : public Asset {
 class Texture2D : public Texture {
    public:
     Texture2D(const std::string& path);
-    Texture2D(void* data, int width, int height, TextureFormat fmt);
+    // take_ownership: when true, this texture owns `data` and frees it (with
+    // stbi_image_free, i.e. free) on destruction. Use for stb- or malloc-allocated
+    // buffers the caller hands off; leave false for buffers owned elsewhere.
+    Texture2D(void* data, int width, int height, TextureFormat fmt, bool take_ownership = false);
 
     virtual AssetType getType() const override { return AssetType::ETex2D; }
     virtual std::string getTypeName() const override { return "Texture2D"; }

@@ -16,8 +16,9 @@ Texture2D::Texture2D(const std::string& path) {
         m_format = TextureFormat::None;
     }
 }
-Texture2D::Texture2D(void* data, int width, int height, TextureFormat fmt) {
+Texture2D::Texture2D(void* data, int width, int height, TextureFormat fmt, bool take_ownership) {
     data_ = data;
+    m_owns_data = take_ownership;
     m_width = width;
     m_height = height;
     m_format = fmt;

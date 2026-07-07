@@ -8,6 +8,7 @@ add_library(${PROJECT_NAME} STATIC)
 target_sources(${PROJECT_NAME} PRIVATE
         src/AssetBank.cpp
 		src/AssetPath.cpp
+		src/stb_image_impl.cpp
         src/Shader.cpp
         src/Model.cpp
         src/Mesh.cpp

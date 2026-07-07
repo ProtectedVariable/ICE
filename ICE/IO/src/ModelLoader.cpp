@@ -5,9 +5,13 @@
 #include "ModelLoader.h"
 
 #include <AssetBank.h>
+#include <Logger.h>
 #include <Material.h>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
+
+#include <cstdlib>
+#include <cstring>
 
 #include <assimp/Importer.hpp>
 #include <cassert>
@@ -15,12 +19,20 @@
 
 namespace ICE {
 std::shared_ptr<Model> ModelLoader::load(const std::vector<std::filesystem::path> &file) {
+    if (file.empty()) {
+        return nullptr;
+    }
     Assimp::Importer importer;
 
     const aiScene *scene =
         importer.ReadFile(file[0].string(),
                           aiProcess_OptimizeGraph | aiProcess_FlipUVs | aiProcess_ValidateDataStructure | aiProcess_SortByPType
                               | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_LimitBoneWeights);
+
+    if (scene == nullptr || scene->mRootNode == nullptr) {
+        Logger::Log(Logger::ERROR, "IO", "Could not load model '%s': %s", file[0].string().c_str(), importer.GetErrorString());
+        return nullptr;
+    }
 
     std::vector<AssetUID> meshes;
     std::vector<AssetUID> materials;
@@ -204,15 +216,23 @@ AssetUID ModelLoader::extractTexture(const aiMaterial *material, const std::stri
             void *data2 = nullptr;
             int width = texture->mWidth;
             int height = texture->mHeight;
-            int channels = 3;
+            int channels = 4;
             if (height == 0) {
-                //Compressed memory, use stbi to load
+                // Compressed in memory: decode with stbi into an owned RGBA buffer.
                 data2 = stbi_load_from_memory(data, texture->mWidth, &width, &height, &channels, 4);
                 channels = 4;
             } else {
-                data2 = data;
+                // Uncompressed aiTexel (BGRA/RGBA8888) data lives in the aiScene, which is
+                // freed when this Importer is destroyed -- and the GPU upload happens later.
+                // Copy it into an owned buffer so the Texture2D remains valid.
+                size_t byte_size = static_cast<size_t>(width) * static_cast<size_t>(height) * 4;
+                data2 = malloc(byte_size);
+                if (data2 != nullptr) {
+                    memcpy(data2, data, byte_size);
+                }
             }
-            auto texture_ice = std::make_shared<Texture2D>(data2, width, height, getTextureFormat(type, channels));
+            // take_ownership=true: both branches produce a free-compatible (stbi/malloc) buffer.
+            auto texture_ice = std::make_shared<Texture2D>(data2, width, height, getTextureFormat(type, channels), true);
             if (tex_id = ref_bank.getUID(AssetPath::WithTypePrefix<Texture2D>(tex_path)); tex_id != 0) {
                 ref_bank.removeAsset(AssetPath::WithTypePrefix<Texture2D>(tex_path));
                 ref_bank.addAssetWithSpecificUID(AssetPath::WithTypePrefix<Texture2D>(tex_path), texture_ice, tex_id);

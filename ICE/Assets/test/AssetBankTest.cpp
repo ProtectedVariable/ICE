@@ -1,7 +1,6 @@
 //
 // Created by Thomas Ibanez on 24.02.21.
 //
-#define STB_IMAGE_IMPLEMENTATION
 #include <gtest/gtest.h>
 
 #include "AssetBank.h"

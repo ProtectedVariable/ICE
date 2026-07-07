@@ -6,6 +6,8 @@
 
 #include <GL/gl3w.h>
 #include <ICEMath.h>
+
+#include <algorithm>
 #include <LightComponent.h>
 #include <Logger.h>
 #include <RenderComponent.h>
@@ -42,9 +44,12 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
     m_camera_ubo->putData(&camera_ubo_data, sizeof(CameraUBO));
 
     SceneLightsUBO light_ubo_data;
-    light_ubo_data.light_count = m_lights.size();
+    // Clamp to the UBO's fixed capacity: lights[] is MAX_LIGHTS long, so writing more
+    // would overflow the stack-allocated struct.
+    const size_t light_count = std::min(m_lights.size(), static_cast<size_t>(MAX_LIGHTS));
+    light_ubo_data.light_count = static_cast<int>(light_count);
     light_ubo_data.ambient_light = Eigen::Vector4f(0.1f, 0.1f, 0.1f, 1.0f);
-    for (int i = 0; i < m_lights.size(); i++) {
+    for (size_t i = 0; i < light_count; i++) {
         auto light = m_lights[i];
         light_ubo_data.lights[i].position = light.position;
         light_ubo_data.lights[i].rotation = light.rotation;
