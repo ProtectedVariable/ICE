@@ -63,6 +63,16 @@ class SceneGraph {
 
         auto sn = idToNode[e];
         auto newParent = idToNode[newParentID];
+
+        // Reject reparenting under one of e's own descendants: it would detach the subtree
+        // from the root and form a strong shared_ptr cycle (children own each other) -> leak.
+        // Walk up from newParent to the root; if we meet e, newParent is a descendant of e.
+        for (auto ancestor = newParent; ancestor != nullptr; ancestor = ancestor->parent.lock()) {
+            if (ancestor->entity == e) {
+                return;
+            }
+        }
+
         auto oldParent = sn->parent.lock();
 
         if (oldParent) {

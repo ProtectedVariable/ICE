@@ -20,6 +20,23 @@ Inspector::Inspector(const std::shared_ptr<ICE::ICEEngine>& engine) : m_engine(e
 }
 
 bool Inspector::update() {
+    // Refresh the widgets' cached component pointers from the registry every frame. A
+    // component vector can be reallocated by another entity's add/remove between frames,
+    // which would leave the Inspector writing through a dangling pointer. tryGetComponent
+    // returns nullptr for a missing/deleted entity, so this also clears the widgets safely.
+    if (m_engine->getProject() && m_engine->getProject()->getCurrentScene()) {
+        auto registry = m_engine->getProject()->getCurrentScene()->getRegistry();
+        ICE::Entity e = m_selected_entity;
+        auto tc = registry->tryGetComponent<ICE::TransformComponent>(e);
+        auto lc = registry->tryGetComponent<ICE::LightComponent>(e);
+        auto rc = registry->tryGetComponent<ICE::RenderComponent>(e);
+        ICE::AnimationComponent* ac = nullptr;
+        if (registry->tryGetComponent<ICE::SkeletonPoseComponent>(e) != nullptr) {
+            ac = registry->tryGetComponent<ICE::AnimationComponent>(e);
+        }
+        ui.refreshComponents(tc, lc, rc, ac);
+    }
+
     ui.render();
     if (m_add_component_popup.isOpen()) {
         m_add_component_popup.render();

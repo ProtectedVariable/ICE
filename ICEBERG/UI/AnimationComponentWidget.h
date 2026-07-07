@@ -70,6 +70,10 @@ class AnimationComponentWidget : public Widget, ImXML::XMLEventHandler {
         }
     }
 
+    // Per-frame refresh of just the cached pointer (see TransformComponentWidget). Mirrors
+    // the full setter's condition: only active when animations were provided for this entity.
+    void refreshComponent(ICE::AnimationComponent* ac) { m_ac = (ac && !m_animations.empty()) ? ac : nullptr; }
+
     void setAnimationComponent(ICE::AnimationComponent* ac, const std::unordered_map<std::string, ICE::Animation>& animations) {
         if (ac && !animations.empty()) {
             m_ac = ac;

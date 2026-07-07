@@ -46,7 +46,10 @@ class ProjectSelectionWidget : public Widget, ImXML::XMLEventHandler {
             m_new_project_popup.open();
         } else if (node.arg<std::string>("id") == "btn_add_project") {
             auto path = open_native_dialog({{"ICE Projects", "*.ice"}});
-            callback("load_clicked", path);
+            // Empty path means the user cancelled: don't try to load a project from "".
+            if (!path.empty()) {
+                callback("load_clicked", path);
+            }
         }
     }
 
@@ -66,9 +69,11 @@ class ProjectSelectionWidget : public Widget, ImXML::XMLEventHandler {
                 callback("project_selected", i);
             }
             ImGui::TableNextColumn();
-            ImGui::Text(p.modified_date.c_str());
+            // TextUnformatted: these are user-controlled strings, so a '%' must not be
+            // interpreted as a printf format specifier.
+            ImGui::TextUnformatted(p.modified_date.c_str());
             ImGui::TableNextColumn();
-            ImGui::Text(p.path.c_str());
+            ImGui::TextUnformatted(p.path.c_str());
             ImGui::TableNextRow();
 
             if (ImGui::IsItemClicked()) {

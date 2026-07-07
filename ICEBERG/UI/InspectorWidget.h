@@ -36,6 +36,17 @@ class InspectorWidget : public Widget {
         }
     }
 
+    // Refresh the widgets' cached component pointers every frame so they can't dangle
+    // after another entity's structural change reallocates component storage. Unlike the
+    // set* methods, this does not rebuild lists or re-bind input values.
+    void refreshComponents(ICE::TransformComponent* tc, ICE::LightComponent* lc, ICE::RenderComponent* rc, ICE::AnimationComponent* ac) {
+        m_entity_selected = (tc != nullptr);
+        m_tc_widget.refreshComponent(tc);
+        m_lc_widget.refreshComponent(lc);
+        m_rc_widget.refreshComponent(rc);
+        m_ac_widget.refreshComponent(ac);
+    }
+
     void setEntityName(const std::string& name) { m_input_entity_name.setText(name); }
 
     void setTransformComponent(ICE::TransformComponent* tc) {

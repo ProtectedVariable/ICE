@@ -86,14 +86,20 @@ bool Viewport::update() {
 
     if (m_selected_entity != 0) {
         auto registry = m_engine->getProject()->getCurrentScene()->getRegistry();
-        auto tc = registry->getComponent<ICE::TransformComponent>(m_selected_entity);
+        auto tc = registry->tryGetComponent<ICE::TransformComponent>(m_selected_entity);
+        if (tc == nullptr) {
+            // Selected entity has no transform: nothing to manipulate with the gizmo.
+            return m_done;
+        }
 
         ICE::Entity parentID = m_engine->getProject()->getCurrentScene()->getGraph()->getParentID(m_selected_entity);
         Eigen::Matrix4f parentWorldMatrix = Eigen::Matrix4f::Identity();
 
         if (parentID != 0) {
-            auto ptc = registry->getComponent<ICE::TransformComponent>(parentID);
-            parentWorldMatrix = ptc->getWorldMatrix();
+            auto ptc = registry->tryGetComponent<ICE::TransformComponent>(parentID);
+            if (ptc != nullptr) {
+                parentWorldMatrix = ptc->getWorldMatrix();
+            }
         }
 
         Eigen::Matrix4f currentWorldMatrix = tc->getWorldMatrix().eval();

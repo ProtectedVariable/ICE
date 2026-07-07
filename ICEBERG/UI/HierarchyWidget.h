@@ -37,6 +37,10 @@ class HierarchyWidget : public Widget {
 
    private:
     void renderTree(const SceneTreeView& tree) {
+        // Scope the ImGui ID by entity id so two entities that share a name don't collide
+        // (which corrupts selection/open state and the context popup). Paired with PopID
+        // below, called unconditionally regardless of whether the node is open.
+        ImGui::PushID(static_cast<int>(tree.id));
         auto flags = tree.children.empty() ? ImGuiTreeNodeFlags_Leaf : 0;
         flags |= tree.id == selected_id ? ImGuiTreeNodeFlags_Selected : 0;
         flags |= ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_OpenOnArrow;
@@ -45,7 +49,9 @@ class HierarchyWidget : public Widget {
             if (tree.type != EntityType::Scene) {
                 auto src_flags = ImGuiDragDropFlags_SourceNoDisableHover;
                 if (ImGui::BeginDragDropSource(src_flags)) {
-                    ImGui::SetDragDropPayload("DND_ENTITY_TREE", &tree.id, sizeof(ICE::Entity*));
+                    // Payload is an ICE::Entity value, not a pointer: sizeof(ICE::Entity*)
+                    // would copy 4 bytes past tree.id.
+                    ImGui::SetDragDropPayload("DND_ENTITY_TREE", &tree.id, sizeof(ICE::Entity));
                     ImGui::Text("%s", name.c_str());
                     ImGui::EndDragDropSource();
                 }
@@ -75,6 +81,7 @@ class HierarchyWidget : public Widget {
             }
             ImGui::TreePop();
         }
+        ImGui::PopID();
     }
 
    private:

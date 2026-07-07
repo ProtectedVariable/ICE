@@ -32,6 +32,9 @@ class RenderComponentWidget : public Widget, ImXML::XMLEventHandler {
         }
     }
 
+    // Per-frame refresh of just the cached pointer (see TransformComponentWidget).
+    void refreshComponent(ICE::RenderComponent* rc) { m_rc = rc; }
+
     void setRenderComponent(ICE::RenderComponent* rc, const std::vector<std::string>& meshes_paths, const std::vector<ICE::AssetUID>& meshes_ids,
                             const std::vector<std::string>& materials_paths, const std::vector<ICE::AssetUID>& materials_ids) {
         m_rc = rc;

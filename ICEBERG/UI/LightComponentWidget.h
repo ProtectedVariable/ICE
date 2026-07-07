@@ -48,6 +48,9 @@ class LightComponentWidget : public Widget, ImXML::XMLEventHandler {
         }
     }
 
+    // Per-frame refresh of just the cached pointer (see TransformComponentWidget).
+    void refreshComponent(ICE::LightComponent* lc) { m_lc = lc; }
+
     void setLightComponent(ICE::LightComponent* lc) {
         m_lc = lc;
         if (lc) {
