@@ -32,6 +32,10 @@ OpenGLTexture2D::OpenGLTexture2D(const Texture2D &tex) {
     glTexImage2D(GL_TEXTURE_2D, 0, storageFormat, width, height, 0, dataFormat, GL_UNSIGNED_BYTE, tex.data());
 }
 
+OpenGLTexture2D::~OpenGLTexture2D() {
+    glDeleteTextures(1, &m_id);
+}
+
 int OpenGLTexture2D::id() const {
     return m_id;
 }

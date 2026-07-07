@@ -13,6 +13,11 @@ namespace ICE {
 class OpenGLFramebuffer : public Framebuffer {
    public:
     OpenGLFramebuffer(FrameBufferFormat fmt);
+    ~OpenGLFramebuffer() override;
+
+    // Owns GL framebuffer/texture/renderbuffer names; copying would double-delete them.
+    OpenGLFramebuffer(const OpenGLFramebuffer &) = delete;
+    OpenGLFramebuffer &operator=(const OpenGLFramebuffer &) = delete;
 
     void bind() override;
 

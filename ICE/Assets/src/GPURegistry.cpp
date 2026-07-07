@@ -1,7 +1,5 @@
 #include "GPURegistry.h"
 
-#include <BufferUtils.h>
-
 namespace ICE {
 GPURegistry::GPURegistry(const std::shared_ptr<GraphicsFactory> &factory, const std::shared_ptr<AssetBank> &bank)
     : m_graphics_factory(factory),
@@ -42,15 +40,18 @@ std::shared_ptr<GPUMesh> GPURegistry::getMesh(AssetUID id) {
         auto boneWeightBuffer = m_graphics_factory->createVertexBuffer();
         auto indexBuffer = m_graphics_factory->createIndexBuffer();
 
-        auto data = mesh_asset->getMeshData();
-        vertexBuffer->putData(BufferUtils::CreateFloatBuffer(data.vertices), 3 * data.vertices.size() * sizeof(float));
-        normalsBuffer->putData(BufferUtils::CreateFloatBuffer(data.normals), 3 * data.normals.size() * sizeof(float));
-        tangentBuffer->putData(BufferUtils::CreateFloatBuffer(data.tangents), 3 * data.tangents.size() * sizeof(float));
-        biTangentBuffer->putData(BufferUtils::CreateFloatBuffer(data.bitangents), 3 * data.bitangents.size() * sizeof(float));
-        boneIDBuffer->putData(BufferUtils::CreateIntBuffer(data.boneIDs), 4 * data.boneIDs.size() * sizeof(int));
-        boneWeightBuffer->putData(BufferUtils::CreateFloatBuffer(data.boneWeights), 4 * data.boneWeights.size() * sizeof(float));
-        uvBuffer->putData(BufferUtils::CreateFloatBuffer(data.uvCoords), 2 * data.uvCoords.size() * sizeof(float));
-        indexBuffer->putData(BufferUtils::CreateIntBuffer(data.indices), 3 * data.indices.size() * sizeof(int));
+        // Fixed-size Eigen vectors are tightly packed (e.g. sizeof(Vector3f) == 3 floats),
+        // so a std::vector of them is a contiguous float/int array we can upload directly
+        // -- no intermediate malloc'd staging buffers (which were previously leaked).
+        const auto &data = mesh_asset->getMeshData();
+        vertexBuffer->putData(data.vertices.data(), 3 * data.vertices.size() * sizeof(float));
+        normalsBuffer->putData(data.normals.data(), 3 * data.normals.size() * sizeof(float));
+        tangentBuffer->putData(data.tangents.data(), 3 * data.tangents.size() * sizeof(float));
+        biTangentBuffer->putData(data.bitangents.data(), 3 * data.bitangents.size() * sizeof(float));
+        boneIDBuffer->putData(data.boneIDs.data(), 4 * data.boneIDs.size() * sizeof(int));
+        boneWeightBuffer->putData(data.boneWeights.data(), 4 * data.boneWeights.size() * sizeof(float));
+        uvBuffer->putData(data.uvCoords.data(), 2 * data.uvCoords.size() * sizeof(float));
+        indexBuffer->putData(data.indices.data(), 3 * data.indices.size() * sizeof(int));
 
         vertexArray->pushVertexBuffer(vertexBuffer, 0, 3);
         vertexArray->pushVertexBuffer(normalsBuffer, 1, 3);

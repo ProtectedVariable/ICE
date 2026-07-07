@@ -34,10 +34,18 @@ OpenGLIndexBuffer::OpenGLIndexBuffer() {
     glGenBuffers(1, &id);
 }
 
+OpenGLIndexBuffer::~OpenGLIndexBuffer() {
+    glDeleteBuffers(1, &id);
+}
+
 /////////////////////////////////// VERTEX BUFFER //////////////////////////////////
 
 OpenGLVertexBuffer::OpenGLVertexBuffer(uint32_t size) : size(size) {
     glGenBuffers(1, &id);
+}
+
+OpenGLVertexBuffer::~OpenGLVertexBuffer() {
+    glDeleteBuffers(1, &id);
 }
 
 void OpenGLVertexBuffer::bind() const {

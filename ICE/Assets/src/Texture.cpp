@@ -5,6 +5,7 @@ namespace ICE {
 Texture2D::Texture2D(const std::string& path) {
     int channels = 0;
     data_ = getDataFromFile(path, &m_width, &m_height, &channels);
+    m_owns_data = true;  // stb-allocated; freed in ~Texture
     if (channels == 3) {
         m_format = TextureFormat::RGB8;
     } else if (channels == 4) {

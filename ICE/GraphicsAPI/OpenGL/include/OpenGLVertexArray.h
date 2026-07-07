@@ -15,6 +15,11 @@ namespace ICE {
     class OpenGLVertexArray : public VertexArray {
     public:
         OpenGLVertexArray();
+        ~OpenGLVertexArray() override;
+
+        // Owns a GL vertex-array name; copying would double-delete it.
+        OpenGLVertexArray(const OpenGLVertexArray&) = delete;
+        OpenGLVertexArray& operator=(const OpenGLVertexArray&) = delete;
 
         void bind() const override;
 

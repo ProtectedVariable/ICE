@@ -4,7 +4,6 @@
 
 #include "Mesh.h"
 
-#include <BufferUtils.h>
 #include <VertexArray.h>
 
 #include <iostream>

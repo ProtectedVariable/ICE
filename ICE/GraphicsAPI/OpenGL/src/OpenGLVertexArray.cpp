@@ -13,6 +13,10 @@ OpenGLVertexArray::OpenGLVertexArray() {
     glGenVertexArrays(1, &vaoID);
 }
 
+OpenGLVertexArray::~OpenGLVertexArray() {
+    glDeleteVertexArrays(1, &vaoID);
+}
+
 void OpenGLVertexArray::bind() const {
     glBindVertexArray(this->vaoID);
 }

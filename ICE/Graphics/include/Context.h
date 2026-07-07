@@ -7,6 +7,7 @@
 namespace ICE {
     class Context {
     public:
+        virtual ~Context() = default;
         virtual void initialize() = 0;
         virtual void swapBuffers() = 0;
         virtual void wireframeMode() = 0;

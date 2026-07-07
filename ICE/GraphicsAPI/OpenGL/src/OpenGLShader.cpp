@@ -15,8 +15,9 @@ OpenGLShader::OpenGLShader(const Shader &shader_asset) {
     m_programID = glCreateProgram();
     Logger::Log(Logger::VERBOSE, "Graphics", "Compiling shader...");
 
+    std::vector<GLuint> stage_shaders;
     for (const auto& [stage, source] : shader_asset.getStageSources()) {
-        compileAndAttachStage(stage, source.second);
+        stage_shaders.push_back(compileAndAttachStage(stage, source.second));
     }
 
     glLinkProgram(m_programID);
@@ -31,6 +32,16 @@ OpenGLShader::OpenGLShader(const Shader &shader_asset) {
         glGetProgramInfoLog(m_programID, maxLength, &maxLength, &errorLog[0]);
         Logger::Log(Logger::FATAL, "Graphics", "Shader linking error: %s", errorLog.data());
     }
+
+    // Stage objects are no longer needed once linked into the program.
+    for (GLuint shader : stage_shaders) {
+        glDetachShader(m_programID, shader);
+        glDeleteShader(shader);
+    }
+}
+
+OpenGLShader::~OpenGLShader() {
+    glDeleteProgram(m_programID);
 }
 
 void OpenGLShader::bind() const {
@@ -100,13 +111,14 @@ bool compileShader(GLenum type, const std::string &source, GLint *shader) {
     return compileStatus == GL_TRUE;
 }
 
-void OpenGLShader::compileAndAttachStage(ShaderStage stage, const std::string &source) {
+GLuint OpenGLShader::compileAndAttachStage(ShaderStage stage, const std::string &source) {
     GLint shader;
     Logger::Log(Logger::VERBOSE, "Graphics", "\t + Compiling shader stage...");
     if (!compileShader(stageToGLStage(stage), source, &shader)) {
         Logger::Log(Logger::FATAL, "Graphics", "Error while compiling shader stage");
     }
     glAttachShader(m_programID, shader);
+    return static_cast<GLuint>(shader);
 }
 
 

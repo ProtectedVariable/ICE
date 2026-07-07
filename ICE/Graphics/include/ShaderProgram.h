@@ -6,6 +6,7 @@
 namespace ICE {
 class ShaderProgram {
    public:
+    virtual ~ShaderProgram() = default;
     virtual void bind() const = 0;
     virtual void unbind() const = 0;
 

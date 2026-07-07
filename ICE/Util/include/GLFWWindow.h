@@ -10,6 +10,11 @@ namespace ICE {
 class GLFWWindow : public Window {
    public:
     GLFWWindow(int width, int height, const std::string& title);
+    ~GLFWWindow() override;
+
+    // Owns a GLFWwindow handle; non-copyable.
+    GLFWWindow(const GLFWWindow&) = delete;
+    GLFWWindow& operator=(const GLFWWindow&) = delete;
 
     void* getHandle() const override;
     bool shouldClose() override;

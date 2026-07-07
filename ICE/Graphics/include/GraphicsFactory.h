@@ -17,6 +17,7 @@
 namespace ICE {
 class GraphicsFactory {
    public:
+    virtual ~GraphicsFactory() = default;
     virtual std::shared_ptr<Context> createContext(const std::shared_ptr<Window>& window) const = 0;
 
     virtual std::shared_ptr<Framebuffer> createFramebuffer(const FrameBufferFormat& format) const = 0;
