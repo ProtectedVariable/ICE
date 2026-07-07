@@ -32,6 +32,14 @@ class AssetBank {
    public:
     AssetBank();
 
+    // Registration seam for asset loaders. The concrete loaders live in the `io`
+    // module; the composition layer wires them in via this method so that `assets`
+    // does not depend on `io` (see registerDefaultLoaders in the io module).
+    template<typename T>
+    void addLoader(const std::shared_ptr<IAssetLoader<T>>& asset_loader) {
+        loader.AddLoader<T>(asset_loader);
+    }
+
     template<typename T>
     std::shared_ptr<T> getAsset(AssetUID uid) {
         return dynamic_pointer_cast<T>(getAsset(uid));

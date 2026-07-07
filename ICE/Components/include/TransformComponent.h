@@ -14,8 +14,10 @@ struct TransformComponent : public Component {
           m_rotation(rot),
           m_scale(sca) {}
 
-    TransformComponent(const Eigen::Vector3f& pos = Eigen::Vector3f::Zero(), const Eigen::Vector3f& rot = Eigen::Vector3f::Zero(),
-                       const Eigen::Vector3f& sca = Eigen::Vector3f::Ones())
+    // Euler-rotation overload: pos and rot are required (no defaults) so that the
+    // zero- and single-Vector3f-argument cases resolve unambiguously to the
+    // quaternion-rotation constructor above.
+    TransformComponent(const Eigen::Vector3f& pos, const Eigen::Vector3f& rot, const Eigen::Vector3f& sca = Eigen::Vector3f::Ones())
         : m_position(pos),
           m_scale(sca) {
         setRotationEulerDeg(rot);

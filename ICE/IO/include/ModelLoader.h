@@ -36,7 +36,7 @@ class ModelLoader : public IAssetLoader<Model> {
     Eigen::Vector3f aiVec3ToEigen(const aiVector3D &vec);
     Eigen::Quaternionf aiQuatToEigen(const aiQuaternion &q);
 
-    constexpr TextureFormat getTextureFormat(aiTextureType type, int channels);
+    TextureFormat getTextureFormat(aiTextureType type, int channels);
 
     AssetBank &ref_bank;
 };

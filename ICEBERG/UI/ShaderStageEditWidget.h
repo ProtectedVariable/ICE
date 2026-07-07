@@ -7,6 +7,7 @@
 #include <XMLRenderer.h>
 #include <imgui.h>
 
+#include <cstdio>
 #include <tuple>
 #include <vector>
 
@@ -26,13 +27,13 @@ class ShaderStageEditWidget : public Widget, ImXML::XMLEventHandler {
 
     void setShaderSource(const std::pair<std::string, std::string>& source, const std::filesystem::path& parent_path) {
         m_parent_path = parent_path;
-        strncpy_s(m_shader_file, source.first.c_str(), 512);
+        std::snprintf(m_shader_file, sizeof(m_shader_file), "%s", source.first.c_str());
 
         std::ifstream file(parent_path / source.first);
         std::stringstream buffer;
         buffer << file.rdbuf();
 
-        strncpy_s(m_shader_source, buffer.str().c_str(), 65535);
+        std::snprintf(m_shader_source, sizeof(m_shader_source), "%s", buffer.str().c_str());
     }
 
     void onNodeBegin(ImXML::XMLNode& node) override {
@@ -50,7 +51,7 @@ class ShaderStageEditWidget : public Widget, ImXML::XMLEventHandler {
             if (file.is_open()) {
                 std::stringstream buffer;
                 buffer << file.rdbuf();
-                strncpy_s(m_shader_source, buffer.str().c_str(), 65535);
+                std::snprintf(m_shader_source, sizeof(m_shader_source), "%s", buffer.str().c_str());
             }
         } else if (node.arg<std::string>("id") == "btn_delete_stage") {
             ImGui::SetTabItemClosed(m_stage.c_str());

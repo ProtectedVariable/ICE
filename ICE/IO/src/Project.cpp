@@ -15,6 +15,7 @@
 #include <fstream>
 #include <iostream>
 
+#include "DefaultLoaders.h"
 #include "MaterialExporter.h"
 #include "ShaderExporter.h"
 
@@ -24,6 +25,7 @@ Project::Project(const fs::path &base_directory, const std::string &m_name)
       m_name(m_name),
       m_asset_bank(std::make_shared<AssetBank>()),
       m_gpu_registry(std::make_shared<GPURegistry>(std::make_shared<OpenGLFactory>(), m_asset_bank)) {
+    registerDefaultLoaders(*m_asset_bank);
     cameraPosition.setZero();
     cameraRotation.setZero();
     constexpr std::string_view assets_folder = "Assets";

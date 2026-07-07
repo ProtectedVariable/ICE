@@ -41,7 +41,7 @@ class OpenGLShader : public ShaderProgram {
 
     void compileAndAttachStage(ShaderStage stage, const std::string &source);
 
-    constexpr GLenum stageToGLStage(ShaderStage stage);
+    GLenum stageToGLStage(ShaderStage stage);
 
     uint32_t m_programID;
     std::unordered_map<std::string, uint32_t> m_locations;

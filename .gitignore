@@ -6,3 +6,5 @@ build/
 
 .vscode/
 /.vs
+
+docs/REMEDIATION_PLAN.md

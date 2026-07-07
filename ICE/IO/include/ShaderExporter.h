@@ -10,7 +10,7 @@ class ShaderExporter : public AssetExporter<Shader> {
     void writeToJson(const std::filesystem::path &path, const Shader &object) override;
     void writeToBin(const std::filesystem::path &path, const Shader &object) override;
 
-    constexpr std::string stageToString(ShaderStage stage) {
+    std::string stageToString(ShaderStage stage) {
         switch (stage) {
             case ShaderStage::Vertex:
                 return "vertex";

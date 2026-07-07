@@ -15,11 +15,10 @@ target_sources(${PROJECT_NAME} PRIVATE
         src/GPURegistry.cpp 
         src/Texture.cpp)
 
-target_link_libraries(${PROJECT_NAME} 
-    PUBLIC 
-    graphics 
+target_link_libraries(${PROJECT_NAME}
+    PUBLIC
+    graphics
     util
-    io
     storage
     math
 )

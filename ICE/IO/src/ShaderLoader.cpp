@@ -37,7 +37,7 @@ std::shared_ptr<Shader> ShaderLoader::load(const std::vector<std::filesystem::pa
     return shader;
 }
 
-constexpr ShaderStage ShaderLoader::stageFromString(const std::string &str) {
+ShaderStage ShaderLoader::stageFromString(const std::string &str) {
     if (str == "vertex") {
         return ShaderStage::Vertex;
     } else if (str == "fragment") {

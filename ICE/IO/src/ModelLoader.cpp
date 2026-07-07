@@ -349,7 +349,7 @@ Eigen::Quaternionf ModelLoader::aiQuatToEigen(const aiQuaternion &q) {
     return quat;
 }
 
-constexpr TextureFormat ModelLoader::getTextureFormat(aiTextureType type, int channels) {
+TextureFormat ModelLoader::getTextureFormat(aiTextureType type, int channels) {
     switch (type) {
         case aiTextureType_METALNESS:
         case aiTextureType_AMBIENT_OCCLUSION:
