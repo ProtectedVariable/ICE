@@ -48,11 +48,12 @@ else()
 	target_include_directories(${PROJECT_NAME} INTERFACE ${GTK3_INCLUDE_DIRS} ${OPENGL_INCLUDE_DIRS})
 	target_compile_options(${PROJECT_NAME} INTERFACE ${GTK3_CFLAGS_OTHER})
 
-	target_link_libraries(${PROJECT_NAME} 
-		INTERFACE 
-		glfw 
-		${GTK3_LIBRARIES} 
-		${OPENGL_LIBRARIES} 
+	target_link_libraries(${PROJECT_NAME}
+		INTERFACE
+		glfw
+		${GTK3_LIBRARIES}
+		${OPENGL_LIBRARIES}
 		stdc++fs
+		${ICE_LIBS}
 	)
 endif()
