@@ -6,6 +6,7 @@
 #define ICE_ENTITY_H
 
 #include <bitset>
+#include <cstdint>
 #include <cstdlib>
 #include <queue>
 #include <typeindex>
