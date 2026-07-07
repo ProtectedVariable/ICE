@@ -23,7 +23,7 @@ message(STATUS "Fetching Assimp")
 FetchContent_Declare(
   Assimp
   GIT_REPOSITORY https://github.com/assimp/assimp.git
-  GIT_TAG v5.4.3
+  GIT_TAG v6.0.5
   GIT_SHALLOW TRUE)
 FetchContent_MakeAvailable(Assimp)
 
