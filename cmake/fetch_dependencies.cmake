@@ -28,6 +28,9 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(Assimp)
 
 message(STATUS "Fetching DearImXML")
+# Don't build DearImXML's example app: it links imgui_impl_glfw which needs X11
+# libs that its example target doesn't request, breaking the Linux build.
+set(BUILD_IMXML_EXAMPLE OFF CACHE BOOL "" FORCE)
 FetchContent_Declare(
   DearImXML
   GIT_REPOSITORY https://github.com/ProtectedVariable/DearImXML.git
