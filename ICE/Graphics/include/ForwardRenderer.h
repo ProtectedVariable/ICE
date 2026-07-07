@@ -9,6 +9,7 @@
 #include <GraphicsAPI.h>
 #include <Registry.h>
 
+#include <optional>
 #include <vector>
 
 #include "Camera.h"
@@ -23,13 +24,13 @@ namespace ICE {
 
 class ForwardRenderer : public Renderer {
    public:
-    ForwardRenderer(const std::shared_ptr<RendererAPI>& api, const std::shared_ptr<GraphicsFactory>& factory);
+    ForwardRenderer(const std::shared_ptr<RendererAPI> &api, const std::shared_ptr<GraphicsFactory> &factory);
 
-    void submitSkybox(const Skybox& e) override;
-    void submitDrawable(const Drawable& e) override;
-    void submitLight(const Light& e) override;
+    void submitSkybox(const Skybox &e) override;
+    void submitDrawable(const Drawable &e) override;
+    void submitLight(const Light &e) override;
 
-    void prepareFrame(Camera& camera) override;
+    void prepareFrame(Camera &camera) override;
 
     std::shared_ptr<Framebuffer> render() override;
 
@@ -52,7 +53,7 @@ class ForwardRenderer : public Renderer {
     std::optional<Skybox> m_skybox;
     std::vector<Drawable> m_drawables;
     std::vector<Light> m_lights;
-    
+
     // Instance batching storage
     std::unordered_map<uint64_t, std::vector<InstanceData>> m_instance_batches;
 
