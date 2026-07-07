@@ -194,6 +194,11 @@ Eigen::Vector3f AnimationSystem::interpolateScale(double timeInTicks, const Bone
 }
 
 Eigen::Quaternionf AnimationSystem::interpolateRotation(double time, const BoneAnimation& track) {
+    // Empty track: nothing to interpolate. Without this guard, rotations.size() - 1 wraps
+    // to SIZE_MAX and findKeyIndex reads out of bounds.
+    if (track.rotations.empty()) {
+        return Eigen::Quaternionf::Identity();
+    }
     if (track.rotations.size() == 1) {
         return track.rotations[0].rotation;
     }
@@ -205,6 +210,9 @@ Eigen::Quaternionf AnimationSystem::interpolateRotation(double time, const BoneA
     const auto& nextKey = track.rotations[nextIndex];
 
     double totalTime = nextKey.timeStamp - startKey.timeStamp;
+    if (totalTime == 0.0) {
+        return startKey.rotation;
+    }
     double factor = (time - startKey.timeStamp) / totalTime;
 
     Eigen::Quaternionf finalQuat = startKey.rotation.slerp((float) factor, nextKey.rotation);

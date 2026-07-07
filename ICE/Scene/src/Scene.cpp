@@ -117,6 +117,9 @@ void Scene::addEntity(Entity e, const std::string &alias, Entity parent) {
 }
 
 void Scene::removeEntity(Entity e) {
+    if (!hasEntity(e)) {
+        return;
+    }
     registry->removeEntity(e);
     aliases.erase(e);
     m_graph->removeEntity(e);

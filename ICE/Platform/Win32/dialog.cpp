@@ -80,20 +80,26 @@ const std::string open_native_folder_dialog() {
 		// Get the folder name
 		::IShellItem* shellItem(NULL);
 		result = fileDialog->GetResult(&shellItem);
-		if (!SUCCEEDED(result))
+		if (!SUCCEEDED(result) || shellItem == NULL)
 		{
-			shellItem->Release();
+			// GetResult failed: shellItem is NULL, so do not call Release on it.
 			goto end;
 		}
 		wchar_t* path = NULL;
 		result = shellItem->GetDisplayName(SIGDN_DESKTOPABSOLUTEPARSING, &path);
-		if (!SUCCEEDED(result))
+		if (SUCCEEDED(result) && path != NULL)
 		{
-			shellItem->Release();
-			goto end;
+			// Convert UTF-16 -> UTF-8 properly (std::string(ws.begin(), ws.end())
+			// truncated each wide char and mangled any non-ASCII path).
+			int bytes = WideCharToMultiByte(CP_UTF8, 0, path, -1, NULL, 0, NULL, NULL);
+			if (bytes > 1)
+			{
+				std::string utf8(bytes - 1, '\0');
+				WideCharToMultiByte(CP_UTF8, 0, path, -1, utf8.data(), bytes, NULL, NULL);
+				str = std::move(utf8);
+			}
+			CoTaskMemFree(path);
 		}
-		std::wstring ws(path);
-		str = std::string(ws.begin(), ws.end());
 		shellItem->Release();
 	}
 end:

@@ -53,6 +53,10 @@ class Registry {
 
     void removeEntity(Entity e) {
         auto it = std::find(entities.begin(), entities.end(), e);
+        if (it == entities.end()) {
+            // Not a live entity: erase(end()) would be undefined behavior.
+            return;
+        }
         entities.erase(it);
         componentManager.entityDestroyed(e);
         entityManager.releaseEntity(e);
@@ -69,6 +73,12 @@ class Registry {
     template<typename T>
     T *getComponent(Entity e) {
         return componentManager.getComponent<T>(e);
+    }
+
+    // Returns nullptr instead of asserting when the entity has no component of type T.
+    template<typename T>
+    T *tryGetComponent(Entity e) {
+        return componentManager.tryGetComponent<T>(e);
     }
 
     template<typename T>

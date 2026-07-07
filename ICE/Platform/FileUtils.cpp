@@ -24,6 +24,10 @@ const std::string FileUtils::openFolderDialog() {
 
 const std::string FileUtils::readFile(const std::string &path) {
     std::ifstream ifs(path);
+    if (!ifs.is_open()) {
+        Logger::Log(Logger::ERROR, "Platform", "Could not open file for reading: %s", path.c_str());
+        return std::string();
+    }
     std::string content((std::istreambuf_iterator<char>(ifs)), (std::istreambuf_iterator<char>()));
     return content;
 }

@@ -31,10 +31,11 @@ struct RenderCommand {
     // Bone matrices - pointer to avoid copying large map
     const std::unordered_map<int, Eigen::Matrix4f>* bones = nullptr;
 
-    // Render state - packed into bitfield to save space
-    bool faceCulling : 1;
-    bool depthTest : 1;
-    bool is_instanced : 1;
+    // Render state - packed into bitfield to save space. Default-initialized so commands
+    // (e.g. the skybox) that don't set them don't read indeterminate values.
+    bool faceCulling : 1 = true;
+    bool depthTest : 1 = true;
+    bool is_instanced : 1 = false;
     
     // Instancing support
     const std::vector<InstanceData>* instance_data = nullptr;

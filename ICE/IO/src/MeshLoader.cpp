@@ -5,6 +5,7 @@
 #include "MeshLoader.h"
 
 #include <AssetBank.h>
+#include <Logger.h>
 #include <Material.h>
 #include <assert.h>
 #include <assimp/postprocess.h>
@@ -23,7 +24,8 @@ std::shared_ptr<Mesh> MeshLoader::load(const std::vector<std::filesystem::path> 
                                              aiProcess_FlipUVs | aiProcess_ValidateDataStructure | aiProcess_SortByPType | aiProcess_GenSmoothNormals
                                                  | aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_PreTransformVertices);
 
-    if (scene->mNumMeshes < 1) {
+    if (scene == nullptr || scene->mNumMeshes < 1) {
+        Logger::Log(Logger::ERROR, "IO", "Could not load mesh '%s': %s", file[0].string().c_str(), importer.GetErrorString());
         return nullptr;
     }
     MeshData data;

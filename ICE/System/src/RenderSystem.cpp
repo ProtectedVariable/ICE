@@ -84,12 +84,16 @@ void RenderSystem::update(double delta) {
         if (m_registry->entityHasComponent<SkinningComponent>(e)) {
             const auto &skinning = m_gpu_bank->getMeshSkinningData(rc->mesh);
             auto skeleton_entity = m_registry->getComponent<SkinningComponent>(e)->skeleton_entity;
-            auto pose = m_registry->getComponent<SkeletonPoseComponent>(skeleton_entity);
-            for (const auto &[id, ibm] : skinning.inverseBindMatrices) {
-                bone_matrices.try_emplace(id, pose->bone_transform[id] * ibm);
+            // The skeleton entity may be stale/invalid; probe instead of asserting so a
+            // bad reference skips skinning for this frame rather than dereferencing null.
+            auto pose = m_registry->tryGetComponent<SkeletonPoseComponent>(skeleton_entity);
+            auto skel_transform = m_registry->tryGetComponent<TransformComponent>(skeleton_entity);
+            if (pose && skel_transform) {
+                for (const auto &[id, ibm] : skinning.inverseBindMatrices) {
+                    bone_matrices.try_emplace(id, pose->bone_transform[id] * ibm);
+                }
+                model_mat = skel_transform->getWorldMatrix();
             }
-
-            model_mat = m_registry->getComponent<TransformComponent>(skeleton_entity)->getWorldMatrix();
         }
 
         std::unordered_map<AssetUID, std::shared_ptr<GPUTexture>> texs;
