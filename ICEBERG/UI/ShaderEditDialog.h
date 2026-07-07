@@ -7,6 +7,7 @@
 #include <XMLRenderer.h>
 #include <imgui.h>
 
+#include <cstdio>
 #include <tuple>
 #include <vector>
 
@@ -25,7 +26,7 @@ class ShaderEditDialog : public Dialog, ImXML::XMLEventHandler {
     void setShader(const std::shared_ptr<ICE::Shader>& shader, const std::string& name, const std::filesystem::path& shader_base_folder) {
         m_shader_base_folder = shader_base_folder;
         m_widgets.clear();
-        strncpy_s(m_shader_name, name.c_str(), 512);
+        std::snprintf(m_shader_name, sizeof(m_shader_name), "%s", name.c_str());
         if (shader) {
             for (const auto& [stage, source] : shader->getStageSources()) {
                 m_shader_base_folder = shader->getSources().at(0).parent_path();
