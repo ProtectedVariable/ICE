@@ -16,6 +16,6 @@ class ShaderLoader : public IAssetLoader<Shader> {
     ShaderLoader() = default;
     std::shared_ptr<Shader> load(const std::vector<std::filesystem::path> &file) override;
     std::string readAndResolveIncludes(const std::filesystem::path &file);
-    constexpr ShaderStage stageFromString(const std::string &str);
+    ShaderStage stageFromString(const std::string &str);
 };
 }  // namespace ICE

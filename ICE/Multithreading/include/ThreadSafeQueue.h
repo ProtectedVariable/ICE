@@ -1,7 +1,10 @@
+#pragma once
+
 #include <condition_variable>
 #include <mutex>
 #include <optional>
 #include <queue>
+#include <stdexcept>
 
 namespace ICE {
 template<typename T>

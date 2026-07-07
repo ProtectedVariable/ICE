@@ -5,6 +5,8 @@
 #include <TransformComponent.h>
 #include <RenderComponent.h>
 
+using namespace ICE;
+
 TEST(ECSTest, FirstEntityIs1)
 {
 	Registry reg = Registry();

@@ -110,7 +110,7 @@ void OpenGLShader::compileAndAttachStage(ShaderStage stage, const std::string &s
 }
 
 
-constexpr GLenum OpenGLShader::stageToGLStage(ShaderStage stage) {
+GLenum OpenGLShader::stageToGLStage(ShaderStage stage) {
     switch (stage) {
         case ShaderStage::Vertex:
             return GL_VERTEX_SHADER;

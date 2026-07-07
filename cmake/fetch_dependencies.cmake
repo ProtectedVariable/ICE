@@ -12,25 +12,22 @@ FetchContent_MakeAvailable(googletest)
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
 message(STATUS "Fetching GLFW")
-include(FetchContent)
 FetchContent_Declare(
   GLFW
   GIT_REPOSITORY https://github.com/glfw/glfw.git
-  GIT_TAG master
-)
+  GIT_TAG 3.4
+  GIT_SHALLOW TRUE)
 FetchContent_MakeAvailable(GLFW)
 
 message(STATUS "Fetching Assimp")
-include(FetchContent)
 FetchContent_Declare(
   Assimp
   GIT_REPOSITORY https://github.com/assimp/assimp.git
-  GIT_TAG master
-)
+  GIT_TAG v5.4.3
+  GIT_SHALLOW TRUE)
 FetchContent_MakeAvailable(Assimp)
 
 message(STATUS "Fetching DearImXML")
-include(FetchContent)
 FetchContent_Declare(
   DearImXML
   GIT_REPOSITORY https://github.com/ProtectedVariable/DearImXML.git
@@ -43,7 +40,7 @@ set(JSON_BuildTests OFF CACHE INTERNAL "")
 FetchContent_Declare(
     json
     GIT_REPOSITORY https://github.com/nlohmann/json
-    GIT_TAG v3.11.2
+    GIT_TAG v3.12.0
     GIT_SHALLOW TRUE
     GIT_PROGRESS TRUE)
 FetchContent_MakeAvailable(json)
