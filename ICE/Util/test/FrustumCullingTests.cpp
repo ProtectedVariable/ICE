@@ -57,7 +57,7 @@ TEST_F(FrustumCullingTest, AABBInFrustum_CompletelyInside) {
     Frustum frustum = extractFrustumPlanes(pv);
 
     // Create a small AABB at the origin (center of view)
-    AABB box({Eigen::Vector3f(-0.5f, -0.5f, -0.5f), Eigen::Vector3f(0.5f, 0.5f, 0.5f)});
+    AABB box(std::vector<Eigen::Vector3f>{Eigen::Vector3f(-0.5f, -0.5f, -0.5f), Eigen::Vector3f(0.5f, 0.5f, 0.5f)});
 
     EXPECT_TRUE(isAABBInFrustum(frustum, box));
 }
@@ -70,7 +70,7 @@ TEST_F(FrustumCullingTest, AABBInFrustum_PartiallyInside) {
     Frustum frustum = extractFrustumPlanes(pv);
 
     // Create an AABB that straddles the near plane
-    AABB box({Eigen::Vector3f(-1.0f, -1.0f, -0.05f), Eigen::Vector3f(1.0f, 1.0f, -0.5f)});
+    AABB box(std::vector<Eigen::Vector3f>{Eigen::Vector3f(-1.0f, -1.0f, -0.05f), Eigen::Vector3f(1.0f, 1.0f, -0.5f)});
 
     EXPECT_TRUE(isAABBInFrustum(frustum, box));
 }
@@ -83,7 +83,7 @@ TEST_F(FrustumCullingTest, AABBInFrustum_FarPlane) {
     Frustum frustum = extractFrustumPlanes(pv);
 
     // Create an AABB beyond the far plane
-    AABB box({Eigen::Vector3f(-1.0f, -1.0f, -101.0f), Eigen::Vector3f(1.0f, 1.0f, -102.0f)});
+    AABB box(std::vector<Eigen::Vector3f>{Eigen::Vector3f(-1.0f, -1.0f, -101.0f), Eigen::Vector3f(1.0f, 1.0f, -102.0f)});
 
     EXPECT_FALSE(isAABBInFrustum(frustum, box));
 }
@@ -96,7 +96,7 @@ TEST_F(FrustumCullingTest, AABBInFrustum_OutsideLeftPlane) {
     Frustum frustum = extractFrustumPlanes(pv);
 
     // Create an AABB to the far left, outside the frustum
-    AABB box({Eigen::Vector3f(-100.0f, -1.0f, -5.0f), Eigen::Vector3f(-50.0f, 1.0f, -3.0f)});
+    AABB box(std::vector<Eigen::Vector3f>{Eigen::Vector3f(-100.0f, -1.0f, -5.0f), Eigen::Vector3f(-50.0f, 1.0f, -3.0f)});
 
     EXPECT_FALSE(isAABBInFrustum(frustum, box));
 }
@@ -188,7 +188,7 @@ TEST_F(FrustumCullingTest, AABBInFrustum_VerySmallBox) {
 
     Frustum frustum = extractFrustumPlanes(pv);
 
-    AABB box({Eigen::Vector3f(0, 0, -10), Eigen::Vector3f(0.001f, 0.001f, -10.001f)});
+    AABB box(std::vector<Eigen::Vector3f>{Eigen::Vector3f(0, 0, -10), Eigen::Vector3f(0.001f, 0.001f, -10.001f)});
 
     EXPECT_TRUE(isAABBInFrustum(frustum, box));
 }
