@@ -2,23 +2,24 @@
 
 #include <vector>
 
-static std::vector<float> full_quad_v = {
-    -1.0f, -1.0f, 0.0f,  // TOP LEFT
-    1.0,   -1.0f, 0.0f,  // TOP RIGHT
-    -1.0f, 1.0,   0.0f,  // BOTTOM LEFT 
-    1.0,   1.0,   0.0f,  // BOTTOM RIGHT
+// Fullscreen-quad geometry in NDC. `inline` gives a single shared definition across
+// translation units instead of one static copy per TU.
+inline const std::vector<float> full_quad_v = {
+    -1.0f, -1.0f, 0.0f,  // bottom-left
+    1.0f,  -1.0f, 0.0f,  // bottom-right
+    -1.0f, 1.0f,  0.0f,  // top-left
+    1.0f,  1.0f,  0.0f,  // top-right
 };
 
-static std::vector<int> full_quad_idx = {
+inline const std::vector<int> full_quad_idx = {
     0, 1, 2, 2, 1, 3
 };
 
-
-static std::vector<float> full_quad_tx = {
-    0, 0,  // TOP LEFT
-    1, 0,  // TOP RIGHT
-    0, 1,  // BOTTOM LEFT
-    1, 1,  // BOTTOM RIGHT
-    1, 0,  // TOP RIGHT
-    0, 1   // BOTTOM LEFT
+// One UV per vertex (the quad has 4 vertices); the previous array had 6 pairs, so the
+// last two were dead.
+inline const std::vector<float> full_quad_tx = {
+    0, 0,  // bottom-left
+    1, 0,  // bottom-right
+    0, 1,  // top-left
+    1, 1,  // top-right
 };

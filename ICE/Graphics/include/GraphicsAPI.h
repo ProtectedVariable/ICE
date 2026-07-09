@@ -9,6 +9,8 @@
 #include <GLFW/glfw3.h>
 #include <VertexArray.h>
 
+#include "RenderState.h"
+
 namespace ICE {
 enum GraphicsAPI {
     None = 0x0,
@@ -29,6 +31,7 @@ class RendererAPI {
     virtual void finish() const = 0;
     virtual void setDepthTest(bool enable) const = 0;
     virtual void setDepthMask(bool enable) const = 0;
+    virtual void setDepthFunc(DepthFunc func) const = 0;
     virtual void setBackfaceCulling(bool enable) const = 0;
     virtual void checkAndLogErrors() const = 0;
 

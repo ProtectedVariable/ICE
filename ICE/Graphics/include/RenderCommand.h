@@ -10,6 +10,7 @@
 #include "GPUMesh.h"
 #include "Material.h"
 #include "Model.h"
+#include "RenderState.h"
 #include "ShaderProgram.h"
 
 namespace ICE {
@@ -35,7 +36,10 @@ struct RenderCommand {
     // (e.g. the skybox) that don't set them don't read indeterminate values.
     bool faceCulling : 1 = true;
     bool depthTest : 1 = true;
+    bool depthWrite : 1 = true;
     bool is_instanced : 1 = false;
+
+    DepthFunc depth_func = DepthFunc::Less;
     
     // Instancing support
     const std::vector<InstanceData>* instance_data = nullptr;
@@ -50,13 +54,18 @@ struct RenderCommand {
         uint64_t transparent_bit = is_transparent ? 1ULL : 0ULL;
         uint64_t shader_bits = (reinterpret_cast<uintptr_t>(shader) >> 3) & 0x1FFFFF;
         uint64_t material_bits = (reinterpret_cast<uintptr_t>(material) >> 3) & 0x1FFFFF;
-        uint64_t depth_bits = static_cast<uint64_t>(depth_sq * 1000.0f) & 0x1FFFFF;
-        
+        // Clamp instead of masking: depth_sq * 1000 overflowed 21 bits past ~46 units and
+        // wrapped, scrambling the order. Clamped, far objects just pin at the max bucket.
+        uint64_t depth_raw = static_cast<uint64_t>(depth_sq * 1000.0f);
+        uint64_t depth_bits = depth_raw > 0x1FFFFF ? 0x1FFFFF : depth_raw;
+
         if (is_transparent) {
-            // Transparent: sort by depth (back-to-front)
-            sort_key = (transparent_bit << 63) | (depth_bits << 42) | (shader_bits << 21) | material_bits;
+            // Alpha blending needs back-to-front: invert depth so farther fragments (larger
+            // depth) get a smaller key and are drawn first. The old code sorted front-to-back.
+            uint64_t depth_far_first = 0x1FFFFF - depth_bits;
+            sort_key = (transparent_bit << 63) | (depth_far_first << 42) | (shader_bits << 21) | material_bits;
         } else {
-            // Opaque: sort by shader/material, then depth (front-to-back)
+            // Opaque: sort by shader/material to minimize state changes, then front-to-back.
             sort_key = (transparent_bit << 63) | (shader_bits << 42) | (material_bits << 21) | depth_bits;
         }
     }

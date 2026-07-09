@@ -90,7 +90,11 @@ void RenderSystem::update(double delta) {
             auto skel_transform = m_registry->tryGetComponent<TransformComponent>(skeleton_entity);
             if (pose && skel_transform) {
                 for (const auto &[id, ibm] : skinning.inverseBindMatrices) {
-                    bone_matrices.try_emplace(id, pose->bone_transform[id] * ibm);
+                    // bone_transform is a vector indexed by bone id; guard against a bone id
+                    // outside the current pose (out-of-bounds vector access is UB).
+                    if (id >= 0 && static_cast<size_t>(id) < pose->bone_transform.size()) {
+                        bone_matrices.try_emplace(id, pose->bone_transform[id] * ibm);
+                    }
                 }
                 model_mat = skel_transform->getWorldMatrix();
             }

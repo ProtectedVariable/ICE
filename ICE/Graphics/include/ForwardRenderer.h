@@ -9,7 +9,9 @@
 #include <GraphicsAPI.h>
 #include <Registry.h>
 
+#include <map>
 #include <optional>
+#include <tuple>
 #include <vector>
 
 #include "Camera.h"
@@ -54,8 +56,10 @@ class ForwardRenderer : public Renderer {
     std::vector<Drawable> m_drawables;
     std::vector<Light> m_lights;
 
-    // Instance batching storage
-    std::unordered_map<uint64_t, std::vector<InstanceData>> m_instance_batches;
+    // Instance batching storage, keyed by the exact (mesh, material, shader) triple so
+    // distinct batches can never collide into one (the old XOR-hashed uint64 key could).
+    using BatchKey = std::tuple<GPUMesh*, Material*, ShaderProgram*>;
+    std::map<BatchKey, std::vector<InstanceData>> m_instance_batches;
 
     RendererConfig config;
 };

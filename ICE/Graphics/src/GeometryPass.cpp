@@ -25,6 +25,8 @@ void GeometryPass::execute() {
 
         m_api->setBackfaceCulling(command.faceCulling);
         m_api->setDepthTest(command.depthTest);
+        m_api->setDepthMask(command.depthWrite);
+        m_api->setDepthFunc(command.depth_func);
 
         if (shader != current_shader) {
             shader->bind();
