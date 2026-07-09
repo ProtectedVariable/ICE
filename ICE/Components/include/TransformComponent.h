@@ -54,7 +54,7 @@ struct TransformComponent : public Component {
     Eigen::Vector3f getRotationEulerDeg() const { return m_rotation.toRotationMatrix().eulerAngles(0, 1, 2) * 180.0 / M_PI; }
 
     Eigen::Matrix4f getModelMatrix() const {
-        if (m_dirty) {
+        if (m_model_dirty) {
             m_model_matrix = Eigen::Matrix4f::Identity();
 
             // Translation
@@ -66,14 +66,18 @@ struct TransformComponent : public Component {
             // Scale
             m_model_matrix.block<3, 3>(0, 0) *= m_scale.asDiagonal();
 
-            m_dirty = false;
+            m_model_dirty = false;
         }
         return m_model_matrix;
     }
 
     Eigen::Matrix4f getWorldMatrix() const {
-        if (m_dirty) {
+        // Separate dirty flag from the model matrix: getModelMatrix() used to clear the
+        // single shared flag, so calling it first left getWorldMatrix() returning a stale
+        // value. markDirty() sets both, and getModelMatrix() only clears the model flag.
+        if (m_world_dirty) {
             m_world_matrix = m_parent_matrix * getModelMatrix();
+            m_world_dirty = false;
         }
         return m_world_matrix;
     }
@@ -81,6 +85,7 @@ struct TransformComponent : public Component {
     void updateParentMatrix(const Eigen::Matrix4f& parent_matrix) {
         m_parent_matrix = parent_matrix;
         m_world_matrix = parent_matrix * getModelMatrix();
+        m_world_dirty = false;
         m_version++;
     }
 
@@ -125,7 +130,8 @@ struct TransformComponent : public Component {
 
    private:
     void markDirty() {
-        m_dirty = true;
+        m_model_dirty = true;
+        m_world_dirty = true;
         m_version++;
     }
 
@@ -136,7 +142,8 @@ struct TransformComponent : public Component {
     mutable Eigen::Matrix4f m_model_matrix = Eigen::Matrix4f::Identity();
     mutable Eigen::Matrix4f m_parent_matrix = Eigen::Matrix4f::Identity();
     mutable Eigen::Matrix4f m_world_matrix = Eigen::Matrix4f::Identity();
-    mutable bool m_dirty = true;
+    mutable bool m_model_dirty = true;
+    mutable bool m_world_dirty = true;
     mutable uint32_t m_version = 0;
 };
 

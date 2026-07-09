@@ -34,6 +34,8 @@ class RenderSystem : public System {
     void onEntityRemoved(Entity e) override;
     void update(double delta) override;
 
+    int updateOrder() const override { return RenderSystemOrder; }
+
     void submitModel(const std::shared_ptr<Model> &model, const Eigen::Matrix4f &transform);
 
     std::shared_ptr<Renderer> getRenderer() const;
