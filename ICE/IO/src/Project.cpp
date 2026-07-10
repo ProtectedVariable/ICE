@@ -229,8 +229,17 @@ json Project::dumpAsset(AssetUID uid, const std::shared_ptr<Asset> &asset) {
 
 void Project::loadFromFile() {
     std::ifstream infile = std::ifstream(m_base_directory / (m_name + ".ice"));
+    if (!infile.is_open()) {
+        Logger::Log(Logger::ERROR, "IO", "Could not open project file '%s'", (m_base_directory / (m_name + ".ice")).string().c_str());
+        return;
+    }
     json j;
-    infile >> j;
+    try {
+        infile >> j;
+    } catch (const std::exception &e) {
+        Logger::Log(Logger::ERROR, "IO", "Failed to parse project file: %s", e.what());
+        return;
+    }
     infile.close();
 
     std::vector<std::string> sceneNames = j["scenes"];
@@ -253,8 +262,17 @@ void Project::loadFromFile() {
 
     for (const auto &s : sceneNames) {
         infile = std::ifstream(m_scenes_directory / (s + ".ics"));
+        if (!infile.is_open()) {
+            Logger::Log(Logger::ERROR, "IO", "Could not open scene file '%s'", s.c_str());
+            continue;
+        }
         json scenejson;
-        infile >> scenejson;
+        try {
+            infile >> scenejson;
+        } catch (const std::exception &e) {
+            Logger::Log(Logger::ERROR, "IO", "Failed to parse scene '%s': %s", s.c_str(), e.what());
+            continue;
+        }
         infile.close();
 
         Scene scene = Scene(scenejson["m_name"]);
@@ -328,7 +346,15 @@ void Project::copyAssetFile(const fs::path &folder, const std::string &assetName
 
     auto dst = subfolder / (assetName + src.extension().string());
     std::ifstream srcStream(src, std::ios::binary);
+    if (!srcStream.is_open()) {
+        Logger::Log(Logger::ERROR, "IO", "Could not open source asset '%s'", src.string().c_str());
+        return;
+    }
     std::ofstream dstStream(dst, std::ios::binary);
+    if (!dstStream.is_open()) {
+        Logger::Log(Logger::ERROR, "IO", "Could not open destination '%s' for asset copy", dst.string().c_str());
+        return;
+    }
 
     dstStream << srcStream.rdbuf();
     dstStream.flush();
@@ -343,9 +369,12 @@ bool Project::renameAsset(const AssetPath &oldName, const AssetPath &newName) {
     if (m_asset_bank->renameAsset(oldName, newName)) {
         auto path = m_base_directory / "Assets";
         for (const auto &file : getFilesInDir(path / oldName.prefix())) {
-            if (file.substr(0, file.find_last_of(".")) == oldName.getName()) {
+            // stem()/extension() handle files with no extension (the old substr(find_last_of("."))
+            // threw std::out_of_range on those).
+            fs::path fp(file);
+            if (fp.stem().string() == oldName.getName()) {
                 if (rename((path / oldName.prefix() / file).string().c_str(),
-                           (path / oldName.prefix() / (newName.getName() + file.substr(file.find_last_of(".")))).string().c_str())
+                           (path / oldName.prefix() / (newName.getName() + fp.extension().string())).string().c_str())
                     == 0) {
                     return true;
                 }
@@ -359,8 +388,9 @@ bool Project::renameAsset(const AssetPath &oldName, const AssetPath &newName) {
 std::vector<std::string> Project::getFilesInDir(const fs::path &folder) {
     std::vector<std::string> files;
     for (const auto &entry : fs::directory_iterator(folder)) {
-        std::string sp = entry.path().string();
-        files.push_back(sp.substr(sp.find_last_of("/") + 1));
+        // Use std::filesystem to extract the filename: splitting on '/' returned the whole
+        // path on Windows, where the separator is '\'.
+        files.push_back(entry.path().filename().string());
     }
     return files;
 }

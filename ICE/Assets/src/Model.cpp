@@ -29,8 +29,12 @@ void Model::traverse(std::vector<AssetUID> &meshes, std::vector<AssetUID> &mater
             transforms.push_back(node_transform);
         }
 
+        // Accumulate this node's local transform into the children's base. This only
+        // affects Model::traverse, which is used solely by the editor thumbnail renderer
+        // (a flat, scene-graph-less render) -- the live scene/animation path uses
+        // spawnTree + the scene graph and must NOT accumulate here.
         for (const auto &child_idx : node.children) {
-            recursive_traversal(child_idx, transform);
+            recursive_traversal(child_idx, transform * node.localTransform);
         }
     };
 

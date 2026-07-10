@@ -26,18 +26,21 @@ EngineConfig EngineConfig::LoadFromFile() {
         configFile.open(ICE_CONFIG_FILE);
 
         if (!configFile.is_open()) {
-            Logger::Log(Logger::FATAL, "IO", "Couldn't open config file");
-            exit(EXIT_FAILURE);
+            // Library code must not exit() the host process; log and return an empty config.
+            Logger::Log(Logger::ERROR, "IO", "Couldn't open config file");
+            return config;
         }
 
-        json j;
-        configFile >> j;
-        configFile.close();
-
-        for (const auto &project : j["projects"]) {
-            std::filesystem::path path = std::string(project["path"]);
-            std::string name = project["name"];
-            config.localProjects.push_back(Project(path, name));
+        try {
+            json j;
+            configFile >> j;
+            for (const auto &project : j["projects"]) {
+                std::filesystem::path path = std::string(project["path"]);
+                std::string name = project["name"];
+                config.localProjects.push_back(Project(path, name));
+            }
+        } catch (const std::exception &e) {
+            Logger::Log(Logger::ERROR, "IO", "Failed to parse config file: %s", e.what());
         }
     }
     return config;
@@ -51,8 +54,8 @@ void EngineConfig::save() {
     std::ofstream configFile;
     configFile.open(ICE_CONFIG_FILE);
     if (!configFile.is_open()) {
-        Logger::Log(Logger::FATAL, "IO", "Couldn't open config file");
-        exit(EXIT_FAILURE);
+        Logger::Log(Logger::ERROR, "IO", "Couldn't open config file for writing");
+        return;
     }
 
     json j;

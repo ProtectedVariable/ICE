@@ -25,6 +25,13 @@ Texture2D::Texture2D(void* data, int width, int height, TextureFormat fmt, bool 
 }
 
 TextureCube::TextureCube(const std::string& path) {
+    // Load the equirectangular source image as RGB; OpenGLTextureCube converts it into the
+    // six cube faces. This used to be an empty stub, so cubemaps loaded from a path had null
+    // data and zero size.
+    int channels = 0;
+    data_ = getDataFromFile(path, &m_width, &m_height, &channels, STBI_rgb);
+    m_owns_data = true;  // stb-allocated; freed in ~Texture
+    m_format = TextureFormat::RGB8;
 }
 TextureCube::TextureCube(void* data, int width, int height, TextureFormat fmt) {
     data_ = data;
