@@ -21,7 +21,9 @@ class AssetPath {
     std::string prefix() const;
     template<typename T>
     static AssetPath WithTypePrefix(std::string path) {
-        return AssetPath(typenames[typeid(T)] + ASSET_PATH_SEPARATOR + path);
+        // .at() is read-only: operator[] inserted an empty prefix for unregistered types
+        // (silently producing "/name" paths) and mutated the shared static map (data race).
+        return AssetPath(typenames.at(typeid(T)) + ASSET_PATH_SEPARATOR + path);
     }
 
     bool operator==(AssetPath other) const { return (other.toString() == this->toString()); }

@@ -30,15 +30,23 @@ void ICEEngine::initialize(const std::shared_ptr<GraphicsFactory> &graphics_fact
     api = graphics_factory->createRendererAPI();
     api->initialize();
     internalFB = graphics_factory->createFramebuffer({720, 720, 1});
+    // Seed the frame clock so the first step() doesn't report a huge delta (time since
+    // the steady_clock epoch).
+    lastFrameTime = std::chrono::steady_clock::now();
 }
 
 void ICEEngine::step() {
+    // Delta time in seconds as a double: the old integer-millisecond cast truncated to 0
+    // above ~1000 fps (freezing animation) and lost ~13% at 144 Hz.
     auto now = std::chrono::steady_clock::now();
-    auto dt = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastFrameTime).count();
+    m_delta_time = std::chrono::duration<double>(now - lastFrameTime).count();
     lastFrameTime = now;
+    if (!project) {
+        return;
+    }
     auto render_system = project->getCurrentScene()->getRegistry()->getSystem<RenderSystem>();
     render_system->setTarget(m_target_fb);
-    project->getCurrentScene()->getRegistry()->updateSystems(dt);
+    project->getCurrentScene()->getRegistry()->updateSystems(m_delta_time);
 }
 
 void ICEEngine::setupScene(const std::shared_ptr<Camera> &camera_) {

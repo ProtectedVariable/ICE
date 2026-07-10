@@ -33,10 +33,13 @@ OpenGLShader::OpenGLShader(const Shader &shader_asset) {
         Logger::Log(Logger::FATAL, "Graphics", "Shader linking error: %s", errorLog.data());
     }
 
-    // Stage objects are no longer needed once linked into the program.
+    // Stage objects are no longer needed once linked into the program. Skip 0, which
+    // marks a stage that failed to compile (and so was never attached).
     for (GLuint shader : stage_shaders) {
-        glDetachShader(m_programID, shader);
-        glDeleteShader(shader);
+        if (shader != 0) {
+            glDetachShader(m_programID, shader);
+            glDeleteShader(shader);
+        }
     }
 }
 
@@ -115,7 +118,11 @@ GLuint OpenGLShader::compileAndAttachStage(ShaderStage stage, const std::string 
     GLint shader;
     Logger::Log(Logger::VERBOSE, "Graphics", "\t + Compiling shader stage...");
     if (!compileShader(stageToGLStage(stage), source, &shader)) {
+        // Don't attach a stage that failed to compile: attaching it only guarantees the
+        // link fails too, producing a broken-but-alive program. Return 0 to signal failure.
         Logger::Log(Logger::FATAL, "Graphics", "Error while compiling shader stage");
+        glDeleteShader(shader);
+        return 0;
     }
     glAttachShader(m_programID, shader);
     return static_cast<GLuint>(shader);

@@ -58,6 +58,10 @@ void OpenGLRendererAPI::setDepthMask(bool enable) const {
     glDepthMask(enable ? GL_TRUE : GL_FALSE);
 }
 
+void OpenGLRendererAPI::setDepthFunc(DepthFunc func) const {
+    glDepthFunc(func == DepthFunc::LEqual ? GL_LEQUAL : GL_LESS);
+}
+
 void OpenGLRendererAPI::setBackfaceCulling(bool enable) const {
     if (enable) {
         glEnable(GL_CULL_FACE);
@@ -67,9 +71,21 @@ void OpenGLRendererAPI::setBackfaceCulling(bool enable) const {
 }
 
 void OpenGLRendererAPI::checkAndLogErrors() const {
-    unsigned int err;
+    // glDebugMessageCallback would be nicer but it is not core until GL 4.3; the engine
+    // targets 4.1 (macOS caps there), so decode the enum to a readable name instead of
+    // logging a bare number. Callers should only drain this in debug builds.
+    GLenum err;
     while ((err = glGetError()) != GL_NO_ERROR) {
-        Logger::Log(Logger::ERROR, "Graphics", "OpenGL Error %d", err);
+        const char *name;
+        switch (err) {
+            case GL_INVALID_ENUM: name = "GL_INVALID_ENUM"; break;
+            case GL_INVALID_VALUE: name = "GL_INVALID_VALUE"; break;
+            case GL_INVALID_OPERATION: name = "GL_INVALID_OPERATION"; break;
+            case GL_INVALID_FRAMEBUFFER_OPERATION: name = "GL_INVALID_FRAMEBUFFER_OPERATION"; break;
+            case GL_OUT_OF_MEMORY: name = "GL_OUT_OF_MEMORY"; break;
+            default: name = "GL_UNKNOWN"; break;
+        }
+        Logger::Log(Logger::ERROR, "Graphics", "OpenGL error: %s (0x%x)", name, err);
     }
 }
 }  // namespace ICE

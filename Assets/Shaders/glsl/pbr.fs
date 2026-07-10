@@ -96,7 +96,7 @@ void main() {
     vec3 albedo     = pow(material.hasBaseColorMap ? texture(material.baseColorMap, ftex_coords).rgb : material.baseColor, vec3(2.2));
     float metallic  = material.hasMetallicMap ? texture(material.metallicMap, ftex_coords).b : material.metallic;
     float roughness = material.hasRoughnessMap ? texture(material.roughnessMap, ftex_coords).g : material.roughness;
-    float ao        = material.hasAoMap ? texture(material.aoMap, ftex_coords).length() : material.ao;
+    float ao        = material.hasAoMap ? texture(material.aoMap, ftex_coords).r : material.ao;
 
     vec3 N = getNormalFromMap();
     vec3 V = normalize(fview - fposition);
@@ -109,11 +109,19 @@ void main() {
     // reflectance equation
     vec3 Lo = vec3(0.0);
     for(int i = 0; i < light_count; ++i) {
-        // calculate per-light radiance
-        vec3 L = normalize(lights[i].position - fposition);
+        // calculate per-light radiance. Directional lights (type 1) come from a fixed
+        // direction with no distance attenuation; point/spot use position + falloff.
+        vec3 L;
+        float attenuation;
+        if(lights[i].type == 1) {
+            L = normalize(-lights[i].rotation);
+            attenuation = 1.0;
+        } else {
+            L = normalize(lights[i].position - fposition);
+            float distance = length(lights[i].position - fposition);
+            attenuation = 1.0 / (1 + lights[i].distance_dropoff * distance * distance);
+        }
         vec3 H = normalize(V + L);
-        float distance = length(lights[i].position - fposition);
-        float attenuation = 1.0 / (1 + lights[i].distance_dropoff * distance * distance);
         vec3 radiance = lights[i].color * attenuation;
 
         // Cook-Torrance BRDF

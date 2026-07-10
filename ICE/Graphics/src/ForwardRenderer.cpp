@@ -67,27 +67,29 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
         skybox_cmd.textures = &m_skybox->textures;
         skybox_cmd.model_matrix = Eigen::Matrix4f::Identity();
         skybox_cmd.is_instanced = false;
+        // Draw after opaque geometry (so it only fills background pixels) but before
+        // transparent. Its fragments sit at the far plane (z=w in skybox.vs), so it needs
+        // GL_LEQUAL and must not write depth.
+        skybox_cmd.depthTest = true;
+        skybox_cmd.depthWrite = false;
+        skybox_cmd.depth_func = DepthFunc::LEqual;
+        skybox_cmd.sort_key = 0x7FFFFFFFFFFFFFFFULL;  // last among opaque (transparent bit 63 = 0)
         m_render_commands.push_back(skybox_cmd);
     }
 
-    // Instance batching: Group drawables by mesh/material/shader
-    std::unordered_map<uint64_t, std::vector<const Drawable*>> instance_batches;
+    // Instance batching: group drawables by the exact (mesh, material, shader) triple.
+    std::map<BatchKey, std::vector<const Drawable*>> instance_batches;
     std::vector<const Drawable*> non_instanced_drawables;  // Skinned meshes, etc.
-    
+
     for (const auto& drawable : m_drawables) {
         // Skip instancing for skinned meshes (has bones)
         if (!drawable.bone_matrices.empty()) {
             non_instanced_drawables.push_back(&drawable);
             continue;
         }
-        
-        // Create batch key (mesh + material + shader)
-        uint64_t batch_key = 0;
-        batch_key ^= reinterpret_cast<uint64_t>(drawable.mesh.get()) + 0x9e3779b9 + (batch_key << 6) + (batch_key >> 2);
-        batch_key ^= reinterpret_cast<uint64_t>(drawable.material.get()) + 0x9e3779b9 + (batch_key << 6) + (batch_key >> 2);
-        batch_key ^= reinterpret_cast<uint64_t>(drawable.shader.get()) + 0x9e3779b9 + (batch_key << 6) + (batch_key >> 2);
-        
-        instance_batches[batch_key].push_back(&drawable);
+
+        BatchKey key{drawable.mesh.get(), drawable.material.get(), drawable.shader.get()};
+        instance_batches[key].push_back(&drawable);
     }
     
     // Convert batches to render commands
@@ -124,6 +126,7 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
             }
             
             const auto* first = batch[0];
+            auto dist = (first->model_matrix.block<3, 1>(0, 3) - camera_pos).squaredNorm();
             RenderCommand cmd;
             cmd.mesh = first->mesh.get();
             cmd.material = first->material.get();
@@ -134,6 +137,7 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
             cmd.is_instanced = true;
             cmd.instance_count = batch.size();
             cmd.instance_data = &instance_data_vec;  // Link to stored data
+            cmd.computeSortKey(cmd.material->isTransparent(), dist);
             m_render_commands.push_back(cmd);
         }
     }
@@ -170,7 +174,10 @@ void ForwardRenderer::endFrame() {
     m_skybox.reset();
     m_drawables.clear();
     m_lights.clear();
+#ifndef NDEBUG
+    // Only drain GL errors in debug builds; skip the per-frame glGetError round-trip in release.
     m_api->checkAndLogErrors();
+#endif
     m_render_commands.clear();
 }
 

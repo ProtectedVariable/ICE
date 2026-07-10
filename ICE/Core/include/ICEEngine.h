@@ -24,6 +24,9 @@ class ICEEngine {
 
     void step();
 
+    // Duration of the last step() in seconds.
+    double getDeltaTime() const { return m_delta_time; }
+
     void setupScene(const std::shared_ptr<Camera>& camera_);
 
     std::shared_ptr<Camera> getCamera();
@@ -64,6 +67,7 @@ class ICEEngine {
     std::shared_ptr<Project> project = nullptr;
 
     std::chrono::steady_clock::time_point lastFrameTime;
+    double m_delta_time = 0.0;
 
     EngineConfig config;
 };

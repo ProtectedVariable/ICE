@@ -63,7 +63,13 @@ int ModelLoader::processNode(const aiNode *ainode, std::vector<Model::Node> &nod
                              std::unordered_set<std::string> &used_names, const Eigen::Matrix4f &parent_transform) {
     std::string name = ainode->mName.C_Str();
     if (used_names.contains(name)) {
-        name = name + "_" + std::to_string(used_names.size());
+        // Suffix with an incrementing counter checked against existing names. The old
+        // "_<set size>" suffix could still collide with a node that already had that name.
+        const std::string base = name;
+        int counter = 1;
+        do {
+            name = base + "_" + std::to_string(counter++);
+        } while (used_names.contains(name));
     }
     used_names.insert(name);
 

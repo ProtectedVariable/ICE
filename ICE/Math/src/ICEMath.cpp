@@ -158,7 +158,12 @@ std::array<uint8_t *, 6> equirectangularToCubemap(uint8_t *inputPixels, int widt
                 Eigen::Vector3f cube = orientation(i, (2 * (x + 0.5) / faceWidth - 1), (2 * (y + 0.5) / faceHeight - 1));
 
                 auto r = cube.norm();
-                auto lon = fmod(atan2(cube.y(), cube.x()) + rotation, 2 * M_PI);
+                // rotation is in degrees; it was being added straight to a radian longitude.
+                // Also wrap negative longitudes into [0, 2pi) so they don't clamp to column 0.
+                auto lon = fmod(atan2(cube.y(), cube.x()) + DEG_TO_RAD(rotation), 2 * M_PI);
+                if (lon < 0) {
+                    lon += 2 * M_PI;
+                }
                 auto lat = acos(cube.z() / r);
 
                 int fx = width * lon / M_PI / 2 - 0.5;

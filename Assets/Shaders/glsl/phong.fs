@@ -22,6 +22,8 @@ struct Material {
 uniform Material material;
 
 in vec3 fnormal;
+in vec3 ftangent;
+in vec3 fbitangent;
 in vec3 fposition;
 in vec3 fview;
 in vec2 ftex_coords;
@@ -64,16 +66,27 @@ vec4 applyLight(Light light) {
     } else if(light.type == 2) {
         //TODO: Spot lights
     }
+    // Non-void function must return on every path (spot/unknown types fell off the end -> UB).
+    return vec4(0.0);
 }
 
-vec3 colorToNormal(vec3 color) {
-    return normalize(vec3(color.x * 2 - 1, color.y * 2 - 1, color.z * 2 - 1));
+// Transform the tangent-space normal-map sample into world space using a proper TBN basis
+// (Gram-Schmidt re-orthogonalized), matching pbr.fs. The previous math was not a TBN
+// transform at all.
+vec3 getNormalFromMap() {
+    vec3 tangentNormal = texture(material.normal_map, ftex_coords).xyz * 2.0 - 1.0;
+    vec3 N = normalize(fnormal);
+    vec3 T = normalize(ftangent);
+    T = normalize(T - dot(T, N) * N);
+    vec3 B = cross(N, T);
+    mat3 TBN = mat3(T, B, N);
+    return normalize(TBN * tangentNormal);
 }
 
 
 void main() {
     if(material.use_normal_map) {
-        normal = normalize(fnormal + (fnormal * colorToNormal(texture(material.normal_map, ftex_coords).xyz)));
+        normal = getNormalFromMap();
     } else {
         normal = fnormal;
     }

@@ -14,6 +14,8 @@ class SceneGraphSystem : public System {
     void onEntityRemoved(Entity e) override;
     void update(double delta) override;
 
+    int updateOrder() const override { return SceneGraphSystemOrder; }
+
     std::vector<Signature> getSignatures(const ComponentManager &comp_manager) const override {
         Signature signature0;
         signature0.set(comp_manager.getComponentType<TransformComponent>());

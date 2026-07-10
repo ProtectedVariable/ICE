@@ -16,13 +16,14 @@ void AnimationSystem::update(double dt) {
         auto model = m_asset_bank->getAsset<Model>(pose->skeletonModel);
         const auto& animations = model->getAnimations();
 
-        // Advance current animation time
-        anim->currentTime += dt * anim->speed;
-
         if (!animations.contains(anim->currentAnimation)) {
             continue;
         }
         const auto& currentAnim = animations.at(anim->currentAnimation);
+
+        // Advance current animation time. dt is in seconds; animation keyframes are in
+        // ticks, so convert with ticksPerSecond (previously ignored -> wrong playback rate).
+        anim->currentTime += dt * currentAnim.ticksPerSecond * anim->speed;
 
         if (anim->currentTime > currentAnim.duration) {
             if (anim->loop) {
@@ -44,7 +45,7 @@ void AnimationSystem::update(double dt) {
             // Advance previous animation time as well
             if (animations.contains(anim->previousAnimation)) {
                 const auto& prevAnim = animations.at(anim->previousAnimation);
-                anim->previousTime += dt * anim->speed;
+                anim->previousTime += dt * prevAnim.ticksPerSecond * anim->speed;
                 if (anim->previousTime > prevAnim.duration) {
                     anim->previousTime = std::fmod(anim->previousTime, prevAnim.duration);
                 }

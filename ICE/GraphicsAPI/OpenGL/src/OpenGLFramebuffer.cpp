@@ -28,7 +28,9 @@ void OpenGLFramebuffer::resize(int width, int height) {
     glBindFramebuffer(GL_FRAMEBUFFER, uid);
     glBindTexture(GL_TEXTURE_2D, texture);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    // Keep the RGBA8 format from construction: the resize path used to recreate the color
+    // attachment as unsized GL_RGB, silently dropping the alpha channel after the first resize.
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -38,6 +40,12 @@ void OpenGLFramebuffer::resize(int width, int height) {
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
 
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depth);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        Logger::Log(Logger::FATAL, "Graphics", "Framebuffer incomplete after resize (%dx%d)", width, height);
+    }
+    // Leave this framebuffer bound: callers (e.g. the editor picking pass) bind() then
+    // resize() and expect to keep rendering into it.
 }
 
 int OpenGLFramebuffer::getTexture() {
@@ -50,7 +58,7 @@ OpenGLFramebuffer::OpenGLFramebuffer(FrameBufferFormat fmt) : Framebuffer(fmt) {
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, fmt.width, fmt.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, fmt.width, fmt.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -81,9 +89,11 @@ void OpenGLFramebuffer::bindAttachment(int slot) const {
 }
 
 Eigen::Vector4i OpenGLFramebuffer::readPixel(int x, int y) {
-    glFlush();
+    // Bind this framebuffer's read target explicitly rather than assuming it is current.
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, uid);
+    glReadBuffer(GL_COLOR_ATTACHMENT0);
     glFinish();
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
     unsigned char data[4];
     auto pixels = Eigen::Vector4i();
     glReadPixels(x, format.height - y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, data);
@@ -91,6 +101,7 @@ Eigen::Vector4i OpenGLFramebuffer::readPixel(int x, int y) {
     pixels.y() = data[1];
     pixels.z() = data[2];
     pixels.w() = data[3];
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
     return pixels;
 }
 }  // namespace ICE

@@ -20,6 +20,9 @@ std::shared_ptr<Texture2D> Texture2DLoader::load(const std::vector<std::filesyst
 
 std::shared_ptr<TextureCube> TextureCubeLoader::load(const std::vector<std::filesystem::path> &file) {
     Logger::Log(Logger::VERBOSE, "IO", "Loading cubemap...");
+    if (file.empty()) {
+        return nullptr;
+    }
     auto texture = std::make_shared<TextureCube>(file[0].string());
     texture->setSources(file);
     return texture;
