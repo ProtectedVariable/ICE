@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <AssetBank.h>
 #include <Entity.h>
 #include <Registry.h>
 #include <SceneGraph.h>
@@ -16,23 +17,23 @@ class Renderer;
 
 class Scene {
    public:
-    Scene(const std::string& name);
+    Scene(const std::string &name);
 
-    bool setAlias(Entity entity, const std::string& newName);
-    std::string getAlias(Entity e);
+    bool setAlias(Entity entity, const std::string &newName);
+    std::string getAlias(Entity e) const;
 
     std::shared_ptr<SceneGraph> getGraph() const;
 
     std::string getName() const;
-    void setName(const std::string& name);
+    void setName(const std::string &name);
 
     std::shared_ptr<Registry> getRegistry() const;
     Entity createEntity();
-    Entity spawnTree(AssetUID model_id, const std::shared_ptr<AssetBank>& bank);
+    Entity spawnTree(AssetUID model_id, const std::shared_ptr<AssetBank> &bank);
 
-    void addEntity(Entity e, const std::string& alias, Entity parent);
+    void addEntity(Entity e, const std::string &alias, Entity parent);
     void removeEntity(Entity e);
-    bool hasEntity(Entity e);
+    bool hasEntity(Entity e) const;
 
    private:
     std::string name;

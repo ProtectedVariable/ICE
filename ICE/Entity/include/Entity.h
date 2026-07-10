@@ -14,7 +14,12 @@
 
 namespace ICE {
 using Entity = std::uint32_t;
-using Signature = std::bitset<32>;
+// 64 bits allows up to 64 component types (8 built-in + custom). See registerComponent's
+// bound check.
+using Signature = std::bitset<64>;
+
+// Reserved "no entity" / scene-graph-root sentinel.
+constexpr Entity NULL_ENTITY = 0;
 
 class EntityManager {
    public:
@@ -39,10 +44,20 @@ class EntityManager {
     }
 
     void releaseEntity(Entity e) {
-        signatures[e].reset();
+        // Guard against releasing a non-alive/already-released entity: that used to enqueue
+        // the same id twice (later handed out as two live entities) and underflow the count.
+        // Presence of a signature entry is the aliveness proxy.
+        if (!signatures.contains(e)) {
+            return;
+        }
+        signatures.erase(e);  // erase, not reset: the map was growing monotonically
         releasedEntities.push(e);
-        entityCount--;
+        if (entityCount > 0) {
+            entityCount--;
+        }
     }
+
+    bool isAlive(Entity e) const { return e != NULL_ENTITY && signatures.contains(e); }
 
     void setSignature(Entity e, Signature s) { signatures[e] = s; }
 

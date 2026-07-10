@@ -29,7 +29,7 @@ namespace ICE {
             return j;
         }
 
-        inline Eigen::Matrix4f readMat4(const json& j) {
+        static Eigen::Matrix4f readMat4(const json& j) {
             Eigen::Matrix4f mat;
             if (!j.is_array() || j.size() != 16)
                 throw std::runtime_error("Invalid JSON for Eigen::Matrix4f");

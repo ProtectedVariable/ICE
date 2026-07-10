@@ -1,12 +1,15 @@
 #include "SceneGraphSystem.h"
 
 namespace ICE {
-SceneGraphSystem::SceneGraphSystem(const std::shared_ptr<Scene> &scene) : m_scene(scene) {
+SceneGraphSystem::SceneGraphSystem(const std::shared_ptr<Scene> &scene) : m_scene(scene.get()) {
 }
 
 void SceneGraphSystem::onEntityAdded(Entity e) {
 }
 void SceneGraphSystem::onEntityRemoved(Entity e) {
+    // Evict the cached transform version so a recycled entity id isn't skipped because its
+    // new version happens to match the stale cached one.
+    m_transformVersions.erase(e);
 }
 void SceneGraphSystem::update(double delta) {
     auto root = m_scene->getGraph()->getRoot();

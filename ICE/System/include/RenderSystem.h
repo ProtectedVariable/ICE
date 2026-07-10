@@ -69,7 +69,9 @@ class RenderSystem : public System {
 
     std::shared_ptr<RendererAPI> m_api;
     std::shared_ptr<GraphicsFactory> m_factory;
-    std::shared_ptr<Registry> m_registry;
+    // Non-owning back-reference: the Registry owns this system, so a shared_ptr here formed
+    // a Registry -> SystemManager -> this -> Registry cycle. The Registry outlives its systems.
+    Registry* m_registry = nullptr;
     std::shared_ptr<GPURegistry> m_gpu_bank;
 
     std::shared_ptr<VertexArray> m_quad_vao;

@@ -3,7 +3,7 @@
 #include <iostream>
 
 namespace ICE {
-AnimationSystem::AnimationSystem(const std::shared_ptr<Registry>& reg, const std::shared_ptr<AssetBank>& bank) : m_registry(reg), m_asset_bank(bank) {
+AnimationSystem::AnimationSystem(const std::shared_ptr<Registry>& reg, const std::shared_ptr<AssetBank>& bank) : m_registry(reg.get()), m_asset_bank(bank) {
 }
 
 void AnimationSystem::update(double dt) {
@@ -80,7 +80,7 @@ void AnimationSystem::update(double dt) {
             updateSkeleton(model, anim->currentTime, pose, currentAnim);
         }
 
-        finalizePose();
+        finalizePose(e);
     }
 }
 
@@ -124,21 +124,22 @@ void AnimationSystem::updateSkeleton(const std::shared_ptr<Model>& model, double
     }
 }
 
-void AnimationSystem::finalizePose() {
-    for (auto e : entities) {
-        auto pose = m_registry->getComponent<SkeletonPoseComponent>(e);
-        auto model = m_asset_bank->getAsset<Model>(pose->skeletonModel);
-        auto& skeleton = model->getSkeleton();
+void AnimationSystem::finalizePose(Entity e) {
+    // Finalize only the entity being processed. This used to loop over every animated
+    // entity on each call, and it is called once per entity in update(), so the work was
+    // O(N^2) (with a matrix inverse per skeleton) while producing identical results.
+    auto pose = m_registry->getComponent<SkeletonPoseComponent>(e);
+    auto model = m_asset_bank->getAsset<Model>(pose->skeletonModel);
+    auto& skeleton = model->getSkeleton();
 
-        auto rootTransform = m_registry->getComponent<TransformComponent>(e);
-        Eigen::Matrix4f modelWorldInv = rootTransform->getWorldMatrix().inverse();
+    auto rootTransform = m_registry->getComponent<TransformComponent>(e);
+    Eigen::Matrix4f modelWorldInv = rootTransform->getWorldMatrix().inverse();
 
-        for (const auto& [name, id] : skeleton.boneMapping) {
-            Entity boneEntity = pose->bone_entity.at(name);
+    for (const auto& [name, id] : skeleton.boneMapping) {
+        Entity boneEntity = pose->bone_entity.at(name);
 
-            Eigen::Matrix4f boneWorld = m_registry->getComponent<TransformComponent>(boneEntity)->getWorldMatrix();
-            pose->bone_transform[id] = modelWorldInv * boneWorld;
-        }
+        Eigen::Matrix4f boneWorld = m_registry->getComponent<TransformComponent>(boneEntity)->getWorldMatrix();
+        pose->bone_transform[id] = modelWorldInv * boneWorld;
     }
 }
 

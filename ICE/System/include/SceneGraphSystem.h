@@ -23,7 +23,10 @@ class SceneGraphSystem : public System {
     }
 
    private:
-    std::shared_ptr<Scene> m_scene;
+    // Non-owning: the Scene owns this system's Registry (which owns this system), so holding
+    // a shared_ptr here formed a Scene -> Registry -> SystemManager -> this -> Scene cycle
+    // that leaked the whole scene. The Scene always outlives its systems.
+    Scene* m_scene = nullptr;
     std::unordered_map<Entity, uint32_t> m_transformVersions;
 };
 }  // namespace ICE

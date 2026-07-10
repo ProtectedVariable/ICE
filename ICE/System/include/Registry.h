@@ -6,12 +6,10 @@
 #define ICE_REGISTRY_H
 
 #include <AnimationComponent.h>
-#include <CameraComponent.h>
 #include <Component.h>
 #include <Entity.h>
 #include <LightComponent.h>
 #include <RenderComponent.h>
-#include <RenderSystem.h>
 #include <SkeletonPoseComponent.h>
 #include <SkinningComponent.h>
 #include <SkyboxComponent.h>
@@ -27,7 +25,6 @@ class Registry {
         componentManager.registerComponent<TransformComponent>();
         componentManager.registerComponent<RenderComponent>();
         componentManager.registerComponent<LightComponent>();
-        componentManager.registerComponent<CameraComponent>();
         componentManager.registerComponent<SkyboxComponent>();
         componentManager.registerComponent<AnimationComponent>();
         componentManager.registerComponent<SkeletonPoseComponent>();
@@ -63,19 +60,26 @@ class Registry {
         systemManager.entityDestroyed(e);
     }
 
-    std::vector<Entity> getEntities() const { return entities; }
+    const std::vector<Entity>& getEntities() const { return entities; }
+
+    bool isAlive(Entity e) const { return entityManager.isAlive(e); }
 
     template<typename T>
-    bool entityHasComponent(Entity e) {
+    bool entityHasComponent(Entity e) const {
         return entityManager.getSignature(e).test(componentManager.getComponentType<T>());
     }
 
+    // WARNING: the returned pointer is only valid until the next structural change to the
+    // T component storage. addComponent<T>/removeComponent<T> on ANY entity can reallocate
+    // or swap-move the backing vector, invalidating outstanding T* handles. Do not cache
+    // component pointers across such changes -- re-fetch instead (see the editor Inspector).
     template<typename T>
     T *getComponent(Entity e) {
         return componentManager.getComponent<T>(e);
     }
 
-    // Returns nullptr instead of asserting when the entity has no component of type T.
+    // Returns nullptr instead of asserting when the entity has no component of type T. Same
+    // pointer-invalidation caveat as getComponent applies.
     template<typename T>
     T *tryGetComponent(Entity e) {
         return componentManager.tryGetComponent<T>(e);
@@ -83,7 +87,7 @@ class Registry {
 
     template<typename T>
     void addComponent(Entity e, T component) {
-        componentManager.addComponent<T>(e, component);
+        componentManager.addComponent<T>(e, std::move(component));
         auto signature = entityManager.getSignature(e);
         signature.set(componentManager.getComponentType<T>(), true);
         entityManager.setSignature(e, signature);

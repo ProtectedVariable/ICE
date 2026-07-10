@@ -3,17 +3,14 @@ project(storage)
 
 message(STATUS "Building ${PROJECT_NAME} module")
 
-add_library(${PROJECT_NAME} STATIC)
+# Header-only after removing the empty Filesystem stub (JsonParser is the only content).
+add_library(${PROJECT_NAME} INTERFACE)
 
-target_sources(${PROJECT_NAME} PRIVATE
-    src/Filesystem.cpp
-)
-
-target_link_libraries(${PROJECT_NAME} PUBLIC
+target_link_libraries(${PROJECT_NAME} INTERFACE
     nlohmann_json
 )
 
-target_include_directories(${PROJECT_NAME} PUBLIC
+target_include_directories(${PROJECT_NAME} INTERFACE
         $<INSTALL_INTERFACE:include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 

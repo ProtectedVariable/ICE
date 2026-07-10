@@ -10,6 +10,8 @@
 #include <cassert>
 #include <memory>
 #include <typeindex>
+#include <unordered_map>
+#include <vector>
 
 namespace ICE {
 
@@ -34,9 +36,9 @@ class ComponentArray : public IComponentArray {
         entityToIndexMap[entity] = newIndex;
         indexToEntityMap[newIndex] = entity;
         if (size < componentArray.size()) {
-            componentArray[newIndex] = component;
+            componentArray[newIndex] = std::move(component);
         } else {
-            componentArray.push_back(component);
+            componentArray.push_back(std::move(component));
         }
         size++;
     }
@@ -106,6 +108,9 @@ class ComponentManager {
         auto const& type = typeid(T);
 
         assert(componentTypes.find(type) == componentTypes.end() && "Registering component type more than once.");
+        // The signature is a bitset<64>; a component type index >= 64 would throw from
+        // signature.set() at runtime.
+        assert(nextComponentType < 64 && "Too many component types registered (max 64).");
 
         // Add this component type to the component type map
         componentTypes.insert({type, nextComponentType});
@@ -126,19 +131,20 @@ class ComponentManager {
 
     template<typename T>
     void addComponent(Entity entity, T component) {
-        // Add a component to the array for an entity
-        getComponentArray<T>()->insertData(entity, component);
+        // Add a component to the array for an entity; move to avoid an extra copy of
+        // potentially heavy components.
+        getComponentArray<T>().insertData(entity, std::move(component));
     }
 
     template<typename T>
     void removeComponent(Entity entity) {
-         getComponentArray<T>()->removeData(entity);
+        getComponentArray<T>().removeData(entity);
     }
 
     template<typename T>
     T* getComponent(Entity entity) {
         // Get a reference to a component from the array for an entity
-        return getComponentArray<T>()->getData(entity);
+        return getComponentArray<T>().getData(entity);
     }
 
     // Returns nullptr if the type is not registered or the entity has no such component,
@@ -172,12 +178,12 @@ class ComponentManager {
     // The component type to be assigned to the next registered component - starting at 0
     ComponentType nextComponentType{};
 
-    // Convenience function to get the statically casted pointer to the ComponentArray of type T.
+    // Reference to the ComponentArray of type T. Returns a reference (not a shared_ptr
+    // copy) to avoid an atomic refcount round-trip on every component access. .at() throws
+    // std::out_of_range for an unregistered type instead of operator[] inserting a null.
     template<typename T>
-    std::shared_ptr<ComponentArray<T>> getComponentArray() {
-        // .at() throws std::out_of_range for an unregistered component type instead of
-        // operator[] inserting a null shared_ptr that later null-derefs.
-        return std::static_pointer_cast<ComponentArray<T>>(componentArrays.at(typeid(T)));
+    ComponentArray<T>& getComponentArray() {
+        return static_cast<ComponentArray<T>&>(*componentArrays.at(typeid(T)));
     }
 };
 }  // namespace ICE
