@@ -1,7 +1,7 @@
 #include "SceneGraphSystem.h"
 
 namespace ICE {
-SceneGraphSystem::SceneGraphSystem(const std::shared_ptr<Scene> &scene) : m_scene(scene) {
+SceneGraphSystem::SceneGraphSystem(const std::shared_ptr<Scene> &scene) : m_scene(scene.get()) {
 }
 
 void SceneGraphSystem::onEntityAdded(Entity e) {

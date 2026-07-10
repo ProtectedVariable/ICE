@@ -6,7 +6,6 @@
 #define ICE_REGISTRY_H
 
 #include <AnimationComponent.h>
-#include <CameraComponent.h>
 #include <Component.h>
 #include <Entity.h>
 #include <LightComponent.h>
@@ -26,7 +25,6 @@ class Registry {
         componentManager.registerComponent<TransformComponent>();
         componentManager.registerComponent<RenderComponent>();
         componentManager.registerComponent<LightComponent>();
-        componentManager.registerComponent<CameraComponent>();
         componentManager.registerComponent<SkyboxComponent>();
         componentManager.registerComponent<AnimationComponent>();
         componentManager.registerComponent<SkeletonPoseComponent>();

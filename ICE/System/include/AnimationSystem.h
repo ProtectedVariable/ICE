@@ -41,7 +41,7 @@ class AnimationSystem : public System {
     }
 
     void updateSkeleton(const std::shared_ptr<Model> &model, double time, SkeletonPoseComponent *pose, const Animation &anim);
-    void finalizePose();
+    void finalizePose(Entity e);
 
     BonePose sampleBonePose(const std::string &boneName, const Animation &anim, double time, const std::shared_ptr<Model> &model);
     static BonePose blendPoses(const BonePose &a, const BonePose &b, float factor);
@@ -53,7 +53,8 @@ class AnimationSystem : public System {
     void applyTransforms(const Model::Node *node, const Eigen::Matrix4f &parentTransform, const Model::Skeleton &skeleton, double time,
                          SkeletonPoseComponent *pose, const Animation &anim, const std::vector<Model::Node> &allModelNodes);
 
-    std::shared_ptr<Registry> m_registry;
+    // Non-owning back-reference (the Registry owns this system) to avoid an ownership cycle.
+    Registry* m_registry = nullptr;
     std::shared_ptr<AssetBank> m_asset_bank;
 };
 }  // namespace ICE

@@ -12,7 +12,7 @@ RenderSystem::RenderSystem(const std::shared_ptr<RendererAPI> &api, const std::s
                            const std::shared_ptr<Registry> &reg, const std::shared_ptr<GPURegistry> &gpu_bank)
     : m_api(api),
       m_factory(factory),
-      m_registry(reg),
+      m_registry(reg.get()),
       m_gpu_bank(gpu_bank) {
     m_quad_vao = factory->createVertexArray();
     auto quad_vertex_vbo = factory->createVertexBuffer();
