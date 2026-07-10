@@ -62,7 +62,12 @@ class SystemManager {
         for (auto const& system : orderedSystems) {
             auto const& systemSignature = system->getSignatures(comp_manager);
 
-            // Entity signature matches system signature - insert into set
+            // Entity signature matches system signature - insert into set. onEntityAdded is
+            // fired on every matching signature change (not just the first insert): a system
+            // like RenderSystem derives several sub-lists (renderables/lights/skybox) from
+            // different component types and must resync when any relevant component is added
+            // or removed while the entity is already a member. Such onEntityAdded handlers
+            // must therefore be idempotent (resync, e.g. remove-then-add their sub-lists).
             bool match = false;
             for (const auto& s : systemSignature) {
                 if ((entitySignature & s) == s) {
@@ -72,7 +77,7 @@ class SystemManager {
                     break;
                 }
             }
-            // Entity signature does not match system signature - erase from set
+            // Entity signature no longer matches - erase from set and notify (both idempotent).
             if (!match) {
                 system->entities.erase(entity);
                 system->onEntityRemoved(entity);

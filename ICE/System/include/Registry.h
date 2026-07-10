@@ -11,7 +11,6 @@
 #include <Entity.h>
 #include <LightComponent.h>
 #include <RenderComponent.h>
-#include <RenderSystem.h>
 #include <SkeletonPoseComponent.h>
 #include <SkinningComponent.h>
 #include <SkyboxComponent.h>
@@ -63,7 +62,9 @@ class Registry {
         systemManager.entityDestroyed(e);
     }
 
-    std::vector<Entity> getEntities() const { return entities; }
+    const std::vector<Entity>& getEntities() const { return entities; }
+
+    bool isAlive(Entity e) const { return entityManager.isAlive(e); }
 
     template<typename T>
     bool entityHasComponent(Entity e) {
@@ -83,7 +84,7 @@ class Registry {
 
     template<typename T>
     void addComponent(Entity e, T component) {
-        componentManager.addComponent<T>(e, component);
+        componentManager.addComponent<T>(e, std::move(component));
         auto signature = entityManager.getSignature(e);
         signature.set(componentManager.getComponentType<T>(), true);
         entityManager.setSignature(e, signature);

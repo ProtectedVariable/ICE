@@ -1,5 +1,6 @@
 #pragma once
 
+#include <AssetBank.h>
 #include <Registry.h>
 
 #include "Animation.h"
@@ -16,12 +17,12 @@ struct BonePose {
 
 class AnimationSystem : public System {
    public:
-    AnimationSystem(const std::shared_ptr<Registry>& reg, const std::shared_ptr<AssetBank>& bank);
+    AnimationSystem(const std::shared_ptr<Registry> &reg, const std::shared_ptr<AssetBank> &bank);
     void update(double delta) override;
 
     int updateOrder() const override { return AnimationSystemOrder; }
 
-    std::vector<Signature> getSignatures(const ComponentManager& comp_manager) const override {
+    std::vector<Signature> getSignatures(const ComponentManager &comp_manager) const override {
         Signature signature;
         signature.set(comp_manager.getComponentType<AnimationComponent>());
         signature.set(comp_manager.getComponentType<SkeletonPoseComponent>());
@@ -30,7 +31,7 @@ class AnimationSystem : public System {
 
    private:
     template<typename T>
-    size_t findKeyIndex(double animationTime, const std::vector<T>& keys) {
+    size_t findKeyIndex(double animationTime, const std::vector<T> &keys) {
         for (size_t i = 0; i < keys.size() - 1; ++i) {
             if (animationTime < keys[i + 1].timeStamp) {
                 return i;
@@ -39,18 +40,18 @@ class AnimationSystem : public System {
         return keys.size() - 1;
     }
 
-    void updateSkeleton(const std::shared_ptr<Model>& model, double time, SkeletonPoseComponent* pose, const Animation& anim);
+    void updateSkeleton(const std::shared_ptr<Model> &model, double time, SkeletonPoseComponent *pose, const Animation &anim);
     void finalizePose();
 
-    BonePose sampleBonePose(const std::string& boneName, const Animation& anim, double time, const std::shared_ptr<Model>& model);
-    static BonePose blendPoses(const BonePose& a, const BonePose& b, float factor);
+    BonePose sampleBonePose(const std::string &boneName, const Animation &anim, double time, const std::shared_ptr<Model> &model);
+    static BonePose blendPoses(const BonePose &a, const BonePose &b, float factor);
 
-    Eigen::Vector3f interpolatePosition(double timeInTicks, const BoneAnimation& track);
-    Eigen::Vector3f interpolateScale(double timeInTicks, const BoneAnimation& track);
-    Eigen::Quaternionf interpolateRotation(double time, const BoneAnimation& track);
+    Eigen::Vector3f interpolatePosition(double timeInTicks, const BoneAnimation &track);
+    Eigen::Vector3f interpolateScale(double timeInTicks, const BoneAnimation &track);
+    Eigen::Quaternionf interpolateRotation(double time, const BoneAnimation &track);
 
-    void applyTransforms(const Model::Node* node, const Eigen::Matrix4f& parentTransform, const Model::Skeleton& skeleton, double time,
-                         SkeletonPoseComponent* pose, const Animation& anim, const std::vector<Model::Node>& allModelNodes);
+    void applyTransforms(const Model::Node *node, const Eigen::Matrix4f &parentTransform, const Model::Skeleton &skeleton, double time,
+                         SkeletonPoseComponent *pose, const Animation &anim, const std::vector<Model::Node> &allModelNodes);
 
     std::shared_ptr<Registry> m_registry;
     std::shared_ptr<AssetBank> m_asset_bank;

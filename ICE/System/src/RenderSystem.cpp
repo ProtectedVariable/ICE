@@ -154,6 +154,10 @@ void RenderSystem::update(double delta) {
 }
 
 void RenderSystem::onEntityAdded(Entity e) {
+    // Resync from scratch: onEntityAdded fires on every signature change while the entity
+    // matches, so clear this entity from all sub-lists first, then re-add based on its
+    // current components. This keeps the renderables/lights/skybox lists correct when an
+    // entity gains a second relevant component (e.g. a light added to a renderable).
     onEntityRemoved(e);
     if (m_registry->entityHasComponent<RenderComponent>(e)) {
         m_render_queue.emplace_back(e);
@@ -178,6 +182,8 @@ void RenderSystem::onEntityRemoved(Entity e) {
     if (e == m_skybox) {
         m_skybox = NO_ASSET_ID;
     }
+    // Evict cached culling data so a recycled entity id can't inherit a stale AABB.
+    m_culling_cache.erase(e);
 }
 
 std::shared_ptr<Renderer> RenderSystem::getRenderer() const {

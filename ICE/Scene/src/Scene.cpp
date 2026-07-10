@@ -30,8 +30,11 @@ bool Scene::setAlias(Entity entity, const std::string &newName) {
     return true;
 }
 
-std::string Scene::getAlias(Entity e) {
-    return aliases[e];
+std::string Scene::getAlias(Entity e) const {
+    // find, not operator[]: the latter inserted an empty alias for unknown entities, which
+    // (combined with the old alias-based hasEntity) made a nonexistent entity "exist".
+    auto it = aliases.find(e);
+    return it == aliases.end() ? std::string() : it->second;
 }
 
 std::shared_ptr<Registry> Scene::getRegistry() const {
@@ -125,8 +128,10 @@ void Scene::removeEntity(Entity e) {
     m_graph->removeEntity(e);
 }
 
-bool Scene::hasEntity(Entity e) {
-    return aliases.contains(e);
+bool Scene::hasEntity(Entity e) const {
+    // Aliveness is owned by the registry, not the alias map (an entity can be alive without
+    // an alias, and getAlias no longer fabricates entries).
+    return registry->isAlive(e);
 }
 
 }  // namespace ICE
