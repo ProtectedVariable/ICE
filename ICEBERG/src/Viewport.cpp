@@ -44,7 +44,26 @@ Viewport::Viewport(const std::shared_ptr<ICE::ICEEngine> &engine, const std::fun
 
                 auto tc = registry->getComponent<ICE::TransformComponent>(e);
                 auto rc = registry->getComponent<ICE::RenderComponent>(e);
-                shader->loadMat4("model", tc->getWorldMatrix());
+                auto model_mat = tc->getWorldMatrix();
+
+                // Skin the picking geometry exactly like the render pass does, so an
+                // animated model is picked at its current pose instead of its bind pose.
+                if (registry->entityHasComponent<ICE::SkinningComponent>(e)) {
+                    const auto &skinning = m_engine->getGPURegistry()->getMeshSkinningData(rc->mesh);
+                    auto skeleton_entity = registry->getComponent<ICE::SkinningComponent>(e)->skeleton_entity;
+                    auto pose = registry->tryGetComponent<ICE::SkeletonPoseComponent>(skeleton_entity);
+                    auto skel_transform = registry->tryGetComponent<ICE::TransformComponent>(skeleton_entity);
+                    if (pose && skel_transform) {
+                        for (const auto &[id, ibm] : skinning.inverseBindMatrices) {
+                            if (id >= 0 && static_cast<size_t>(id) < pose->bone_transform.size()) {
+                                shader->loadMat4("bonesTransformMatrices[" + std::to_string(id) + "]", pose->bone_transform[id] * ibm);
+                            }
+                        }
+                        model_mat = skel_transform->getWorldMatrix();
+                    }
+                }
+
+                shader->loadMat4("model", model_mat);
                 shader->loadInt("objectID", e);
                 auto mesh = m_engine->getGPURegistry()->getMesh(rc->mesh);
                 if (mesh) {

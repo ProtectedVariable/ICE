@@ -1,7 +1,7 @@
 [
   {
     "stage": "vertex",
-    "source": "glsl/skinning.vs"
+    "source": "glsl/picking.vs"
   },
   {
     "stage": "fragment",
