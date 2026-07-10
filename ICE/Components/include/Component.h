@@ -10,6 +10,8 @@
 #include <cassert>
 #include <memory>
 #include <typeindex>
+#include <unordered_map>
+#include <vector>
 
 namespace ICE {
 
