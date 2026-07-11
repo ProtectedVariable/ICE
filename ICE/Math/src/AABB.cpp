@@ -6,7 +6,12 @@
 
 namespace ICE {
 
-AABB::AABB(const Eigen::Vector3f &min, const Eigen::Vector3f &max) : AABB(std::vector<Eigen::Vector3f>{min, max}) {
+AABB::AABB(const Eigen::Vector3f &a, const Eigen::Vector3f &b) {
+    // Set corners directly (no heap-allocated std::vector). cwiseMin/Max keeps min <= max
+    // even when callers pass swapped corners (e.g. scaledBy with a negative scale).
+    min = a.cwiseMin(b);
+    max = a.cwiseMax(b);
+    precomputeCenterAndExtent();
 }
 AABB::AABB(const std::vector<Eigen::Vector3f> &points) {
     if (points.empty()) {

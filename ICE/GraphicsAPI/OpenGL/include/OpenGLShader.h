@@ -33,13 +33,15 @@ class OpenGLShader : public ShaderProgram {
 
     void loadFloat(const std::string &name, float v) override;
 
-    void loadFloat2(const std::string &name, Eigen::Vector2f vec) override;
+    void loadFloat2(const std::string &name, const Eigen::Vector2f &vec) override;
 
-    void loadFloat3(const std::string &name, Eigen::Vector3f vec) override;
+    void loadFloat3(const std::string &name, const Eigen::Vector3f &vec) override;
 
-    void loadFloat4(const std::string &name, Eigen::Vector4f vec) override;
+    void loadFloat4(const std::string &name, const Eigen::Vector4f &vec) override;
 
-    void loadMat4(const std::string &name, Eigen::Matrix4f mat) override;
+    void loadMat4(const std::string &name, const Eigen::Matrix4f &mat) override;
+
+    void loadMat4v(const std::string &name, const Eigen::Matrix4f *data, uint32_t count) override;
 
    private:
     GLint getLocation(const std::string &name);

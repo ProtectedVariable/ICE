@@ -32,6 +32,7 @@ class RendererAPI {
     virtual void setDepthTest(bool enable) const = 0;
     virtual void setDepthMask(bool enable) const = 0;
     virtual void setDepthFunc(DepthFunc func) const = 0;
+    virtual void setBlend(bool enable) const = 0;
     virtual void setBackfaceCulling(bool enable) const = 0;
     virtual void checkAndLogErrors() const = 0;
 

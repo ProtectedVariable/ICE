@@ -62,6 +62,14 @@ void OpenGLRendererAPI::setDepthFunc(DepthFunc func) const {
     glDepthFunc(func == DepthFunc::LEqual ? GL_LEQUAL : GL_LESS);
 }
 
+void OpenGLRendererAPI::setBlend(bool enable) const {
+    if (enable) {
+        glEnable(GL_BLEND);
+    } else {
+        glDisable(GL_BLEND);
+    }
+}
+
 void OpenGLRendererAPI::setBackfaceCulling(bool enable) const {
     if (enable) {
         glEnable(GL_CULL_FACE);

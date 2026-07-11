@@ -27,10 +27,11 @@ AssetPath::AssetPath(std::string path) {
         }
     }
     name = path.substr(last, path.length() - last);
+    m_string = prefix() + name;  // canonical form, computed once
 }
 
-std::string AssetPath::toString() const {
-    return (prefix() + name);
+const std::string& AssetPath::toString() const {
+    return m_string;
 }
 
 std::vector<std::string> AssetPath::getPath() const {
@@ -43,9 +44,7 @@ std::string AssetPath::getName() const {
 
 void AssetPath::setName(const std::string &name) {
     AssetPath::name = name;
-}
-
-AssetPath::AssetPath(const AssetPath &cpy) : AssetPath(cpy.toString()) {
+    m_string = prefix() + name;  // keep the canonical string in sync
 }
 
 std::string AssetPath::prefix() const {

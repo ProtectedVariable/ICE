@@ -16,6 +16,10 @@ class SceneGraphSystem : public System {
 
     int updateOrder() const override { return SceneGraphSystemOrder; }
 
+    // Recursive transform propagation over raw node pointers (no per-frame std::function
+    // allocation, no shared_ptr refcount churn per node).
+    void updateNode(SceneGraph::SceneNode *node, const Eigen::Matrix4f &parentMatrix, bool parent_changed);
+
     std::vector<Signature> getSignatures(const ComponentManager &comp_manager) const override {
         Signature signature0;
         signature0.set(comp_manager.getComponentType<TransformComponent>());

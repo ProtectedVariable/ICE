@@ -35,6 +35,8 @@ namespace ICE {
 
         void setDepthFunc(DepthFunc func) const override;
 
+        void setBlend(bool enable) const override;
+
         void setBackfaceCulling(bool enable) const override;
 
         void checkAndLogErrors() const override;

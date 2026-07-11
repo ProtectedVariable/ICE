@@ -20,7 +20,7 @@ class ThreadSafeQueue {
     // Push an item into the queue
     void push(T value) {
         std::lock_guard<std::mutex> lock(m_mutex);
-        m_queue.push(value);
+        m_queue.push(std::move(value));
 
         m_cond_var.notify_one();
     }
@@ -43,7 +43,7 @@ class ThreadSafeQueue {
         m_cond_var.wait(lock, [this] { return !m_queue.empty() || m_stop; });
         if (m_stop && m_queue.empty())
             throw std::runtime_error("Queue stopped");
-        T value = m_queue.front();
+        T value = std::move(m_queue.front());
         m_queue.pop();
         return value;
     }

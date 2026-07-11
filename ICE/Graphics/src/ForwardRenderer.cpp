@@ -29,8 +29,8 @@ ForwardRenderer::ForwardRenderer(const std::shared_ptr<RendererAPI>& api, const 
 void ForwardRenderer::submitSkybox(const Skybox& e) {
     m_skybox.emplace(e);
 }
-void ForwardRenderer::submitDrawable(const Drawable& e) {
-    m_drawables.push_back(e);
+void ForwardRenderer::submitDrawable(Drawable e) {
+    m_drawables.push_back(std::move(e));
 }
 void ForwardRenderer::submitLight(const Light& e) {
     m_lights.push_back(e);
@@ -110,6 +110,7 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
             cmd.depthTest = true;
             cmd.faceCulling = true;
             cmd.is_instanced = false;
+            cmd.blend = cmd.material->isTransparent();
             cmd.computeSortKey(cmd.material->isTransparent(), dist);
             m_render_commands.push_back(cmd);
         } else {
@@ -137,6 +138,7 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
             cmd.is_instanced = true;
             cmd.instance_count = batch.size();
             cmd.instance_data = &instance_data_vec;  // Link to stored data
+            cmd.blend = cmd.material->isTransparent();
             cmd.computeSortKey(cmd.material->isTransparent(), dist);
             m_render_commands.push_back(cmd);
         }
@@ -155,6 +157,7 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
         cmd.faceCulling = true;
         cmd.bones = &drawable->bone_matrices;
         cmd.is_instanced = false;
+        cmd.blend = cmd.material->isTransparent();
         cmd.computeSortKey(cmd.material->isTransparent(), dist);
         m_render_commands.push_back(cmd);
     }

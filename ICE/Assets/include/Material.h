@@ -39,7 +39,7 @@ class Material : public Asset {
     void renameUniform(const std::string& previous_name, const std::string& new_name);
     void removeUniform(const std::string& name);
 
-    std::unordered_map<std::string, UniformValue> getAllUniforms() const;
+    const std::unordered_map<std::string, UniformValue>& getAllUniforms() const;
     AssetUID getShader() const;
     void setShader(AssetUID shader_id);
     bool isTransparent() const;
