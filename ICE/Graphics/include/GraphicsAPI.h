@@ -33,6 +33,12 @@ class RendererAPI {
     virtual void setDepthMask(bool enable) const = 0;
     virtual void setDepthFunc(DepthFunc func) const = 0;
     virtual void setBlend(bool enable) const = 0;
+
+    // GPU timing via double-buffered GL_TIME_ELAPSED queries. begin/end bracket the GPU work;
+    // endGPUTimer returns the elapsed GPU time in milliseconds of a *previous* frame (one
+    // frame of latency) so reading the result never stalls the pipeline.
+    virtual void beginGPUTimer() const = 0;
+    virtual double endGPUTimer() const = 0;
     virtual void setBackfaceCulling(bool enable) const = 0;
     virtual void checkAndLogErrors() const = 0;
 

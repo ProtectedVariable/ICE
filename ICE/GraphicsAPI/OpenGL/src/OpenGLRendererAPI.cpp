@@ -70,6 +70,30 @@ void OpenGLRendererAPI::setBlend(bool enable) const {
     }
 }
 
+void OpenGLRendererAPI::beginGPUTimer() const {
+    if (!m_gpu_query_init) {
+        glGenQueries(2, m_gpu_query);
+        m_gpu_query_init = true;
+    }
+    glBeginQuery(GL_TIME_ELAPSED, m_gpu_query[m_gpu_query_idx]);
+}
+
+double OpenGLRendererAPI::endGPUTimer() const {
+    glEndQuery(GL_TIME_ELAPSED);
+    m_gpu_query_used[m_gpu_query_idx] = true;
+
+    // Read the other buffer's result (last frame's query): one frame old, so it's ready and
+    // reading it doesn't stall.
+    const int other = 1 - m_gpu_query_idx;
+    if (m_gpu_query_used[other]) {
+        GLuint64 elapsed_ns = 0;
+        glGetQueryObjectui64v(m_gpu_query[other], GL_QUERY_RESULT, &elapsed_ns);
+        m_last_gpu_ms = static_cast<double>(elapsed_ns) / 1.0e6;
+    }
+    m_gpu_query_idx = other;
+    return m_last_gpu_ms;
+}
+
 void OpenGLRendererAPI::setBackfaceCulling(bool enable) const {
     if (enable) {
         glEnable(GL_CULL_FACE);

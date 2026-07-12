@@ -41,6 +41,7 @@ struct alignas(16) SceneLightsUBO {
 struct alignas(16) CameraUBO {
     Eigen::Matrix4f projection;
     Eigen::Matrix4f view;
+    Eigen::Vector4f cameraPos;  // world-space camera position (xyz); matches std140 SceneData
 };
 
 struct Skybox {

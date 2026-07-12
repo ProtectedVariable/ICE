@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <LightComponent.h>
 #include <Logger.h>
+#include <Profiler.h>
 #include <RenderComponent.h>
 #include <Scene.h>
 #include <TransformComponent.h>
@@ -39,8 +40,10 @@ void ForwardRenderer::submitLight(const Light& e) {
 void ForwardRenderer::prepareFrame(Camera& camera) {
     auto view_mat = camera.lookThrough();
     auto proj_mat = camera.getProjection();
+    auto cam_pos = camera.getPosition();
 
-    CameraUBO camera_ubo_data{.projection = proj_mat, .view = view_mat};
+    CameraUBO camera_ubo_data{
+        .projection = proj_mat, .view = view_mat, .cameraPos = Eigen::Vector4f(cam_pos.x(), cam_pos.y(), cam_pos.z(), 1.0f)};
     m_camera_ubo->putData(&camera_ubo_data, sizeof(CameraUBO));
 
     SceneLightsUBO light_ubo_data;
@@ -168,9 +171,10 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
 }
 
 std::shared_ptr<Framebuffer> ForwardRenderer::render() {
+    m_api->beginGPUTimer();
     m_geometry_pass.execute();
-    auto result = m_geometry_pass.getResult();
-    return result;
+    Profiler::get().addSample("GPU::geometry", m_api->endGPUTimer());
+    return m_geometry_pass.getResult();
 }
 
 void ForwardRenderer::endFrame() {

@@ -37,9 +37,21 @@ namespace ICE {
 
         void setBlend(bool enable) const override;
 
+        void beginGPUTimer() const override;
+        double endGPUTimer() const override;
+
         void setBackfaceCulling(bool enable) const override;
 
         void checkAndLogErrors() const override;
+
+    private:
+        // Double-buffered GL_TIME_ELAPSED query state (GPU state, hence mutable behind the
+        // const API).
+        mutable GLuint m_gpu_query[2] = {0, 0};
+        mutable bool m_gpu_query_used[2] = {false, false};
+        mutable int m_gpu_query_idx = 0;
+        mutable bool m_gpu_query_init = false;
+        mutable double m_last_gpu_ms = 0.0;
     };
 }
 
