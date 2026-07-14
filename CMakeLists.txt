@@ -43,3 +43,9 @@ set(GL3W_SRC
 add_subdirectory(ICE)
 add_subdirectory(ICEBERG)
 add_subdirectory(ICEFIELD)
+
+# Architectural guard: fail the test run if a new inter-module dependency cycle is introduced.
+# Enforces the target module DAG (see cmake/module_dependency_check.cmake and
+# docs/module_dependencies.md). Runs standalone -- no build required -- so it can also gate CI early.
+add_test(NAME module_cycle_check
+    COMMAND ${CMAKE_COMMAND} -DICE_DIR=${CMAKE_SOURCE_DIR}/ICE -P ${CMAKE_SOURCE_DIR}/cmake/module_dependency_check.cmake)

@@ -7,7 +7,6 @@
 #include <AssetBank.h>
 #include <Entity.h>
 #include <GraphicsAPI.h>
-#include <Registry.h>
 
 #include <map>
 #include <optional>

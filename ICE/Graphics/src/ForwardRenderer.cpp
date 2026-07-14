@@ -13,7 +13,6 @@
 #include <Profiler.h>
 #include <RenderComponent.h>
 #include <RenderData.h>
-#include <Scene.h>
 #include <TransformComponent.h>
 
 #include <unordered_set>
