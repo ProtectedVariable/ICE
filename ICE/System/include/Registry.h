@@ -118,6 +118,12 @@ class Registry {
         return systemManager.getSystem<T>();
     }
 
+    // nullptr if no system of type T has been added (getSystem throws in that case).
+    template<typename T>
+    std::shared_ptr<T> tryGetSystem() {
+        return systemManager.tryGetSystem<T>();
+    }
+
     void updateSystems(double delta) { systemManager.updateSystems(delta); }
 
    private:

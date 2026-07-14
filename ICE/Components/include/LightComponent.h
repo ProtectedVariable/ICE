@@ -10,7 +10,16 @@
 #include "Component.h"
 
 namespace ICE {
-enum LightType { PointLight = 0, DirectionalLight = 1, SpotLight = 2 };
+// Short aliases (Point/Directional/Spot) sit alongside the original *Light names; both refer to
+// the same values, so existing code keeps compiling.
+enum LightType {
+    PointLight = 0,
+    DirectionalLight = 1,
+    SpotLight = 2,
+    Point = PointLight,
+    Directional = DirectionalLight,
+    Spot = SpotLight,
+};
 
 struct LightComponent : public Component {
     LightComponent(LightType t, const Eigen::Vector3f &col) : type(t), color(col) {}

@@ -115,6 +115,13 @@ class SystemManager {
         return std::static_pointer_cast<T>(systems.at(typeid(T)));
     }
 
+    // Non-throwing variant: nullptr if no system of type T has been added (getSystem throws).
+    template<typename T>
+    std::shared_ptr<T> tryGetSystem() {
+        auto it = systems.find(typeid(T));
+        return it == systems.end() ? nullptr : std::static_pointer_cast<T>(it->second);
+    }
+
    private:
     // Map from system type index to a system pointer (fast getSystem<T>() lookup).
     std::unordered_map<std::type_index, std::shared_ptr<System>> systems;

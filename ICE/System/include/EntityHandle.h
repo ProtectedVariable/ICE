@@ -2,6 +2,7 @@
 
 #include <AnimationComponent.h>
 #include <LightComponent.h>
+#include <NativeScriptComponent.h>
 #include <Registry.h>
 #include <RenderComponent.h>
 #include <TransformComponent.h>
@@ -58,6 +59,17 @@ class EntityHandle {
     RenderComponent* render() const { return get<RenderComponent>(); }
     LightComponent* light() const { return get<LightComponent>(); }
     AnimationComponent* animation() const { return get<AnimationComponent>(); }
+
+    // Attach a native script of type TScript to this entity. Wraps the NativeScriptComponent
+    // bind() dance: the ScriptSystem constructs and owns the live instance (forwarding any args
+    // to TScript's constructor) and drives its onCreate/onUpdate/onDestroy.
+    //   e.script<Rotator>();
+    template<typename TScript, typename... Args>
+    NativeScriptComponent& script(Args... args) {
+        NativeScriptComponent nsc;
+        nsc.bind<TScript>(args...);
+        return add(std::move(nsc));
+    }
 
     // --- Identity / liveness ----------------------------------------------------------------
     Entity id() const { return m_id; }

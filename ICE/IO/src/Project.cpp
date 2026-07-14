@@ -7,6 +7,7 @@
 #include <Entity.h>
 #include <JsonParser.h>
 #include <LightComponent.h>
+#include <Model.h>
 #include <OpenGLFactory.h>
 #include <RenderComponent.h>
 #include <Scene.h>
@@ -62,7 +63,7 @@ bool Project::CreateDirectories() {
     m_asset_bank->addAsset<Texture2D>("Editor/folder", {m_textures_directory / "Editor" / "folder.png"});
     m_asset_bank->addAsset<Texture2D>("Editor/shader", {m_textures_directory / "Editor" / "shader.png"});
 
-    m_scenes.push_back(std::make_shared<Scene>("MainScene"));
+    addScene(Scene("MainScene"));  // addScene wires the asset bank into the scene
     setCurrentScene(getScenes()[0]);
     return true;
 }
@@ -364,6 +365,26 @@ void Project::copyAssetFile(const fs::path &folder, const std::string &assetName
     dstStream.close();
 }
 
+AssetUID Project::importModel(const std::string &name, const fs::path &src) {
+    // Copy the source file into <project>/Assets/Models (keeping its extension) and register it.
+    copyAssetFile("Models", name, src);
+    fs::path dst = m_models_directory / (name + src.extension().string());
+    m_asset_bank->addAsset<Model>(name, {dst});
+    return model(name);
+}
+
+AssetUID Project::mesh(const std::string &name) const {
+    return m_asset_bank->getUID(AssetPath::WithTypePrefix<Mesh>(name));
+}
+
+AssetUID Project::material(const std::string &name) const {
+    return m_asset_bank->getUID(AssetPath::WithTypePrefix<Material>(name));
+}
+
+AssetUID Project::model(const std::string &name) const {
+    return m_asset_bank->getUID(AssetPath::WithTypePrefix<Model>(name));
+}
+
 bool Project::renameAsset(const AssetPath &oldName, const AssetPath &newName) {
     if (newName.getName() == "" || newName.prefix() != oldName.prefix()) {
         return false;
@@ -403,6 +424,12 @@ std::vector<std::shared_ptr<Scene>> Project::getScenes() {
 
 void Project::setScenes(const std::vector<std::shared_ptr<Scene>> &scenes) {
     m_scenes = scenes;
+    // Keep spawn()/by-name lookups working on scenes set in bulk (e.g. after a load).
+    for (auto &scene : m_scenes) {
+        if (scene) {
+            scene->setAssetBank(m_asset_bank);
+        }
+    }
 }
 
 std::shared_ptr<GPURegistry> Project::getGPURegistry() {
@@ -418,7 +445,11 @@ void Project::setAssetBank(const std::shared_ptr<AssetBank> &asset_bank) {
 }
 
 void Project::addScene(const Scene &scene) {
-    m_scenes.push_back(std::make_shared<Scene>(scene));
+    auto stored = std::make_shared<Scene>(scene);
+    // Wire the project's asset bank into the scene so scene.spawn()/by-name lookups work without
+    // the caller threading the bank through.
+    stored->setAssetBank(m_asset_bank);
+    m_scenes.push_back(stored);
 }
 
 void Project::setCurrentScene(const std::shared_ptr<Scene> &scene) {
@@ -426,6 +457,20 @@ void Project::setCurrentScene(const std::shared_ptr<Scene> &scene) {
 }
 std::shared_ptr<Scene> Project::getCurrentScene() const {
     return m_current_scene;
+}
+
+Scene &Project::createScene(const std::string &name) {
+    addScene(Scene(name));
+    auto scene = m_scenes.back();
+    m_current_scene = scene;
+    if (m_scene_activator) {
+        m_scene_activator(scene);  // engine builds the scene's runtime systems
+    }
+    return *scene;
+}
+
+void Project::setSceneActivator(const std::function<void(const std::shared_ptr<Scene>&)> &activator) {
+    m_scene_activator = activator;
 }
 
 json Project::dumpVec3(const Eigen::Vector3f &v) {

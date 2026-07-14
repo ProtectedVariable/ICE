@@ -19,6 +19,7 @@ error "Missing the <filesystem> header."
 #include <Scene.h>
 #include <nlohmann/json.hpp>
 
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -39,6 +40,17 @@ class Project {
     void copyAssetFile(const fs::path& folder, const std::string& assetName, const fs::path& src);
     bool renameAsset(const AssetPath& oldName, const AssetPath& newName);
 
+    // Import a model file into the project: copies `src` into the project's Models folder and
+    // registers it in the asset bank under `name`. Folds the copyAssetFile + addAsset + path
+    // reconstruction that callers used to spell out by hand. Returns the new asset's UID.
+    AssetUID importModel(const std::string& name, const fs::path& src);
+
+    // Resolve a bank UID by name for a given asset kind, hiding AssetPath::WithTypePrefix from
+    // gameplay/tools code. Return NO_ASSET_ID if no such asset is registered.
+    AssetUID mesh(const std::string& name) const;
+    AssetUID material(const std::string& name) const;
+    AssetUID model(const std::string& name) const;
+
     std::vector<std::shared_ptr<Scene>> getScenes();
     void setScenes(const std::vector<std::shared_ptr<Scene>>& scenes);
 
@@ -49,6 +61,14 @@ class Project {
     void addScene(const Scene& scene);
     void setCurrentScene(const std::shared_ptr<Scene>& scene);
     std::shared_ptr<Scene> getCurrentScene() const;
+
+    // Create a scene, add it, make it current, and -- if this project is attached to an engine --
+    // activate it (set up its runtime systems) so it is ready to render. Returns the owned scene.
+    Scene& createScene(const std::string& name);
+
+    // Installed by the engine when it adopts the project (see ICEEngine::newProject); createScene
+    // invokes it so a new scene gets its runtime systems. Runtime-only, never serialized.
+    void setSceneActivator(const std::function<void(const std::shared_ptr<Scene>&)>& activator);
 
     static json dumpVec3(const Eigen::Vector3f& v);
     static json dumpVec4(const Eigen::Vector4f& v);
@@ -94,6 +114,7 @@ class Project {
 
     std::vector<std::shared_ptr<Scene>> m_scenes;
     std::shared_ptr<Scene> m_current_scene;
+    std::function<void(const std::shared_ptr<Scene>&)> m_scene_activator;
 
     std::shared_ptr<AssetBank> m_asset_bank;
     std::shared_ptr<GPURegistry> m_gpu_registry;

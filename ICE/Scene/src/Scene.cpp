@@ -4,8 +4,10 @@
 
 #include "Scene.h"
 
+#include <PerspectiveCamera.h>
 #include <Registry.h>
 #include <RenderComponent.h>
+#include <RenderSystem.h>
 #include <SkeletonPoseComponent.h>
 #include <SkinningComponent.h>
 #include <TransformComponent.h>
@@ -13,7 +15,11 @@
 #include <utility>
 
 namespace ICE {
-Scene::Scene(const std::string &name) : name(name), m_graph(std::make_shared<SceneGraph>()), registry(std::make_shared<Registry>()) {
+Scene::Scene(const std::string &name)
+    : name(name),
+      m_graph(std::make_shared<SceneGraph>()),
+      registry(std::make_shared<Registry>()),
+      m_camera(std::make_shared<PerspectiveCamera>(60.0, 16.0 / 9.0, 0.01, 10000.0)) {
     aliases.try_emplace(0, "Scene");
 }
 
@@ -43,6 +49,33 @@ std::string Scene::getAlias(Entity e) const {
 
 std::shared_ptr<Registry> Scene::getRegistry() const {
     return registry;
+}
+
+CameraHandle Scene::camera() const {
+    return CameraHandle(m_camera.get());
+}
+
+std::shared_ptr<Camera> Scene::cameraPtr() const {
+    return m_camera;
+}
+
+void Scene::setCamera(const std::shared_ptr<Camera> &camera) {
+    m_camera = camera;
+    // If the scene is already active, re-point its render system at the new camera.
+    if (auto rs = registry->tryGetSystem<RenderSystem>()) {
+        rs->setCamera(camera);
+    }
+}
+
+void Scene::setAssetBank(const std::shared_ptr<AssetBank> &bank) {
+    m_asset_bank = bank;
+}
+
+EntityHandle Scene::spawn(AssetUID model_id) {
+    if (!m_asset_bank) {
+        return EntityHandle();  // no bank wired: nothing to spawn from
+    }
+    return wrap(spawnTree(model_id, m_asset_bank));
 }
 
 Entity Scene::createEntity() {
