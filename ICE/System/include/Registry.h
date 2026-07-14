@@ -85,6 +85,15 @@ class Registry {
         return componentManager.tryGetComponent<T>(e);
     }
 
+    // Cache-friendly iteration over all entities that have every listed component type.
+    // Iterates the first type's dense storage, so list the rarest component first:
+    //   registry.each<LightComponent, TransformComponent>([](Entity e, LightComponent& l, TransformComponent& t){ ... });
+    // Don't add/remove any of these component types from within the callback.
+    template<typename... Ts, typename Fn>
+    void each(Fn &&fn) {
+        componentManager.each<Ts...>(std::forward<Fn>(fn));
+    }
+
     template<typename T>
     void addComponent(Entity e, T component) {
         componentManager.addComponent<T>(e, std::move(component));

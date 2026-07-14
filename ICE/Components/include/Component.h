@@ -9,6 +9,7 @@
 
 #include <cassert>
 #include <memory>
+#include <tuple>
 #include <typeindex>
 #include <unordered_map>
 #include <vector>
@@ -75,6 +76,21 @@ class ComponentArray : public IComponentArray {
         T* data = tryGetData(entity);
         assert(data != nullptr && "getData: entity has no component of this type.");
         return data;
+    }
+
+    size_t count() const { return size; }
+
+    // Iterate the dense storage directly (cache-friendly, no per-entity hash lookup),
+    // invoking fn(Entity, T&) for each live component. Do not add/remove components of type
+    // T from within the callback (it mutates this storage).
+    template<typename Fn>
+    void forEach(Fn&& fn) {
+        for (size_t i = 0; i < size; ++i) {
+            auto it = indexToEntityMap.find(i);
+            if (it != indexToEntityMap.end()) {
+                fn(it->second, componentArray[i]);
+            }
+        }
     }
 
     void entityDestroyed(Entity entity) override {
@@ -151,11 +167,36 @@ class ComponentManager {
     // instead of asserting/throwing. For callers that legitimately probe for a component.
     template<typename T>
     T* tryGetComponent(Entity entity) {
-        auto it = componentArrays.find(typeid(T));
-        if (it == componentArrays.end()) {
-            return nullptr;
+        auto* arr = tryGetComponentArrayPtr<T>();
+        return arr == nullptr ? nullptr : arr->tryGetData(entity);
+    }
+
+    // View iteration: invokes fn(Entity, Primary&, Others&...) for every entity that has all
+    // of the listed component types. Iterates Primary's dense storage (cache-friendly) and
+    // probes the others by hash lookup, so list the rarest component first. Behaves like a
+    // minimal entt-style view. Do not add/remove any of these component types inside fn.
+    template<typename Primary, typename... Others, typename Fn>
+    void each(Fn&& fn) {
+        auto* primaryArr = tryGetComponentArrayPtr<Primary>();
+        if (primaryArr == nullptr) {
+            return;
         }
-        return std::static_pointer_cast<ComponentArray<T>>(it->second)->tryGetData(entity);
+        if constexpr (sizeof...(Others) > 0) {
+            if (((tryGetComponentArrayPtr<Others>() == nullptr) || ...)) {
+                return;  // an "Others" type isn't registered, so nothing can match
+            }
+        }
+        primaryArr->forEach([&](Entity e, Primary& primary) {
+            if constexpr (sizeof...(Others) == 0) {
+                fn(e, primary);
+            } else {
+                std::tuple<Others*...> others{tryGetComponent<Others>(e)...};
+                const bool all_present = ((std::get<Others*>(others) != nullptr) && ...);
+                if (all_present) {
+                    fn(e, primary, *std::get<Others*>(others)...);
+                }
+            }
+        });
     }
 
     void entityDestroyed(Entity entity) {
@@ -184,6 +225,13 @@ class ComponentManager {
     template<typename T>
     ComponentArray<T>& getComponentArray() {
         return static_cast<ComponentArray<T>&>(*componentArrays.at(typeid(T)));
+    }
+
+    // Non-throwing variant: nullptr if type T is not registered.
+    template<typename T>
+    ComponentArray<T>* tryGetComponentArrayPtr() {
+        auto it = componentArrays.find(typeid(T));
+        return it == componentArrays.end() ? nullptr : static_cast<ComponentArray<T>*>(it->second.get());
     }
 };
 }  // namespace ICE
