@@ -6,6 +6,7 @@
 #include <GLFW/glfw3.h>
 #include <Logger.h>
 #include <PerspectiveCamera.h>
+#include <Profiler.h>
 #include <TransformComponent.h>
 #include <AnimationSystem.h>
 #include <SceneGraphSystem.h>
@@ -36,6 +37,10 @@ void ICEEngine::initialize(const std::shared_ptr<GraphicsFactory> &graphics_fact
 }
 
 void ICEEngine::step() {
+    // Snapshot the previous frame's profiler samples and start a new frame.
+    Profiler::get().beginFrame();
+    ICE_PROFILE_SCOPE("Engine::step");
+
     // Delta time in seconds as a double: the old integer-millisecond cast truncated to 0
     // above ~1000 fps (freezing animation) and lost ~13% at 144 Hz.
     auto now = std::chrono::steady_clock::now();
@@ -46,7 +51,19 @@ void ICEEngine::step() {
     }
     auto render_system = project->getCurrentScene()->getRegistry()->getSystem<RenderSystem>();
     render_system->setTarget(m_target_fb);
-    project->getCurrentScene()->getRegistry()->updateSystems(m_delta_time);
+    {
+        ICE_PROFILE_SCOPE("updateSystems");
+        project->getCurrentScene()->getRegistry()->updateSystems(m_delta_time);
+    }
+
+    // Periodically surface the previous frame's timing breakdown (every ~5s at 60fps).
+    static int s_profile_log_counter = 0;
+    if (++s_profile_log_counter >= 300) {
+        s_profile_log_counter = 0;
+        for (const auto& [name, ms] : Profiler::get().lastFrame()) {
+            Logger::Log(Logger::DEBUG, "Profiler", "%s: %.3f ms", name.c_str(), ms);
+        }
+    }
 }
 
 void ICEEngine::setupScene(const std::shared_ptr<Camera> &camera_) {

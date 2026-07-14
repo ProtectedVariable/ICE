@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <LightComponent.h>
 #include <Logger.h>
+#include <Profiler.h>
 #include <RenderComponent.h>
 #include <Scene.h>
 #include <TransformComponent.h>
@@ -29,8 +30,8 @@ ForwardRenderer::ForwardRenderer(const std::shared_ptr<RendererAPI>& api, const 
 void ForwardRenderer::submitSkybox(const Skybox& e) {
     m_skybox.emplace(e);
 }
-void ForwardRenderer::submitDrawable(const Drawable& e) {
-    m_drawables.push_back(e);
+void ForwardRenderer::submitDrawable(Drawable e) {
+    m_drawables.push_back(std::move(e));
 }
 void ForwardRenderer::submitLight(const Light& e) {
     m_lights.push_back(e);
@@ -39,8 +40,10 @@ void ForwardRenderer::submitLight(const Light& e) {
 void ForwardRenderer::prepareFrame(Camera& camera) {
     auto view_mat = camera.lookThrough();
     auto proj_mat = camera.getProjection();
+    auto cam_pos = camera.getPosition();
 
-    CameraUBO camera_ubo_data{.projection = proj_mat, .view = view_mat};
+    CameraUBO camera_ubo_data{
+        .projection = proj_mat, .view = view_mat, .cameraPos = Eigen::Vector4f(cam_pos.x(), cam_pos.y(), cam_pos.z(), 1.0f)};
     m_camera_ubo->putData(&camera_ubo_data, sizeof(CameraUBO));
 
     SceneLightsUBO light_ubo_data;
@@ -110,6 +113,7 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
             cmd.depthTest = true;
             cmd.faceCulling = true;
             cmd.is_instanced = false;
+            cmd.blend = cmd.material->isTransparent();
             cmd.computeSortKey(cmd.material->isTransparent(), dist);
             m_render_commands.push_back(cmd);
         } else {
@@ -137,6 +141,7 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
             cmd.is_instanced = true;
             cmd.instance_count = batch.size();
             cmd.instance_data = &instance_data_vec;  // Link to stored data
+            cmd.blend = cmd.material->isTransparent();
             cmd.computeSortKey(cmd.material->isTransparent(), dist);
             m_render_commands.push_back(cmd);
         }
@@ -155,6 +160,7 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
         cmd.faceCulling = true;
         cmd.bones = &drawable->bone_matrices;
         cmd.is_instanced = false;
+        cmd.blend = cmd.material->isTransparent();
         cmd.computeSortKey(cmd.material->isTransparent(), dist);
         m_render_commands.push_back(cmd);
     }
@@ -165,9 +171,10 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
 }
 
 std::shared_ptr<Framebuffer> ForwardRenderer::render() {
+    m_api->beginGPUTimer();
     m_geometry_pass.execute();
-    auto result = m_geometry_pass.getResult();
-    return result;
+    Profiler::get().addSample("GPU::geometry", m_api->endGPUTimer());
+    return m_geometry_pass.getResult();
 }
 
 void ForwardRenderer::endFrame() {

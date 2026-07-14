@@ -2,6 +2,9 @@
 
 #include <Entity.h>
 
+#include <Eigen/Dense>
+#include <vector>
+
 #include "Framebuffer.h"
 #include "GraphicsFactory.h"
 #include "RenderCommand.h"
@@ -23,6 +26,9 @@ class GeometryPass : public RenderPass {
     // Reused every draw for per-instance data instead of allocating a fresh GL buffer
     // per command per frame.
     std::shared_ptr<VertexBuffer> m_instance_buffer;
+    // Reused scratch buffer for packing a skinned mesh's bone palette into a contiguous,
+    // id-indexed array for a single glUniformMatrix4fv upload.
+    std::vector<Eigen::Matrix4f> m_bone_palette;
     std::vector<RenderCommand>* m_render_queue;
 };
 }  // namespace ICE

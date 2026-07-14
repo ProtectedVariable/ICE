@@ -67,28 +67,37 @@ void OpenGLShader::loadFloat(const std::string &name, float v) {
     glUniform1f(getLocation(name), v);
 }
 
-void OpenGLShader::loadFloat2(const std::string &name, Eigen::Vector2f vec) {
+void OpenGLShader::loadFloat2(const std::string &name, const Eigen::Vector2f &vec) {
     glUniform2f(getLocation(name), vec.x(), vec.y());
 }
 
-void OpenGLShader::loadFloat3(const std::string &name, Eigen::Vector3f vec) {
+void OpenGLShader::loadFloat3(const std::string &name, const Eigen::Vector3f &vec) {
     glUniform3f(getLocation(name), vec.x(), vec.y(), vec.z());
 }
 
-void OpenGLShader::loadFloat4(const std::string &name, Eigen::Vector4f vec) {
+void OpenGLShader::loadFloat4(const std::string &name, const Eigen::Vector4f &vec) {
     glUniform4f(getLocation(name), vec.x(), vec.y(), vec.z(), vec.w());
 }
 
-void OpenGLShader::loadMat4(const std::string &name, Eigen::Matrix4f mat) {
+void OpenGLShader::loadMat4(const std::string &name, const Eigen::Matrix4f &mat) {
     glUniformMatrix4fv(getLocation(name), 1, GL_FALSE, mat.data());
 }
 
+void OpenGLShader::loadMat4v(const std::string &name, const Eigen::Matrix4f *data, uint32_t count) {
+    // std::vector<Matrix4f> / a Matrix4f array is contiguous, column-major -- exactly what
+    // glUniformMatrix4fv expects for a mat4[] uniform, so one call uploads the whole array.
+    glUniformMatrix4fv(getLocation(name), count, GL_FALSE, data->data());
+}
+
 GLint OpenGLShader::getLocation(const std::string &name) {
-    if (!m_locations.contains(name)) {
-        GLint location = glGetUniformLocation(m_programID, name.c_str());
-        m_locations[name] = static_cast<unsigned int>(location);
+    // Single hash lookup on the hot path (was contains + operator[] insert + operator[]).
+    auto it = m_locations.find(name);
+    if (it != m_locations.end()) {
+        return static_cast<GLint>(it->second);
     }
-    return m_locations[name];
+    GLint location = glGetUniformLocation(m_programID, name.c_str());
+    m_locations.emplace(name, static_cast<unsigned int>(location));
+    return location;
 }
 
 bool compileShader(GLenum type, const std::string &source, GLint *shader) {

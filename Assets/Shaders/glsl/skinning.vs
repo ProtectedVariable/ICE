@@ -46,10 +46,12 @@ void main() {
 			}
 			
 			mat4 finalBonesMatrix = bonesTransformMatrices[bone_ids[i]];
-			
+
 			totalPosition += finalBonesMatrix * vec4(vertex, 1.0f) * bone_weights[i];
-			
-			mat3 normalMatrix = mat3(transpose(inverse(finalBonesMatrix)));
+
+			// Skeletal bones are rigid (rotation + translation), so the 3x3 already is the
+			// correct normal transform -- no need for a per-bone, per-vertex inverse-transpose.
+			mat3 normalMatrix = mat3(finalBonesMatrix);
 			totalNormal += normalMatrix * normal * bone_weights[i];
 			totalTangent += normalMatrix * tangent * bone_weights[i];
 			totalBitangent += normalMatrix * bitangent * bone_weights[i];
@@ -65,6 +67,7 @@ void main() {
 
     gl_Position = uProjection * uView * model * totalPosition;
 
-    fview = (inverse(uView) * vec4(0, 0, 0, 1)).xyz;
+    // Camera world position comes from the UBO instead of a per-vertex inverse(uView).
+    fview = uCameraPos.xyz;
     ftex_coords = tex_coords;
 }

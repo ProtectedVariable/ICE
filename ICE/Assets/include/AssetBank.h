@@ -159,12 +159,10 @@ class AssetBank {
     }
 
     AssetPath getName(AssetUID uid) {
-        for (const auto& [path, id] : nameMapping) {
-            if (id == uid) {
-                return path;
-            }
-        }
-        return AssetPath("");
+        // O(1): the entry already stores its path. This used to linear-scan nameMapping,
+        // which made project saves (getName per asset) O(n^2).
+        auto it = resources.find(uid);
+        return it == resources.end() ? AssetPath("") : it->second.path;
     }
 
     AssetUID getUID(const AssetPath& name) {

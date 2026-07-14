@@ -38,6 +38,9 @@ struct RenderCommand {
     bool depthTest : 1 = true;
     bool depthWrite : 1 = true;
     bool is_instanced : 1 = false;
+    // Alpha blending: only transparent materials need it; opaque draws leave it off so they
+    // don't lose early-Z/HSR to a blend that does nothing.
+    bool blend : 1 = false;
 
     DepthFunc depth_func = DepthFunc::Less;
     

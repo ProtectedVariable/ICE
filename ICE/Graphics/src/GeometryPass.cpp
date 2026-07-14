@@ -1,5 +1,7 @@
 #include "GeometryPass.h"
 
+#include <algorithm>
+
 #include "InstanceData.h"
 
 namespace ICE {
@@ -18,27 +20,59 @@ void GeometryPass::execute() {
     Material* current_material = nullptr;
     GPUMesh* current_mesh = nullptr;
 
+    // Cache render state within the pass so identical consecutive commands (e.g. a run of
+    // opaque draws) don't re-issue the same GL state calls. Forced on the first command.
+    bool state_init = false;
+    bool cur_cull = false, cur_depth_test = false, cur_depth_write = false, cur_blend = false;
+    DepthFunc cur_depth_func = DepthFunc::Less;
+
     for (const auto& command : *m_render_queue) {
         auto& shader = command.shader;
         auto& material = command.material;
         auto& mesh = command.mesh;
 
-        m_api->setBackfaceCulling(command.faceCulling);
-        m_api->setDepthTest(command.depthTest);
-        m_api->setDepthMask(command.depthWrite);
-        m_api->setDepthFunc(command.depth_func);
+        if (!state_init || cur_cull != command.faceCulling) {
+            m_api->setBackfaceCulling(command.faceCulling);
+            cur_cull = command.faceCulling;
+        }
+        if (!state_init || cur_depth_test != command.depthTest) {
+            m_api->setDepthTest(command.depthTest);
+            cur_depth_test = command.depthTest;
+        }
+        if (!state_init || cur_depth_write != command.depthWrite) {
+            m_api->setDepthMask(command.depthWrite);
+            cur_depth_write = command.depthWrite;
+        }
+        if (!state_init || cur_depth_func != command.depth_func) {
+            m_api->setDepthFunc(command.depth_func);
+            cur_depth_func = command.depth_func;
+        }
+        if (!state_init || cur_blend != command.blend) {
+            m_api->setBlend(command.blend);
+            cur_blend = command.blend;
+        }
+        state_init = true;
 
         if (shader != current_shader) {
             shader->bind();
             current_shader = shader;
         }
 
-        // Handle bone matrices (non-instanced only)
+        // Handle bone matrices (non-instanced only). Pack into a contiguous, id-indexed
+        // buffer (reused across draws) and upload the whole palette in one glUniformMatrix4fv
+        // call instead of one string-built uniform lookup + upload per bone.
         if (!command.is_instanced && command.bones && !command.bones->empty()) {
-            // TODO: Use UBO instead of individual uploads for better performance
+            int max_id = 0;
             for (const auto& [id, matrix] : *command.bones) {
-                current_shader->loadMat4("bonesTransformMatrices[" + std::to_string(id) + "]", matrix);
+                max_id = std::max(max_id, id);
             }
+            m_bone_palette.assign(static_cast<size_t>(max_id) + 1, Eigen::Matrix4f::Identity());
+            for (const auto& [id, matrix] : *command.bones) {
+                if (id >= 0) {
+                    m_bone_palette[id] = matrix;
+                }
+            }
+            current_shader->loadMat4v("bonesTransformMatrices", m_bone_palette.data(), static_cast<uint32_t>(m_bone_palette.size()));
         }
 
         if (material != current_material) {
@@ -100,6 +134,10 @@ void GeometryPass::execute() {
         va->pushVertexBuffer(m_instance_buffer, 7, 16, 1);
         m_api->renderVertexArrayInstanced(va, command.instance_count);
     }
+
+    // Restore the globally-on blend state expected by other passes (final blit, editor
+    // picking), since opaque commands turned it off.
+    m_api->setBlend(true);
 }
 
 std::shared_ptr<Framebuffer> GeometryPass::getResult() const {

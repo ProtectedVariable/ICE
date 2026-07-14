@@ -50,7 +50,9 @@ void RenderSystem::update(double delta) {
 
         auto model_mat = tc->getWorldMatrix();
 
-        if (!m_culling_cache.contains(e) || m_culling_cache[e].lastTransformVersion != tc->getVersion() || m_culling_cache[e].lastMesh != rc->mesh) {
+        // Single hash lookup instead of contains + several operator[] per entity per frame.
+        auto cache_it = m_culling_cache.find(e);
+        if (cache_it == m_culling_cache.end() || cache_it->second.lastTransformVersion != tc->getVersion() || cache_it->second.lastMesh != rc->mesh) {
             auto local_aabb = m_gpu_bank->getMeshAABB(rc->mesh);
             Eigen::Vector3f localCenter = local_aabb.getCenter();
             Eigen::Vector3f localExtents = local_aabb.getExtent();
@@ -63,15 +65,20 @@ void RenderSystem::update(double delta) {
             Eigen::Matrix3f absR = R.cwiseAbs();
             Eigen::Vector3f worldExtents = absR * localExtents;
 
-            m_culling_cache[e] = CullingData{
+            CullingData data{
                 .lastTransformVersion = tc->getVersion(),
                 .lastMesh = rc->mesh,
                 .worldCenter = worldCenter,
                 .worldExtents = worldExtents,
             };
+            if (cache_it == m_culling_cache.end()) {
+                cache_it = m_culling_cache.emplace(e, data).first;
+            } else {
+                cache_it->second = data;
+            }
         }
 
-        if (!isAABBInFrustum(frustum, m_culling_cache[e].worldCenter, m_culling_cache[e].worldExtents))
+        if (!isAABBInFrustum(frustum, cache_it->second.worldCenter, cache_it->second.worldExtents))
             continue;
 
         auto mesh = m_gpu_bank->getMesh(rc->mesh);

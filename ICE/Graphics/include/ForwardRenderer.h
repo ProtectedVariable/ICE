@@ -29,7 +29,7 @@ class ForwardRenderer : public Renderer {
     ForwardRenderer(const std::shared_ptr<RendererAPI> &api, const std::shared_ptr<GraphicsFactory> &factory);
 
     void submitSkybox(const Skybox &e) override;
-    void submitDrawable(const Drawable &e) override;
+    void submitDrawable(Drawable e) override;
     void submitLight(const Light &e) override;
 
     void prepareFrame(Camera &camera) override;

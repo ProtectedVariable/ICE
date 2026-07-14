@@ -15,9 +15,9 @@
 namespace ICE {
 class AssetPath {
    public:
-    AssetPath(const AssetPath& cpy);
+    AssetPath(const AssetPath& cpy) = default;  // copy members directly (no re-parse)
     AssetPath(std::string path);
-    std::string toString() const;
+    const std::string& toString() const;
     std::string prefix() const;
     template<typename T>
     static AssetPath WithTypePrefix(std::string path) {
@@ -26,7 +26,8 @@ class AssetPath {
         return AssetPath(typenames.at(typeid(T)) + ASSET_PATH_SEPARATOR + path);
     }
 
-    bool operator==(AssetPath other) const { return (other.toString() == this->toString()); }
+    // Compare the pre-computed canonical string (no allocation / re-parse per comparison).
+    bool operator==(const AssetPath& other) const { return m_string == other.m_string; }
 
     std::vector<std::string> getPath() const;
 
@@ -37,6 +38,7 @@ class AssetPath {
    private:
     std::vector<std::string> path;
     std::string name;
+    std::string m_string;  // canonical "prefix/name", computed once in the constructor
     static std::unordered_map<std::type_index, std::string> typenames;
 };
 }  // namespace ICE

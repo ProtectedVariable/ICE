@@ -12,29 +12,29 @@ void SceneGraphSystem::onEntityRemoved(Entity e) {
     m_transformVersions.erase(e);
 }
 void SceneGraphSystem::update(double delta) {
-    auto root = m_scene->getGraph()->getRoot();
-    std::function<void(const std::shared_ptr<SceneGraph::SceneNode> &, const Eigen::Matrix4f &, bool)> updateNode;
-    updateNode = [this, &updateNode](const std::shared_ptr<SceneGraph::SceneNode> &node, const Eigen::Matrix4f &parentMatrix, bool parent_changed) {
-        Eigen::Matrix4f newParentMatrix = parentMatrix;
-        if (node->entity != 0 && m_scene->getRegistry()->entityHasComponent<TransformComponent>(node->entity)) {
-            auto tc = m_scene->getRegistry()->getComponent<TransformComponent>(node->entity);
+    updateNode(m_scene->getGraph()->getRoot().get(), Eigen::Matrix4f::Identity(), false);
+}
 
-            if (parent_changed) {
-                tc->updateParentMatrix(parentMatrix);
-            }
+void SceneGraphSystem::updateNode(SceneGraph::SceneNode *node, const Eigen::Matrix4f &parentMatrix, bool parent_changed) {
+    auto *registry = m_scene->getRegistry().get();
+    Eigen::Matrix4f newParentMatrix = parentMatrix;
+    if (node->entity != NULL_ENTITY && registry->entityHasComponent<TransformComponent>(node->entity)) {
+        auto tc = registry->getComponent<TransformComponent>(node->entity);
 
-            if (!m_transformVersions.contains(node->entity) || m_transformVersions[node->entity] != tc->getVersion()) {
-                parent_changed = true;
-                m_transformVersions[node->entity] = tc->getVersion();
-            }
-            newParentMatrix = tc->getWorldMatrix();
-
+        if (parent_changed) {
+            tc->updateParentMatrix(parentMatrix);
         }
-        for (const auto &child : node->children) {
-            updateNode(child, newParentMatrix, parent_changed);
+
+        auto it = m_transformVersions.find(node->entity);
+        if (it == m_transformVersions.end() || it->second != tc->getVersion()) {
+            parent_changed = true;
+            m_transformVersions[node->entity] = tc->getVersion();
         }
-    };
-    updateNode(root, Eigen::Matrix4f::Identity(), false);
+        newParentMatrix = tc->getWorldMatrix();
+    }
+    for (const auto &child : node->children) {
+        updateNode(child.get(), newParentMatrix, parent_changed);
+    }
 }
 
 }  // namespace ICE

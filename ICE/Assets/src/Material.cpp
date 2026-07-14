@@ -35,7 +35,7 @@ void Material::removeUniform(const std::string& name) {
     }
 }
 
-std::unordered_map<std::string, UniformValue> Material::getAllUniforms() const {
+const std::unordered_map<std::string, UniformValue>& Material::getAllUniforms() const {
     return m_uniforms;
 }
 

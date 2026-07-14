@@ -60,7 +60,13 @@ class SystemManager {
     void entitySignatureChanged(Entity entity, Signature entitySignature, const ComponentManager& comp_manager) {
         // Notify each system that an entity's signature changed
         for (auto const& system : orderedSystems) {
-            auto const& systemSignature = system->getSignatures(comp_manager);
+            // A system's signatures are fixed once component types are registered, so cache
+            // them instead of rebuilding the vector on every component add/remove.
+            auto sig_it = m_signatureCache.find(system.get());
+            if (sig_it == m_signatureCache.end()) {
+                sig_it = m_signatureCache.emplace(system.get(), system->getSignatures(comp_manager)).first;
+            }
+            const auto& systemSignature = sig_it->second;
 
             // Entity signature matches system signature - insert into set. onEntityAdded is
             // fired on every matching signature change (not just the first insert): a system
@@ -114,5 +120,8 @@ class SystemManager {
     std::unordered_map<std::type_index, std::shared_ptr<System>> systems;
     // Same systems, kept sorted by updateOrder() for deterministic iteration.
     std::vector<std::shared_ptr<System>> orderedSystems;
+    // Cached signatures per system (stable after component registration); avoids rebuilding
+    // the vector on every entitySignatureChanged call.
+    std::unordered_map<System*, std::vector<Signature>> m_signatureCache;
 };
 }  // namespace ICE
