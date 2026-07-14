@@ -20,7 +20,10 @@ std::pair<void*, bool> AssetsRenderer::getPreview(const std::shared_ptr<ICE::Ass
     Eigen::Matrix4f rotation = ICE::rotationMatrix({0, t, 0});
 
     if (auto m = std::dynamic_pointer_cast<ICE::Texture2D>(asset); m) {
-        return {m_bank->getTexture2D(asset_path)->ptr(), false};
+        // The asset may have been removed since the browser last listed it; getTexture2D
+        // returns null in that case, so don't dereference it.
+        auto tex = m_bank->getTexture2D(asset_path);
+        return {tex ? tex->ptr() : nullptr, false};
     } else if (auto m = std::dynamic_pointer_cast<ICE::TextureCube>(asset); m) {
         return {nullptr, false};  //TODO
     } else if (auto m = std::dynamic_pointer_cast<ICE::Shader>(asset); m) {
@@ -67,7 +70,9 @@ std::pair<void*, bool> AssetsRenderer::getPreview(const std::shared_ptr<ICE::Ass
             }
         }
         auto shader = m_bank->getShader(materials[i]->getShader());
-        if (shader)
+        // Skip anything whose GPU resources aren't available (e.g. an asset removed after the
+        // browser listed it) rather than submitting a null mesh/shader to the renderer.
+        if (meshes[i] && shader)
             renderer.submitDrawable(
                 ICE::Drawable{.mesh = meshes[i], .material = materials[i], .shader = shader, .textures = textures, .model_matrix = transforms[i]});
     }

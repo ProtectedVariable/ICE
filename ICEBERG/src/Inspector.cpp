@@ -49,10 +49,13 @@ bool Inspector::update() {
 }
 
 bool Inspector::entityHasChanged() {
+    // Return true only when there is a pending change to consume. The old expression
+    // (value + 1) != 0 was always true, so the hierarchy tree was rebuilt every frame.
     if (m_entity_has_changed > 0) {
         m_entity_has_changed--;
+        return true;
     }
-    return (m_entity_has_changed + 1) != 0;
+    return false;
 }
 
 void Inspector::setSelectedEntity(ICE::Entity e, bool force_refesh) {

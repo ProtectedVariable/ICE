@@ -36,8 +36,10 @@ class ComboBox {
     void setValues(const std::vector<std::string> &values) { m_values = values; }
     void setSelected(int index) {
         if (index >= 0 && index < m_values.size()) {
+            // Programmatic set only updates state; the selection-changed callback is for user
+            // interaction (render()). Firing it here made MaterialEditor::open re-assign the
+            // material's shader on open.
             m_selected_index = index;
-            m_callback_edit(m_values[m_selected_index], m_selected_index);
         }
     }
 

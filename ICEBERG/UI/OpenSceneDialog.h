@@ -8,17 +8,15 @@
 class OpenSceneDialog : public Dialog {
    public:
     OpenSceneDialog(const std::shared_ptr<ICE::ICEEngine>& engine) : m_engine(engine), m_scene_name_combo("###SceneNameCombo", {}) {
-        std::vector<std::string> scenes_names;
-        for (const auto& s : m_engine->getProject()->getScenes()) {
-            scenes_names.push_back(s->getName());
-        }
-        m_scene_name_combo.setValues(scenes_names);
-        m_scene_name_combo.setSelected(0);
+        refreshScenes();
     }
 
     void render() override {
         ImGui::PushID("scene_open");
         if (isOpenRequested()) {
+            // Rebuild the list every time the dialog opens: scenes can be added or removed
+            // during the session, so a list captured once in the constructor goes stale.
+            refreshScenes();
             ImGui::OpenPopup("Scene Selection");
         }
 
@@ -42,6 +40,15 @@ class OpenSceneDialog : public Dialog {
 
 
    private:
+    void refreshScenes() {
+        std::vector<std::string> scenes_names;
+        for (const auto& s : m_engine->getProject()->getScenes()) {
+            scenes_names.push_back(s->getName());
+        }
+        m_scene_name_combo.setValues(scenes_names);
+        m_scene_name_combo.setSelected(0);
+    }
+
     std::shared_ptr<ICE::ICEEngine> m_engine;
     ComboBox m_scene_name_combo;
 };

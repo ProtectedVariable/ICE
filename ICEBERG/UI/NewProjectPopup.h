@@ -17,8 +17,13 @@ class NewProjectPopup : public Dialog, ImXML::XMLEventHandler {
     }
 
     void render() override {
-        if (isOpenRequested())
+        if (isOpenRequested()) {
+            // Reset the inputs each time the dialog opens so a previously typed name/path
+            // doesn't linger into a new project.
+            m_project_name[0] = '\0';
+            m_project_dir[0] = '\0';
             ImGui::OpenPopup("New Project");
+        }
         m_xml_renderer.render(m_xml_tree, *this);
     }
 
@@ -28,8 +33,9 @@ class NewProjectPopup : public Dialog, ImXML::XMLEventHandler {
         if (node.arg<std::string>("id") == "btn_create") {
             auto path_string = std::string(m_project_dir);
             if (!path_string.empty() && std::filesystem::exists(path_string) && !std::string(m_project_name).empty()) {
-                auto project = std::make_shared<ICE::Project>(path_string, m_project_name);
-                project->CreateDirectories();
+                // Only validate and report the choice here; the "create_clicked" handler in
+                // ProjectSelection owns the single, authoritative project creation. Creating a
+                // throwaway project here as well ran CreateDirectories twice on the same path.
                 ImGui::CloseCurrentPopup();
                 done(DialogResult::Ok);
             }

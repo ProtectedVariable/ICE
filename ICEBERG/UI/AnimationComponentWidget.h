@@ -61,7 +61,13 @@ class AnimationComponentWidget : public Widget, ImXML::XMLEventHandler {
                 m_ac->playAnimation(m_current_animation, m_blend_duration);
                 m_animation_changed = false;
                 m_time = 0.0f;
+                m_ac->currentTime = m_time;
+            } else if (m_playing) {
+                // While playing, the AnimationSystem owns currentTime. Mirror it into the slider
+                // so the playhead tracks playback instead of the widget's stale m_time freezing it.
+                m_time = m_ac->currentTime;
             } else {
+                // Paused: the slider scrubs the playhead.
                 m_ac->currentTime = m_time;
             }
             m_ac->speed = m_speed;
@@ -100,8 +106,8 @@ class AnimationComponentWidget : public Widget, ImXML::XMLEventHandler {
     float m_time = 0.0;
     float m_speed = 1.0;
     float m_blend_duration = 0.2f;
-    bool m_playing;
-    bool m_loop;
+    bool m_playing = false;
+    bool m_loop = false;
 
     ImXML::XMLTree m_xml_tree;
     ImXML::XMLRenderer m_xml_renderer;
