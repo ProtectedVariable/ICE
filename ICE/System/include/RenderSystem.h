@@ -6,6 +6,7 @@
 #include <Camera.h>
 #include <Framebuffer.h>
 #include <GPURegistry.h>
+#include <JobScheduler.h>
 #include <LightComponent.h>
 #include <RenderComponent.h>
 #include <Renderer.h>
@@ -48,6 +49,11 @@ class RenderSystem : public System {
     void setTarget(const std::shared_ptr<Framebuffer> &fb);
     void setViewport(int x, int y, int w, int h);
 
+    // Opt-in parallel cull+build. With a scheduler set, the per-entity frustum culling, skinning
+    // and drawable assembly run across worker threads (all GL/asset access stays on this thread).
+    // Null (the default) keeps the single-threaded path. See update().
+    void setScheduler(const std::shared_ptr<JobScheduler> &scheduler) { m_scheduler = scheduler; }
+
     std::vector<Signature> getSignatures(const ComponentManager &comp_manager) const override {
         Signature signature0;
         signature0.set(comp_manager.getComponentType<RenderComponent>());
@@ -77,6 +83,9 @@ class RenderSystem : public System {
     // Full-screen present shader, resolved from the GPU bank once and reused, instead of a
     // per-frame string lookup. The renderer's present pass consumes it.
     std::shared_ptr<ShaderProgram> m_lastpass_shader;
+
+    // Optional work-stealing scheduler for the parallel cull+build path (null => single-threaded).
+    std::shared_ptr<JobScheduler> m_scheduler;
 
     std::unordered_map<Entity, CullingData> m_culling_cache;
 };

@@ -103,6 +103,10 @@ void ICEEngine::installRuntimeSystems(const std::shared_ptr<Scene> &scene, const
     // system add).
     if (auto existing = registry->tryGetSystem<RenderSystem>()) {
         existing->setCamera(camera_);
+        existing->setScheduler(m_scheduler);
+        if (auto as = registry->tryGetSystem<AnimationSystem>()) {
+            as->setScheduler(m_scheduler);
+        }
         m_active_scene = scene;
         m_active_render_system = existing;
         return;
@@ -115,6 +119,8 @@ void ICEEngine::installRuntimeSystems(const std::shared_ptr<Scene> &scene, const
     auto ss = std::make_shared<ScriptSystem>(registry);
     rs->setCamera(camera_);
     rs->setRenderer(renderer);
+    rs->setScheduler(m_scheduler);  // null unless parallel systems are enabled
+    as->setScheduler(m_scheduler);
     registry->addSystem(rs);
     registry->addSystem(as);
     registry->addSystem(sgs);
@@ -138,6 +144,27 @@ void ICEEngine::setActiveScene(const std::shared_ptr<Scene> &scene) {
     // The one coupling that makes a scene visible: install its runtime systems (idempotent) and
     // let the engine drive it. The scene owns its camera, so the render system borrows that.
     installRuntimeSystems(scene, scene->cameraPtr());
+}
+
+void ICEEngine::setParallelSystems(bool enable) {
+    if (enable) {
+        if (!m_scheduler) {
+            m_scheduler = std::make_shared<JobScheduler>();
+        }
+    } else {
+        m_scheduler = nullptr;
+    }
+    // Apply immediately to the active scene's parallel-capable systems; newly activated scenes pick
+    // it up in installRuntimeSystems.
+    if (m_active_scene) {
+        auto registry = m_active_scene->getRegistry();
+        if (auto rs = registry->tryGetSystem<RenderSystem>()) {
+            rs->setScheduler(m_scheduler);
+        }
+        if (auto as = registry->tryGetSystem<AnimationSystem>()) {
+            as->setScheduler(m_scheduler);
+        }
+    }
 }
 
 void ICEEngine::onFramebufferResize(int width, int height) {

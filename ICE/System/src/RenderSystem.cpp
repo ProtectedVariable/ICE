@@ -10,6 +10,132 @@
 #include "Registry.h"
 
 namespace ICE {
+namespace {
+
+// A fully-resolved renderable: everything needed to frustum-cull and assemble a Drawable, gathered
+// on the render thread (Phase 1) so the parallel phase (Phase 2) touches no registry, asset bank or
+// GPU bank -- only plain data and stable pointers. mesh/material/shader/textures are owning handles;
+// skinning/pose are non-owning pointers into the mesh asset and the pose component, both of which
+// outlive the frame and (after P4) have stable addresses.
+struct RenderJob {
+    Eigen::Vector3f worldCenter;
+    Eigen::Vector3f worldExtents;
+    Eigen::Matrix4f model_matrix;
+    std::shared_ptr<GPUMesh> mesh;
+    std::shared_ptr<Material> material;
+    std::shared_ptr<ShaderProgram> shader;
+    std::unordered_map<AssetUID, std::shared_ptr<GPUTexture>> textures;
+    const SkinningData *skinning = nullptr;
+    const SkeletonPoseComponent *pose = nullptr;
+};
+
+// Phase 1 (render thread): read components, refresh the world-space bounds cache, resolve GPU
+// resources (which may lazily upload -- hence render-thread only), and gather skinning inputs.
+// Returns false (job discarded) if the mesh/material/shader can't be resolved.
+bool resolveJob(Registry *reg, GPURegistry *gpu, std::unordered_map<Entity, CullingData> &cache, Entity e, RenderJob &job) {
+    auto tc = reg->getComponent<TransformComponent>(e);
+    auto rc = reg->getComponent<RenderComponent>(e);
+    Eigen::Matrix4f model_mat = tc->getWorldMatrix();
+
+    // World-space bounds, recomputed only when the transform or mesh changes (single hash lookup).
+    auto cache_it = cache.find(e);
+    if (cache_it == cache.end() || cache_it->second.lastTransformVersion != tc->getVersion() || cache_it->second.lastMesh != rc->mesh) {
+        auto local_aabb = gpu->getMeshAABB(rc->mesh);
+        Eigen::Vector3f localCenter = local_aabb.getCenter();
+        Eigen::Vector3f localExtents = local_aabb.getExtent();
+
+        Eigen::Matrix3f R = model_mat.block<3, 3>(0, 0);
+        Eigen::Vector3f T = model_mat.block<3, 1>(0, 3);
+        Eigen::Vector3f worldCenter = R * localCenter + T;
+        Eigen::Matrix3f absR = R.cwiseAbs();
+        Eigen::Vector3f worldExtents = absR * localExtents;
+
+        CullingData data{
+            .lastTransformVersion = tc->getVersion(),
+            .lastMesh = rc->mesh,
+            .worldCenter = worldCenter,
+            .worldExtents = worldExtents,
+        };
+        if (cache_it == cache.end()) {
+            cache_it = cache.emplace(e, data).first;
+        } else {
+            cache_it->second = data;
+        }
+    }
+    job.worldCenter = cache_it->second.worldCenter;
+    job.worldExtents = cache_it->second.worldExtents;
+
+    auto mesh = gpu->getMesh(rc->mesh);
+    auto material = gpu->getMaterial(rc->material);
+    if (!mesh || !material) {
+        return false;
+    }
+    auto shader = gpu->getShader(material->getShader());
+    if (!shader) {
+        return false;
+    }
+
+    if (reg->entityHasComponent<SkinningComponent>(e)) {
+        auto skeleton_entity = reg->getComponent<SkinningComponent>(e)->skeleton_entity;
+        // The skeleton entity may be stale/invalid; probe instead of asserting so a bad reference
+        // skips skinning for this frame rather than dereferencing null.
+        auto pose = reg->tryGetComponent<SkeletonPoseComponent>(skeleton_entity);
+        auto skel_transform = reg->tryGetComponent<TransformComponent>(skeleton_entity);
+        if (pose && skel_transform) {
+            job.skinning = &gpu->getMeshSkinningData(rc->mesh);
+            job.pose = pose;
+            model_mat = skel_transform->getWorldMatrix();
+        }
+    }
+
+    std::unordered_map<AssetUID, std::shared_ptr<GPUTexture>> texs;
+    for (const auto &[name, value] : material->getAllUniforms()) {
+        if (std::holds_alternative<AssetUID>(value)) {
+            auto v = std::get<AssetUID>(value);
+            if (auto tex = gpu->getTexture2D(v); tex) {
+                texs.try_emplace(v, tex);
+            }
+        }
+    }
+
+    job.model_matrix = model_mat;
+    job.mesh = std::move(mesh);
+    job.material = std::move(material);
+    job.shader = std::move(shader);
+    job.textures = std::move(texs);
+    return true;
+}
+
+// Phase 2 (any thread): frustum-cull, compute skinning bone matrices, and assemble the Drawable.
+// Pure computation over the job's own data -- no shared mutable state -- so disjoint jobs run
+// concurrently. Consumes `job` (moved-from) since each job is processed exactly once.
+template<typename Frustum>
+bool cullAndAssemble(RenderJob &job, const Frustum &frustum, Drawable &out) {
+    if (!isAABBInFrustum(frustum, job.worldCenter, job.worldExtents)) {
+        return false;
+    }
+    std::unordered_map<int, Eigen::Matrix4f> bone_matrices;
+    if (job.skinning && job.pose) {
+        for (const auto &[id, ibm] : job.skinning->inverseBindMatrices) {
+            // bone_transform is indexed by bone id; guard against an id outside the current pose.
+            if (id >= 0 && static_cast<size_t>(id) < job.pose->bone_transform.size()) {
+                bone_matrices.try_emplace(id, job.pose->bone_transform[id] * ibm);
+            }
+        }
+    }
+    out = Drawable{
+        .mesh = std::move(job.mesh),
+        .material = std::move(job.material),
+        .shader = std::move(job.shader),
+        .textures = std::move(job.textures),
+        .model_matrix = job.model_matrix,
+        .bone_matrices = std::move(bone_matrices),
+    };
+    return true;
+}
+
+}  // namespace
+
 RenderSystem::RenderSystem(const std::shared_ptr<Registry> &reg, const std::shared_ptr<GPURegistry> &gpu_bank)
     : m_registry(reg.get()),
       m_gpu_bank(gpu_bank) {
@@ -33,84 +159,44 @@ void RenderSystem::update(double delta) {
     }
 
     auto frustum = extractFrustumPlanes(proj_mat * view_mat);
+
+    // Phase 1 (render thread): resolve every renderable into a self-contained job. All component,
+    // asset-bank and GPU-bank access -- including lazy GL uploads -- happens here, single-threaded.
+    std::vector<RenderJob> jobs;
+    jobs.reserve(m_render_queue.size());
     for (const auto &e : m_render_queue) {
-        auto tc = m_registry->getComponent<TransformComponent>(e);
-        auto rc = m_registry->getComponent<RenderComponent>(e);
+        RenderJob job;
+        if (resolveJob(m_registry, m_gpu_bank.get(), m_culling_cache, e, job)) {
+            jobs.push_back(std::move(job));
+        }
+    }
 
-        auto model_mat = tc->getWorldMatrix();
-
-        // Single hash lookup instead of contains + several operator[] per entity per frame.
-        auto cache_it = m_culling_cache.find(e);
-        if (cache_it == m_culling_cache.end() || cache_it->second.lastTransformVersion != tc->getVersion() || cache_it->second.lastMesh != rc->mesh) {
-            auto local_aabb = m_gpu_bank->getMeshAABB(rc->mesh);
-            Eigen::Vector3f localCenter = local_aabb.getCenter();
-            Eigen::Vector3f localExtents = local_aabb.getExtent();
-
-            Eigen::Matrix3f R = model_mat.block<3, 3>(0, 0);
-            Eigen::Vector3f T = model_mat.block<3, 1>(0, 3);
-
-            Eigen::Vector3f worldCenter = R * localCenter + T;
-
-            Eigen::Matrix3f absR = R.cwiseAbs();
-            Eigen::Vector3f worldExtents = absR * localExtents;
-
-            CullingData data{
-                .lastTransformVersion = tc->getVersion(),
-                .lastMesh = rc->mesh,
-                .worldCenter = worldCenter,
-                .worldExtents = worldExtents,
-            };
-            if (cache_it == m_culling_cache.end()) {
-                cache_it = m_culling_cache.emplace(e, data).first;
-            } else {
-                cache_it->second = data;
+    // Phase 2: frustum-cull, skin and assemble a Drawable per surviving job. This is pure
+    // computation over the pre-resolved data with each index independent (disjoint writes to
+    // `drawables`/`visible`), so it runs across the scheduler's workers when one is set and the
+    // batch is large enough; otherwise it runs inline. `visible` is char (not vector<bool>) so
+    // concurrent writes to distinct elements are race-free.
+    std::vector<Drawable> drawables(jobs.size());
+    std::vector<char> visible(jobs.size(), 0);
+    auto process = [&](size_t begin, size_t end) {
+        for (size_t i = begin; i < end; ++i) {
+            if (cullAndAssemble(jobs[i], frustum, drawables[i])) {
+                visible[i] = 1;
             }
         }
+    };
+    static constexpr size_t kParallelThreshold = 256;
+    if (m_scheduler && jobs.size() >= kParallelThreshold) {
+        m_scheduler->parallelRanges(jobs.size(), [&](size_t begin, size_t end) { process(begin, end); });
+    } else {
+        process(0, jobs.size());
+    }
 
-        if (!isAABBInFrustum(frustum, cache_it->second.worldCenter, cache_it->second.worldExtents))
-            continue;
-
-        auto mesh = m_gpu_bank->getMesh(rc->mesh);
-        auto material = m_gpu_bank->getMaterial(rc->material);
-        auto shader = m_gpu_bank->getShader(material->getShader());
-        if (!mesh || !material || !shader)
-            continue;
-
-        std::unordered_map<int, Eigen::Matrix4f> bone_matrices;
-        if (m_registry->entityHasComponent<SkinningComponent>(e)) {
-            const auto &skinning = m_gpu_bank->getMeshSkinningData(rc->mesh);
-            auto skeleton_entity = m_registry->getComponent<SkinningComponent>(e)->skeleton_entity;
-            // The skeleton entity may be stale/invalid; probe instead of asserting so a
-            // bad reference skips skinning for this frame rather than dereferencing null.
-            auto pose = m_registry->tryGetComponent<SkeletonPoseComponent>(skeleton_entity);
-            auto skel_transform = m_registry->tryGetComponent<TransformComponent>(skeleton_entity);
-            if (pose && skel_transform) {
-                for (const auto &[id, ibm] : skinning.inverseBindMatrices) {
-                    // bone_transform is a vector indexed by bone id; guard against a bone id
-                    // outside the current pose (out-of-bounds vector access is UB).
-                    if (id >= 0 && static_cast<size_t>(id) < pose->bone_transform.size()) {
-                        bone_matrices.try_emplace(id, pose->bone_transform[id] * ibm);
-                    }
-                }
-                model_mat = skel_transform->getWorldMatrix();
-            }
+    // Phase 3 (render thread): submit the survivors in queue order (the renderer sorts them anyway).
+    for (size_t i = 0; i < jobs.size(); ++i) {
+        if (visible[i]) {
+            m_renderer->submitDrawable(std::move(drawables[i]));
         }
-
-        std::unordered_map<AssetUID, std::shared_ptr<GPUTexture>> texs;
-        for (const auto &[name, value] : material->getAllUniforms()) {
-            if (std::holds_alternative<AssetUID>(value)) {
-                auto v = std::get<AssetUID>(value);
-                if (auto tex = m_gpu_bank->getTexture2D(v); tex) {
-                    texs.try_emplace(v, tex);
-                }
-            }
-        }
-        m_renderer->submitDrawable(Drawable{.mesh = mesh,
-                                            .material = material,
-                                            .shader = shader,
-                                            .textures = texs,
-                                            .model_matrix = model_mat,
-                                            .bone_matrices = bone_matrices});
     }
 
     for (int i = 0; i < m_lights.size(); i++) {

@@ -16,6 +16,7 @@ target_link_libraries(${PROJECT_NAME}
     PUBLIC
     graphics
     entity
+    multithreading
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC

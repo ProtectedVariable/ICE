@@ -8,81 +8,115 @@ AnimationSystem::AnimationSystem(const std::shared_ptr<Registry>& reg, const std
 }
 
 void AnimationSystem::update(double dt) {
+    // Phase 1 (render thread): resolve each playing entity's model (asset-bank access) and force
+    // its lazy node-name map to build now, so the parallel phase only ever reads it. Entities that
+    // aren't playing or whose model is missing are dropped here.
+    struct AnimJob {
+        Entity entity;
+        std::shared_ptr<Model> model;
+    };
+    std::vector<AnimJob> jobs;
+    jobs.reserve(entities.size());
     for (auto e : entities) {
         auto anim = m_registry->getComponent<AnimationComponent>(e);
+        if (!anim->playing) {
+            continue;
+        }
         auto pose = m_registry->getComponent<SkeletonPoseComponent>(e);
-        if (!anim->playing)
-            continue;
-
         auto model = m_asset_bank->getAsset<Model>(pose->skeletonModel);
-        const auto& animations = model->getAnimations();
-
-        if (!animations.contains(anim->currentAnimation)) {
+        if (!model) {
             continue;
         }
-        const auto& currentAnim = animations.at(anim->currentAnimation);
-
-        // Advance current animation time. dt is in seconds; animation keyframes are in
-        // ticks, so convert with ticksPerSecond (previously ignored -> wrong playback rate).
-        anim->currentTime += dt * currentAnim.ticksPerSecond * anim->speed;
-
-        if (anim->currentTime > currentAnim.duration) {
-            if (anim->loop) {
-                anim->currentTime = std::fmod(anim->currentTime, currentAnim.duration);
-            } else {
-                anim->currentTime = currentAnim.duration;
-                anim->playing = false;
-            }
-        }
-
-        // Handle blending
-        if (anim->blending) {
-            anim->blendFactor += dt / anim->blendDuration;
-            if (anim->blendFactor >= 1.0) {
-                anim->blendFactor = 1.0;
-                anim->blending = false;
-            }
-
-            // Advance previous animation time as well
-            if (animations.contains(anim->previousAnimation)) {
-                const auto& prevAnim = animations.at(anim->previousAnimation);
-                anim->previousTime += dt * prevAnim.ticksPerSecond * anim->speed;
-                if (anim->previousTime > prevAnim.duration) {
-                    anim->previousTime = std::fmod(anim->previousTime, prevAnim.duration);
-                }
-            }
-
-            // Blended update
-            const Animation* prevAnimPtr = nullptr;
-            if (animations.contains(anim->previousAnimation)) {
-                prevAnimPtr = &animations.at(anim->previousAnimation);
-            }
-
-            float blendT = static_cast<float>(anim->blendFactor);
-
-            for (auto const& [nodeName, nodeEntity] : pose->bone_entity) {
-                BonePose currentPose = sampleBonePose(nodeName, currentAnim, anim->currentTime, model);
-                BonePose prevPose;
-                if (prevAnimPtr) {
-                    prevPose = sampleBonePose(nodeName, *prevAnimPtr, anim->previousTime, model);
-                } else {
-                    prevPose = currentPose;
-                }
-
-                BonePose finalPose = blendPoses(prevPose, currentPose, blendT);
-
-                auto transform = m_registry->getComponent<TransformComponent>(nodeEntity);
-                transform->setPosition(finalPose.position);
-                transform->setRotation(finalPose.rotation);
-                transform->setScale(finalPose.scale);
-            }
-        } else {
-            // No blending — direct update
-            updateSkeleton(model, anim->currentTime, pose, currentAnim);
-        }
-
-        finalizePose(e);
+        (void) model->getNodeByName(std::string());  // warm the lazy node-name cache serially
+        jobs.push_back({e, std::move(model)});
     }
+
+    // Phase 2: sample and pose each skeleton. Each animated entity owns disjoint bone entities and
+    // touches no asset bank, so the work parallelises cleanly across workers when a scheduler is
+    // set and there are enough entities; otherwise it runs inline.
+    auto process = [&](size_t begin, size_t end) {
+        for (size_t i = begin; i < end; ++i) {
+            updateEntity(jobs[i].entity, jobs[i].model, dt);
+        }
+    };
+    static constexpr size_t kParallelThreshold = 8;  // skeletal update is heavy per entity
+    if (m_scheduler && jobs.size() >= kParallelThreshold) {
+        m_scheduler->parallelRanges(jobs.size(), [&](size_t begin, size_t end) { process(begin, end); });
+    } else {
+        process(0, jobs.size());
+    }
+}
+
+void AnimationSystem::updateEntity(Entity e, const std::shared_ptr<Model>& model, double dt) {
+    auto anim = m_registry->getComponent<AnimationComponent>(e);
+    auto pose = m_registry->getComponent<SkeletonPoseComponent>(e);
+
+    const auto& animations = model->getAnimations();
+    if (!animations.contains(anim->currentAnimation)) {
+        return;
+    }
+    const auto& currentAnim = animations.at(anim->currentAnimation);
+
+    // Advance current animation time. dt is in seconds; animation keyframes are in
+    // ticks, so convert with ticksPerSecond (previously ignored -> wrong playback rate).
+    anim->currentTime += dt * currentAnim.ticksPerSecond * anim->speed;
+
+    if (anim->currentTime > currentAnim.duration) {
+        if (anim->loop) {
+            anim->currentTime = std::fmod(anim->currentTime, currentAnim.duration);
+        } else {
+            anim->currentTime = currentAnim.duration;
+            anim->playing = false;
+        }
+    }
+
+    // Handle blending
+    if (anim->blending) {
+        anim->blendFactor += dt / anim->blendDuration;
+        if (anim->blendFactor >= 1.0) {
+            anim->blendFactor = 1.0;
+            anim->blending = false;
+        }
+
+        // Advance previous animation time as well
+        if (animations.contains(anim->previousAnimation)) {
+            const auto& prevAnim = animations.at(anim->previousAnimation);
+            anim->previousTime += dt * prevAnim.ticksPerSecond * anim->speed;
+            if (anim->previousTime > prevAnim.duration) {
+                anim->previousTime = std::fmod(anim->previousTime, prevAnim.duration);
+            }
+        }
+
+        // Blended update
+        const Animation* prevAnimPtr = nullptr;
+        if (animations.contains(anim->previousAnimation)) {
+            prevAnimPtr = &animations.at(anim->previousAnimation);
+        }
+
+        float blendT = static_cast<float>(anim->blendFactor);
+
+        for (auto const& [nodeName, nodeEntity] : pose->bone_entity) {
+            BonePose currentPose = sampleBonePose(nodeName, currentAnim, anim->currentTime, model);
+            BonePose prevPose;
+            if (prevAnimPtr) {
+                prevPose = sampleBonePose(nodeName, *prevAnimPtr, anim->previousTime, model);
+            } else {
+                prevPose = currentPose;
+            }
+
+            BonePose finalPose = blendPoses(prevPose, currentPose, blendT);
+
+            auto transform = m_registry->getComponent<TransformComponent>(nodeEntity);
+            transform->setPosition(finalPose.position);
+            transform->setRotation(finalPose.rotation);
+            transform->setScale(finalPose.scale);
+        }
+    } else {
+        // No blending — direct update
+        updateSkeleton(model, anim->currentTime, pose, currentAnim);
+    }
+
+    finalizePose(e, model);
 }
 
 BonePose AnimationSystem::sampleBonePose(const std::string& boneName, const Animation& anim, double time, const std::shared_ptr<Model>& model) {
@@ -125,12 +159,11 @@ void AnimationSystem::updateSkeleton(const std::shared_ptr<Model>& model, double
     }
 }
 
-void AnimationSystem::finalizePose(Entity e) {
+void AnimationSystem::finalizePose(Entity e, const std::shared_ptr<Model>& model) {
     // Finalize only the entity being processed. This used to loop over every animated
     // entity on each call, and it is called once per entity in update(), so the work was
     // O(N^2) (with a matrix inverse per skeleton) while producing identical results.
     auto pose = m_registry->getComponent<SkeletonPoseComponent>(e);
-    auto model = m_asset_bank->getAsset<Model>(pose->skeletonModel);
     auto& skeleton = model->getSkeleton();
 
     auto rootTransform = m_registry->getComponent<TransformComponent>(e);

@@ -55,6 +55,12 @@ class ICEEngine {
     // The scene the engine is currently driving (nullptr before any activation).
     std::shared_ptr<Scene> getActiveScene() const { return m_active_scene; }
 
+    // Opt into multithreaded systems: creates a shared job scheduler and hands it to the parallel-
+    // capable systems (render culling + animation) of the active and future scenes. Off by default
+    // -- the single-threaded path is the validated fallback. Passing false tears the scheduler
+    // back down and returns those systems to serial.
+    void setParallelSystems(bool enable);
+
     void step();
 
     // Run the blocking main loop until the window closes: poll input, step() the engine, size the
@@ -128,6 +134,9 @@ class ICEEngine {
     // per-frame and resize paths don't rediscover them through the project/registry each time.
     std::shared_ptr<Scene> m_active_scene;
     std::shared_ptr<RenderSystem> m_active_render_system;
+
+    // Shared job scheduler for the parallel-capable systems; null unless setParallelSystems(true).
+    std::shared_ptr<JobScheduler> m_scheduler;
 
     std::chrono::steady_clock::time_point lastFrameTime;
     double m_delta_time = 0.0;

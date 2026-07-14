@@ -1,6 +1,7 @@
 #pragma once
 
 #include <AssetBank.h>
+#include <JobScheduler.h>
 #include <Registry.h>
 #include <SkeletonPoseComponent.h>
 
@@ -23,6 +24,11 @@ class AnimationSystem : public System {
 
     int updateOrder() const override { return AnimationSystemOrder; }
 
+    // Opt-in parallel skeleton update. With a scheduler set, each animated entity is sampled and
+    // posed on a worker thread (asset access stays on the render thread; see update()). Null (the
+    // default) keeps the single-threaded path.
+    void setScheduler(const std::shared_ptr<JobScheduler> &scheduler) { m_scheduler = scheduler; }
+
     std::vector<Signature> getSignatures(const ComponentManager &comp_manager) const override {
         Signature signature;
         signature.set(comp_manager.getComponentType<AnimationComponent>());
@@ -41,8 +47,14 @@ class AnimationSystem : public System {
         return keys.size() - 1;
     }
 
+    // Advance and pose one animated entity. Takes the already-resolved model so the parallel path
+    // performs no asset-bank lookups (only the entity's own components + the shared, read-only
+    // model). Safe to run concurrently across entities: each animated skeleton owns disjoint bone
+    // entities, so the TransformComponent/pose writes never overlap.
+    void updateEntity(Entity e, const std::shared_ptr<Model> &model, double dt);
+
     void updateSkeleton(const std::shared_ptr<Model> &model, double time, SkeletonPoseComponent *pose, const Animation &anim);
-    void finalizePose(Entity e);
+    void finalizePose(Entity e, const std::shared_ptr<Model> &model);
 
     BonePose sampleBonePose(const std::string &boneName, const Animation &anim, double time, const std::shared_ptr<Model> &model);
     static BonePose blendPoses(const BonePose &a, const BonePose &b, float factor);
@@ -57,5 +69,8 @@ class AnimationSystem : public System {
     // Non-owning back-reference (the Registry owns this system) to avoid an ownership cycle.
     Registry* m_registry = nullptr;
     std::shared_ptr<AssetBank> m_asset_bank;
+
+    // Optional work-stealing scheduler for the parallel skeleton-update path (null => serial).
+    std::shared_ptr<JobScheduler> m_scheduler;
 };
 }  // namespace ICE
