@@ -41,7 +41,15 @@ class AnimationComponentWidget : public Widget, ImXML::XMLEventHandler {
         }
     }
     void onNodeEnd(ImXML::XMLNode& node) override {}
-    void onEvent(ImXML::XMLNode& node) override {}
+    void onEvent(ImXML::XMLNode& node) override {
+        if (node.arg<std::string>("id") == "btn_remove" && m_on_remove) {
+            m_on_remove();
+        }
+    }
+
+    // The Remove button lives in this child widget, but the removal handler is registered on
+    // the parent InspectorWidget's callback map. This hook bridges the two.
+    void onRemove(const std::function<void()>& f) { m_on_remove = f; }
 
     void render() override {
         if (m_ac) {
@@ -96,6 +104,7 @@ class AnimationComponentWidget : public Widget, ImXML::XMLEventHandler {
 
    private:
     ICE::AnimationComponent* m_ac = nullptr;
+    std::function<void()> m_on_remove;
     std::unordered_map<std::string, ICE::Animation> m_animations;
 
     std::string m_current_animation = "";

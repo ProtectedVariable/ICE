@@ -12,15 +12,22 @@ Assets::Assets(const std::shared_ptr<ICE::ICEEngine>& engine, const std::shared_
       m_material_editor(engine),
       m_shader_editor(engine) {
     rebuildViewer();
-    ui.registerCallback("material_duplicate", [this](std::string name) {
-        auto id = m_engine->getAssetBank()->getUID("Materials/" + name);
-        auto mat_copy = std::make_shared<ICE::Material>(*m_engine->getAssetBank()->getAsset<ICE::Material>(id));
+    ui.registerCallback("material_duplicate", [this](std::string path) {
+        auto bank = m_engine->getAssetBank();
+        auto src = bank->getAsset<ICE::Material>(bank->getUID(path));
+        if (!src) {
+            return;
+        }
+        auto mat_copy = std::make_shared<ICE::Material>(*src);
         mat_copy->setSources({});
-        m_engine->getAssetBank()->addAsset<ICE::Material>(name + " copy", mat_copy);
+        bank->addAsset<ICE::Material>(ICE::AssetPath(path).getName() + " copy", mat_copy);
         rebuildViewer();
     });
-    ui.registerCallback("delete_asset", [this](std::string name) {
-        m_engine->getAssetBank()->removeAsset(name);
+    ui.registerCallback("delete_asset", [this](std::string path) {
+        m_engine->getAssetBank()->removeAsset(ICE::AssetPath(path));
+        // Drop the cached preview/thumbnail renderer so a later asset reusing this path
+        // doesn't show the deleted asset's image.
+        m_renderer.evict(path);
         rebuildViewer();
     });
 

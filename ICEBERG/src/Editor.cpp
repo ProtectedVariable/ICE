@@ -42,6 +42,11 @@ bool Editor::update() {
     m_selected_entity = m_hierarchy->getSelectedEntity();
 
     m_inspector->setSelectedEntity(m_selected_entity);
+    // A hierarchy rename keeps the same entity selected, so force the Inspector to reload its
+    // (otherwise cached) name field.
+    if (m_hierarchy->selectionRenamed()) {
+        m_inspector->setSelectedEntity(m_selected_entity, true);
+    }
     if (m_inspector->entityHasChanged()) {
         m_hierarchy->rebuildTree();
     }

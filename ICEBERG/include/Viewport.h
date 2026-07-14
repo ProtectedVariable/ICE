@@ -17,7 +17,10 @@ class Viewport : public Controller {
     std::shared_ptr<ICE::ICEEngine> m_engine;
     bool m_done = false;
     ViewportWidget ui;
-    const double camera_delta = 0.1;
+    // World units per second; the per-frame step is camera_speed * dt so movement is
+    // frame-rate independent. scroll_speed is world units per mouse-wheel notch.
+    const double camera_speed = 6.0;
+    const double scroll_speed = 0.5;
     ImGuizmo::OPERATION m_guizmo_mode = ImGuizmo::TRANSLATE;
     ICE::Entity m_selected_entity = 0;
     std::function<void()> m_entity_transformed_callback = [] {

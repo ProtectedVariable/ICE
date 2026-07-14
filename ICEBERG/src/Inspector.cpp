@@ -9,14 +9,11 @@ Inspector::Inspector(const std::shared_ptr<ICE::ICEEngine>& engine) : m_engine(e
         m_add_component_popup.setData(m_engine->getProject()->getCurrentScene()->getRegistry(), m_selected_entity);
         m_add_component_popup.open();
     });
-    ui.registerCallback("remove_light_component_clicked", [this] {
-        m_engine->getProject()->getCurrentScene()->getRegistry()->removeComponent<ICE::LightComponent>(m_selected_entity);
-        setSelectedEntity(m_selected_entity, true);
-    });
-    ui.registerCallback("remove_render_component_clicked", [this] {
-        m_engine->getProject()->getCurrentScene()->getRegistry()->removeComponent<ICE::RenderComponent>(m_selected_entity);
-        setSelectedEntity(m_selected_entity, true);
-    });
+    // Defer the actual removal to after render() (see PendingRemove): these fire from inside
+    // the component widget's own render pass.
+    ui.registerCallback("remove_light_component_clicked", [this] { m_pending_remove = PendingRemove::Light; });
+    ui.registerCallback("remove_render_component_clicked", [this] { m_pending_remove = PendingRemove::Render; });
+    ui.registerCallback("remove_animation_component_clicked", [this] { m_pending_remove = PendingRemove::Animation; });
 }
 
 bool Inspector::update() {
@@ -38,6 +35,23 @@ bool Inspector::update() {
     }
 
     ui.render();
+
+    // Apply a deferred component removal now that the widgets have finished rendering.
+    if (m_pending_remove != PendingRemove::None) {
+        auto registry = m_engine->getProject()->getCurrentScene()->getRegistry();
+        if (m_pending_remove == PendingRemove::Render) {
+            registry->removeComponent<ICE::RenderComponent>(m_selected_entity);
+        } else if (m_pending_remove == PendingRemove::Light) {
+            registry->removeComponent<ICE::LightComponent>(m_selected_entity);
+        } else if (m_pending_remove == PendingRemove::Animation) {
+            // Remove only the AnimationComponent: the skeleton pose and skinning stay intact so
+            // the mesh keeps rendering (frozen at its last pose) instead of losing its bone data.
+            registry->removeComponent<ICE::AnimationComponent>(m_selected_entity);
+        }
+        m_pending_remove = PendingRemove::None;
+        setSelectedEntity(m_selected_entity, true);
+    }
+
     if (m_add_component_popup.isOpen()) {
         m_add_component_popup.render();
         if (m_add_component_popup.getResult() == DialogResult::Ok) {

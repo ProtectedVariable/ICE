@@ -2,6 +2,17 @@
 
 #include <iostream>
 
+namespace {
+// Copy component T from src to dst if src has it. addComponent takes T by value, so *src is
+// copied into the parameter before insertData runs -- safe against storage reallocation.
+template<typename T>
+void copyComponent(const std::shared_ptr<ICE::Registry> &reg, ICE::Entity src, ICE::Entity dst) {
+    if (reg->entityHasComponent<T>(src)) {
+        reg->addComponent<T>(dst, *reg->getComponent<T>(src));
+    }
+}
+}  // namespace
+
 Hierarchy::Hierarchy(const std::shared_ptr<ICE::ICEEngine> &engine) : m_engine(engine) {
     ui.registerCallback("hierarchy_changed", [this](ICE::Entity child, ICE::Entity parent) {
         auto scene = m_engine->getProject()->getCurrentScene();
@@ -22,6 +33,49 @@ Hierarchy::Hierarchy(const std::shared_ptr<ICE::ICEEngine> &engine) : m_engine(e
         m_need_rebuild_tree = true;
     });
     ui.registerCallback("selected_entity_changed", [this](ICE::Entity selected) { m_selected = selected; });
+    ui.registerCallback("delete_entity_clicked", [this](ICE::Entity e) {
+        auto scene = m_engine->getProject()->getCurrentScene();
+        if (e == ICE::NULL_ENTITY || !scene->hasEntity(e)) {
+            return;
+        }
+        scene->removeEntity(e);
+        if (m_selected == e) {
+            setSelectedEntity(ICE::NULL_ENTITY);
+        }
+        m_need_rebuild_tree = true;
+    });
+    ui.registerCallback("duplicate_entity_clicked", [this](ICE::Entity src) {
+        auto scene = m_engine->getProject()->getCurrentScene();
+        if (src == ICE::NULL_ENTITY || !scene->hasEntity(src)) {
+            return;
+        }
+        auto reg = scene->getRegistry();
+        auto e = scene->createEntity();
+        // Copy every component the source carries. addComponent takes the component by value,
+        // so the source pointer is dereferenced and copied before any storage reallocation.
+        copyComponent<ICE::TransformComponent>(reg, src, e);
+        copyComponent<ICE::RenderComponent>(reg, src, e);
+        copyComponent<ICE::LightComponent>(reg, src, e);
+        copyComponent<ICE::SkyboxComponent>(reg, src, e);
+        copyComponent<ICE::AnimationComponent>(reg, src, e);
+        copyComponent<ICE::SkeletonPoseComponent>(reg, src, e);
+        copyComponent<ICE::SkinningComponent>(reg, src, e);
+        scene->setAlias(e, scene->getAlias(src) + " copy");
+        scene->getGraph()->setParent(e, scene->getGraph()->getParentID(src));
+        setSelectedEntity(e);
+        m_need_rebuild_tree = true;
+    });
+    ui.registerCallback("rename_entity", [this](ICE::Entity e, std::string name) {
+        auto scene = m_engine->getProject()->getCurrentScene();
+        if (e == ICE::NULL_ENTITY || !scene->hasEntity(e) || name.empty()) {
+            return;
+        }
+        scene->setAlias(e, name);
+        m_need_rebuild_tree = true;
+        if (e == m_selected) {
+            m_selection_renamed = true;
+        }
+    });
 }
 
 SceneTreeView getSubTree(const std::shared_ptr<ICE::Scene> &scene, const std::shared_ptr<ICE::SceneGraph::SceneNode> &node) {
@@ -51,6 +105,12 @@ void Hierarchy::setSelectedEntity(ICE::Entity e) {
 
 void Hierarchy::rebuildTree() {
     m_need_rebuild_tree = true;
+}
+
+bool Hierarchy::selectionRenamed() {
+    bool renamed = m_selection_renamed;
+    m_selection_renamed = false;
+    return renamed;
 }
 
 bool Hierarchy::update() {

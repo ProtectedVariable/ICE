@@ -13,12 +13,13 @@ Viewport::Viewport(const std::shared_ptr<ICE::ICEEngine> &engine, const std::fun
 
     m_picking_frambuffer = engine->getGraphicsFactory()->createFramebuffer({1, 1, 1});
 
-    ui.registerCallback("w_pressed", [this]() { m_engine->getCamera()->forward(camera_delta); });
-    ui.registerCallback("s_pressed", [this]() { m_engine->getCamera()->backward(camera_delta); });
-    ui.registerCallback("a_pressed", [this]() { m_engine->getCamera()->left(camera_delta); });
-    ui.registerCallback("d_pressed", [this]() { m_engine->getCamera()->right(camera_delta); });
-    ui.registerCallback("ls_pressed", [this]() { m_engine->getCamera()->up(camera_delta); });
-    ui.registerCallback("lc_pressed", [this]() { m_engine->getCamera()->down(camera_delta); });
+    ui.registerCallback("w_pressed", [this](float dt) { m_engine->getCamera()->forward(camera_speed * dt); });
+    ui.registerCallback("s_pressed", [this](float dt) { m_engine->getCamera()->backward(camera_speed * dt); });
+    ui.registerCallback("a_pressed", [this](float dt) { m_engine->getCamera()->left(camera_speed * dt); });
+    ui.registerCallback("d_pressed", [this](float dt) { m_engine->getCamera()->right(camera_speed * dt); });
+    ui.registerCallback("ls_pressed", [this](float dt) { m_engine->getCamera()->up(camera_speed * dt); });
+    ui.registerCallback("lc_pressed", [this](float dt) { m_engine->getCamera()->down(camera_speed * dt); });
+    ui.registerCallback("scroll", [this](float amount) { m_engine->getCamera()->forward(amount * scroll_speed); });
     ui.registerCallback("mouse_dragged", [this](float dx, float dy) {
         if (!ImGuizmo::IsUsingAny()) {
             m_engine->getCamera()->yaw(dx / 6.0);

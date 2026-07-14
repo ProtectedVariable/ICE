@@ -13,6 +13,11 @@ class InspectorWidget : public Widget {
    public:
     InspectorWidget() {
         m_input_entity_name.onEdit([this](const std::string&, const std::string& text) { callback("entity_name_changed", text); });
+        // The child component widgets own the Remove buttons; forward their clicks to this
+        // widget's callback map, where the Inspector controller registers the handlers.
+        m_rc_widget.onRemove([this] { callback("remove_render_component_clicked"); });
+        m_lc_widget.onRemove([this] { callback("remove_light_component_clicked"); });
+        m_ac_widget.onRemove([this] { callback("remove_animation_component_clicked"); });
     }
 
     void render() override {
