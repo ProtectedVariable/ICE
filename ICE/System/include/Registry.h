@@ -9,6 +9,7 @@
 #include <Component.h>
 #include <Entity.h>
 #include <LightComponent.h>
+#include <NativeScriptComponent.h>
 #include <RenderComponent.h>
 #include <SkeletonPoseComponent.h>
 #include <SkinningComponent.h>
@@ -29,6 +30,7 @@ class Registry {
         componentManager.registerComponent<AnimationComponent>();
         componentManager.registerComponent<SkeletonPoseComponent>();
         componentManager.registerComponent<SkinningComponent>();
+        componentManager.registerComponent<NativeScriptComponent>();
     }
     ~Registry() = default;
 

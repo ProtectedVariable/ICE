@@ -6,6 +6,7 @@
 
 #include <AssetBank.h>
 #include <Entity.h>
+#include <EntityHandle.h>
 #include <Registry.h>
 #include <SceneGraph.h>
 
@@ -29,6 +30,13 @@ class Scene {
 
     std::shared_ptr<Registry> getRegistry() const;
     Entity createEntity();
+
+    // Create an entity and return an ergonomic handle to it (optionally aliased). Prefer this
+    // over createEntity() + registry gymnastics when writing gameplay/tools code.
+    EntityHandle create(const std::string &name = "");
+    // Wrap an existing entity id in a handle bound to this scene's registry.
+    EntityHandle wrap(Entity e) const;
+
     Entity spawnTree(AssetUID model_id, const std::shared_ptr<AssetBank> &bank);
 
     void addEntity(Entity e, const std::string &alias, Entity parent);
