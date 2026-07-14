@@ -109,7 +109,7 @@ void ICEEngine::installRuntimeSystems(const std::shared_ptr<Scene> &scene, const
     }
 
     auto renderer = std::make_shared<ForwardRenderer>(api, m_graphics_factory);
-    auto rs = std::make_shared<RenderSystem>(api, m_graphics_factory, registry, project->getGPURegistry());
+    auto rs = std::make_shared<RenderSystem>(registry, project->getGPURegistry());
     auto as = std::make_shared<AnimationSystem>(registry, project->getAssetBank());
     auto sgs = std::make_shared<SceneGraphSystem>(scene);
     auto ss = std::make_shared<ScriptSystem>(registry);

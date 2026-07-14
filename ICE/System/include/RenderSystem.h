@@ -27,8 +27,10 @@ struct CullingData {
 
 class RenderSystem : public System {
    public:
-    RenderSystem(const std::shared_ptr<RendererAPI> &api, const std::shared_ptr<GraphicsFactory> &factory, const std::shared_ptr<Registry> &reg,
-                 const std::shared_ptr<GPURegistry> &gpu_bank);
+    // The render system no longer touches the graphics API directly: it only culls, submits the
+    // visible set to the renderer, and asks the renderer to present. It therefore needs the
+    // registry (to read components) and the GPU bank (to resolve mesh/material/shader handles).
+    RenderSystem(const std::shared_ptr<Registry> &reg, const std::shared_ptr<GPURegistry> &gpu_bank);
 
     void onEntityAdded(Entity e) override;
     void onEntityRemoved(Entity e) override;
@@ -67,14 +69,14 @@ class RenderSystem : public System {
     std::vector<Entity> m_render_queue;
     std::vector<Entity> m_lights;
 
-    std::shared_ptr<RendererAPI> m_api;
-    std::shared_ptr<GraphicsFactory> m_factory;
     // Non-owning back-reference: the Registry owns this system, so a shared_ptr here formed
     // a Registry -> SystemManager -> this -> Registry cycle. The Registry outlives its systems.
     Registry* m_registry = nullptr;
     std::shared_ptr<GPURegistry> m_gpu_bank;
 
-    std::shared_ptr<VertexArray> m_quad_vao;
+    // Full-screen present shader, resolved from the GPU bank once and reused, instead of a
+    // per-frame string lookup. The renderer's present pass consumes it.
+    std::shared_ptr<ShaderProgram> m_lastpass_shader;
 
     std::unordered_map<Entity, CullingData> m_culling_cache;
 };

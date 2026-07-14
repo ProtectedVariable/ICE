@@ -8,25 +8,11 @@
 #include <SkinningComponent.h>
 
 #include "Registry.h"
-#include "RenderData.h"
 
 namespace ICE {
-RenderSystem::RenderSystem(const std::shared_ptr<RendererAPI> &api, const std::shared_ptr<GraphicsFactory> &factory,
-                           const std::shared_ptr<Registry> &reg, const std::shared_ptr<GPURegistry> &gpu_bank)
-    : m_api(api),
-      m_factory(factory),
-      m_registry(reg.get()),
+RenderSystem::RenderSystem(const std::shared_ptr<Registry> &reg, const std::shared_ptr<GPURegistry> &gpu_bank)
+    : m_registry(reg.get()),
       m_gpu_bank(gpu_bank) {
-    m_quad_vao = factory->createVertexArray();
-    auto quad_vertex_vbo = factory->createVertexBuffer();
-    quad_vertex_vbo->putData(full_quad_v.data(), full_quad_v.size() * sizeof(float));
-    m_quad_vao->pushVertexBuffer(quad_vertex_vbo, 3);
-    auto quad_uv_vbo = factory->createVertexBuffer();
-    quad_uv_vbo->putData(full_quad_tx.data(), full_quad_tx.size() * sizeof(float));
-    m_quad_vao->pushVertexBuffer(quad_uv_vbo, 2);
-    auto quad_ibo = factory->createIndexBuffer();
-    quad_ibo->putData(full_quad_idx.data(), full_quad_idx.size() * sizeof(int));
-    m_quad_vao->setIndexBuffer(quad_ibo);
 }
 
 void RenderSystem::update(double delta) {
@@ -142,25 +128,16 @@ void RenderSystem::update(double delta) {
     }
 
     m_renderer->prepareFrame(*m_camera);
-    auto rendered_fb = m_renderer->render();
+    m_renderer->render();
     m_renderer->endFrame();
 
-    //Final pass, render the last result to the screen
-    if (!m_target) {
-        m_api->bindDefaultFramebuffer();
-    } else {
-        m_target->bind();
+    // Hand off the final composite to the renderer's present pass. Resolve the full-screen shader
+    // once and reuse it, rather than the old per-frame string lookup. m_target (nullptr = default
+    // framebuffer) is still honoured, preserving the editor's render-to-texture path.
+    if (!m_lastpass_shader) {
+        m_lastpass_shader = m_gpu_bank->getShader(AssetPath::WithTypePrefix<Shader>("lastpass"));
     }
-
-    m_api->clear();
-    auto shader = m_gpu_bank->getShader(AssetPath::WithTypePrefix<Shader>("lastpass"));
-
-    shader->bind();
-    rendered_fb->bindAttachment(0);
-    shader->loadInt("uTexture", 0);
-    m_quad_vao->bind();
-    m_quad_vao->getIndexBuffer()->bind();
-    m_api->renderVertexArray(m_quad_vao);
+    m_renderer->present(m_target, m_lastpass_shader);
 }
 
 void RenderSystem::onEntityAdded(Entity e) {

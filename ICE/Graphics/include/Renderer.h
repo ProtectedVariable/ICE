@@ -79,6 +79,10 @@ class Renderer {
     virtual void prepareFrame(Camera &camera) = 0;
     virtual std::shared_ptr<Framebuffer> render() = 0;
     virtual void endFrame() = 0;
+    // Composite the last render() result onto `target` (nullptr = the default framebuffer) using
+    // the given full-screen present shader. The final blit lives in the renderer so that the
+    // visible-set producer (RenderSystem) issues no GL of its own.
+    virtual void present(const std::shared_ptr<Framebuffer> &target, const std::shared_ptr<ShaderProgram> &present_shader) = 0;
     virtual void resize(uint32_t width, uint32_t height) = 0;
     virtual void setClearColor(Eigen::Vector4f clearColor) = 0;
     virtual void setViewport(int x, int y, int w, int h) = 0;

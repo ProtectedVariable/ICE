@@ -27,6 +27,8 @@ int main() {
     ICEEngine engine({.title = "IceField", .width = 1280, .height = 720});
     engine.getWindow()->setSwapInterval(0);
 
+    engine.getApi()->setClearColor(0.1f, 0.1f, 0.1f, 1.f);
+
     auto& project = engine.newProject("IceField_project");
     auto& scene = project.createScene("TestScene");
     auto hero = project.importModel("Adventurer", "ImportAssets/Adventurer.glb");

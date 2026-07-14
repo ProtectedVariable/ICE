@@ -12,6 +12,7 @@
 #include <Logger.h>
 #include <Profiler.h>
 #include <RenderComponent.h>
+#include <RenderData.h>
 #include <Scene.h>
 #include <TransformComponent.h>
 
@@ -25,6 +26,19 @@ ForwardRenderer::ForwardRenderer(const std::shared_ptr<RendererAPI>& api, const 
 
     m_camera_ubo = factory->createUniformBuffer(sizeof(CameraUBO), 0);
     m_light_ubo = factory->createUniformBuffer(sizeof(SceneLightsUBO), 1);
+
+    // Full-screen quad for the present pass (moved here from RenderSystem, which no longer owns
+    // any GL objects).
+    m_present_quad = factory->createVertexArray();
+    auto quad_vertex_vbo = factory->createVertexBuffer();
+    quad_vertex_vbo->putData(full_quad_v.data(), full_quad_v.size() * sizeof(float));
+    m_present_quad->pushVertexBuffer(quad_vertex_vbo, 3);
+    auto quad_uv_vbo = factory->createVertexBuffer();
+    quad_uv_vbo->putData(full_quad_tx.data(), full_quad_tx.size() * sizeof(float));
+    m_present_quad->pushVertexBuffer(quad_uv_vbo, 2);
+    auto quad_ibo = factory->createIndexBuffer();
+    quad_ibo->putData(full_quad_idx.data(), full_quad_idx.size() * sizeof(int));
+    m_present_quad->setIndexBuffer(quad_ibo);
 }
 
 void ForwardRenderer::submitSkybox(const Skybox& e) {
@@ -174,7 +188,29 @@ std::shared_ptr<Framebuffer> ForwardRenderer::render() {
     m_api->beginGPUTimer();
     m_geometry_pass.execute();
     Profiler::get().addSample("GPU::geometry", m_api->endGPUTimer());
-    return m_geometry_pass.getResult();
+    // Retain the geometry result so present() can composite it after endFrame().
+    m_output_fb = m_geometry_pass.getResult();
+    return m_output_fb;
+}
+
+void ForwardRenderer::present(const std::shared_ptr<Framebuffer>& target, const std::shared_ptr<ShaderProgram>& present_shader) {
+    // The final composite: draw the geometry result full-screen onto the target (or the default
+    // framebuffer). This is the blit that used to live at the tail of RenderSystem::update.
+    if (!m_output_fb || !present_shader) {
+        return;
+    }
+    if (!target) {
+        m_api->bindDefaultFramebuffer();
+    } else {
+        target->bind();
+    }
+    m_api->clear();
+    present_shader->bind();
+    m_output_fb->bindAttachment(0);
+    present_shader->loadInt("uTexture", 0);
+    m_present_quad->bind();
+    m_present_quad->getIndexBuffer()->bind();
+    m_api->renderVertexArray(m_present_quad);
 }
 
 void ForwardRenderer::endFrame() {
