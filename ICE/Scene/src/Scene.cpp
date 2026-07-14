@@ -5,6 +5,10 @@
 #include "Scene.h"
 
 #include <Registry.h>
+#include <RenderComponent.h>
+#include <SkeletonPoseComponent.h>
+#include <SkinningComponent.h>
+#include <TransformComponent.h>
 
 #include <utility>
 

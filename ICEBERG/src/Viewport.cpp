@@ -1,6 +1,10 @@
 #include "Viewport.h"
 
 #include <ICEMath.h>
+#include <RenderComponent.h>
+#include <SkeletonPoseComponent.h>
+#include <SkinningComponent.h>
+#include <TransformComponent.h>
 
 #include <iostream>
 

@@ -9,6 +9,7 @@
 #include <GL/gl3w.h>
 #include <GLFW/glfw3.h>
 #include <GPUMesh.h>
+#include <LightComponent.h>
 
 #include "Camera.h"
 #include "Context.h"
@@ -70,12 +71,12 @@ struct Light {
 class Renderer {
    public:
     virtual ~Renderer() = default;
-    virtual void submitSkybox(const Skybox& e) = 0;
+    virtual void submitSkybox(const Skybox &e) = 0;
     // By value so the caller's temporary (with its texture/bone maps) can be moved into the
     // renderer's queue instead of copied.
     virtual void submitDrawable(Drawable e) = 0;
-    virtual void submitLight(const Light& e) = 0;
-    virtual void prepareFrame(Camera& camera) = 0;
+    virtual void submitLight(const Light &e) = 0;
+    virtual void prepareFrame(Camera &camera) = 0;
     virtual std::shared_ptr<Framebuffer> render() = 0;
     virtual void endFrame() = 0;
     virtual void resize(uint32_t width, uint32_t height) = 0;

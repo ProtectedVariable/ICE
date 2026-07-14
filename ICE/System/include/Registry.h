@@ -5,38 +5,28 @@
 #ifndef ICE_REGISTRY_H
 #define ICE_REGISTRY_H
 
-#include <AnimationComponent.h>
 #include <Component.h>
 #include <Entity.h>
-#include <LightComponent.h>
-#include <NativeScriptComponent.h>
-#include <RenderComponent.h>
-#include <SkeletonPoseComponent.h>
-#include <SkinningComponent.h>
-#include <SkyboxComponent.h>
 #include <System.h>
-#include <TransformComponent.h>
 
 #include <vector>
 
 namespace ICE {
+// Component types are no longer enumerated here: they register themselves the first time they are
+// added/queried (see ComponentManager::assure). This keeps the ECS core free of any dependency on
+// concrete gameplay/render component headers -- add a brand-new component type from anywhere with
+// no registration call and no edit to this file.
 class Registry {
    public:
-    Registry() {
-        componentManager.registerComponent<TransformComponent>();
-        componentManager.registerComponent<RenderComponent>();
-        componentManager.registerComponent<LightComponent>();
-        componentManager.registerComponent<SkyboxComponent>();
-        componentManager.registerComponent<AnimationComponent>();
-        componentManager.registerComponent<SkeletonPoseComponent>();
-        componentManager.registerComponent<SkinningComponent>();
-        componentManager.registerComponent<NativeScriptComponent>();
-    }
+    Registry() = default;
     ~Registry() = default;
 
+    // Deprecated: component types register on first use, so this call is unnecessary. Kept as an
+    // idempotent forwarder until existing call sites are removed.
     template<typename T>
+    [[deprecated("Component types register on first use; registerCustomComponent() is no longer required.")]]
     void registerCustomComponent() {
-        componentManager.registerComponent<T>();
+        componentManager.assure<T>();
     }
 
     Entity createEntity() {
@@ -71,17 +61,18 @@ class Registry {
         return entityManager.getSignature(e).test(componentManager.getComponentType<T>());
     }
 
-    // WARNING: the returned pointer is only valid until the next structural change to the
-    // T component storage. addComponent<T>/removeComponent<T> on ANY entity can reallocate
-    // or swap-move the backing vector, invalidating outstanding T* handles. Do not cache
-    // component pointers across such changes -- re-fetch instead (see the editor Inspector).
+    // The returned pointer stays valid until *this* component is removed (removeComponent<T>(e)
+    // or the entity/registry is destroyed). Component storage is stable: adding or removing any
+    // OTHER entity's component -- of this or any other type -- never invalidates it, so it is safe
+    // to hold across add/remove of other entities. Removing this component leaves the pointer
+    // dangling, as with erasing any container element.
     template<typename T>
     T *getComponent(Entity e) {
         return componentManager.getComponent<T>(e);
     }
 
     // Returns nullptr instead of asserting when the entity has no component of type T. Same
-    // pointer-invalidation caveat as getComponent applies.
+    // pointer-validity guarantee as getComponent.
     template<typename T>
     T *tryGetComponent(Entity e) {
         return componentManager.tryGetComponent<T>(e);

@@ -1,6 +1,7 @@
 #include "AssetsRenderer.h"
 
 #include <PerspectiveCamera.h>
+#include <ICEMath.h>
 
 std::pair<void*, bool> AssetsRenderer::createThumbnail(const std::shared_ptr<ICE::Asset>& asset, const std::string& asset_path) {
     return getPreview(asset, asset_path, std::numeric_limits<float>::infinity());

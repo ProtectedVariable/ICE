@@ -6,6 +6,7 @@
 #define ICE_ENTITY_H
 
 #include <bitset>
+#include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <queue>
@@ -14,9 +15,15 @@
 
 namespace ICE {
 using Entity = std::uint32_t;
-// 64 bits allows up to 64 component types (8 built-in + custom). See registerComponent's
-// bound check.
-using Signature = std::bitset<64>;
+
+// Single source of truth for ECS storage limits. The component-type ceiling and the Signature
+// bit width are both derived from MaxComponentTypes so they can never drift apart -- widen both
+// by changing this one constant. Referenced by ComponentTypeRegistry's bound check in
+// Component.h (replaces the constant that used to be hard-coded in registerComponent).
+struct StoragePolicy {
+    static constexpr std::size_t MaxComponentTypes = 64;
+};
+using Signature = std::bitset<StoragePolicy::MaxComponentTypes>;
 
 // Reserved "no entity" / scene-graph-root sentinel.
 constexpr Entity NULL_ENTITY = 0;

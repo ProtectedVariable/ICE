@@ -3,8 +3,6 @@ project(ICE)
 
 message(STATUS "Building ${PROJECT_NAME}")
 
-add_compile_definitions(NOMINMAX)
-
 add_subdirectory(Assets)
 add_subdirectory(Components)
 add_subdirectory(Core)

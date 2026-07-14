@@ -1,5 +1,13 @@
 #include "Hierarchy.h"
 
+#include <AnimationComponent.h>
+#include <LightComponent.h>
+#include <RenderComponent.h>
+#include <SkeletonPoseComponent.h>
+#include <SkinningComponent.h>
+#include <SkyboxComponent.h>
+#include <TransformComponent.h>
+
 #include <iostream>
 
 namespace {

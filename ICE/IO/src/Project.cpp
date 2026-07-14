@@ -10,6 +10,7 @@
 #include <OpenGLFactory.h>
 #include <RenderComponent.h>
 #include <Scene.h>
+#include <SkeletonPoseComponent.h>
 #include <TransformComponent.h>
 
 #include <fstream>
@@ -18,6 +19,7 @@
 #include "DefaultLoaders.h"
 #include "MaterialExporter.h"
 #include "ShaderExporter.h"
+#include <SkinningComponent.h>
 
 namespace ICE {
 Project::Project(const fs::path &base_directory, const std::string &m_name)
@@ -192,7 +194,7 @@ void Project::writeToFile(const std::shared_ptr<Camera> &editorCamera) {
                 spjson["skeletonModel"] = sc.skeletonModel;
                 spjson["bone_entity"] = sc.bone_entity;
                 std::vector<json> bone_transforms;
-                for (const auto& tr : sc.bone_transform) {
+                for (const auto &tr : sc.bone_transform) {
                     bone_transforms.push_back(JsonParser::dumpMat4(tr));
                 }
                 spjson["bone_transforms"] = bone_transforms;
@@ -316,7 +318,7 @@ void Project::loadFromFile() {
                 sc.skeletonModel = sj["skeletonModel"];
                 sc.bone_entity = sj["bone_entity"].get<std::unordered_map<std::string, Entity>>();
                 std::vector<Eigen::Matrix4f> bone_transforms;
-                for (const auto& jt : sj["bone_transforms"]) {
+                for (const auto &jt : sj["bone_transforms"]) {
                     bone_transforms.push_back(JsonParser().readMat4(jt));
                 }
                 sc.bone_transform = bone_transforms;

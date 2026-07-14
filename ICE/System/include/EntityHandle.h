@@ -1,6 +1,10 @@
 #pragma once
 
+#include <AnimationComponent.h>
+#include <LightComponent.h>
 #include <Registry.h>
+#include <RenderComponent.h>
+#include <TransformComponent.h>
 
 #include <utility>
 
@@ -17,9 +21,9 @@ namespace ICE {
 //   if (e.has<LightComponent>()) { ... }
 //   if (!e.valid()) { ... }                 // entity destroyed since we took the handle
 //
-// This supersedes the old EntityHelper. Component pointers returned here follow the same
-// invalidation rule as Registry::getComponent: a structural change to that component's storage
-// invalidates them, so don't cache them across add/remove.
+// This supersedes the old EntityHelper. Component pointers returned here follow the same validity
+// guarantee as Registry::getComponent: they stay valid until that component is removed, and are
+// not invalidated by add/remove of any other entity's components.
 class EntityHandle {
    public:
     EntityHandle() = default;

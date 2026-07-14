@@ -6,6 +6,7 @@
 #include <NativeScriptComponent.h>
 #include <OpenGLFactory.h>
 #include <PerspectiveCamera.h>
+#include <TransformComponent.h>
 #include <WindowFactory.h>
 
 using namespace ICE;

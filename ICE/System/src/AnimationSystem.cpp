@@ -1,6 +1,7 @@
 ﻿#include "AnimationSystem.h"
 
 #include <iostream>
+#include <TransformComponent.h>
 
 namespace ICE {
 AnimationSystem::AnimationSystem(const std::shared_ptr<Registry>& reg, const std::shared_ptr<AssetBank>& bank) : m_registry(reg.get()), m_asset_bank(bank) {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Scene.h>
+#include <TransformComponent.h>
 
 #include "System.h"
 

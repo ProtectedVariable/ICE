@@ -1,6 +1,9 @@
 #pragma once
 
+#include <AnimationComponent.h>
+#include <LightComponent.h>
 #include <Registry.h>
+#include <RenderComponent.h>
 #include <imgui.h>
 
 #include "Components/ComboBox.h"

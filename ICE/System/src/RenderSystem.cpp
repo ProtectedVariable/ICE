@@ -4,6 +4,9 @@
 
 #include "RenderSystem.h"
 
+#include <SkeletonPoseComponent.h>
+#include <SkinningComponent.h>
+
 #include "Registry.h"
 #include "RenderData.h"
 

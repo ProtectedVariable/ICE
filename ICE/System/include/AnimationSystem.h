@@ -2,6 +2,7 @@
 
 #include <AssetBank.h>
 #include <Registry.h>
+#include <SkeletonPoseComponent.h>
 
 #include "Animation.h"
 #include "AnimationComponent.h"
