@@ -48,6 +48,18 @@ Entity Scene::createEntity() {
     return e;
 }
 
+EntityHandle Scene::create(const std::string &name) {
+    Entity e = createEntity();
+    if (!name.empty()) {
+        setAlias(e, name);
+    }
+    return EntityHandle(e, registry.get());
+}
+
+EntityHandle Scene::wrap(Entity e) const {
+    return EntityHandle(e, registry.get());
+}
+
 Entity Scene::spawnTree(AssetUID model_id, const std::shared_ptr<AssetBank> &bank) {
     auto model = bank->getAsset<Model>(model_id);
     auto nodes = model->getNodes();

@@ -9,6 +9,7 @@
 #include <Profiler.h>
 #include <TransformComponent.h>
 #include <AnimationSystem.h>
+#include <ScriptSystem.h>
 #include <SceneGraphSystem.h>
 
 namespace ICE {
@@ -49,6 +50,11 @@ void ICEEngine::step() {
     if (!project) {
         return;
     }
+    // Application frame callbacks (engine.onUpdate) run before the ECS systems so gameplay
+    // state they set is consumed by animation/scene-graph/render the same frame.
+    for (auto& cb : m_update_callbacks) {
+        cb(m_delta_time);
+    }
     auto render_system = project->getCurrentScene()->getRegistry()->getSystem<RenderSystem>();
     render_system->setTarget(m_target_fb);
     {
@@ -67,15 +73,18 @@ void ICEEngine::step() {
 }
 
 void ICEEngine::setupScene(const std::shared_ptr<Camera> &camera_) {
+    auto registry = project->getCurrentScene()->getRegistry();
     auto renderer = std::make_shared<ForwardRenderer>(api, m_graphics_factory);
-    auto rs = std::make_shared<RenderSystem>(api, m_graphics_factory, project->getCurrentScene()->getRegistry(), project->getGPURegistry());
-    auto as = std::make_shared<AnimationSystem>(project->getCurrentScene()->getRegistry(), project->getAssetBank());
+    auto rs = std::make_shared<RenderSystem>(api, m_graphics_factory, registry, project->getGPURegistry());
+    auto as = std::make_shared<AnimationSystem>(registry, project->getAssetBank());
     auto sgs = std::make_shared<SceneGraphSystem>(project->getCurrentScene());
+    auto ss = std::make_shared<ScriptSystem>(registry);
     rs->setCamera(camera_);
     rs->setRenderer(renderer);
-    project->getCurrentScene()->getRegistry()->addSystem(rs);
-    project->getCurrentScene()->getRegistry()->addSystem(as);
-    project->getCurrentScene()->getRegistry()->addSystem(sgs);
+    registry->addSystem(rs);
+    registry->addSystem(as);
+    registry->addSystem(sgs);
+    registry->addSystem(ss);
     camera = camera_;
     auto [w, h] = m_window->getSize();
     renderer->resize(w, h);

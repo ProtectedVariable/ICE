@@ -2,11 +2,26 @@
 #include <ICEEngine.h>
 #include <ICEMath.h>
 #include <MaterialExporter.h>
+#include <NativeScript.h>
+#include <NativeScriptComponent.h>
 #include <OpenGLFactory.h>
 #include <PerspectiveCamera.h>
 #include <WindowFactory.h>
 
 using namespace ICE;
+
+// Example per-entity game logic: spin the entity around Y. Attached via a NativeScriptComponent
+// (see below); the ScriptSystem instantiates and updates it every frame.
+class Rotator : public NativeScript {
+   public:
+    void onUpdate(double dt) override {
+        m_angle += dt * 45.0;  // 45 deg/sec, frame-rate independent
+        registry()->getComponent<TransformComponent>(entity())->setRotationEulerDeg({0, (float) m_angle, 0});
+    }
+
+   private:
+    double m_angle = 0.0;
+};
 
 int main(void) {
     std::filesystem::remove_all("IceField_project");
@@ -32,25 +47,40 @@ int main(void) {
     engine.getAssetBank()->addAsset<ICE::Model>("Adventurer", {engine.getProject()->getBaseDirectory() / "Assets" / "Models" / "Adventurer.glb"});
 
     
+    auto sphere = engine.getAssetBank()->getUID(AssetPath::WithTypePrefix<Mesh>("sphere"));
+    auto base_mat = engine.getAssetBank()->getUID(AssetPath::WithTypePrefix<Material>("base_mat"));
     for (int i = 0; i < 10; i++) {
-        auto entity = scene->createEntity();
-        scene->getRegistry()->addComponent<TransformComponent>(
-            entity, TransformComponent({(float) i - 5, 0, 0}, Eigen::Vector3f::Zero(), Eigen::Vector3f::Constant(1.0)));
-        scene->getRegistry()->addComponent<LightComponent>(entity, LightComponent(LightType::PointLight, {1, 1, 1}));
-        scene->getRegistry()->addComponent<RenderComponent>(
-            entity,
-            RenderComponent(engine.getAssetBank()->getUID(AssetPath::WithTypePrefix<Mesh>("sphere")),
-                            engine.getAssetBank()->getUID(AssetPath::WithTypePrefix<Material>("base_mat"))));
+        // EntityHandle: create + add components without the registry boilerplate.
+        auto entity = scene->create();
+        entity.add(TransformComponent({(float) i - 5, 0, 0}, Eigen::Vector3f::Zero(), Eigen::Vector3f::Constant(1.0)));
+        entity.add(LightComponent(LightType::PointLight, {1, 1, 1}));
+        entity.add(RenderComponent(sphere, base_mat));
     }
 
     
     auto model_id = engine.getAssetBank()->getUID(AssetPath::WithTypePrefix<Model>("Adventurer"));
-    auto entity2 = scene->spawnTree(model_id, engine.getAssetBank());
-    scene->getRegistry()->addComponent<AnimationComponent>(entity2, AnimationComponent{.currentAnimation = "Walk", .loop = true});
+    auto entity2 = scene->wrap(scene->spawnTree(model_id, engine.getAssetBank()));
+    entity2.add(AnimationComponent{.currentAnimation = "Walk", .loop = true});
 
-    auto entity3 = scene->spawnTree(model_id, engine.getAssetBank());
-    scene->getRegistry()->getComponent<TransformComponent>(entity3)->setPosition({1, 0, 0});
-    scene->getRegistry()->addComponent<AnimationComponent>(entity3, AnimationComponent{.currentAnimation = "Run", .loop = true});
+    // Attach the Rotator script: the ScriptSystem will spin this entity while it animates.
+    NativeScriptComponent rotator;
+    rotator.bind<Rotator>();
+    entity2.add(rotator);
+
+    auto entity3 = scene->wrap(scene->spawnTree(model_id, engine.getAssetBank()));
+    entity3.transform()->setPosition({1, 0, 0});
+    entity3.add(AnimationComponent{.currentAnimation = "Run", .loop = true});
+
+    // Global per-frame game logic via the engine.onUpdate hook: switch entity3 to Idle after 5s.
+    double elapsed = 0.0;
+    bool switched = false;
+    engine.onUpdate([&, entity3](double dt) {
+        elapsed += dt;
+        if (!switched && elapsed > 5.0) {
+            switched = true;
+            entity3.animation()->playAnimation("Idle", 300.0);
+        }
+    });
     
     auto camera = std::make_shared<PerspectiveCamera>(60.0, 16.0 / 9.0, 0.01, 10000.0);
     camera->backward(5);
@@ -58,22 +88,16 @@ int main(void) {
     camera->pitch(-30);
     scene->getRegistry()->getSystem<RenderSystem>()->setCamera(camera);
 
-    int i = 0;
     while (!window->shouldClose()) {
         window->pollEvents();
 
         engine.step();
-        /*
-        scene->getRegistry()->getComponent<TransformComponent>(entity2)->setRotationEulerDeg({0, i / 10.0f, 0});
-        if (i == 300)
-            scene->getRegistry()->getComponent<AnimationComponent>(entity3)->playAnimation("Idle", 300.0);
-*/
+
         //Render system duty
         int display_w, display_h;
         window->getFramebufferSize(&display_w, &display_h);
         engine.getApi()->setViewport(0, 0, display_w, display_h);
         window->swapBuffers();
-        i++;
     }
 
     return 0;

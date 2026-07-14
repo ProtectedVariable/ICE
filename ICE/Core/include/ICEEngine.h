@@ -13,6 +13,7 @@
 #include <RenderSystem.h>
 #include <System.h>
 
+#include <functional>
 #include <vector>
 
 namespace ICE {
@@ -23,6 +24,12 @@ class ICEEngine {
     void initialize(const std::shared_ptr<GraphicsFactory>& graphics_factor, const std::shared_ptr<Window>& window);
 
     void step();
+
+    // Register an application frame callback. Every registered callback is invoked once per
+    // step() with the frame delta (seconds), before the ECS systems run -- so gameplay logic
+    // here is picked up by animation, the scene graph and rendering the same frame. This is
+    // the simplest place to put per-frame game code; for per-entity logic use a NativeScript.
+    void onUpdate(const std::function<void(double)>& callback) { m_update_callbacks.push_back(callback); }
 
     // Duration of the last step() in seconds.
     double getDeltaTime() const { return m_delta_time; }
@@ -68,6 +75,8 @@ class ICEEngine {
 
     std::chrono::steady_clock::time_point lastFrameTime;
     double m_delta_time = 0.0;
+
+    std::vector<std::function<void(double)>> m_update_callbacks;
 
     EngineConfig config;
 };
