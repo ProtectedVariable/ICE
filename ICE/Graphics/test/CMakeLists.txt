@@ -21,3 +21,19 @@ target_link_libraries(HandlePoolTestSuite
         PRIVATE
         gtest_main
 )
+
+# RenderGraph.h transitively pulls in the graphics headers, so this suite links the graphics
+# library for the include paths. It exercises only compile-time graph logic (no GL is invoked).
+add_executable(RenderGraphTestSuite
+        RenderGraphTest.cpp
+)
+
+add_test(NAME RenderGraphTestSuite
+        COMMAND RenderGraphTestSuite
+        WORKING_DIRECTORY $<TARGET_FILE_DIR:RenderGraphTestSuite>)
+
+target_link_libraries(RenderGraphTestSuite
+        PRIVATE
+        gtest_main
+        graphics
+)

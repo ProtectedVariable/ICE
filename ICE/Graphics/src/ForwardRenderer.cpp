@@ -23,7 +23,8 @@ ForwardRenderer::ForwardRenderer(const std::shared_ptr<RendererAPI>& api, const 
                                  const std::shared_ptr<GPURegistry>& gpu_registry)
     : m_api(api),
       m_gpu_registry(gpu_registry),
-      m_geometry_pass(api, factory, gpu_registry, {1, 1, 1}) {
+      m_geometry_pass(api, factory, gpu_registry, {1, 1, 1}),
+      m_graph(factory) {
 
     m_camera_ubo = factory->createUniformBuffer(sizeof(CameraUBO), 0);
     m_light_ubo = factory->createUniformBuffer(sizeof(SceneLightsUBO), 1);
@@ -197,6 +198,26 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
 }
 
 std::shared_ptr<Framebuffer> ForwardRenderer::render() {
+    if (m_use_render_graph) {
+        // Same work, orchestrated by the render graph: the geometry pass runs inside a graph pass,
+        // so shadow/post passes can later be added here (in the renderer) without any System/Scene
+        // change. The geometry pass still owns its framebuffer; graph-managed resource aliasing is
+        // a follow-up. Present remains a separate step (its target/shader arrive at present time).
+        m_graph.reset();
+        auto& geometry = m_graph.addPass("geometry");
+        geometry.write("scene_color");
+        geometry.setExecuteCallback([this](const RenderGraphPass&) {
+            m_api->beginGPUTimer();
+            m_geometry_pass.execute();
+            Profiler::get().addSample("GPU::geometry", m_api->endGPUTimer());
+        });
+        m_graph.setOutput("scene_color");
+        m_graph.compile();
+        m_graph.execute();
+        m_output_fb = m_geometry_pass.getResult();
+        return m_output_fb;
+    }
+
     m_api->beginGPUTimer();
     m_geometry_pass.execute();
     Profiler::get().addSample("GPU::geometry", m_api->endGPUTimer());

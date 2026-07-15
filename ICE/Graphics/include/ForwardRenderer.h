@@ -19,6 +19,7 @@
 #include "GeometryPass.h"
 #include "InstanceData.h"
 #include "RenderCommand.h"
+#include "RenderGraph.h"
 #include "Renderer.h"
 #include "RendererConfig.h"
 
@@ -46,12 +47,16 @@ class ForwardRenderer : public Renderer {
     void setClearColor(Eigen::Vector4f clearColor) override;
     void setViewport(int x, int y, int w, int h) override;
 
+    void setUseRenderGraph(bool enable) override { m_use_render_graph = enable; }
+
    private:
     std::shared_ptr<RendererAPI> m_api;
     std::shared_ptr<GPURegistry> m_gpu_registry;
     std::vector<RenderCommand> m_render_commands;
 
     GeometryPass m_geometry_pass;
+    RenderGraph m_graph;
+    bool m_use_render_graph = false;
 
     // Owned by the renderer for the present pass: the full-screen quad the final blit draws, and
     // the most recent render() result it composites from.

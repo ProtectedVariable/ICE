@@ -61,6 +61,11 @@ class ICEEngine {
     // back down and returns those systems to serial.
     void setParallelSystems(bool enable);
 
+    // Opt into driving rendering through the RenderGraph (off by default; the hardcoded pass path
+    // is the validated fallback). Applies to the active and future scenes' renderers. Exists to
+    // validate the graph path before it becomes the only path.
+    void setUseRenderGraph(bool enable);
+
     void step();
 
     // Run the blocking main loop until the window closes: poll input, step() the engine, size the
@@ -137,6 +142,9 @@ class ICEEngine {
 
     // Shared job scheduler for the parallel-capable systems; null unless setParallelSystems(true).
     std::shared_ptr<JobScheduler> m_scheduler;
+
+    // Whether renderers should drive the frame through the RenderGraph (see setUseRenderGraph).
+    bool m_use_render_graph = false;
 
     std::chrono::steady_clock::time_point lastFrameTime;
     double m_delta_time = 0.0;

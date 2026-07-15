@@ -33,6 +33,8 @@ int main() {
     auto& scene = project.createScene("TestScene");
     auto hero = project.importModel("Adventurer", "ImportAssets/Adventurer.glb");
 
+    engine.setUseRenderGraph(true);
+
     for (int i = 0; i < 10; ++i) {
         auto e = scene.create();
         e.add(TransformComponent({i - 5.f, 0, 0}, Eigen::Vector3f::Zero()));

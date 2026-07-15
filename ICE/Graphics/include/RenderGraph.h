@@ -5,9 +5,12 @@
 
 #pragma once
 
+#include <algorithm>
 #include <functional>
 #include <memory>
+#include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
@@ -165,7 +168,12 @@ public:
         m_sorted_passes.clear();
         m_resources.clear();
         m_dependencies.clear();
+        m_output_resource.clear();
     }
+
+    // Name of the resource that must reach the screen (the backbuffer/output). Passes that don't
+    // contribute to producing it are culled by compile(). If unset, every pass is kept.
+    void setOutput(const std::string& resource_name) { m_output_resource = resource_name; }
     
     // Get a resource by name
     std::shared_ptr<RenderGraphResource> getResource(const std::string& name) {
@@ -212,8 +220,10 @@ private:
                 topologicalSortVisit(pass.get(), visited, temp_mark);
             }
         }
-        
-        std::reverse(m_sorted_passes.begin(), m_sorted_passes.end());
+        // topologicalSortVisit pushes a pass only after its dependencies (the passes producing
+        // what it reads), so m_sorted_passes is already in execution order -- dependencies first.
+        // (The previous std::reverse here inverted that, running passes back-to-front; it was
+        // never observed because the graph had no live consumer.)
     }
     
     void topologicalSortVisit(RenderGraphPass* pass,
@@ -247,13 +257,18 @@ private:
                 if (m_resources.find(name) == m_resources.end()) {
                     auto resource = std::make_shared<RenderGraphResource>(name, desc);
                     
-                    // Allocate physical resource based on type
+                    // Allocate physical resource based on type. RenderTargets map to a
+                    // framebuffer (used by the geometry/post passes). Standalone transient
+                    // Texture2D/Buffer resources aren't produced by any pass yet; when a pass needs
+                    // one (e.g. a shadow map), GraphicsFactory needs a descriptor-based
+                    // createTexture2D/createBuffer -- today it only creates textures from a loaded
+                    // asset. Until then such a resource stays virtual (null physical) rather than
+                    // being silently mis-allocated.
                     if (desc.type == ResourceType::RenderTarget) {
                         FrameBufferFormat format{desc.width, desc.height, 1};
                         auto fb = m_factory->createFramebuffer(format);
                         resource->setPhysicalResource(fb);
                     }
-                    // TODO: Handle other resource types (Texture2D, Buffer, etc.)
                     
                     m_resources[name] = resource;
                     pass->cacheResource(name, resource->getPhysicalResource());
@@ -277,8 +292,46 @@ private:
     }
     
     void cullUnusedPasses() {
-        // TODO: Implement pass culling based on which resources are actually used
-        // For now, keep all passes
+        // Without a declared output there is nothing to cull against -- keep every pass.
+        if (m_output_resource.empty()) {
+            return;
+        }
+
+        // Mark the passes that actually contribute to the output: start from whoever writes/creates
+        // the output resource, then walk their dependencies (the passes producing what they read)
+        // transitively. Anything not reached is dead and is dropped from the execution order.
+        std::unordered_set<RenderGraphPass*> live;
+        std::vector<RenderGraphPass*> worklist;
+        for (const auto& pass : m_passes) {
+            const auto& writes = pass->getWrites();
+            const auto& creates = pass->getCreates();
+            const bool produces_output = std::find(writes.begin(), writes.end(), m_output_resource) != writes.end() ||
+                                         creates.find(m_output_resource) != creates.end();
+            if (produces_output && live.insert(pass.get()).second) {
+                worklist.push_back(pass.get());
+            }
+        }
+        while (!worklist.empty()) {
+            auto* pass = worklist.back();
+            worklist.pop_back();
+            auto it = m_dependencies.find(pass);
+            if (it != m_dependencies.end()) {
+                for (auto* dep : it->second) {
+                    if (live.insert(dep).second) {
+                        worklist.push_back(dep);
+                    }
+                }
+            }
+        }
+
+        std::vector<RenderGraphPass*> kept;
+        kept.reserve(m_sorted_passes.size());
+        for (auto* pass : m_sorted_passes) {
+            if (live.count(pass) > 0) {
+                kept.push_back(pass);
+            }
+        }
+        m_sorted_passes = std::move(kept);
     }
 
 private:
@@ -287,6 +340,7 @@ private:
     std::vector<RenderGraphPass*> m_sorted_passes;
     std::unordered_map<std::string, std::shared_ptr<RenderGraphResource>> m_resources;
     std::unordered_map<RenderGraphPass*, std::vector<RenderGraphPass*>> m_dependencies;
+    std::string m_output_resource;
 };
 
 }  // namespace ICE
