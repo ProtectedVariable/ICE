@@ -21,10 +21,9 @@ struct RenderJob {
     Eigen::Vector3f worldCenter;
     Eigen::Vector3f worldExtents;
     Eigen::Matrix4f model_matrix;
-    std::shared_ptr<GPUMesh> mesh;
+    MeshHandle mesh;
     std::shared_ptr<Material> material;
-    std::shared_ptr<ShaderProgram> shader;
-    std::unordered_map<AssetUID, std::shared_ptr<GPUTexture>> textures;
+    ShaderHandle shader;
     const SkinningData *skinning = nullptr;
     const SkeletonPoseComponent *pose = nullptr;
 };
@@ -65,13 +64,15 @@ bool resolveJob(Registry *reg, GPURegistry *gpu, std::unordered_map<Entity, Cull
     job.worldCenter = cache_it->second.worldCenter;
     job.worldExtents = cache_it->second.worldExtents;
 
-    auto mesh = gpu->getMesh(rc->mesh);
+    // Resolve to generational handles (uploading the resources on first use). The material stays a
+    // CPU-asset shared_ptr; its textures are resolved by the geometry pass at bind time.
+    auto mesh = gpu->meshHandle(rc->mesh);
     auto material = gpu->getMaterial(rc->material);
-    if (!mesh || !material) {
+    if (!mesh.valid() || !material) {
         return false;
     }
-    auto shader = gpu->getShader(material->getShader());
-    if (!shader) {
+    auto shader = gpu->shaderHandle(material->getShader());
+    if (!shader.valid()) {
         return false;
     }
 
@@ -88,21 +89,10 @@ bool resolveJob(Registry *reg, GPURegistry *gpu, std::unordered_map<Entity, Cull
         }
     }
 
-    std::unordered_map<AssetUID, std::shared_ptr<GPUTexture>> texs;
-    for (const auto &[name, value] : material->getAllUniforms()) {
-        if (std::holds_alternative<AssetUID>(value)) {
-            auto v = std::get<AssetUID>(value);
-            if (auto tex = gpu->getTexture2D(v); tex) {
-                texs.try_emplace(v, tex);
-            }
-        }
-    }
-
     job.model_matrix = model_mat;
-    job.mesh = std::move(mesh);
+    job.mesh = mesh;
     job.material = std::move(material);
-    job.shader = std::move(shader);
-    job.textures = std::move(texs);
+    job.shader = shader;
     return true;
 }
 
@@ -124,10 +114,9 @@ bool cullAndAssemble(RenderJob &job, const Frustum &frustum, Drawable &out) {
         }
     }
     out = Drawable{
-        .mesh = std::move(job.mesh),
+        .mesh = job.mesh,
         .material = std::move(job.material),
-        .shader = std::move(job.shader),
-        .textures = std::move(job.textures),
+        .shader = job.shader,
         .model_matrix = job.model_matrix,
         .bone_matrices = std::move(bone_matrices),
     };
@@ -147,14 +136,9 @@ void RenderSystem::update(double delta) {
     auto proj_mat = m_camera->getProjection();
 
     if (m_skybox != NO_ASSET_ID) {
-        auto shader = m_gpu_bank->getShader(AssetPath::WithTypePrefix<Shader>("__ice_skybox_shader"));
-        auto skybox = m_registry->getComponent<SkyboxComponent>(m_skybox);
-        auto mesh = m_gpu_bank->getMesh(AssetPath::WithTypePrefix<Mesh>("cube"));
-        auto tex = m_gpu_bank->getCubemap(skybox->texture);
         m_renderer->submitSkybox(Skybox{
-            .cube_mesh = mesh,
-            .shader = shader,
-            .textures = {{skybox->texture, tex}},
+            .cube_mesh = m_gpu_bank->meshHandle(AssetPath::WithTypePrefix<Mesh>("cube")),
+            .shader = m_gpu_bank->shaderHandle(AssetPath::WithTypePrefix<Shader>("__ice_skybox_shader")),
         });
     }
 

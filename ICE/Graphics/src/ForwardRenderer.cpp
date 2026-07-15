@@ -19,9 +19,11 @@
 
 namespace ICE {
 
-ForwardRenderer::ForwardRenderer(const std::shared_ptr<RendererAPI>& api, const std::shared_ptr<GraphicsFactory>& factory)
+ForwardRenderer::ForwardRenderer(const std::shared_ptr<RendererAPI>& api, const std::shared_ptr<GraphicsFactory>& factory,
+                                 const std::shared_ptr<GPURegistry>& gpu_registry)
     : m_api(api),
-      m_geometry_pass(api, factory, {1, 1, 1}) {
+      m_gpu_registry(gpu_registry),
+      m_geometry_pass(api, factory, gpu_registry, {1, 1, 1}) {
 
     m_camera_ubo = factory->createUniformBuffer(sizeof(CameraUBO), 0);
     m_light_ubo = factory->createUniformBuffer(sizeof(SceneLightsUBO), 1);
@@ -76,58 +78,68 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
     m_light_ubo->putData(&light_ubo_data, sizeof(SceneLightsUBO));
 
     if (m_skybox.has_value()) {
-        RenderCommand skybox_cmd;
-        skybox_cmd.mesh = m_skybox->cube_mesh.get();
-        skybox_cmd.material = nullptr;
-        skybox_cmd.shader = m_skybox->shader.get();
-        skybox_cmd.textures = &m_skybox->textures;
-        skybox_cmd.model_matrix = Eigen::Matrix4f::Identity();
-        skybox_cmd.is_instanced = false;
-        // Draw after opaque geometry (so it only fills background pixels) but before
-        // transparent. Its fragments sit at the far plane (z=w in skybox.vs), so it needs
-        // GL_LEQUAL and must not write depth.
-        skybox_cmd.depthTest = true;
-        skybox_cmd.depthWrite = false;
-        skybox_cmd.depth_func = DepthFunc::LEqual;
-        skybox_cmd.sort_key = 0x7FFFFFFFFFFFFFFFULL;  // last among opaque (transparent bit 63 = 0)
-        m_render_commands.push_back(skybox_cmd);
+        GPUMesh* sky_mesh = m_gpu_registry->resolve(m_skybox->cube_mesh);
+        ShaderProgram* sky_shader = m_gpu_registry->resolve(m_skybox->shader);
+        if (sky_mesh && sky_shader) {
+            RenderCommand skybox_cmd;
+            skybox_cmd.mesh = sky_mesh;
+            skybox_cmd.material = nullptr;
+            skybox_cmd.shader = sky_shader;
+            skybox_cmd.model_matrix = Eigen::Matrix4f::Identity();
+            skybox_cmd.is_instanced = false;
+            // Draw after opaque geometry (so it only fills background pixels) but before
+            // transparent. Its fragments sit at the far plane (z=w in skybox.vs), so it needs
+            // GL_LEQUAL and must not write depth.
+            skybox_cmd.depthTest = true;
+            skybox_cmd.depthWrite = false;
+            skybox_cmd.depth_func = DepthFunc::LEqual;
+            skybox_cmd.sort_key = 0x7FFFFFFFFFFFFFFFULL;  // last among opaque (transparent bit 63 = 0)
+            m_render_commands.push_back(skybox_cmd);
+        }
     }
 
-    // Instance batching: group drawables by the exact (mesh, material, shader) triple.
+    // Instance batching: group drawables by the exact (mesh, material, shader) triple. Each
+    // drawable's mesh/shader handle is resolved to a raw pointer once here, and those resolved
+    // pointers ARE the batch key -- so the render commands and sort keys are unchanged.
     std::map<BatchKey, std::vector<const Drawable*>> instance_batches;
     std::vector<const Drawable*> non_instanced_drawables;  // Skinned meshes, etc.
 
     for (const auto& drawable : m_drawables) {
+        GPUMesh* mesh = m_gpu_registry->resolve(drawable.mesh);
+        ShaderProgram* shader = m_gpu_registry->resolve(drawable.shader);
+        if (!mesh || !shader || !drawable.material) {
+            continue;  // stale handle or missing material
+        }
         // Skip instancing for skinned meshes (has bones)
         if (!drawable.bone_matrices.empty()) {
             non_instanced_drawables.push_back(&drawable);
             continue;
         }
-
-        BatchKey key{drawable.mesh.get(), drawable.material.get(), drawable.shader.get()};
-        instance_batches[key].push_back(&drawable);
+        instance_batches[BatchKey{mesh, drawable.material.get(), shader}].push_back(&drawable);
     }
-    
+
     // Convert batches to render commands
     m_instance_batches.clear();  // Clear previous frame's instance data
     Eigen::Vector3f camera_pos = camera.getPosition();
 
     for (const auto& [key, batch] : instance_batches) {
+        GPUMesh* mesh = std::get<0>(key);
+        Material* material = std::get<1>(key);
+        ShaderProgram* shader = std::get<2>(key);
         if (batch.size() == 1) {
             // Single instance - use regular rendering
             const auto* drawable = batch[0];
             auto dist = (drawable->model_matrix.block<3, 1>(0, 3) - camera_pos).squaredNorm();
             RenderCommand cmd;
-            cmd.mesh = drawable->mesh.get();
-            cmd.material = drawable->material.get();
-            cmd.shader = drawable->shader.get();
-            cmd.textures = &drawable->textures;
+            cmd.mesh = mesh;
+            cmd.material = material;
+            cmd.shader = shader;
             cmd.model_matrix = drawable->model_matrix;
             cmd.depthTest = true;
             cmd.faceCulling = true;
             cmd.is_instanced = false;
-            cmd.blend = cmd.material->isTransparent();
-            cmd.computeSortKey(cmd.material->isTransparent(), dist);
+            cmd.blend = material->isTransparent();
+            cmd.computeSortKey(material->isTransparent(), dist);
             m_render_commands.push_back(cmd);
         } else {
             // Multiple instances - use instanced rendering
@@ -135,46 +147,47 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
             auto& instance_data_vec = m_instance_batches[key];
             instance_data_vec.clear();
             instance_data_vec.reserve(batch.size());
-            
+
             for (const auto* drawable : batch) {
                 InstanceData inst_data;
                 inst_data.model_matrix = drawable->model_matrix;
                 instance_data_vec.push_back(inst_data);
             }
-            
+
             const auto* first = batch[0];
             auto dist = (first->model_matrix.block<3, 1>(0, 3) - camera_pos).squaredNorm();
             RenderCommand cmd;
-            cmd.mesh = first->mesh.get();
-            cmd.material = first->material.get();
-            cmd.shader = first->shader.get();
-            cmd.textures = &first->textures;
+            cmd.mesh = mesh;
+            cmd.material = material;
+            cmd.shader = shader;
             cmd.depthTest = true;
             cmd.faceCulling = true;
             cmd.is_instanced = true;
             cmd.instance_count = batch.size();
             cmd.instance_data = &instance_data_vec;  // Link to stored data
-            cmd.blend = cmd.material->isTransparent();
-            cmd.computeSortKey(cmd.material->isTransparent(), dist);
+            cmd.blend = material->isTransparent();
+            cmd.computeSortKey(material->isTransparent(), dist);
             m_render_commands.push_back(cmd);
         }
     }
-    
+
     // Add non-instanced drawables (skinned meshes)
     for (const auto* drawable : non_instanced_drawables) {
+        GPUMesh* mesh = m_gpu_registry->resolve(drawable->mesh);
+        ShaderProgram* shader = m_gpu_registry->resolve(drawable->shader);
+        Material* material = drawable->material.get();
         RenderCommand cmd;
         auto dist = (drawable->model_matrix.block<3, 1>(0, 3) - camera_pos).squaredNorm();
-        cmd.mesh = drawable->mesh.get();
-        cmd.material = drawable->material.get();
-        cmd.shader = drawable->shader.get();
-        cmd.textures = &drawable->textures;
+        cmd.mesh = mesh;
+        cmd.material = material;
+        cmd.shader = shader;
         cmd.model_matrix = drawable->model_matrix;
         cmd.depthTest = true;
         cmd.faceCulling = true;
         cmd.bones = &drawable->bone_matrices;
         cmd.is_instanced = false;
-        cmd.blend = cmd.material->isTransparent();
-        cmd.computeSortKey(cmd.material->isTransparent(), dist);
+        cmd.blend = material->isTransparent();
+        cmd.computeSortKey(material->isTransparent(), dist);
         m_render_commands.push_back(cmd);
     }
 

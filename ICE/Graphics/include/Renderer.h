@@ -9,6 +9,7 @@
 #include <GL/gl3w.h>
 #include <GLFW/glfw3.h>
 #include <GPUMesh.h>
+#include <GpuHandle.h>
 #include <LightComponent.h>
 
 #include "Camera.h"
@@ -45,17 +46,19 @@ struct alignas(16) CameraUBO {
     Eigen::Vector4f cameraPos;  // world-space camera position (xyz); matches std140 SceneData
 };
 
+// The per-frame submission structs carry generational GPU handles, not shared_ptr<GPU*>: no
+// refcount churn, no per-drawable texture-map copy. The renderer resolves the mesh/shader handles
+// to raw pointers once (in prepareFrame), and the geometry pass resolves each material's texture
+// handles at bind. Material is a CPU asset, so it stays a shared_ptr.
 struct Skybox {
-    std::shared_ptr<GPUMesh> cube_mesh;
-    std::shared_ptr<ShaderProgram> shader;
-    std::unordered_map<AssetUID, std::shared_ptr<GPUTexture>> textures;
+    MeshHandle cube_mesh;
+    ShaderHandle shader;
 };
 
 struct Drawable {
-    std::shared_ptr<GPUMesh> mesh;
+    MeshHandle mesh;
     std::shared_ptr<Material> material;
-    std::shared_ptr<ShaderProgram> shader;
-    std::unordered_map<AssetUID, std::shared_ptr<GPUTexture>> textures;
+    ShaderHandle shader;
     Eigen::Matrix4f model_matrix;
     std::unordered_map<int, Eigen::Matrix4f> bone_matrices;
 };

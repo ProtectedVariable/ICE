@@ -6,6 +6,7 @@
 
 #include <AssetBank.h>
 #include <Entity.h>
+#include <GPURegistry.h>
 #include <GraphicsAPI.h>
 
 #include <map>
@@ -25,7 +26,8 @@ namespace ICE {
 
 class ForwardRenderer : public Renderer {
    public:
-    ForwardRenderer(const std::shared_ptr<RendererAPI> &api, const std::shared_ptr<GraphicsFactory> &factory);
+    ForwardRenderer(const std::shared_ptr<RendererAPI> &api, const std::shared_ptr<GraphicsFactory> &factory,
+                    const std::shared_ptr<GPURegistry> &gpu_registry);
 
     void submitSkybox(const Skybox &e) override;
     void submitDrawable(Drawable e) override;
@@ -46,6 +48,7 @@ class ForwardRenderer : public Renderer {
 
    private:
     std::shared_ptr<RendererAPI> m_api;
+    std::shared_ptr<GPURegistry> m_gpu_registry;
     std::vector<RenderCommand> m_render_commands;
 
     GeometryPass m_geometry_pass;

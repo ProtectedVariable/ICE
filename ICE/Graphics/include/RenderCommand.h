@@ -18,14 +18,15 @@ namespace ICE {
 struct InstanceData;  // Forward declaration
 
 struct RenderCommand {
+    // mesh/shader are resolved from generational handles to raw pointers once, in
+    // ForwardRenderer::prepareFrame; material is a CPU asset (raw pointer into the asset bank).
     GPUMesh* mesh = nullptr;
     Material* material = nullptr;
     ShaderProgram* shader = nullptr;
-    
-    // Texture map - still needs shared_ptr for lifetime management
-    // TODO: Could use texture indices into a global texture array
-    const std::unordered_map<AssetUID, std::shared_ptr<GPUTexture>>* textures = nullptr;
-    
+
+    // Textures are no longer carried per-command: the geometry pass resolves each of the
+    // material's texture uniforms to a GPUTexture* via the registry at bind time.
+
     // Model matrix - direct value, no pointer
     Eigen::Matrix4f model_matrix;
 

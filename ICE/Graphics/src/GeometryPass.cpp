@@ -5,9 +5,11 @@
 #include "InstanceData.h"
 
 namespace ICE {
-GeometryPass::GeometryPass(const std::shared_ptr<RendererAPI>& api, const std::shared_ptr<GraphicsFactory>& factory, const FrameBufferFormat& format)
+GeometryPass::GeometryPass(const std::shared_ptr<RendererAPI>& api, const std::shared_ptr<GraphicsFactory>& factory,
+                           const std::shared_ptr<GPURegistry>& gpu_registry, const FrameBufferFormat& format)
     : m_api(api),
-      m_factory(factory) {
+      m_factory(factory),
+      m_gpu_registry(gpu_registry) {
     m_framebuffer = factory->createFramebuffer(format);
     m_instance_buffer = factory->createVertexBuffer();
 }
@@ -75,8 +77,9 @@ void GeometryPass::execute() {
             current_shader->loadMat4v("bonesTransformMatrices", m_bone_palette.data(), static_cast<uint32_t>(m_bone_palette.size()));
         }
 
-        if (material != current_material) {
-            auto& textures = command.textures;
+        // Skybox commands carry a null material (their uniforms come from the skybox shader),
+        // so guard against it; opaque/transparent geometry always has one.
+        if (material && material != current_material) {
             current_material = material;
             int texture_count = 0;
 
@@ -89,14 +92,13 @@ void GeometryPass::execute() {
                     auto v = std::get<int>(value);
                     shader->loadInt(name, v);
                 } else if (std::holds_alternative<AssetUID>(value)) {
+                    // Resolve the texture from its AssetUID to a raw GPU pointer here, at bind time
+                    // (uploading on first use), instead of carrying a per-command shared_ptr map.
                     auto v = std::get<AssetUID>(value);
-                    if (textures->contains(v)) {
-                        auto& tex = textures->at(v);
-                        if (tex) {
-                            tex->bind(texture_count);
-                            shader->loadInt(name, texture_count);
-                            texture_count++;
-                        }
+                    if (GPUTexture* tex = m_gpu_registry->texture2DPtr(v)) {
+                        tex->bind(texture_count);
+                        shader->loadInt(name, texture_count);
+                        texture_count++;
                     }
                 } else if (std::holds_alternative<Eigen::Vector2f>(value)) {
                     auto& v = std::get<Eigen::Vector2f>(value);

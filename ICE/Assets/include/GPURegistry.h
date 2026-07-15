@@ -46,6 +46,13 @@ class GPURegistry {
     MeshHandle meshHandle(AssetUID id);
     TextureHandle textureHandle(AssetUID id);
     ShaderHandle shaderHandle(AssetUID id);
+    MeshHandle meshHandle(const AssetPath &path) { return meshHandle(getUID(path)); }
+    TextureHandle textureHandle(const AssetPath &path) { return textureHandle(getUID(path)); }
+    ShaderHandle shaderHandle(const AssetPath &path) { return shaderHandle(getUID(path)); }
+
+    // Ensure a 2D texture is resident and return a raw pointer to it (nullptr if it isn't a valid
+    // texture asset). Used by the geometry pass to bind a material's textures without a shared_ptr.
+    GPUTexture *texture2DPtr(AssetUID id) { return resolve(textureHandle(id)); }
 
     GPUMesh *resolve(MeshHandle h) {
         auto *sp = m_mesh_pool.get(h);
