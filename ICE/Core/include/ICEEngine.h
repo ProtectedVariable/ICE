@@ -8,6 +8,9 @@
 #include <EngineConfig.h>
 #include <GL/gl3w.h>
 #include <GraphicsAPI.h>
+#include <IPhysicsBackend.h>
+#include <IPlugin.h>
+#include <IScriptingBackend.h>
 #include <Project.h>
 #include <Registry.h>
 #include <RenderSystem.h>
@@ -65,6 +68,20 @@ class ICEEngine {
     // is the validated fallback). Applies to the active and future scenes' renderers. Exists to
     // validate the graph path before it becomes the only path.
     void setUseRenderGraph(bool enable);
+
+    // --- Extension seams (P11) --------------------------------------------------------------------
+    // Attach a physics backend; it is initialized now and stepped each frame (before the ECS
+    // systems). Null (the default) means no physics. A concrete backend plugs in here without any
+    // change to core.
+    void setPhysicsBackend(const std::shared_ptr<IPhysicsBackend>& backend);
+
+    // Attach a scripting backend (embedded VM). Initialized with the active scene's registry and
+    // updated each frame alongside the native ScriptSystem.
+    void setScriptingBackend(const std::shared_ptr<IScriptingBackend>& backend);
+
+    // Load an out-of-tree plugin: builds a PluginContext for the active scene and lets the plugin
+    // register its systems / loaders / components. The engine keeps the plugin alive.
+    void loadPlugin(const std::shared_ptr<IPlugin>& plugin);
 
     void step();
 
@@ -145,6 +162,12 @@ class ICEEngine {
 
     // Whether renderers should drive the frame through the RenderGraph (see setUseRenderGraph).
     bool m_use_render_graph = false;
+
+    // Extension seams (P11): optional physics/scripting backends stepped in the frame loop, and the
+    // loaded plugins kept alive for the engine's lifetime.
+    std::shared_ptr<IPhysicsBackend> m_physics;
+    std::shared_ptr<IScriptingBackend> m_scripting;
+    std::vector<std::shared_ptr<IPlugin>> m_plugins;
 
     std::chrono::steady_clock::time_point lastFrameTime;
     double m_delta_time = 0.0;

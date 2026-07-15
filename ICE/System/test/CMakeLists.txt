@@ -6,6 +6,7 @@ include(CTest)
 
 add_executable(SystemTestSuite
         ECSTest.cpp
+        PluginTest.cpp
 )
 
 add_test(NAME SystemTestSuite

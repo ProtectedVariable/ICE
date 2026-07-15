@@ -60,6 +60,14 @@ void ICEEngine::step() {
     for (auto& cb : m_update_callbacks) {
         cb(m_delta_time);
     }
+    // Extension seams (P11): advance physics and drive the scripting VM before the ECS systems, so
+    // their results are visible to animation/scene-graph/render this frame. No-ops when unset.
+    if (m_physics) {
+        m_physics->step(m_delta_time);
+    }
+    if (m_scripting) {
+        m_scripting->update(m_delta_time);
+    }
     // The engine drives the active scene it was handed; it does not reach back through the
     // project/registry to rediscover the render system each frame (it was cached on activation).
     if (m_active_render_system) {
@@ -156,6 +164,31 @@ void ICEEngine::setUseRenderGraph(bool enable) {
             renderer->setUseRenderGraph(enable);
         }
     }
+}
+
+void ICEEngine::setPhysicsBackend(const std::shared_ptr<IPhysicsBackend>& backend) {
+    m_physics = backend;
+    if (m_physics) {
+        m_physics->initialize();
+    }
+}
+
+void ICEEngine::setScriptingBackend(const std::shared_ptr<IScriptingBackend>& backend) {
+    m_scripting = backend;
+    if (m_scripting && m_active_scene) {
+        m_scripting->initialize(*m_active_scene->getRegistry());
+    }
+}
+
+void ICEEngine::loadPlugin(const std::shared_ptr<IPlugin>& plugin) {
+    if (!plugin) {
+        return;
+    }
+    PluginContext ctx;
+    ctx.registry = m_active_scene ? m_active_scene->getRegistry().get() : nullptr;
+    ctx.asset_bank = project ? project->getAssetBank().get() : nullptr;
+    plugin->registerWith(ctx);
+    m_plugins.push_back(plugin);
 }
 
 void ICEEngine::setParallelSystems(bool enable) {

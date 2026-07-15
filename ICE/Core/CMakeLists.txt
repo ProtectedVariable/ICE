@@ -17,8 +17,10 @@ target_link_libraries(${PROJECT_NAME}
     graphics_api
     io
     math
+    physics
     platform
     scene
+    scripting
     storage
     system
     util
