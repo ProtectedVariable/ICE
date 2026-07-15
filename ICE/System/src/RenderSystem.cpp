@@ -24,6 +24,7 @@ struct RenderJob {
     MeshHandle mesh;
     std::shared_ptr<Material> material;
     ShaderHandle shader;
+    AssetUID material_uid = NO_ASSET_ID;
     const SkinningData *skinning = nullptr;
     const SkeletonPoseComponent *pose = nullptr;
 };
@@ -93,6 +94,7 @@ bool resolveJob(Registry *reg, GPURegistry *gpu, std::unordered_map<Entity, Cull
     job.mesh = mesh;
     job.material = std::move(material);
     job.shader = shader;
+    job.material_uid = rc->material;
     return true;
 }
 
@@ -117,6 +119,7 @@ bool cullAndAssemble(RenderJob &job, const Frustum &frustum, Drawable &out) {
         .mesh = job.mesh,
         .material = std::move(job.material),
         .shader = job.shader,
+        .material_uid = job.material_uid,
         .model_matrix = job.model_matrix,
         .bone_matrices = std::move(bone_matrices),
     };

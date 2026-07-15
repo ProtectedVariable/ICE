@@ -59,6 +59,9 @@ struct Drawable {
     MeshHandle mesh;
     std::shared_ptr<Material> material;
     ShaderHandle shader;
+    // The material's asset UID (Material doesn't store its own id -- it's the bank key). Carried so
+    // the renderer can build a stable sort key without hashing pointer addresses.
+    AssetUID material_uid = NO_ASSET_ID;
     Eigen::Matrix4f model_matrix;
     std::unordered_map<int, Eigen::Matrix4f> bone_matrices;
 };

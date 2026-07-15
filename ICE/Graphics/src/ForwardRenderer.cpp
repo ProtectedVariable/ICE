@@ -140,7 +140,7 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
             cmd.faceCulling = true;
             cmd.is_instanced = false;
             cmd.blend = material->isTransparent();
-            cmd.computeSortKey(material->isTransparent(), dist);
+            cmd.computeSortKey(material->isTransparent(), dist, material->getShader(), drawable->material_uid);
             m_render_commands.push_back(cmd);
         } else {
             // Multiple instances - use instanced rendering
@@ -167,7 +167,7 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
             cmd.instance_count = batch.size();
             cmd.instance_data = &instance_data_vec;  // Link to stored data
             cmd.blend = material->isTransparent();
-            cmd.computeSortKey(material->isTransparent(), dist);
+            cmd.computeSortKey(material->isTransparent(), dist, material->getShader(), first->material_uid);
             m_render_commands.push_back(cmd);
         }
     }
@@ -188,7 +188,7 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
         cmd.bones = &drawable->bone_matrices;
         cmd.is_instanced = false;
         cmd.blend = material->isTransparent();
-        cmd.computeSortKey(material->isTransparent(), dist);
+        cmd.computeSortKey(material->isTransparent(), dist, material->getShader(), drawable->material_uid);
         m_render_commands.push_back(cmd);
     }
 

@@ -37,3 +37,18 @@ target_link_libraries(RenderGraphTestSuite
         gtest_main
         graphics
 )
+
+# Sort-key packing/determinism (RenderCommand.h pulls in the graphics headers, so link graphics).
+add_executable(SortKeyTestSuite
+        SortKeyTest.cpp
+)
+
+add_test(NAME SortKeyTestSuite
+        COMMAND SortKeyTestSuite
+        WORKING_DIRECTORY $<TARGET_FILE_DIR:SortKeyTestSuite>)
+
+target_link_libraries(SortKeyTestSuite
+        PRIVATE
+        gtest_main
+        graphics
+)

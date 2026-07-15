@@ -52,12 +52,15 @@ struct RenderCommand {
     // Sorting key - pre-computed for fast sorting
     uint64_t sort_key = 0;
     
-    // Helper to compute sort key
-    void computeSortKey(bool is_transparent, float depth_sq) {
+    // Helper to compute sort key. Keyed off the shader/material *asset UIDs* (stable and identical
+    // across runs) rather than their heap addresses, which were non-deterministic run-to-run and
+    // collision-prone once shifted. UIDs are small monotonic ids, so the low 21 bits identify a
+    // shader/material without collision for any realistic project.
+    void computeSortKey(bool is_transparent, float depth_sq, AssetUID shader_uid, AssetUID material_uid) {
         // Pack: [transparent:1][shader:21][material:21][depth:21]
         uint64_t transparent_bit = is_transparent ? 1ULL : 0ULL;
-        uint64_t shader_bits = (reinterpret_cast<uintptr_t>(shader) >> 3) & 0x1FFFFF;
-        uint64_t material_bits = (reinterpret_cast<uintptr_t>(material) >> 3) & 0x1FFFFF;
+        uint64_t shader_bits = static_cast<uint64_t>(shader_uid) & 0x1FFFFF;
+        uint64_t material_bits = static_cast<uint64_t>(material_uid) & 0x1FFFFF;
         // Clamp instead of masking: depth_sq * 1000 overflowed 21 bits past ~46 units and
         // wrapped, scrambling the order. Clamped, far objects just pin at the max bucket.
         uint64_t depth_raw = static_cast<uint64_t>(depth_sq * 1000.0f);

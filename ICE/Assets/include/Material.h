@@ -5,7 +5,9 @@
 #pragma once
 
 #include <Eigen/Dense>
+#include <string>
 #include <variant>
+#include <vector>
 
 #include "Shader.h"
 #include "Texture.h"
@@ -13,6 +15,16 @@
 namespace ICE {
 
 using UniformValue = std::variant<AssetUID, int, float, Eigen::Vector2f, Eigen::Vector3f, Eigen::Vector4f, Eigen::Matrix4f>;
+
+// The variant's active alternative, resolved once so the render hot path can switch on it instead
+// of walking a std::holds_alternative chain per material bind.
+enum class UniformKind { Texture, Int, Float, Vec2, Vec3, Vec4, Mat4 };
+
+struct UniformBinding {
+    std::string name;
+    UniformKind kind;
+    UniformValue value;
+};
 
 class Material : public Asset {
    public:
@@ -25,6 +37,7 @@ class Material : public Asset {
         } else {
             m_uniforms[name] = value;
         }
+        m_bindings_dirty = true;
     }
 
     template<typename T>
@@ -40,6 +53,11 @@ class Material : public Asset {
     void removeUniform(const std::string& name);
 
     const std::unordered_map<std::string, UniformValue>& getAllUniforms() const;
+
+    // Pre-classified uniforms for the render hot path (see UniformBinding). Rebuilt lazily the
+    // first time it's read after a uniform changes; otherwise returned straight from the cache.
+    const std::vector<UniformBinding>& getUniformBindings() const;
+
     AssetUID getShader() const;
     void setShader(AssetUID shader_id);
     bool isTransparent() const;
@@ -52,5 +70,10 @@ class Material : public Asset {
     AssetUID m_shader = NO_ASSET_ID;
     std::unordered_map<std::string, UniformValue> m_uniforms;
     bool m_transparent;
+
+    // Cache of pre-classified uniforms, rebuilt when m_uniforms changes. Mutable so the read-only
+    // accessor can refresh it lazily.
+    mutable std::vector<UniformBinding> m_bindings;
+    mutable bool m_bindings_dirty = true;
 };
 }  // namespace ICE

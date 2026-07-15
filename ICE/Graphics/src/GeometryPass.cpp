@@ -83,37 +83,38 @@ void GeometryPass::execute() {
             current_material = material;
             int texture_count = 0;
 
-            //TODO: Can we do better ?
-            for (const auto& [name, value] : material->getAllUniforms()) {
-                if (std::holds_alternative<float>(value)) {
-                    auto v = std::get<float>(value);
-                    shader->loadFloat(name, v);
-                } else if (!std::holds_alternative<AssetUID>(value) && std::holds_alternative<int>(value)) {
-                    auto v = std::get<int>(value);
-                    shader->loadInt(name, v);
-                } else if (std::holds_alternative<AssetUID>(value)) {
-                    // Resolve the texture from its AssetUID to a raw GPU pointer here, at bind time
-                    // (uploading on first use), instead of carrying a per-command shared_ptr map.
-                    auto v = std::get<AssetUID>(value);
-                    if (GPUTexture* tex = m_gpu_registry->texture2DPtr(v)) {
-                        tex->bind(texture_count);
-                        shader->loadInt(name, texture_count);
-                        texture_count++;
+            // Iterate the material's pre-classified uniform bindings and switch on the resolved
+            // kind -- no std::holds_alternative chain per bind.
+            for (const auto& binding : material->getUniformBindings()) {
+                switch (binding.kind) {
+                    case UniformKind::Float:
+                        shader->loadFloat(binding.name, std::get<float>(binding.value));
+                        break;
+                    case UniformKind::Int:
+                        shader->loadInt(binding.name, std::get<int>(binding.value));
+                        break;
+                    case UniformKind::Texture: {
+                        // Resolve the texture from its AssetUID to a raw GPU pointer here, at bind
+                        // time (uploading on first use), instead of carrying a per-command map.
+                        if (GPUTexture* tex = m_gpu_registry->texture2DPtr(std::get<AssetUID>(binding.value))) {
+                            tex->bind(texture_count);
+                            shader->loadInt(binding.name, texture_count);
+                            texture_count++;
+                        }
+                        break;
                     }
-                } else if (std::holds_alternative<Eigen::Vector2f>(value)) {
-                    auto& v = std::get<Eigen::Vector2f>(value);
-                    shader->loadFloat2(name, v);
-                } else if (std::holds_alternative<Eigen::Vector3f>(value)) {
-                    auto& v = std::get<Eigen::Vector3f>(value);
-                    shader->loadFloat3(name, v);
-                } else if (std::holds_alternative<Eigen::Vector4f>(value)) {
-                    auto& v = std::get<Eigen::Vector4f>(value);
-                    shader->loadFloat4(name, v);
-                } else if (std::holds_alternative<Eigen::Matrix4f>(value)) {
-                    auto& v = std::get<Eigen::Matrix4f>(value);
-                    shader->loadMat4(name, v);
-                } else {
-                    throw std::runtime_error("Uniform type not implemented");
+                    case UniformKind::Vec2:
+                        shader->loadFloat2(binding.name, std::get<Eigen::Vector2f>(binding.value));
+                        break;
+                    case UniformKind::Vec3:
+                        shader->loadFloat3(binding.name, std::get<Eigen::Vector3f>(binding.value));
+                        break;
+                    case UniformKind::Vec4:
+                        shader->loadFloat4(binding.name, std::get<Eigen::Vector4f>(binding.value));
+                        break;
+                    case UniformKind::Mat4:
+                        shader->loadMat4(binding.name, std::get<Eigen::Matrix4f>(binding.value));
+                        break;
                 }
             }
         }
