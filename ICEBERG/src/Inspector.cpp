@@ -1,4 +1,5 @@
 #include "Inspector.h"
+#include <Model.h>
 #include <SkeletonPoseComponent.h>
 
 Inspector::Inspector(const std::shared_ptr<ICE::ICEEngine>& engine) : m_engine(engine) {

@@ -16,6 +16,9 @@
 
 #include <fstream>
 #include <iostream>
+#include <optional>
+#include <typeindex>
+#include <unordered_set>
 
 #include "DefaultLoaders.h"
 #include "MaterialExporter.h"
@@ -23,6 +26,15 @@
 #include <SkinningComponent.h>
 
 namespace ICE {
+namespace {
+// The six built-in asset kinds are persisted in their own named sections; everything else (plugin
+// types) goes through the generic "assets" section. Keep these in sync with the built-in prefixes
+// pre-registered in AssetPath.
+bool isBuiltinAssetPrefix(const std::string &prefix) {
+    static const std::unordered_set<std::string> builtins = {"Textures", "CubeMaps", "Meshes", "Models", "Materials", "Shaders"};
+    return builtins.find(prefix) != builtins.end();
+}
+}  // namespace
 Project::Project(const fs::path &base_directory, const std::string &m_name)
     : m_base_directory(base_directory / m_name),
       m_name(m_name),
@@ -141,6 +153,27 @@ void Project::writeToFile(const std::shared_ptr<Camera> &editorCamera) {
         vec.push_back(dumpAsset(asset_id, texture));
     }
     j["cubeMaps"] = vec;
+    vec.clear();
+
+    // Generic section for plugin-defined asset kinds (anything whose path prefix is not one of the
+    // six built-ins). Keyed by prefix so load can route each entry to the right erased loader. Any
+    // entries whose plugin was missing at load are re-emitted verbatim first, so they are preserved.
+    std::vector<json> custom_assets = m_unknown_assets;
+    for (const auto &entry : m_asset_bank->getAllEntries()) {
+        if (!entry.asset) {
+            continue;  // reservation still loading / failed load: nothing to persist
+        }
+        const auto components = entry.path.getPath();
+        std::string type_prefix = components.empty() ? "" : components.front();
+        if (type_prefix.empty() || isBuiltinAssetPrefix(type_prefix)) {
+            continue;  // built-ins are saved in their own sections above
+        }
+        AssetUID uid = m_asset_bank->getUID(entry.path);
+        json dumped = dumpAsset(uid, entry.asset);
+        dumped["prefix"] = type_prefix;
+        custom_assets.push_back(dumped);
+    }
+    j["assets"] = custom_assets;
 
     outstream << j.dump(4);
     outstream.close();
@@ -262,6 +295,37 @@ void Project::loadFromFile() {
     loadAssetsOfType<Material>(material);
     loadAssetsOfType<Mesh>(meshes);
     loadAssetsOfType<Model>(models);
+
+    // Generic section for plugin-defined asset kinds. Route each entry to the right loader via its
+    // path prefix (AssetPath::typeForPrefix). If the type is unknown (its plugin isn't loaded) or has
+    // no loader, warn and keep the raw entry so the next save preserves it instead of dropping it.
+    m_unknown_assets.clear();
+    if (j.contains("assets")) {
+        for (const auto &asset : j["assets"]) {
+            std::string prefix = asset.value("prefix", std::string());
+            std::optional<std::type_index> type;
+            if (!prefix.empty()) {
+                type = AssetPath::typeForPrefix(prefix);
+            }
+            if (!type.has_value()) {
+                Logger::Log(Logger::WARNING, "IO", "No registered asset type for prefix '%s'; preserving entry across save", prefix.c_str());
+                m_unknown_assets.push_back(asset);
+                continue;
+            }
+            AssetUID uid = asset["uid"];
+            std::string bank_path = asset["bank_path"];
+            std::vector<fs::path> sources;
+            for (const auto &entry : asset["sources"]) {
+                sources.push_back(m_base_directory / std::string(entry));
+            }
+            try {
+                m_asset_bank->addAssetWithSpecificUID(type.value(), AssetPath(bank_path), sources, uid);
+            } catch (const std::exception &e) {
+                Logger::Log(Logger::WARNING, "IO", "Could not load custom asset '%s' (%s); preserving entry", bank_path.c_str(), e.what());
+                m_unknown_assets.push_back(asset);
+            }
+        }
+    }
 
     for (const auto &s : sceneNames) {
         infile = std::ifstream(m_scenes_directory / (s + ".ics"));

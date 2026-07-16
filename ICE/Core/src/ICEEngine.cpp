@@ -52,6 +52,14 @@ void ICEEngine::step() {
     auto now = std::chrono::steady_clock::now();
     m_delta_time = std::chrono::duration<double>(now - lastFrameTime).count();
     lastFrameTime = now;
+
+    // Finalize any async imports that completed staging (publish payloads, commit model sub-assets)
+    // on the main thread. Done before the early-out so imports drain even with no active scene (e.g.
+    // a loading screen). Cheap no-op when nothing is in flight.
+    if (project) {
+        project->getAssetBank()->pump();
+    }
+
     if (!m_active_scene) {
         return;  // nothing activated yet
     }
@@ -198,6 +206,11 @@ void ICEEngine::setParallelSystems(bool enable) {
         }
     } else {
         m_scheduler = nullptr;
+    }
+    // Share the pool with the asset bank so async imports stage off-thread too (setScheduler drains
+    // in-flight loads before dropping the old scheduler). Null returns the bank to inline staging.
+    if (project) {
+        project->getAssetBank()->setScheduler(m_scheduler);
     }
     // Apply immediately to the active scene's parallel-capable systems; newly activated scenes pick
     // it up in installRuntimeSystems.

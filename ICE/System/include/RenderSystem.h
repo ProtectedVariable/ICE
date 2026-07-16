@@ -17,6 +17,7 @@
 namespace ICE {
 class Scene;
 class Registry;
+class Model;  // only referenced as shared_ptr in a declaration; full type not needed here
 
 struct CullingData {
     uint32_t lastTransformVersion = 0xFFFFFFFF;

@@ -2,6 +2,7 @@
 
 #include <AssetBank.h>
 #include <JobScheduler.h>
+#include <Model.h>  // Model::Node / Model::Skeleton are used by value here (nested types need the full type)
 #include <Registry.h>
 #include <SkeletonPoseComponent.h>
 

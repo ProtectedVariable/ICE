@@ -25,13 +25,32 @@ namespace ICE {
 class GPURegistry {
    public:
     GPURegistry(const std::shared_ptr<GraphicsFactory> &factory, const std::shared_ptr<AssetBank> &bank);
+    ~GPURegistry();
+
+    // Single owner of the GPU pools and holder of a self-referential removal-listener registration:
+    // non-copyable (a copy would double-unregister and not own its own listener).
+    GPURegistry(const GPURegistry &) = delete;
+    GPURegistry &operator=(const GPURegistry &) = delete;
+
+    // Release every GPU resource uploaded from `id` (mesh / 2D texture / shader / cubemap) and drop
+    // the by-uid entries. Invoked via the AssetBank removal listener when an asset is removed or
+    // re-imported. Outstanding handles held by in-flight render jobs go stale (resolve() -> nullptr,
+    // safe by design); the next frame's Phase 1 re-resolves and lazily re-uploads if the asset
+    // still exists.
+    void evict(AssetUID id);
 
     AssetUID getUID(const AssetPath &path) const { return m_asset_bank->getUID(path); }
     std::shared_ptr<Material> getMaterial(const AssetPath &path) { return m_asset_bank->getAsset<Material>(getUID(path)); }
     std::shared_ptr<Material> getMaterial(AssetUID id) { return m_asset_bank->getAsset<Material>(id); }
     std::shared_ptr<ShaderProgram> getShader(AssetUID id);
     std::shared_ptr<ShaderProgram> getShader(const AssetPath &path) { return getShader(getUID(path)); }
-    AABB getMeshAABB(AssetUID id) { return m_asset_bank->getAsset<Mesh>(id)->getBoundingBox(); }
+    // Null-safe: an evicted/removed mesh yields a zero AABB instead of dereferencing null. Callers on
+    // the frame path resolve the mesh handle first and discard the job when it is gone, so this
+    // default is a backstop rather than a rendered value.
+    AABB getMeshAABB(AssetUID id) {
+        auto mesh = m_asset_bank->getAsset<Mesh>(id);
+        return mesh ? mesh->getBoundingBox() : AABB{Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero()};
+    }
     const SkinningData &getMeshSkinningData(AssetUID id) { return m_asset_bank->getAsset<Mesh>(id)->getSkinningData(); }
     std::shared_ptr<GPUMesh> getMesh(AssetUID id);
     std::shared_ptr<GPUMesh> getMesh(const AssetPath &path) { return getMesh(getUID(path)); }
@@ -53,6 +72,22 @@ class GPURegistry {
     // Ensure a 2D texture is resident and return a raw pointer to it (nullptr if it isn't a valid
     // texture asset). Used by the geometry pass to bind a material's textures without a shared_ptr.
     GPUTexture *texture2DPtr(AssetUID id) { return resolve(textureHandle(id)); }
+
+    // --- Residency stats -------------------------------------------------------------------------
+    // Measurement foundation for a future eviction policy: expose how much is resident so memory
+    // pressure can be measured before any budget/LRU policy is enforced (see the eviction task,
+    // deliberately profiling-gated). None of these touch the per-frame resolve path.
+    //
+    // Live GPU resources per pool (cheap; safe to poll every frame).
+    std::size_t residentMeshCount() const { return m_mesh_pool.size(); }
+    std::size_t residentTextureCount() const { return m_tex2d_pool.size(); }
+    std::size_t residentShaderCount() const { return m_shader_pool.size(); }
+
+    // Estimated bytes of the CPU payload backing the resident meshes / 2D textures. Reads the source
+    // assets, so it is O(resident) and intended for occasional diagnostics, not per frame. Textures
+    // are estimated at 4 bytes/texel.
+    std::size_t residentMeshBytes();
+    std::size_t residentTextureBytes();
 
     GPUMesh *resolve(MeshHandle h) {
         auto *sp = m_mesh_pool.get(h);
@@ -82,5 +117,6 @@ class GPURegistry {
 
     std::shared_ptr<GraphicsFactory> m_graphics_factory;
     std::shared_ptr<AssetBank> m_asset_bank;
+    AssetBank::RemovalListenerHandle m_removal_listener_handle = 0;
 };
 }  // namespace ICE

@@ -22,6 +22,8 @@ target_link_libraries(${PROJECT_NAME}
     util
     storage
     math
+    # Async import stages loads on the JobScheduler (header-only Multithreading module).
+    multithreading
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC

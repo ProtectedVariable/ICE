@@ -119,6 +119,11 @@ class Project {
     std::shared_ptr<AssetBank> m_asset_bank;
     std::shared_ptr<GPURegistry> m_gpu_registry;
 
+    // Custom-asset entries from the "assets" section whose type/prefix couldn't be resolved at load
+    // time (the providing plugin wasn't registered). Kept verbatim and re-emitted on save so a
+    // missing plugin doesn't silently drop the user's assets.
+    std::vector<json> m_unknown_assets;
+
     Eigen::Vector3f cameraPosition, cameraRotation;
 };
 }  // namespace ICE

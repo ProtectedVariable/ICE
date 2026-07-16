@@ -4,12 +4,14 @@
 #include <chrono>
 #include <condition_variable>
 #include <cstddef>
+#include <cstdio>
 #include <deque>
 #include <exception>
 #include <functional>
 #include <memory>
 #include <mutex>
 #include <thread>
+#include <utility>
 #include <vector>
 
 namespace ICE {
@@ -137,11 +139,67 @@ class JobScheduler {
         });
     }
 
+    // Fire-and-forget: enqueue a detached task and return immediately. Unlike dispatch(), this does
+    // not block and does not participate in batch-completion accounting (m_pending), so it can be
+    // freely interleaved with per-frame dispatch() batches -- a batch never hangs or completes early
+    // because of detached work. Detached tasks live on separate per-worker deques that the dispatch
+    // calling thread never drains, so a long-running background job (e.g. an asset load) is never
+    // picked up on the frame's calling thread; it only ever occupies a worker. An exception escaping
+    // the job is caught and logged (there is no caller to rethrow to).
+    //
+    // Shutdown semantics: on destruction, detached tasks still queued are dropped; a detached task
+    // already running finishes before the worker threads join. An owner that needs the result must
+    // arrange its own synchronization (e.g. a completion queue drained on the main thread) and flush
+    // before the scheduler is destroyed.
+    void submit(std::function<void()> job) {
+        if (!job) {
+            return;
+        }
+        if (m_workers.empty()) {
+            // The pool is clamped to >= 1 worker, so this is defensive only: run inline rather than
+            // silently drop the work.
+            runGuarded(job);
+            return;
+        }
+        // Counts tasks that are queued but not yet started; keeps workers awake (see the wait
+        // predicate) so a detached task is picked up promptly instead of only on the 2ms backstop.
+        m_pending_detached.fetch_add(1, std::memory_order_relaxed);
+        auto wrapped = [this, task = std::move(job)]() mutable {
+            // Decrement as soon as the task starts: once it is running it is no longer waiting to be
+            // picked up, so idle workers can go back to sleep instead of spinning.
+            m_pending_detached.fetch_sub(1, std::memory_order_acq_rel);
+            runGuarded(task);
+        };
+        std::size_t idx = m_submit_rr.fetch_add(1, std::memory_order_relaxed) % m_workers.size();
+        {
+            auto& worker = *m_workers[idx];
+            std::lock_guard<std::mutex> lock(worker.mutex);
+            worker.detached.push_back(std::move(wrapped));
+        }
+        std::lock_guard<std::mutex> lk(m_wake_mutex);
+        m_wake.notify_all();
+    }
+
    private:
     struct Worker {
+        // Batch tasks (fork-join dispatch) and detached tasks (submit) are kept in separate deques:
+        // workers prefer batch work, and the dispatch calling thread only ever steals batch work
+        // (never a long-running detached job).
         std::deque<std::function<void()>> queue;
+        std::deque<std::function<void()>> detached;
         std::mutex mutex;
     };
+
+    // Run a detached job, swallowing any exception (nowhere to rethrow to on a fire-and-forget path).
+    static void runGuarded(const std::function<void()>& job) {
+        try {
+            job();
+        } catch (const std::exception& e) {
+            std::fprintf(stderr, "[JobScheduler] detached job threw: %s\n", e.what());
+        } catch (...) {
+            std::fprintf(stderr, "[JobScheduler] detached job threw an unknown exception\n");
+        }
+    }
 
     void workerLoop(std::size_t index) {
         while (!m_stop.load(std::memory_order_acquire)) {
@@ -150,16 +208,20 @@ class JobScheduler {
                 task();
                 continue;
             }
-            // No work: sleep until a batch is dispatched or we are stopping. The short timeout is
-            // a backstop against a missed wakeup (the calling thread is the real guarantee).
+            // No work: sleep until a batch is dispatched, a detached task is submitted, or we are
+            // stopping. The short timeout is a backstop against a missed wakeup (the dispatch calling
+            // thread is the real guarantee for batch work).
             std::unique_lock<std::mutex> lock(m_wake_mutex);
             m_wake.wait_for(lock, std::chrono::milliseconds(2), [this] {
-                return m_stop.load(std::memory_order_acquire) || m_pending.load(std::memory_order_acquire) > 0;
+                return m_stop.load(std::memory_order_acquire) || m_pending.load(std::memory_order_acquire) > 0
+                       || m_pending_detached.load(std::memory_order_acquire) > 0;
             });
         }
     }
 
-    // A worker takes from its own deque (LIFO, cache-friendly) then steals from others (FIFO).
+    // A worker takes from its own deque (LIFO, cache-friendly) then steals from others (FIFO). Batch
+    // work is exhausted before detached work so per-frame dispatch batches are never delayed by
+    // background jobs.
     bool getTask(std::size_t index, std::function<void()>& out) {
         {
             auto& own = *m_workers[index];
@@ -170,7 +232,19 @@ class JobScheduler {
                 return true;
             }
         }
-        return steal(index, out);
+        if (steal(index, out)) {
+            return true;
+        }
+        {
+            auto& own = *m_workers[index];
+            std::lock_guard<std::mutex> lock(own.mutex);
+            if (!own.detached.empty()) {
+                out = std::move(own.detached.front());
+                own.detached.pop_front();
+                return true;
+            }
+        }
+        return stealDetached(index, out);
     }
 
     bool steal(std::size_t skip_index, std::function<void()>& out) {
@@ -189,7 +263,27 @@ class JobScheduler {
         return false;
     }
 
-    // For the calling thread, which owns no deque: steal from any worker.
+    // Steal a detached task from another worker (FIFO). Only workers run detached tasks; the
+    // dispatch calling thread (stealAny) never does, so a background job can't stall a frame.
+    bool stealDetached(std::size_t skip_index, std::function<void()>& out) {
+        for (std::size_t n = 0; n < m_workers.size(); ++n) {
+            if (n == skip_index) {
+                continue;
+            }
+            auto& w = *m_workers[n];
+            std::lock_guard<std::mutex> lock(w.mutex);
+            if (!w.detached.empty()) {
+                out = std::move(w.detached.front());
+                w.detached.pop_front();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // For the calling thread, which owns no deque: steal batch work from any worker. Deliberately
+    // does not touch the detached deques -- the calling thread must never run a background job while
+    // draining a fork-join batch.
     bool stealAny(std::function<void()>& out) {
         for (std::size_t n = 0; n < m_workers.size(); ++n) {
             auto& w = *m_workers[n];
@@ -208,6 +302,8 @@ class JobScheduler {
     std::mutex m_wake_mutex;
     std::condition_variable m_wake;
     std::atomic<bool> m_stop{false};
-    std::atomic<std::size_t> m_pending{0};
+    std::atomic<std::size_t> m_pending{0};           // outstanding batch tasks (gates dispatch)
+    std::atomic<std::size_t> m_pending_detached{0};  // detached tasks queued but not yet started
+    std::atomic<std::size_t> m_submit_rr{0};         // round-robin cursor for submit()
 };
 }  // namespace ICE

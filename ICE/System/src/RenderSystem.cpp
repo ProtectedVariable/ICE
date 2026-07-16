@@ -35,6 +35,21 @@ struct RenderJob {
 bool resolveJob(Registry *reg, GPURegistry *gpu, std::unordered_map<Entity, CullingData> &cache, Entity e, RenderJob &job) {
     auto tc = reg->getComponent<TransformComponent>(e);
     auto rc = reg->getComponent<RenderComponent>(e);
+
+    // Resolve GPU resources first (uploading on first use). meshHandle() returns an invalid handle
+    // when the mesh asset is gone -- removed or evicted, e.g. after a re-import -- so this both gates
+    // the job and guarantees the mesh asset is present before getMeshAABB() dereferences it below.
+    // The material stays a CPU-asset shared_ptr; its textures are resolved by the geometry pass.
+    auto mesh = gpu->meshHandle(rc->mesh);
+    auto material = gpu->getMaterial(rc->material);
+    if (!mesh.valid() || !material) {
+        return false;
+    }
+    auto shader = gpu->shaderHandle(material->getShader());
+    if (!shader.valid()) {
+        return false;
+    }
+
     Eigen::Matrix4f model_mat = tc->getWorldMatrix();
 
     // World-space bounds, recomputed only when the transform or mesh changes (single hash lookup).
@@ -64,18 +79,6 @@ bool resolveJob(Registry *reg, GPURegistry *gpu, std::unordered_map<Entity, Cull
     }
     job.worldCenter = cache_it->second.worldCenter;
     job.worldExtents = cache_it->second.worldExtents;
-
-    // Resolve to generational handles (uploading the resources on first use). The material stays a
-    // CPU-asset shared_ptr; its textures are resolved by the geometry pass at bind time.
-    auto mesh = gpu->meshHandle(rc->mesh);
-    auto material = gpu->getMaterial(rc->material);
-    if (!mesh.valid() || !material) {
-        return false;
-    }
-    auto shader = gpu->shaderHandle(material->getShader());
-    if (!shader.valid()) {
-        return false;
-    }
 
     if (reg->entityHasComponent<SkinningComponent>(e)) {
         auto skeleton_entity = reg->getComponent<SkinningComponent>(e)->skeleton_entity;

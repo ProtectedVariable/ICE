@@ -4,6 +4,7 @@
 
 #include "Scene.h"
 
+#include <Model.h>
 #include <PerspectiveCamera.h>
 #include <Registry.h>
 #include <RenderComponent.h>

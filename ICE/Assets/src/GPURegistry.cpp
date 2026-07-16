@@ -4,6 +4,65 @@ namespace ICE {
 GPURegistry::GPURegistry(const std::shared_ptr<GraphicsFactory> &factory, const std::shared_ptr<AssetBank> &bank)
     : m_graphics_factory(factory),
       m_asset_bank(bank) {
+    // Subscribe to asset removals: without this, the by-uid maps would pin every upload forever, so
+    // removing an asset leaks its GPU memory and re-importing keeps rendering the old data.
+    m_removal_listener_handle = m_asset_bank->addRemovalListener([this](AssetUID id) { evict(id); });
+}
+
+GPURegistry::~GPURegistry() {
+    // The bank can outlive the registry (the registry holds a shared_ptr to it), so a listener that
+    // captures `this` must be removed before we are destroyed.
+    if (m_asset_bank) {
+        m_asset_bank->removeRemovalListener(m_removal_listener_handle);
+    }
+}
+
+std::size_t GPURegistry::residentMeshBytes() {
+    std::size_t total = 0;
+    for (const auto &[uid, handle] : m_mesh_by_uid) {
+        auto mesh = m_asset_bank->getAsset<Mesh>(uid);
+        if (!mesh) {
+            continue;
+        }
+        const auto &d = mesh->getMeshData();
+        total += d.vertices.size() * sizeof(Eigen::Vector3f);
+        total += d.normals.size() * sizeof(Eigen::Vector3f);
+        total += d.uvCoords.size() * sizeof(Eigen::Vector2f);
+        total += d.tangents.size() * sizeof(Eigen::Vector3f);
+        total += d.bitangents.size() * sizeof(Eigen::Vector3f);
+        total += d.boneIDs.size() * sizeof(Eigen::Vector4i);
+        total += d.boneWeights.size() * sizeof(Eigen::Vector4f);
+        total += d.indices.size() * sizeof(Eigen::Vector3i);
+    }
+    return total;
+}
+
+std::size_t GPURegistry::residentTextureBytes() {
+    std::size_t total = 0;
+    for (const auto &[uid, handle] : m_tex2d_by_uid) {
+        auto tex = m_asset_bank->getAsset<Texture2D>(uid);
+        if (!tex) {
+            continue;
+        }
+        total += static_cast<std::size_t>(tex->getWidth()) * static_cast<std::size_t>(tex->getHeight()) * 4;
+    }
+    return total;
+}
+
+void GPURegistry::evict(AssetUID id) {
+    if (auto it = m_mesh_by_uid.find(id); it != m_mesh_by_uid.end()) {
+        m_mesh_pool.erase(it->second);
+        m_mesh_by_uid.erase(it);
+    }
+    if (auto it = m_tex2d_by_uid.find(id); it != m_tex2d_by_uid.end()) {
+        m_tex2d_pool.erase(it->second);
+        m_tex2d_by_uid.erase(it);
+    }
+    if (auto it = m_shader_by_uid.find(id); it != m_shader_by_uid.end()) {
+        m_shader_pool.erase(it->second);
+        m_shader_by_uid.erase(it);
+    }
+    m_gpu_cubemaps.erase(id);
 }
 
 std::shared_ptr<ShaderProgram> GPURegistry::getShader(AssetUID id) {

@@ -3,6 +3,7 @@
 #include <ICEEngine.h>
 #include <Registry.h>
 #include <AssetBank.h>
+#include <Model.h>
 #include <Scene.h>
 #include <Project.h>
 #include <Camera.h>
