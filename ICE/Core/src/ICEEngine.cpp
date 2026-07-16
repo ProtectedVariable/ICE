@@ -143,7 +143,9 @@ void ICEEngine::installRuntimeSystems(const std::shared_ptr<Scene> &scene, const
     auto rs = std::make_shared<RenderSystem>(registry, project->getGPURegistry());
     auto as = std::make_shared<AnimationSystem>(registry, project->getAssetBank());
     auto sgs = std::make_shared<SceneGraphSystem>(scene);
-    auto ss = std::make_shared<ScriptSystem>(registry);
+    // Scripts get their behaviour context from here: the scene they live in and the engine input
+    // service (m_input, constructed in initialize()). Both are non-owning.
+    auto ss = std::make_shared<ScriptSystem>(registry, scene.get(), m_input.get());
     rs->setCamera(camera_);
     rs->setRenderer(renderer);
     renderer->setUseRenderGraph(m_use_render_graph);

@@ -3,9 +3,14 @@
 #include <functional>
 #include <memory>
 
-#include "NativeScript.h"
-
 namespace ICE {
+
+// Forward-declared, not included: this component only holds a std::function returning a
+// shared_ptr<NativeScript> (fine with an incomplete type) and a bind<T>() template whose body is
+// instantiated at the call site, where T -- and therefore its NativeScript base -- is complete.
+// Keeping NativeScript.h out of here breaks the EntityHandle.h -> NativeScriptComponent.h ->
+// NativeScript.h -> EntityHandle.h include cycle that NativeScript's behaviour context introduces.
+class NativeScript;
 
 // Attaches native game logic to an entity. bind<T>() only records how to construct the script;
 // the ScriptSystem owns the live instance (keyed by entity) and drives its lifecycle. The
