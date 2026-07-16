@@ -7,6 +7,7 @@ include(CTest)
 add_executable(UtilsTestSuite
         FrustumCullingTests.cpp
         HelpersTest.cpp
+        InputManagerTest.cpp
 )
 
 add_test(NAME UtilsTestSuite

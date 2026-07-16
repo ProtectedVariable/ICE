@@ -18,9 +18,10 @@ add_subdirectory(Scene)
 add_subdirectory(Scripting)
 add_subdirectory(Storage)
 add_subdirectory(System)
+add_subdirectory(UI)
 add_subdirectory(Util)
 
-set(ICE_LIBS assets core graphics graphics_api io math platform scene storage system util components entity physics scripting)
+set(ICE_LIBS assets core graphics graphics_api io math platform scene storage system UI util components entity physics scripting)
 add_library(${PROJECT_NAME} INTERFACE)
 
 if(APPLE)

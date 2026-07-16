@@ -8,6 +8,7 @@
 #include <EngineConfig.h>
 #include <GL/gl3w.h>
 #include <GraphicsAPI.h>
+#include <InputManager.h>
 #include <IPhysicsBackend.h>
 #include <IPlugin.h>
 #include <IScriptingBackend.h>
@@ -138,6 +139,10 @@ class ICEEngine {
 
     std::shared_ptr<Window> getWindow() const;
 
+    // The engine-owned input service, constructed in initialize() and pumped once per frame in
+    // step(). Read key/mouse state and mouse delta from here (also injected into scripts by T3).
+    InputManager* input() const { return m_input.get(); }
+
    private:
     // Shared system-building used by both setupScene (legacy/editor path) and setActiveScene:
     // builds the render/animation/scene-graph/script systems on the scene's registry with the
@@ -156,6 +161,9 @@ class ICEEngine {
 
     std::shared_ptr<Camera> camera;  // editor viewport camera (see getCamera)
     std::shared_ptr<Project> project = nullptr;
+
+    // Engine-owned input service (see input()); constructed in initialize(), pumped in step().
+    std::unique_ptr<InputManager> m_input;
 
     // The scene the engine currently drives and its render system, cached on activation so the
     // per-frame and resize paths don't rediscover them through the project/registry each time.

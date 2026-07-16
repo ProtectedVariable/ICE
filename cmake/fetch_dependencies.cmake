@@ -47,3 +47,14 @@ FetchContent_Declare(
     GIT_SHALLOW TRUE
     GIT_PROGRESS TRUE)
 FetchContent_MakeAvailable(json)
+
+
+add_compile_definitions(FT_CONFIG_OPTION_ERROR_STRINGS)
+message(STATUS "Fetching FreeType")
+FetchContent_Declare(
+        freetype
+        GIT_REPOSITORY https://github.com/freetype/freetype.git
+        GIT_TAG VER-2-13-3
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE)
+FetchContent_MakeAvailable(freetype)

@@ -9,7 +9,8 @@ target_sources(${PROJECT_NAME} PRIVATE
 	src/ICEException.cpp
 	src/Logger.cpp
 	src/WindowFactory.cpp
-	src/GLFWWindow.cpp)
+	src/GLFWWindow.cpp
+	src/InputManager.cpp)
 
 target_link_libraries(${PROJECT_NAME}
 	PUBLIC

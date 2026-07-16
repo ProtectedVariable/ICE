@@ -226,41 +226,6 @@ private:
 
 ---
 
-## Integration with Cursed
-
-### Update Character.cpp
-
-Replace:
-```cpp
-auto reg = m_engine.getProject()->getCurrentScene()->getRegistry();
-auto char_transform = reg->getComponent<TransformComponent>(m_entity_id);
-```
-
-With:
-```cpp
-#include <ICEHelpers.h>
-
-EntityHelper player(m_entity_id, EngineHelper::getRegistry(m_engine));
-auto char_transform = player.transform();
-```
-
-### Update Dungeon.h
-
-Replace:
-```cpp
-m_scene->getRegistry()->registerCustomComponent<ICE::NPCComponent>();
-```
-
-With:
-```cpp
-#include <ICEHelpers.h>
-
-auto registry = m_scene->getRegistry();
-registry->registerCustomComponent<ICE::NPCComponent>();
-```
-
----
-
 ## Benefits
 
 ### Reduced Verbosity

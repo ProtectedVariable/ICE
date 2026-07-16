@@ -32,6 +32,9 @@ void ICEEngine::initialize(const std::shared_ptr<GraphicsFactory> &graphics_fact
     m_window = window;
     m_window->setSwapInterval(1);
     m_window->setResizeCallback([this](int w, int h) { onFramebufferResize(w, h); });
+    // One engine-owned input service, wired to this window's handlers. Pumped once per frame in
+    // step() (after the systems have read the frame's input).
+    m_input = std::make_unique<InputManager>(m_window);
     ctx = graphics_factory->createContext(m_window);
     ctx->initialize();
     api = graphics_factory->createRendererAPI();
@@ -60,39 +63,47 @@ void ICEEngine::step() {
         project->getAssetBank()->pump();
     }
 
-    if (!m_active_scene) {
-        return;  // nothing activated yet
-    }
-    // Application frame callbacks (engine.onUpdate) run before the ECS systems so gameplay
-    // state they set is consumed by animation/scene-graph/render the same frame.
-    for (auto& cb : m_update_callbacks) {
-        cb(m_delta_time);
-    }
-    // Extension seams (P11): advance physics and drive the scripting VM before the ECS systems, so
-    // their results are visible to animation/scene-graph/render this frame. No-ops when unset.
-    if (m_physics) {
-        m_physics->step(m_delta_time);
-    }
-    if (m_scripting) {
-        m_scripting->update(m_delta_time);
-    }
-    // The engine drives the active scene it was handed; it does not reach back through the
-    // project/registry to rediscover the render system each frame (it was cached on activation).
-    if (m_active_render_system) {
-        m_active_render_system->setTarget(m_target_fb);
-    }
-    {
-        ICE_PROFILE_SCOPE("updateSystems");
-        m_active_scene->getRegistry()->updateSystems(m_delta_time);
+    if (m_active_scene) {
+        // Application frame callbacks (engine.onUpdate) run before the ECS systems so gameplay
+        // state they set is consumed by animation/scene-graph/render the same frame.
+        for (auto& cb : m_update_callbacks) {
+            cb(m_delta_time);
+        }
+        // Extension seams (P11): advance physics and drive the scripting VM before the ECS systems,
+        // so their results are visible to animation/scene-graph/render this frame. No-ops when unset.
+        if (m_physics) {
+            m_physics->step(m_delta_time);
+        }
+        if (m_scripting) {
+            m_scripting->update(m_delta_time);
+        }
+        // The engine drives the active scene it was handed; it does not reach back through the
+        // project/registry to rediscover the render system each frame (it was cached on activation).
+        if (m_active_render_system) {
+            m_active_render_system->setTarget(m_target_fb);
+        }
+        {
+            ICE_PROFILE_SCOPE("updateSystems");
+            m_active_scene->getRegistry()->updateSystems(m_delta_time);
+        }
+
+        // Periodically surface the previous frame's timing breakdown (every ~5s at 60fps).
+        static int s_profile_log_counter = 0;
+        if (++s_profile_log_counter >= 300) {
+            s_profile_log_counter = 0;
+            for (const auto& [name, ms] : Profiler::get().lastFrame()) {
+                Logger::Log(Logger::DEBUG, "Profiler", "%s: %.3f ms", name.c_str(), ms);
+            }
+        }
     }
 
-    // Periodically surface the previous frame's timing breakdown (every ~5s at 60fps).
-    static int s_profile_log_counter = 0;
-    if (++s_profile_log_counter >= 300) {
-        s_profile_log_counter = 0;
-        for (const auto& [name, ms] : Profiler::get().lastFrame()) {
-            Logger::Log(Logger::DEBUG, "Profiler", "%s: %.3f ms", name.c_str(), ms);
-        }
+    // Roll input at the END of the frame -- after any onUpdate callbacks and ECS systems (scripts)
+    // have read this frame's PRESS/RELEASE edges and mouse position. This is why PRESS lasts exactly
+    // one frame and getMouseDelta is the movement across the frame. (Callbacks fire during the run
+    // loop's pollEvents, which precedes step(), so rolling here -- not before the systems -- is what
+    // keeps the edges alive for the frame that reads them.)
+    if (m_input) {
+        m_input->update(static_cast<float>(m_delta_time));
     }
 }
 
