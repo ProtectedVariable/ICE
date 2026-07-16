@@ -8,6 +8,9 @@ Editor::Editor(const std::shared_ptr<ICE::ICEEngine>& engine, const std::shared_
       m_open_scene_popup(engine),
       m_material_popup(engine),
       m_shader_popup(engine) {
+    // Stage imports off the main thread so importing a large model doesn't hitch the editor. The
+    // asset bank publishes results on the main thread via ICEEngine::step -> pump().
+    m_engine->enableBackgroundAssetLoading();
     m_viewport = std::make_unique<Viewport>(
         engine, [this]() { m_inspector->setSelectedEntity(m_hierarchy->getSelectedEntity(), true); },
         [this](ICE::Entity e) {

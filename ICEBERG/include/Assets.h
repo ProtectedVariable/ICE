@@ -35,5 +35,9 @@ class Assets : public Controller {
 
     std::optional<AssetData> m_current_preview = std::nullopt;
 
+    // Last observed count of in-flight async imports; a decrease means one finished and the viewer
+    // should rebuild (see update()).
+    std::size_t m_last_inflight = 0;
+
     float m_t = 0;
 };

@@ -22,6 +22,7 @@
 
 #include "DefaultLoaders.h"
 #include "MaterialExporter.h"
+#include "ModelLoader.h"
 #include "ShaderExporter.h"
 #include <SkinningComponent.h>
 
@@ -435,6 +436,25 @@ AssetUID Project::importModel(const std::string &name, const fs::path &src) {
     fs::path dst = m_models_directory / (name + src.extension().string());
     m_asset_bank->addAsset<Model>(name, {dst});
     return model(name);
+}
+
+AssetUID Project::requestModel(const std::string &name, const std::vector<fs::path> &sources) {
+    // Resolve the one bank value the parse needs (the pbr shader UID) on the main thread, then stage
+    // (pure) on a worker and commit (bank mutation) on the main thread in pump(). The ModelLoader is
+    // captured by shared_ptr so it outlives the in-flight request; the commit runs only in pump(),
+    // where the bank is alive.
+    AssetUID pbr_shader_uid = m_asset_bank->getUID(AssetPath::WithTypePrefix<Shader>("pbr"));
+    auto loader = std::make_shared<ModelLoader>(*m_asset_bank);
+    AssetBank *bank = m_asset_bank.get();
+
+    AssetBank::StageFn stage = [loader, sources, pbr_shader_uid]() -> std::shared_ptr<void> {
+        return std::make_shared<StagedModel>(loader->stage(sources, pbr_shader_uid));
+    };
+    AssetBank::CommitFn commit = [loader, bank](const std::shared_ptr<void> &staged) -> std::shared_ptr<Asset> {
+        auto staged_model = std::static_pointer_cast<StagedModel>(staged);
+        return loader->commit(*staged_model, *bank);
+    };
+    return m_asset_bank->requestAsset<Model>(name, std::move(stage), std::move(commit));
 }
 
 AssetUID Project::mesh(const std::string &name) const {

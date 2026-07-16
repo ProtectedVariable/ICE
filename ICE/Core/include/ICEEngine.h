@@ -64,6 +64,11 @@ class ICEEngine {
     // back down and returns those systems to serial.
     void setParallelSystems(bool enable);
 
+    // Enable background (off-main-thread) staging for async asset imports (AssetBank::requestAsset)
+    // without turning on parallel ECS systems: lazily creates the shared job scheduler and hands it
+    // to the asset bank. Idempotent. Without this, requestAsset still works but stages inline.
+    void enableBackgroundAssetLoading();
+
     // Opt into driving rendering through the RenderGraph (off by default; the hardcoded pass path
     // is the validated fallback). Applies to the active and future scenes' renderers. Exists to
     // validate the graph path before it becomes the only path.

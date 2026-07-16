@@ -79,6 +79,9 @@ void Assets::rebuildViewer() {
 
     auto asset_bank = m_engine->getAssetBank();
     for (const auto& entry : asset_bank->getAllEntries()) {
+        if (!entry.asset) {
+            continue;  // async import still loading (or failed): skip until its payload is ready
+        }
         Thumbnail thumbnail;
         auto [ptr, flip] = m_renderer.createThumbnail(entry.asset, entry.path.toString());
         thumbnail.ptr = ptr;
@@ -144,6 +147,15 @@ void Assets::createSubfolderView(AssetView* parent_view, const std::vector<std::
 
 bool Assets::update() {
     m_t += 0.1f;
+
+    // An async import that finished staging becomes Ready after the engine's pump() (which runs in
+    // ICEEngine::step). Rebuild the viewer when the in-flight count drops so newly-loaded assets
+    // (and a model's committed sub-assets) appear. Cheap when nothing is importing.
+    std::size_t inflight = m_engine->getAssetBank()->inFlight();
+    if (inflight < m_last_inflight) {
+        rebuildViewer();
+    }
+    m_last_inflight = inflight;
 
     if (m_current_preview.has_value()) {
         auto asset_ptr = m_engine->getAssetBank()->getAsset(m_engine->getAssetBank()->getUID(m_current_preview.value().asset_path));

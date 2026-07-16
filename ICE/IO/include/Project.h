@@ -45,6 +45,13 @@ class Project {
     // reconstruction that callers used to spell out by hand. Returns the new asset's UID.
     AssetUID importModel(const std::string& name, const fs::path& src);
 
+    // Asynchronous model request: reserve the UID now (state Loading) and parse the model (Assimp +
+    // texture decode) off the main thread, then commit its meshes/materials/textures on the main
+    // thread in AssetBank::pump(). `sources` is the already-copied model file. Returns the reserved
+    // UID. Wires ModelLoader::stage/commit into AssetBank::requestAsset; the synchronous importModel
+    // path above is unchanged.
+    AssetUID requestModel(const std::string& name, const std::vector<fs::path>& sources);
+
     // Resolve a bank UID by name for a given asset kind, hiding AssetPath::WithTypePrefix from
     // gameplay/tools code. Return NO_ASSET_ID if no such asset is registered.
     AssetUID mesh(const std::string& name) const;

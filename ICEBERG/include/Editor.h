@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ICEEngine.h>
+#include <Model.h>
 #include <UI/EditorWidget.h>
 #include <UI/MaterialEditDialog.h>
 #include <UI/NewSceneDialog.h>
@@ -8,6 +9,7 @@
 #include <dialog.h>
 
 #include <memory>
+#include <type_traits>
 #include <vector>
 
 #include "Assets.h"
@@ -25,20 +27,30 @@ class Editor : public Controller {
     template<typename T>
     bool importAsset(const std::vector<FileFilter> &filters = {}) {
         std::filesystem::path file = open_native_dialog(filters);
-        if (!file.empty()) {
-            std::string import_name = file.stem().string();
-            int i = 0;
-            while (m_engine->getAssetBank()->nameInUse(ICE::AssetPath::WithTypePrefix<T>(import_name))) {
-                import_name = file.stem().string() + std::to_string(++i);
-            }
-            auto folder = ICE::AssetPath::WithTypePrefix<T>("").getPath().at(0);
-            m_engine->getProject()->copyAssetFile(folder, import_name, file);
-            m_engine->getAssetBank()->addAsset<T>(
-                import_name, {m_engine->getProject()->getBaseDirectory() / "Assets" / folder / (import_name + file.extension().string())});
-            m_assets->rebuildViewer();
-            return true;
+        if (file.empty()) {
+            return false;
         }
-        return false;
+        std::string import_name = file.stem().string();
+        int i = 0;
+        while (m_engine->getAssetBank()->nameInUse(ICE::AssetPath::WithTypePrefix<T>(import_name))) {
+            import_name = file.stem().string() + std::to_string(++i);
+        }
+        auto folder = ICE::AssetPath::WithTypePrefix<T>("").getPath().at(0);
+        m_engine->getProject()->copyAssetFile(folder, import_name, file);
+        std::vector<std::filesystem::path> sources = {
+            m_engine->getProject()->getBaseDirectory() / "Assets" / folder / (import_name + file.extension().string())};
+
+        // Async import: reserve the UID now and load in the background (staging off-thread once
+        // enableBackgroundAssetLoading is on). AssetBank::pump() -- driven by ICEEngine::step --
+        // publishes the asset, and the viewer rebuilds when the in-flight count drops (see
+        // Assets::update). Model import routes through the two-phase stage/commit path because its
+        // loader mutates the bank; other kinds use the pure-loader convenience overload.
+        if constexpr (std::is_same_v<T, ICE::Model>) {
+            m_engine->getProject()->requestModel(import_name, sources);
+        } else {
+            m_engine->getAssetBank()->requestAsset<T>(import_name, sources);
+        }
+        return true;
     }
 
     void loadScene(int index);

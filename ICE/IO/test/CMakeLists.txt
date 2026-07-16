@@ -38,3 +38,19 @@ add_custom_command(
             $<TARGET_FILE_DIR:ModelLoaderTestSuite>
 )
 
+add_executable(ProjectTestSuite
+    ProjectTest.cpp
+)
+
+add_test(NAME ProjectTestSuite
+        COMMAND ProjectTestSuite
+        WORKING_DIRECTORY $<TARGET_FILE_DIR:ProjectTestSuite>)
+
+target_link_libraries(ProjectTestSuite
+        PRIVATE
+        gtest_main
+        io
+        # Project constructs an OpenGLFactory (GL-free at construction); its vtable pulls the concrete
+        # OpenGL symbols, so link the OpenGL backend.
+        graphics_api_OpenGL)
+

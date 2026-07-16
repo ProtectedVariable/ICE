@@ -199,6 +199,15 @@ void ICEEngine::loadPlugin(const std::shared_ptr<IPlugin>& plugin) {
     m_plugins.push_back(plugin);
 }
 
+void ICEEngine::enableBackgroundAssetLoading() {
+    if (!m_scheduler) {
+        m_scheduler = std::make_shared<JobScheduler>();
+    }
+    if (project) {
+        project->getAssetBank()->setScheduler(m_scheduler);
+    }
+}
+
 void ICEEngine::setParallelSystems(bool enable) {
     if (enable) {
         if (!m_scheduler) {
