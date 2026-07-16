@@ -5,10 +5,11 @@
 #pragma once
 
 #include <Eigen/Dense>
+#include <cstdint>
 
 namespace ICE {
 struct FrameBufferFormat {
-    int width, height, samples;
+    uint32_t width, height, samples;
 };
 
 class Framebuffer {
