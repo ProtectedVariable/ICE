@@ -1,13 +1,4 @@
-#include <AnimationComponent.h>
-#include <ICEEngine.h>
-#include <ICEMath.h>
-#include <InputManager.h>
-#include <LightComponent.h>
-#include <Logger.h>
-#include <NativeScript.h>
-#include <RenderComponent.h>
-#include <TransformComponent.h>
-#include <UI.h>
+#include <ICE.h>  // the single umbrella header (T10): everything the app needs
 
 using namespace ICE;
 
@@ -49,8 +40,6 @@ int main() {
     auto& project = engine.newProject("IceField_project");
     auto& scene = project.createScene("TestScene");
     auto hero = project.importModel("Adventurer", "ImportAssets/Adventurer.glb");
-
-    engine.setUseRenderGraph(true);
 
     for (int i = 0; i < 10; ++i) {
         auto e = scene.create();

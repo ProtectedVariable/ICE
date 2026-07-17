@@ -86,32 +86,32 @@ class Renderer {
     virtual void submitDrawable(Drawable e) = 0;
     virtual void submitLight(const Light &e) = 0;
     virtual void prepareFrame(Camera &camera) = 0;
+    // Render the frame end to end through the render graph -- geometry, application passes/features,
+    // and the final present blit are all graph passes. Returns the scene-colour target (the editor
+    // reads it for picking); the on-screen/off-screen composite is done by the graph's present pass.
     virtual std::shared_ptr<Framebuffer> render() = 0;
     virtual void endFrame() = 0;
-    // Composite the last render() result onto `target` (nullptr = the default framebuffer) using
-    // the given full-screen present shader. The final blit lives in the renderer so that the
-    // visible-set producer (RenderSystem) issues no GL of its own.
-    virtual void present(const std::shared_ptr<Framebuffer> &target, const std::shared_ptr<ShaderProgram> &present_shader) = 0;
+
+    // Where and how the frame's present pass composites the scene colour. Target nullptr = the
+    // window's default framebuffer; a framebuffer = off-screen (the editor's render-to-texture
+    // viewport). Set per frame before render(); the present pass reads them at execute time, so
+    // changing the target never forces a graph recompile.
+    virtual void setPresentTarget(const std::shared_ptr<Framebuffer> &target) {}
+    virtual void setPresentShader(const std::shared_ptr<ShaderProgram> &present_shader) {}
+
     virtual void resize(uint32_t width, uint32_t height) = 0;
     virtual void setClearColor(Eigen::Vector4f clearColor) = 0;
     virtual void setViewport(int x, int y, int w, int h) = 0;
 
-    // Opt into driving the frame through the RenderGraph instead of the hardcoded pass sequence.
-    // Off by default; the two paths render identically, so this exists to validate the graph path
-    // (and, later, to add post/shadow passes without touching System/Scene). No-op for backends
-    // that don't implement a graph.
-    virtual void setUseRenderGraph(bool) {}
-
     // Register a single render pass: it is added to the frame's render graph (setup() when the
     // graph is built, execute() when it runs), so application code can extend the frame with no
-    // engine edits. This is the common path -- prefer it over wrapping one pass in a feature.
-    // Requires the graph path -- see setUseRenderGraph(true). The renderer takes ownership (the
-    // graph is rebuilt from scratch each compile, so it cannot own passes itself). No-op for
-    // backends without a graph.
+    // engine edits. This is the common path -- prefer it over wrapping one pass in a feature. The
+    // renderer takes ownership (the graph is rebuilt from scratch each compile, so it cannot own
+    // passes itself). No-op for backends without a graph.
     virtual void addPass(std::unique_ptr<IRenderPass>) {}
 
     // Register a bundle of passes that belong together (shared state, one on/off switch). For a
-    // lone pass use addPass(). Same ownership and graph-path requirements as addPass.
+    // lone pass use addPass(). Same ownership as addPass.
     virtual void addFeature(std::unique_ptr<RenderFeature>) {}
 };
 }  // namespace ICE

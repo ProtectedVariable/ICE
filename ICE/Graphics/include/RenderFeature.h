@@ -20,7 +20,6 @@
 //       const char* name() const override { return "outline"; }
 //   };
 //
-//   renderer->setUseRenderGraph(true);
 //   renderer->addFeature(std::make_unique<OutlineFeature>());
 //
 

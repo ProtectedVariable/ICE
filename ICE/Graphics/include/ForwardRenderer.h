@@ -42,17 +42,13 @@ class ForwardRenderer : public Renderer, public IPassDrawer {
 
     void endFrame() override;
 
-    void present(const std::shared_ptr<Framebuffer> &target, const std::shared_ptr<ShaderProgram> &present_shader) override;
+    void setPresentTarget(const std::shared_ptr<Framebuffer> &target) override { m_present_target = target; }
+    void setPresentShader(const std::shared_ptr<ShaderProgram> &present_shader) override { m_present_shader = present_shader; }
 
     void resize(uint32_t width, uint32_t height) override;
 
     void setClearColor(Eigen::Vector4f clearColor) override;
     void setViewport(int x, int y, int w, int h) override;
-
-    void setUseRenderGraph(bool enable) override {
-        m_use_render_graph = enable;
-        m_graph_dirty = true;
-    }
 
     void addPass(std::unique_ptr<IRenderPass> pass) override;
     void addFeature(std::unique_ptr<RenderFeature> feature) override;
@@ -74,12 +70,17 @@ class ForwardRenderer : public Renderer, public IPassDrawer {
 
     GeometryPass m_geometry_pass;
     RenderGraph m_graph;
-    bool m_use_render_graph = false;
 
     // The graph is compiled once and re-executed each frame; this marks it for rebuild when
     // something that changes its shape happens -- a resize (resource descriptors change) or a
     // newly registered pass/feature. Rebuilding is what regenerates passes' resource handles.
     bool m_graph_dirty = true;
+
+    // The frame's present target + shader, set per frame by the RenderSystem and read by the
+    // graph's present pass. Target null = the window's default framebuffer; a framebuffer = the
+    // editor's render-to-texture viewport.
+    std::shared_ptr<Framebuffer> m_present_target;
+    std::shared_ptr<ShaderProgram> m_present_shader;
 
     // The camera the current frame was prepared with (see prepareFrame). Borrowed for the frame
     // only: drawScene() restores the camera UBO to it so a pass drawing from another point of view

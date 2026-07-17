@@ -203,17 +203,19 @@ void RenderSystem::update(double delta) {
                                       .type = lc->type});
     }
 
-    m_renderer->prepareFrame(*m_camera);
-    m_renderer->render();
-    m_renderer->endFrame();
-
-    // Hand off the final composite to the renderer's present pass. Resolve the full-screen shader
-    // once and reuse it, rather than the old per-frame string lookup. m_target (nullptr = default
-    // framebuffer) is still honoured, preserving the editor's render-to-texture path.
+    // Hand the present target + shader to the renderer before render(): present is now a graph pass
+    // (T10), so the whole frame -- geometry, features, UI, and the final composite -- runs inside
+    // render(). m_target (nullptr = default framebuffer) is honoured by the present pass, preserving
+    // the editor's render-to-texture path. Resolve the full-screen shader once and reuse it.
     if (!m_lastpass_shader) {
         m_lastpass_shader = m_gpu_bank->getShader(AssetPath::WithTypePrefix<Shader>("lastpass"));
     }
-    m_renderer->present(m_target, m_lastpass_shader);
+    m_renderer->setPresentTarget(m_target);
+    m_renderer->setPresentShader(m_lastpass_shader);
+
+    m_renderer->prepareFrame(*m_camera);
+    m_renderer->render();
+    m_renderer->endFrame();
 }
 
 void RenderSystem::onEntityAdded(Entity e) {

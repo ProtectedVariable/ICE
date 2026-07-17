@@ -263,62 +263,55 @@ void ForwardRenderer::rebuildGraph() {
         addFeaturePasses(m_graph, *feature, scene_color, m_api, this);
     }
 
-    m_graph.setOutput(scene_color);
+    // Present is a graph pass too (T10): it reads the finished scene colour -- so it is ordered
+    // after geometry and every feature/UI pass that wrote it -- and composites it to the frame's
+    // present target. It writes a virtual "backbuffer" resource that is the graph's declared output,
+    // which is what keeps it (and its dependencies) from being culled. The backbuffer has no
+    // physical resource: the pass binds the real target (default framebuffer or the editor's RTT)
+    // itself, since that isn't a graph-managed framebuffer.
+    auto& present = m_graph.addPass("present");
+    present.read("scene_color");
+    present.write("backbuffer");
+    present.setExecuteCallback([this, scene_color](const RenderGraphPass&) {
+        auto* resource = m_graph.resourceAt(scene_color.index());
+        auto scene_fb = resource ? resource->getPhysicalResourceAs<Framebuffer>() : nullptr;
+        if (!m_present_shader || !scene_fb) {
+            return;
+        }
+        // Off-screen (editor viewport) if a target is set, else the window's default framebuffer.
+        if (m_present_target) {
+            m_present_target->bind();
+            m_api->setViewport(0, 0, static_cast<int>(m_present_target->getFormat().width), static_cast<int>(m_present_target->getFormat().height));
+        } else {
+            m_api->bindDefaultFramebuffer();
+            m_api->setViewport(0, 0, static_cast<int>(scene_fb->getFormat().width), static_cast<int>(scene_fb->getFormat().height));
+        }
+        m_api->clear();
+        m_present_shader->bind();
+        scene_fb->bindAttachment(0);
+        m_present_shader->loadInt("uTexture", 0);
+        m_present_quad->bind();
+        m_present_quad->getIndexBuffer()->bind();
+        m_api->renderVertexArray(m_present_quad);
+    });
+
+    m_graph.setOutput("backbuffer");
     m_graph.compile();
 }
 
 std::shared_ptr<Framebuffer> ForwardRenderer::render() {
-    if (m_use_render_graph) {
-        // The graph is built and compiled once, then re-executed each frame. It used to be
-        // reset()/compile()ed per frame, which reallocated every created resource (a framebuffer
-        // per frame) the moment a pass used create<T>(). Rebuilds now happen only when the graph's
-        // shape changes -- a resize or a newly registered pass/feature.
-        if (m_graph_dirty) {
-            rebuildGraph();
-            m_graph_dirty = false;
-        }
-        m_graph.execute();
-        // Present what the graph declared as its output, resolved from the resource table -- not a
-        // reach back into the geometry pass. The two are the same object today (scene_color is the
-        // geometry pass's framebuffer, imported), so this is not a behaviour change; it stops being
-        // the same as soon as a pass redirects the output, and then this is the one that is right.
-        m_output_fb = m_graph.output<Framebuffer>();
-        // Passes size the viewport to their own target, so a pass rendering into an off-size target
-        // (a 2048x2048 shadow map) would otherwise leave that viewport in place for present(),
-        // which draws before the run loop resets it. Restore the scene target's viewport -- the
-        // state the non-graph path leaves behind.
-        if (m_output_fb) {
-            m_api->setViewport(0, 0, static_cast<int>(m_output_fb->getFormat().width), static_cast<int>(m_output_fb->getFormat().height));
-        }
-        return m_output_fb;
+    // The graph owns the whole frame -- geometry, feature/UI passes, and present. It is compiled
+    // once and re-executed each frame; a rebuild happens only when its shape changes (a resize, or
+    // a newly registered pass/feature). The present pass composites to the frame's target, so
+    // render() has no separate present step. Returns the scene colour for callers that read it
+    // (e.g. the editor's picking pass).
+    if (m_graph_dirty) {
+        rebuildGraph();
+        m_graph_dirty = false;
     }
-
-    m_api->beginGPUTimer();
-    m_geometry_pass.execute();
-    Profiler::get().addSample("GPU::geometry", m_api->endGPUTimer());
-    // Retain the geometry result so present() can composite it after endFrame().
+    m_graph.execute();
     m_output_fb = m_geometry_pass.getResult();
     return m_output_fb;
-}
-
-void ForwardRenderer::present(const std::shared_ptr<Framebuffer>& target, const std::shared_ptr<ShaderProgram>& present_shader) {
-    // The final composite: draw the geometry result full-screen onto the target (or the default
-    // framebuffer). This is the blit that used to live at the tail of RenderSystem::update.
-    if (!m_output_fb || !present_shader) {
-        return;
-    }
-    if (!target) {
-        m_api->bindDefaultFramebuffer();
-    } else {
-        target->bind();
-    }
-    m_api->clear();
-    present_shader->bind();
-    m_output_fb->bindAttachment(0);
-    present_shader->loadInt("uTexture", 0);
-    m_present_quad->bind();
-    m_present_quad->getIndexBuffer()->bind();
-    m_api->renderVertexArray(m_present_quad);
 }
 
 void ForwardRenderer::endFrame() {

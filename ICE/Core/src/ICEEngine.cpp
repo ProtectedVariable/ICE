@@ -160,7 +160,6 @@ void ICEEngine::installRuntimeSystems(const std::shared_ptr<Scene> &scene, const
     auto ss = std::make_shared<ScriptSystem>(registry, scene.get(), m_input.get());
     rs->setCamera(camera_);
     rs->setRenderer(renderer);
-    renderer->setUseRenderGraph(m_use_render_graph);
     rs->setScheduler(m_scheduler);  // null unless parallel systems are enabled
     as->setScheduler(m_scheduler);
     registry->addSystem(rs);
@@ -190,17 +189,6 @@ void ICEEngine::setActiveScene(const std::shared_ptr<Scene> &scene) {
     // The one coupling that makes a scene visible: install its runtime systems (idempotent) and
     // let the engine drive it. The scene owns its camera, so the render system borrows that.
     installRuntimeSystems(scene, scene->cameraPtr());
-}
-
-void ICEEngine::setUseRenderGraph(bool enable) {
-    m_use_render_graph = enable;
-    // Apply to the active scene's renderer immediately; future scenes pick it up in
-    // installRuntimeSystems.
-    if (m_active_render_system) {
-        if (auto renderer = m_active_render_system->getRenderer()) {
-            renderer->setUseRenderGraph(enable);
-        }
-    }
 }
 
 void ICEEngine::setPhysicsBackend(const std::shared_ptr<IPhysicsBackend>& backend) {
@@ -303,8 +291,6 @@ UIManager *ICEEngine::ui() {
             Logger::Log(Logger::ERROR, "UI", "'ui' shader asset failed to load -- UI will not render (check Assets/Shaders/ui.*)");
         }
         m_ui = std::make_shared<UIManager>(m_graphics_factory, shader, font_path);
-        // The UI composites as a render-graph present-time pass, so the graph path must be on.
-        setUseRenderGraph(true);
     }
     registerUIPass();
     if (!m_ui_pass_registered) {

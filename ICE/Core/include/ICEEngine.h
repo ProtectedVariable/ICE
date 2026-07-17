@@ -72,11 +72,6 @@ class ICEEngine {
     // to the asset bank. Idempotent. Without this, requestAsset still works but stages inline.
     void enableBackgroundAssetLoading();
 
-    // Opt into driving rendering through the RenderGraph (off by default; the hardcoded pass path
-    // is the validated fallback). Applies to the active and future scenes' renderers. Exists to
-    // validate the graph path before it becomes the only path.
-    void setUseRenderGraph(bool enable);
-
     // --- Extension seams (P11) --------------------------------------------------------------------
     // Attach a physics backend; it is initialized now and stepped each frame (before the ECS
     // systems). Null (the default) means no physics. A concrete backend plugs in here without any
@@ -146,14 +141,13 @@ class ICEEngine {
     InputManager* input() const { return m_input.get(); }
 
     // The renderer drawing the active scene; null before a scene is activated. This is the
-    // registration point for render passes/features -- it needs the graph path
-    // (setUseRenderGraph(true)):
+    // registration point for render passes/features:
     //   engine.renderer()->addPass(std::make_unique<DebugOverlayPass>(mesh, shader));
     std::shared_ptr<Renderer> renderer() const;
 
     // The engine's UI, created on first call (needs a project for the "ui" shader asset and the
-    // bundled font). It composites over the scene as a render-graph present-time pass -- so this
-    // turns on the graph path -- and is fed pointer input each frame from the input service. Add
+    // bundled font). It composites over the scene as a render-graph present-time pass and is fed
+    // pointer input each frame from the input service. Add
     // elements to it and register event handlers:
     //   auto* ui = engine.ui();
     //   auto* btn = static_cast<UIRect*>(ui->add(std::make_unique<UIRect>("btn", {0.4f,0.4f}, {0.2f,0.1f}, {..})));
@@ -201,9 +195,6 @@ class ICEEngine {
 
     // Shared job scheduler for the parallel-capable systems; null unless setParallelSystems(true).
     std::shared_ptr<JobScheduler> m_scheduler;
-
-    // Whether renderers should drive the frame through the RenderGraph (see setUseRenderGraph).
-    bool m_use_render_graph = false;
 
     // Extension seams (P11): optional physics/scripting backends stepped in the frame loop, and the
     // loaded plugins kept alive for the engine's lifetime.
