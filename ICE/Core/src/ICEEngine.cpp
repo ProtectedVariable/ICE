@@ -268,6 +268,12 @@ Project &ICEEngine::newProject(const std::string &name, const fs::path &base) {
     return *proj;
 }
 
+std::shared_ptr<Renderer> ICEEngine::renderer() const {
+    // Reaches through the cached active render system rather than the
+    // project/scene/registry/getSystem chain that application code used to write by hand.
+    return m_active_render_system ? m_active_render_system->getRenderer() : nullptr;
+}
+
 std::shared_ptr<Camera> ICEEngine::getCamera() {
     return camera;
 }

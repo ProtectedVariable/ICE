@@ -12,9 +12,12 @@
 #include <GpuHandle.h>
 #include <LightComponent.h>
 
+#include <memory>
+
 #include "Camera.h"
 #include "Context.h"
 #include "Framebuffer.h"
+#include "RenderFeature.h"
 #include "RendererConfig.h"
 
 namespace ICE {
@@ -98,5 +101,17 @@ class Renderer {
     // (and, later, to add post/shadow passes without touching System/Scene). No-op for backends
     // that don't implement a graph.
     virtual void setUseRenderGraph(bool) {}
+
+    // Register a single render pass: it is added to the frame's render graph (setup() when the
+    // graph is built, execute() when it runs), so application code can extend the frame with no
+    // engine edits. This is the common path -- prefer it over wrapping one pass in a feature.
+    // Requires the graph path -- see setUseRenderGraph(true). The renderer takes ownership (the
+    // graph is rebuilt from scratch each compile, so it cannot own passes itself). No-op for
+    // backends without a graph.
+    virtual void addPass(std::unique_ptr<IRenderPass>) {}
+
+    // Register a bundle of passes that belong together (shared state, one on/off switch). For a
+    // lone pass use addPass(). Same ownership and graph-path requirements as addPass.
+    virtual void addFeature(std::unique_ptr<RenderFeature>) {}
 };
 }  // namespace ICE

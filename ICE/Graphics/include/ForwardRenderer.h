@@ -25,7 +25,9 @@
 
 namespace ICE {
 
-class ForwardRenderer : public Renderer {
+// IPassDrawer is implemented here (not on Renderer) because it is the pass-facing half of the
+// renderer: what a graph pass may ask it to draw, handed out through PassContext.
+class ForwardRenderer : public Renderer, public IPassDrawer {
    public:
     ForwardRenderer(const std::shared_ptr<RendererAPI> &api, const std::shared_ptr<GraphicsFactory> &factory,
                     const std::shared_ptr<GPURegistry> &gpu_registry);
@@ -47,9 +49,25 @@ class ForwardRenderer : public Renderer {
     void setClearColor(Eigen::Vector4f clearColor) override;
     void setViewport(int x, int y, int w, int h) override;
 
-    void setUseRenderGraph(bool enable) override { m_use_render_graph = enable; }
+    void setUseRenderGraph(bool enable) override {
+        m_use_render_graph = enable;
+        m_graph_dirty = true;
+    }
+
+    void addPass(std::unique_ptr<IRenderPass> pass) override;
+    void addFeature(std::unique_ptr<RenderFeature> feature) override;
+
+    // --- IPassDrawer (what a graph pass can ask the renderer to draw) ---------------------------
+    void drawScene(Camera& camera, ShaderProgram* override_shader) override;
+    void fullscreen(ShaderProgram* shader) override;
 
    private:
+    // Tear down and rebuild the frame's graph: import scene_color, add the geometry pass, let every
+    // registered feature contribute, then compile. Only called when m_graph_dirty (see render()).
+    void rebuildGraph();
+
+    // Upload `camera` into the shared camera UBO (what the geometry shaders read).
+    void uploadCameraUBO(Camera& camera);
     std::shared_ptr<RendererAPI> m_api;
     std::shared_ptr<GPURegistry> m_gpu_registry;
     std::vector<RenderCommand> m_render_commands;
@@ -57,6 +75,20 @@ class ForwardRenderer : public Renderer {
     GeometryPass m_geometry_pass;
     RenderGraph m_graph;
     bool m_use_render_graph = false;
+
+    // The graph is compiled once and re-executed each frame; this marks it for rebuild when
+    // something that changes its shape happens -- a resize (resource descriptors change) or a
+    // newly registered pass/feature. Rebuilding is what regenerates passes' resource handles.
+    bool m_graph_dirty = true;
+
+    // The camera the current frame was prepared with (see prepareFrame). Borrowed for the frame
+    // only: drawScene() restores the camera UBO to it so a pass drawing from another point of view
+    // (a shadow pass) can't leak that view into later passes.
+    Camera* m_frame_camera = nullptr;
+
+    // Application-registered features, in registration order. Their passes are added to the graph
+    // each time it is rebuilt (see rebuildGraph()).
+    std::vector<std::unique_ptr<RenderFeature>> m_features;
 
     // Owned by the renderer for the present pass: the full-screen quad the final blit draws, and
     // the most recent render() result it composites from.

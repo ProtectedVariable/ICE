@@ -18,6 +18,10 @@ void GeometryPass::execute() {
     m_framebuffer->bind();
     m_api->setViewport(0, 0, m_framebuffer->getFormat().width, m_framebuffer->getFormat().height);
     m_api->clear();
+    drawInto(nullptr);
+}
+
+void GeometryPass::drawInto(ShaderProgram* override_shader) {
     ShaderProgram* current_shader = nullptr;
     Material* current_material = nullptr;
     GPUMesh* current_mesh = nullptr;
@@ -29,8 +33,10 @@ void GeometryPass::execute() {
     DepthFunc cur_depth_func = DepthFunc::Less;
 
     for (const auto& command : *m_render_queue) {
-        auto& shader = command.shader;
-        auto& material = command.material;
+        // An override shader stands in for every command's own shader (and suppresses the
+        // material below); otherwise each command draws with its material's shader as usual.
+        ShaderProgram* shader = override_shader ? override_shader : command.shader;
+        Material* material = override_shader ? nullptr : command.material;
         auto& mesh = command.mesh;
 
         if (!state_init || cur_cull != command.faceCulling) {

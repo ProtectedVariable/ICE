@@ -36,6 +36,14 @@ class GraphicsFactory {
 
     virtual std::shared_ptr<GPUTexture> createTexture2D(const Texture2D &texture) const = 0;
 
+    // Create an empty GPU texture: storage only, no CPU data. This is what the render graph uses to
+    // allocate a transient Texture2D resource from its descriptor (the overload above can only
+    // upload an already-loaded asset). Not pure: a backend that hasn't implemented it returns null
+    // and the graph leaves the resource virtual rather than failing to build.
+    virtual std::shared_ptr<GPUTexture> createTexture2D(uint32_t width, uint32_t height, TextureFormat format) const {
+        return nullptr;
+    }
+
     virtual std::shared_ptr<GPUTexture> createTextureCube(const TextureCube& texture) const = 0;
 };
 }  // namespace ICE

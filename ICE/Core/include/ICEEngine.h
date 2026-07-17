@@ -143,6 +143,12 @@ class ICEEngine {
     // step(). Read key/mouse state and mouse delta from here (also injected into scripts by T3).
     InputManager* input() const { return m_input.get(); }
 
+    // The renderer drawing the active scene; null before a scene is activated. This is the
+    // registration point for render passes/features -- it needs the graph path
+    // (setUseRenderGraph(true)):
+    //   engine.renderer()->addPass(std::make_unique<DebugOverlayPass>(mesh, shader));
+    std::shared_ptr<Renderer> renderer() const;
+
    private:
     // Shared system-building used by both setupScene (legacy/editor path) and setActiveScene:
     // builds the render/animation/scene-graph/script systems on the scene's registry with the

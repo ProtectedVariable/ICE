@@ -67,6 +67,8 @@ constexpr int textureFormatToChannels(TextureFormat format) {
 class OpenGLTexture2D : public GPUTexture {
    public:
     OpenGLTexture2D(const Texture2D &tex);
+    // Storage-only texture with no CPU data, for render-graph transient resources.
+    OpenGLTexture2D(uint32_t width, uint32_t height, TextureFormat format);
     ~OpenGLTexture2D() override;
 
     // Owns a GL texture name; copying would double-delete it.

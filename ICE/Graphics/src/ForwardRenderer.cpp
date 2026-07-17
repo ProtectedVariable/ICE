@@ -53,7 +53,7 @@ void ForwardRenderer::submitLight(const Light& e) {
     m_lights.push_back(e);
 }
 
-void ForwardRenderer::prepareFrame(Camera& camera) {
+void ForwardRenderer::uploadCameraUBO(Camera& camera) {
     auto view_mat = camera.lookThrough();
     auto proj_mat = camera.getProjection();
     auto cam_pos = camera.getPosition();
@@ -61,6 +61,13 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
     CameraUBO camera_ubo_data{
         .projection = proj_mat, .view = view_mat, .cameraPos = Eigen::Vector4f(cam_pos.x(), cam_pos.y(), cam_pos.z(), 1.0f)};
     m_camera_ubo->putData(&camera_ubo_data, sizeof(CameraUBO));
+}
+
+void ForwardRenderer::prepareFrame(Camera& camera) {
+    // Remembered for the frame so drawScene() can restore this view after a pass draws from
+    // another one.
+    m_frame_camera = &camera;
+    uploadCameraUBO(camera);
 
     SceneLightsUBO light_ubo_data;
     // Clamp to the UBO's fixed capacity: lights[] is MAX_LIGHTS long, so writing more
@@ -197,24 +204,92 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
     m_geometry_pass.submit(&m_render_commands);
 }
 
+void ForwardRenderer::addPass(std::unique_ptr<IRenderPass> pass) {
+    // Wrapped rather than kept in a second list, so passes and features share one registration
+    // order and one wiring path in rebuildGraph().
+    if (pass) {
+        addFeature(std::make_unique<SinglePassFeature>(std::move(pass)));
+    }
+}
+
+void ForwardRenderer::addFeature(std::unique_ptr<RenderFeature> feature) {
+    if (feature) {
+        m_features.push_back(std::move(feature));
+        m_graph_dirty = true;  // the new feature's passes only join the graph on a rebuild
+    }
+}
+
+void ForwardRenderer::drawScene(Camera& camera, ShaderProgram* override_shader) {
+    // Point the shared camera UBO at the requested view, replay the frame's visible set into
+    // whatever target the graph bound, then put the frame's own camera back. Without the restore, a
+    // shadow pass drawing from a light would leave the geometry pass rendering from that light.
+    uploadCameraUBO(camera);
+    m_geometry_pass.drawInto(override_shader);
+    if (m_frame_camera && m_frame_camera != &camera) {
+        uploadCameraUBO(*m_frame_camera);
+    }
+}
+
+void ForwardRenderer::fullscreen(ShaderProgram* shader) {
+    if (!shader) {
+        return;
+    }
+    shader->bind();
+    m_present_quad->bind();
+    m_present_quad->getIndexBuffer()->bind();
+    m_api->renderVertexArray(m_present_quad);
+}
+
+void ForwardRenderer::rebuildGraph() {
+    m_graph.reset();
+
+    // Publish the geometry pass's framebuffer into the resource table so features can name the
+    // scene colour with a typed handle. The geometry pass itself still declares its target
+    // through the string layer (removed in T10).
+    auto scene_color = m_graph.importResource<Framebuffer>("scene_color", m_geometry_pass.getResult());
+
+    auto& geometry = m_graph.addPass("geometry");
+    geometry.write("scene_color");
+    geometry.setExecuteCallback([this](const RenderGraphPass&) {
+        m_api->beginGPUTimer();
+        m_geometry_pass.execute();
+        Profiler::get().addSample("GPU::geometry", m_api->endGPUTimer());
+    });
+
+    // Application-registered features contribute their passes here -- the whole point of the seam:
+    // no engine edit is needed to add a pass. setup() runs on each rebuild, which is what
+    // regenerates every pass's resource handles for this compile.
+    for (const auto& feature : m_features) {
+        addFeaturePasses(m_graph, *feature, scene_color, m_api, this);
+    }
+
+    m_graph.setOutput(scene_color);
+    m_graph.compile();
+}
+
 std::shared_ptr<Framebuffer> ForwardRenderer::render() {
     if (m_use_render_graph) {
-        // Same work, orchestrated by the render graph: the geometry pass runs inside a graph pass,
-        // so shadow/post passes can later be added here (in the renderer) without any System/Scene
-        // change. The geometry pass still owns its framebuffer; graph-managed resource aliasing is
-        // a follow-up. Present remains a separate step (its target/shader arrive at present time).
-        m_graph.reset();
-        auto& geometry = m_graph.addPass("geometry");
-        geometry.write("scene_color");
-        geometry.setExecuteCallback([this](const RenderGraphPass&) {
-            m_api->beginGPUTimer();
-            m_geometry_pass.execute();
-            Profiler::get().addSample("GPU::geometry", m_api->endGPUTimer());
-        });
-        m_graph.setOutput("scene_color");
-        m_graph.compile();
+        // The graph is built and compiled once, then re-executed each frame. It used to be
+        // reset()/compile()ed per frame, which reallocated every created resource (a framebuffer
+        // per frame) the moment a pass used create<T>(). Rebuilds now happen only when the graph's
+        // shape changes -- a resize or a newly registered pass/feature.
+        if (m_graph_dirty) {
+            rebuildGraph();
+            m_graph_dirty = false;
+        }
         m_graph.execute();
-        m_output_fb = m_geometry_pass.getResult();
+        // Present what the graph declared as its output, resolved from the resource table -- not a
+        // reach back into the geometry pass. The two are the same object today (scene_color is the
+        // geometry pass's framebuffer, imported), so this is not a behaviour change; it stops being
+        // the same as soon as a pass redirects the output, and then this is the one that is right.
+        m_output_fb = m_graph.output<Framebuffer>();
+        // Passes size the viewport to their own target, so a pass rendering into an off-size target
+        // (a 2048x2048 shadow map) would otherwise leave that viewport in place for present(),
+        // which draws before the run loop resets it. Restore the scene target's viewport -- the
+        // state the non-graph path leaves behind.
+        if (m_output_fb) {
+            m_api->setViewport(0, 0, static_cast<int>(m_output_fb->getFormat().width), static_cast<int>(m_output_fb->getFormat().height));
+        }
         return m_output_fb;
     }
 
@@ -260,6 +335,10 @@ void ForwardRenderer::endFrame() {
 void ForwardRenderer::resize(uint32_t width, uint32_t height) {
     m_api->setViewport(0, 0, width, height);
     m_geometry_pass.resize(width, height);
+    // Resource descriptors are sized from the viewport, so the compiled graph is now stale. This is
+    // the one path that must reliably re-dirty it -- RenderSystem::setViewport calls us on every
+    // framebuffer resize.
+    m_graph_dirty = true;
 }
 
 void ForwardRenderer::setClearColor(Eigen::Vector4f clearColor) {
