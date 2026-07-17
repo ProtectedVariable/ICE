@@ -10,8 +10,12 @@
 #include <Profiler.h>
 #include <TransformComponent.h>
 #include <AnimationSystem.h>
+#include <AssetPath.h>
 #include <ScriptSystem.h>
 #include <SceneGraphSystem.h>
+#include <Shader.h>
+#include <UIManager.h>
+#include <UIRenderPass.h>
 #include <WindowFactory.h>
 
 namespace ICE {
@@ -97,6 +101,14 @@ void ICEEngine::step() {
         }
     }
 
+    // Hit-test the UI against this frame's pointer state, before the input roll below consumes the
+    // click edge. Bridges the input service to the (input-agnostic) UIManager.
+    if (m_ui && m_input && m_window) {
+        auto [w, h] = m_window->getSize();
+        const bool clicked = m_input->getMouseAction(MouseButton::LEFT_MOUSE_BUTTON) == KeyAction::PRESS;
+        m_ui->processInput(m_input->getMouseX(), m_input->getMouseY(), clicked, w, h);
+    }
+
     // Roll input at the END of the frame -- after any onUpdate callbacks and ECS systems (scripts)
     // have read this frame's PRESS/RELEASE edges and mouse position. This is why PRESS lasts exactly
     // one frame and getMouseDelta is the movement across the frame. (Callbacks fire during the run
@@ -162,6 +174,10 @@ void ICEEngine::installRuntimeSystems(const std::shared_ptr<Scene> &scene, const
     // rediscovers them through project->getCurrentScene()->getRegistry()->getSystem<...>().
     m_active_scene = scene;
     m_active_render_system = rs;
+
+    // A fresh renderer was just built, so the UI pass (if any) is not on it yet.
+    m_ui_pass_registered = false;
+    registerUIPass();
 }
 
 void ICEEngine::setupScene(const std::shared_ptr<Camera> &camera_) {
@@ -272,6 +288,39 @@ std::shared_ptr<Renderer> ICEEngine::renderer() const {
     // Reaches through the cached active render system rather than the
     // project/scene/registry/getSystem chain that application code used to write by hand.
     return m_active_render_system ? m_active_render_system->getRenderer() : nullptr;
+}
+
+UIManager *ICEEngine::ui() {
+    if (!m_ui) {
+        if (!project || !m_graphics_factory) {
+            return nullptr;  // no project yet: no "ui" shader asset and no font to load
+        }
+        auto shader = project->getGPURegistry()->getShader(AssetPath::WithTypePrefix<Shader>("ui"));
+        const auto font_path = (project->getBaseDirectory() / "Assets" / "Fonts" / "helvetica.ttf").string();
+        if (!shader) {
+            // Loud, not silent: without the shader the UI draws nothing. Usually means the updated
+            // Assets/ (ui.shader.json + glsl/ui.*) weren't deployed next to the executable.
+            Logger::Log(Logger::ERROR, "UI", "'ui' shader asset failed to load -- UI will not render (check Assets/Shaders/ui.*)");
+        }
+        m_ui = std::make_shared<UIManager>(m_graphics_factory, shader, font_path);
+        // The UI composites as a render-graph present-time pass, so the graph path must be on.
+        setUseRenderGraph(true);
+    }
+    registerUIPass();
+    if (!m_ui_pass_registered) {
+        Logger::Log(Logger::WARNING, "UI", "ui() called before a scene/renderer is active -- the UI pass is not attached yet");
+    }
+    return m_ui.get();
+}
+
+void ICEEngine::registerUIPass() {
+    if (!m_ui || m_ui_pass_registered || !m_active_render_system) {
+        return;
+    }
+    if (auto renderer = m_active_render_system->getRenderer()) {
+        renderer->addPass(std::make_unique<UIRenderPass>(m_ui.get()));
+        m_ui_pass_registered = true;
+    }
 }
 
 std::shared_ptr<Camera> ICEEngine::getCamera() {

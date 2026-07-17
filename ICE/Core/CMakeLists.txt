@@ -23,6 +23,7 @@ target_link_libraries(${PROJECT_NAME}
     scripting
     storage
     system
+    UI
     util
 )
 

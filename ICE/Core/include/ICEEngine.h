@@ -23,6 +23,8 @@
 #include <vector>
 
 namespace ICE {
+class UIManager;  // engine-owned UI (see ui()); forward-declared to keep this header light
+
 class ICEEngine {
    public:
     // One-call launch configuration for the config constructor below. Aggregate, so it takes
@@ -149,6 +151,17 @@ class ICEEngine {
     //   engine.renderer()->addPass(std::make_unique<DebugOverlayPass>(mesh, shader));
     std::shared_ptr<Renderer> renderer() const;
 
+    // The engine's UI, created on first call (needs a project for the "ui" shader asset and the
+    // bundled font). It composites over the scene as a render-graph present-time pass -- so this
+    // turns on the graph path -- and is fed pointer input each frame from the input service. Add
+    // elements to it and register event handlers:
+    //   auto* ui = engine.ui();
+    //   auto* btn = static_cast<UIRect*>(ui->add(std::make_unique<UIRect>("btn", {0.4f,0.4f}, {0.2f,0.1f}, {..})));
+    //   btn->onEvent([](const Event& e){ if (e.type == EventType::Click) { ... } });
+    // Call it after a scene is active so the present pass can attach to its renderer. Null if there
+    // is no project yet.
+    UIManager* ui();
+
    private:
     // Shared system-building used by both setupScene (legacy/editor path) and setActiveScene:
     // builds the render/animation/scene-graph/script systems on the scene's registry with the
@@ -157,6 +170,10 @@ class ICEEngine {
 
     // Window framebuffer-resize handler: resizes the active render system's viewport and camera.
     void onFramebufferResize(int width, int height);
+
+    // Attach the UI present-time pass to the active renderer, once per renderer. No-op until both
+    // the UI (ui()) and a render system exist.
+    void registerUIPass();
 
     std::shared_ptr<GraphicsFactory> m_graphics_factory;
     std::shared_ptr<Context> ctx;
@@ -170,6 +187,12 @@ class ICEEngine {
 
     // Engine-owned input service (see input()); constructed in initialize(), pumped in step().
     std::unique_ptr<InputManager> m_input;
+
+    // Engine-owned UI (see ui()); lazily created, drawn as a render-graph present-time pass and fed
+    // pointer input each frame. m_ui_pass_registered tracks whether its pass is on the current
+    // renderer (reset when a new renderer is built in installRuntimeSystems).
+    std::shared_ptr<UIManager> m_ui;
+    bool m_ui_pass_registered = false;
 
     // The scene the engine currently drives and its render system, cached on activation so the
     // per-frame and resize paths don't rediscover them through the project/registry each time.

@@ -67,6 +67,7 @@ bool Project::CreateDirectories() {
     m_asset_bank->addAsset<Shader>("pbr", {m_shaders_directory / "pbr.shader.json"});
     m_asset_bank->addAsset<Shader>("lastpass", {m_shaders_directory / "lastpass.shader.json"});
     m_asset_bank->addAsset<Shader>("__ice__picking_shader", {m_shaders_directory / "picking.shader.json"});
+    m_asset_bank->addAsset<Shader>("ui", {m_shaders_directory / "ui.shader.json"});
 
     m_asset_bank->addAsset<Material>("base_mat", {m_materials_directory / "base_mat.material.json"});
 

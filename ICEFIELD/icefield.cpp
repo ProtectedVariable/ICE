@@ -3,9 +3,11 @@
 #include <ICEMath.h>
 #include <InputManager.h>
 #include <LightComponent.h>
+#include <Logger.h>
 #include <NativeScript.h>
 #include <RenderComponent.h>
 #include <TransformComponent.h>
+#include <UI.h>
 
 using namespace ICE;
 
@@ -64,6 +66,20 @@ int main() {
     // Camera faces -Z, and the scene sits at z = 0, so sit in front of it at +Z (this is what the
     // old backward(5)+up(5) produced) and pitch down to look at the group.
     scene.camera().setPosition({0, 5, 5}).pitch(-30);
+
+    // UI overlay: a title label and a clickable button, composited over the scene by the render
+    // graph's UI present-time pass. ui() turns on the graph path and attaches the pass.
+    if (auto* ui = engine.ui()) {
+        ui->add(std::make_unique<UILabel>("title", Eigen::Vector2f{0.02f, 0.02f}, Eigen::Vector2f{0.3f, 0.05f}, "IceField",
+                                          Eigen::Vector4f{1, 1, 1, 1}, ui->font()));
+        auto* button = static_cast<UIRect*>(ui->add(
+            std::make_unique<UIRect>("button", Eigen::Vector2f{0.02f, 0.1f}, Eigen::Vector2f{0.15f, 0.06f}, Eigen::Vector4f{0.2f, 0.4f, 0.8f, 1})));
+        button->onEvent([](const Event& e) {
+            if (e.type == EventType::Click) {
+                Logger::Log(Logger::INFO, "UI", "Button clicked");
+            }
+        });
+    }
 
     engine.run();
     return 0;
