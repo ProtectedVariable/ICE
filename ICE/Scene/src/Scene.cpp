@@ -5,10 +5,10 @@
 #include "Scene.h"
 
 #include <Model.h>
-#include <PerspectiveCamera.h>
 #include <Registry.h>
 #include <RenderComponent.h>
 #include <RenderSystem.h>
+#include <SceneCamera.h>
 #include <SkeletonPoseComponent.h>
 #include <SkinningComponent.h>
 #include <TransformComponent.h>
@@ -20,7 +20,9 @@ Scene::Scene(const std::string &name)
     : name(name),
       m_graph(std::make_shared<SceneGraph>()),
       registry(std::make_shared<Registry>()),
-      m_camera(std::make_shared<PerspectiveCamera>(60.0, 16.0 / 9.0, 0.01, 10000.0)) {
+      // Free SceneCamera by default: identical behaviour to the scene-owned PerspectiveCamera it
+      // replaces, but able to bind to a camera entity via setActiveCamera.
+      m_camera(std::make_shared<SceneCamera>()) {
     aliases.try_emplace(0, "Scene");
 }
 
@@ -62,9 +64,27 @@ std::shared_ptr<Camera> Scene::cameraPtr() const {
 
 void Scene::setCamera(const std::shared_ptr<Camera> &camera) {
     m_camera = camera;
+    m_active_camera = NULL_ENTITY;  // an explicit camera object supersedes any active entity
     // If the scene is already active, re-point its render system at the new camera.
     if (auto rs = registry->tryGetSystem<RenderSystem>()) {
         rs->setCamera(camera);
+    }
+}
+
+void Scene::setActiveCamera(Entity camera_entity) {
+    m_active_camera = camera_entity;
+    // Bind the existing SceneCamera in place where possible, so the shared_ptr the render system
+    // already holds keeps pointing at the live view (no re-point needed). If setCamera() had
+    // swapped in a non-SceneCamera, replace it with a bound one.
+    auto scene_camera = std::dynamic_pointer_cast<SceneCamera>(m_camera);
+    if (!scene_camera) {
+        scene_camera = std::make_shared<SceneCamera>();
+        m_camera = scene_camera;
+    }
+    scene_camera->bindEntity(camera_entity == NULL_ENTITY ? nullptr : registry.get(), camera_entity);
+
+    if (auto rs = registry->tryGetSystem<RenderSystem>()) {
+        rs->setCamera(m_camera);
     }
 }
 
