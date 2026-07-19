@@ -53,7 +53,6 @@ std::pair<void*, bool> AssetsRenderer::getPreview(const std::shared_ptr<ICE::Ass
   
     if (!m_renderers.contains(key)) {
         m_renderers.try_emplace(key, m_api, m_factory, m_bank);
-        m_renderers.at(key).resize(256, 256);
     }
 
     auto camera = std::make_shared<ICE::PerspectiveCamera>(60.0, 1.0, 0.01, 10000.0);
@@ -61,7 +60,8 @@ std::pair<void*, bool> AssetsRenderer::getPreview(const std::shared_ptr<ICE::Ass
     camera->up(1);
     camera->pitch(-30);
 
-    auto& renderer = m_renderers.at(key);
+    auto& preview = m_renderers.at(key);
+    auto& renderer = preview.renderer;
     for (int i = 0; i < meshes.size(); i++) {
         auto shader = m_bank->shaderHandle(materials[i]->getShader());
         // Skip anything whose GPU resources aren't available (e.g. an asset removed after the
@@ -74,9 +74,13 @@ std::pair<void*, bool> AssetsRenderer::getPreview(const std::shared_ptr<ICE::Ass
     renderer.submitLight(
         ICE::Light{.position = {-2, 2, 2}, .rotation = {0, 0, 0}, .color = {1, 1, 1}, .distance_dropoff = 0, .type = ICE::LightType::PointLight});
 
+    // Present the frame into our own target (a render-to-texture blit) and read that back: render()
+    // returns nothing now, so we drive an explicit target rather than assuming a resource name.
+    renderer.setPresentTarget(preview.target);
+    renderer.setPresentShader(m_bank->getShader(ICE::AssetPath::WithTypePrefix<ICE::Shader>("lastpass")));
     renderer.prepareFrame(*camera);
-    auto fb = renderer.render();
+    renderer.render();
     renderer.endFrame();
 
-    return {static_cast<char*>(0) + fb->getTexture(), true};
+    return {static_cast<char*>(0) + preview.target->getTexture(), true};
 }

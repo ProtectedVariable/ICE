@@ -25,7 +25,21 @@ class AssetsRenderer {
     }
 
    private:
-    std::unordered_map<std::string, ICE::ForwardRenderer> m_renderers;
+    // A cached offscreen renderer plus the target it presents into. render() no longer hands back a
+    // framebuffer (the pipeline decides what it composites), so each preview drives an explicit
+    // render-to-texture target and reads that back for ImGui.
+    struct Preview {
+        ICE::ForwardRenderer renderer;
+        std::shared_ptr<ICE::Framebuffer> target;
+        Preview(const std::shared_ptr<ICE::RendererAPI>& api, const std::shared_ptr<ICE::GraphicsFactory>& factory,
+                const std::shared_ptr<ICE::GPURegistry>& bank)
+            : renderer(api, factory, bank),
+              target(factory->createFramebuffer({256, 256, 1})) {
+            renderer.resize(256, 256);
+        }
+    };
+
+    std::unordered_map<std::string, Preview> m_renderers;
     std::shared_ptr<ICE::RendererAPI> m_api;
     std::shared_ptr<ICE::GraphicsFactory> m_factory;
     std::shared_ptr<ICE::GPURegistry> m_bank;
