@@ -137,15 +137,19 @@ RenderSystem::RenderSystem(const std::shared_ptr<Registry> &reg, const std::shar
 }
 
 void RenderSystem::update(double delta) {
+    // Gather the frame's inputs and hand them to the renderer in one drawFrame() call (Phase 5). This
+    // system only produces the visible set; the renderer owns the frame's structure.
+    FrameInputs inputs;
+    inputs.camera = m_camera.get();
 
     auto view_mat = m_camera->lookThrough();
     auto proj_mat = m_camera->getProjection();
 
     if (m_skybox != NO_ASSET_ID) {
-        m_renderer->submitSkybox(Skybox{
+        inputs.skybox = Skybox{
             .cube_mesh = m_gpu_bank->meshHandle(AssetPath::WithTypePrefix<Mesh>("cube")),
             .shader = m_gpu_bank->shaderHandle(AssetPath::WithTypePrefix<Shader>("__ice_skybox_shader")),
-        });
+        };
     }
 
     auto frustum = extractFrustumPlanes(proj_mat * view_mat);
@@ -182,10 +186,10 @@ void RenderSystem::update(double delta) {
         process(0, jobs.size());
     }
 
-    // Phase 3 (render thread): submit the survivors in queue order (the renderer sorts them anyway).
+    // Phase 3 (render thread): collect the survivors in queue order (the renderer sorts them anyway).
     for (size_t i = 0; i < jobs.size(); ++i) {
         if (visible[i]) {
-            m_renderer->submitDrawable(std::move(drawables[i]));
+            inputs.drawables.push_back(std::move(drawables[i]));
         }
     }
 
@@ -196,26 +200,25 @@ void RenderSystem::update(double delta) {
         auto lc = m_registry->getComponent<LightComponent>(light);
         auto tc = m_registry->getComponent<TransformComponent>(light);
 
-        m_renderer->submitLight(Light{.position = tc->getPosition(),
+        inputs.lights.push_back(Light{.position = tc->getPosition(),
                                       .rotation = tc->getRotationEulerDeg(),
                                       .color = lc->color,
                                       .distance_dropoff = lc->distance_dropoff,
                                       .type = lc->type});
     }
 
-    // Hand the present target + shader to the renderer before render(): present is now a graph pass
-    // (T10), so the whole frame -- geometry, features, UI, and the final composite -- runs inside
-    // render(). m_target (nullptr = default framebuffer) is honoured by the present pass, preserving
-    // the editor's render-to-texture path. Resolve the full-screen shader once and reuse it.
+    // Present target + shader for the frame. m_target (nullptr = default framebuffer) is honoured by
+    // the renderer's present pass, preserving the editor's render-to-texture path. Resolve the
+    // full-screen composite shader once and reuse it.
     if (!m_lastpass_shader) {
         m_lastpass_shader = m_gpu_bank->getShader(AssetPath::WithTypePrefix<Shader>("lastpass"));
     }
-    m_renderer->setPresentTarget(m_target);
-    m_renderer->setPresentShader(m_lastpass_shader);
+    inputs.outputTarget = m_target;
+    inputs.presentShader = m_lastpass_shader;
 
-    m_renderer->prepareFrame(*m_camera);
-    m_renderer->render();
-    m_renderer->endFrame();
+    // One hand-off: the renderer prepares, runs the graph (geometry -> features -> present), and ends
+    // the frame.
+    m_renderer->drawFrame(std::move(inputs));
 }
 
 void RenderSystem::onEntityAdded(Entity e) {

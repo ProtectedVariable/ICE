@@ -22,8 +22,9 @@ namespace ICE {
 ForwardRenderer::ForwardRenderer(const std::shared_ptr<RendererAPI>& api, const std::shared_ptr<GraphicsFactory>& factory,
                                  const std::shared_ptr<GPURegistry>& gpu_registry)
     : m_api(api),
+      m_factory(factory),
       m_gpu_registry(gpu_registry),
-      m_geometry_pass(api, factory, gpu_registry, {1, 1, 1}),
+      m_pipeline(std::make_unique<ForwardPipeline>(api, factory, gpu_registry)),
       m_graph(factory) {
 
     m_camera_ubo = factory->createUniformBuffer(sizeof(CameraUBO), 0);
@@ -64,8 +65,7 @@ void ForwardRenderer::uploadCameraUBO(Camera& camera) {
 }
 
 void ForwardRenderer::prepareFrame(Camera& camera) {
-    // Remembered for the frame so drawScene() can restore this view after a pass draws from
-    // another one.
+    // Remembered for the frame and handed to passes through the frame context (frame.camera).
     m_frame_camera = &camera;
     uploadCameraUBO(camera);
 
@@ -200,8 +200,8 @@ void ForwardRenderer::prepareFrame(Camera& camera) {
     }
 
     std::sort(m_render_commands.begin(), m_render_commands.end());
-
-    m_geometry_pass.submit(&m_render_commands);
+    // The geometry pass reads the sorted visible set from the frame context (m_frame_context.commands
+    // points at m_render_commands), so there is no separate submit step.
 }
 
 void ForwardRenderer::addPass(std::unique_ptr<IRenderPass> pass) {
@@ -219,99 +219,51 @@ void ForwardRenderer::addFeature(std::unique_ptr<RenderFeature> feature) {
     }
 }
 
-void ForwardRenderer::drawScene(Camera& camera, ShaderProgram* override_shader) {
-    // Point the shared camera UBO at the requested view, replay the frame's visible set into
-    // whatever target the graph bound, then put the frame's own camera back. Without the restore, a
-    // shadow pass drawing from a light would leave the geometry pass rendering from that light.
-    uploadCameraUBO(camera);
-    m_geometry_pass.drawInto(override_shader);
-    if (m_frame_camera && m_frame_camera != &camera) {
-        uploadCameraUBO(*m_frame_camera);
-    }
-}
-
-void ForwardRenderer::fullscreen(ShaderProgram* shader) {
-    if (!shader) {
-        return;
-    }
-    shader->bind();
-    m_present_quad->bind();
-    m_present_quad->getIndexBuffer()->bind();
-    m_api->renderVertexArray(m_present_quad);
-}
-
 void ForwardRenderer::rebuildGraph() {
+    // The renderer no longer hardcodes the frame's passes (Phase 4): it hands the pipeline the graph
+    // and the per-rebuild context, and the pipeline declares the passes (geometry -> features ->
+    // present for ForwardPipeline). Application features are woven in by the pipeline.
     m_graph.reset();
 
-    // Publish the geometry pass's framebuffer into the resource table so features can name the
-    // scene colour with a typed handle. The geometry pass itself still declares its target
-    // through the string layer (removed in T10).
-    auto scene_color = m_graph.importResource<Framebuffer>("scene_color", m_geometry_pass.getResult());
+    PipelineContext ctx;
+    ctx.api = m_api;
+    ctx.frame = &m_frame_context;
+    ctx.render_width = m_render_width;
+    ctx.render_height = m_render_height;
+    ctx.features = &m_features;
+    m_pipeline->build(m_graph, ctx);
 
-    auto& geometry = m_graph.addPass("geometry");
-    geometry.write("scene_color");
-    geometry.setExecuteCallback([this](const RenderGraphPass&) {
-        m_api->beginGPUTimer();
-        m_geometry_pass.execute();
-        Profiler::get().addSample("GPU::geometry", m_api->endGPUTimer());
-    });
-
-    // Application-registered features contribute their passes here -- the whole point of the seam:
-    // no engine edit is needed to add a pass. setup() runs on each rebuild, which is what
-    // regenerates every pass's resource handles for this compile.
-    for (const auto& feature : m_features) {
-        addFeaturePasses(m_graph, *feature, scene_color, m_api, this);
-    }
-
-    // Present is a graph pass too (T10): it reads the finished scene colour -- so it is ordered
-    // after geometry and every feature/UI pass that wrote it -- and composites it to the frame's
-    // present target. It writes a virtual "backbuffer" resource that is the graph's declared output,
-    // which is what keeps it (and its dependencies) from being culled. The backbuffer has no
-    // physical resource: the pass binds the real target (default framebuffer or the editor's RTT)
-    // itself, since that isn't a graph-managed framebuffer.
-    auto& present = m_graph.addPass("present");
-    present.read("scene_color");
-    present.write("backbuffer");
-    present.setExecuteCallback([this, scene_color](const RenderGraphPass&) {
-        auto* resource = m_graph.resourceAt(scene_color.index());
-        auto scene_fb = resource ? resource->getPhysicalResourceAs<Framebuffer>() : nullptr;
-        if (!m_present_shader || !scene_fb) {
-            return;
-        }
-        // Off-screen (editor viewport) if a target is set, else the window's default framebuffer.
-        if (m_present_target) {
-            m_present_target->bind();
-            m_api->setViewport(0, 0, static_cast<int>(m_present_target->getFormat().width), static_cast<int>(m_present_target->getFormat().height));
-        } else {
-            m_api->bindDefaultFramebuffer();
-            m_api->setViewport(0, 0, static_cast<int>(scene_fb->getFormat().width), static_cast<int>(scene_fb->getFormat().height));
-        }
-        m_api->clear();
-        m_present_shader->bind();
-        scene_fb->bindAttachment(0);
-        m_present_shader->loadInt("uTexture", 0);
-        m_present_quad->bind();
-        m_present_quad->getIndexBuffer()->bind();
-        m_api->renderVertexArray(m_present_quad);
-    });
-
-    m_graph.setOutput("backbuffer");
     m_graph.compile();
 }
 
-std::shared_ptr<Framebuffer> ForwardRenderer::render() {
+void ForwardRenderer::render() {
     // The graph owns the whole frame -- geometry, feature/UI passes, and present. It is compiled
-    // once and re-executed each frame; a rebuild happens only when its shape changes (a resize, or
-    // a newly registered pass/feature). The present pass composites to the frame's target, so
-    // render() has no separate present step. Returns the scene colour for callers that read it
-    // (e.g. the editor's picking pass).
+    // once and re-executed each frame; a rebuild happens only when its shape changes (a resize, a
+    // newly registered pass/feature, or a new pipeline). The present pass composites to the frame's
+    // target, so there is no separate present step and nothing to hand back: what reaches the screen
+    // (or the editor's render-to-texture target) is entirely the pipeline's business.
     if (m_graph_dirty) {
         rebuildGraph();
         m_graph_dirty = false;
     }
+    updateFrameContext();
     m_graph.execute();
-    m_output_fb = m_geometry_pass.getResult();
-    return m_output_fb;
+}
+
+void ForwardRenderer::updateFrameContext() {
+    // Refresh the per-frame conduit. Its address is stable (a member), so the graph's compiled pass
+    // callbacks -- captured once -- read this frame's data through it. The geometry pass reads the
+    // visible set from here; the present pass reads the shader/target/quad.
+    m_frame_context.api = m_api.get();
+    m_frame_context.factory = m_factory.get();
+    m_frame_context.gpu = m_gpu_registry.get();
+    m_frame_context.camera = m_frame_camera;
+    m_frame_context.commands = &m_render_commands;
+    m_frame_context.cameraUBO = m_camera_ubo.get();
+    m_frame_context.lightUBO = m_light_ubo.get();
+    m_frame_context.fullscreenQuad = m_present_quad;
+    m_frame_context.outputTarget = m_present_target.get();
+    m_frame_context.presentShader = m_present_shader.get();
 }
 
 void ForwardRenderer::endFrame() {
@@ -327,10 +279,12 @@ void ForwardRenderer::endFrame() {
 
 void ForwardRenderer::resize(uint32_t width, uint32_t height) {
     m_api->setViewport(0, 0, width, height);
-    m_geometry_pass.resize(width, height);
-    // Resource descriptors are sized from the viewport, so the compiled graph is now stale. This is
-    // the one path that must reliably re-dirty it -- RenderSystem::setViewport calls us on every
+    // The scene-colour target is graph-owned and sized from here: record the size for the geometry
+    // pass's create<>, and re-dirty so the next rebuild reallocates at the new size. This is the one
+    // path that must reliably re-dirty the graph -- RenderSystem::setViewport calls us on every
     // framebuffer resize.
+    m_render_width = width;
+    m_render_height = height;
     m_graph_dirty = true;
 }
 

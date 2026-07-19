@@ -1,27 +1,44 @@
 #include "GeometryPass.h"
 
+#include <Profiler.h>
+
 #include <algorithm>
 
 #include "InstanceData.h"
 
 namespace ICE {
 GeometryPass::GeometryPass(const std::shared_ptr<RendererAPI>& api, const std::shared_ptr<GraphicsFactory>& factory,
-                           const std::shared_ptr<GPURegistry>& gpu_registry, const FrameBufferFormat& format)
+                           const std::shared_ptr<GPURegistry>& gpu_registry)
     : m_api(api),
       m_factory(factory),
       m_gpu_registry(gpu_registry) {
-    m_framebuffer = factory->createFramebuffer(format);
     m_instance_buffer = factory->createVertexBuffer();
 }
 
-void GeometryPass::execute() {
-    m_framebuffer->bind();
-    m_api->setViewport(0, 0, m_framebuffer->getFormat().width, m_framebuffer->getFormat().height);
-    m_api->clear();
-    drawInto(nullptr);
+void GeometryPass::setup(RenderGraphBuilder& builder) {
+    // Create the scene colour as a graph-owned render target at the current render size; write it so
+    // this pass produces it (features/present that read it are ordered after) and so the graph binds
+    // it (and sizes the viewport) before execute().
+    ResourceDescriptor desc;
+    desc.width = m_width;
+    desc.height = m_height;
+    desc.debug_name = "scene_color";
+    m_color = builder.create<Framebuffer>(desc);  // create<> sets desc.type = RenderTarget
+    builder.write(m_color);
 }
 
-void GeometryPass::drawInto(ShaderProgram* override_shader) {
+void GeometryPass::execute(PassContext& ctx) {
+    // The graph bound our target (scene_color) and sized the viewport to it. Clear it and draw the
+    // frame's visible set. GPU-timed, as the geometry pass has always been.
+    m_api->beginGPUTimer();
+    m_api->clear();
+    if (ctx.hasFrame() && ctx.frame().commands) {
+        drawCommands(*ctx.frame().commands);
+    }
+    Profiler::get().addSample("GPU::geometry", m_api->endGPUTimer());
+}
+
+void GeometryPass::drawCommands(const std::vector<RenderCommand>& queue) {
     ShaderProgram* current_shader = nullptr;
     Material* current_material = nullptr;
     GPUMesh* current_mesh = nullptr;
@@ -32,11 +49,9 @@ void GeometryPass::drawInto(ShaderProgram* override_shader) {
     bool cur_cull = false, cur_depth_test = false, cur_depth_write = false, cur_blend = false;
     DepthFunc cur_depth_func = DepthFunc::Less;
 
-    for (const auto& command : *m_render_queue) {
-        // An override shader stands in for every command's own shader (and suppresses the
-        // material below); otherwise each command draws with its material's shader as usual.
-        ShaderProgram* shader = override_shader ? override_shader : command.shader;
-        Material* material = override_shader ? nullptr : command.material;
+    for (const auto& command : queue) {
+        auto& shader = command.shader;
+        auto& material = command.material;
         auto& mesh = command.mesh;
 
         if (!state_init || cur_cull != command.faceCulling) {
@@ -148,13 +163,4 @@ void GeometryPass::drawInto(ShaderProgram* override_shader) {
     // picking), since opaque commands turned it off.
     m_api->setBlend(true);
 }
-
-std::shared_ptr<Framebuffer> GeometryPass::getResult() const {
-    return m_framebuffer;
-}
-
-void GeometryPass::resize(int w, int h) {
-    m_framebuffer->resize(w, h);
-}
-
 }  // namespace ICE

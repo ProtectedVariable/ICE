@@ -15,8 +15,9 @@
 #include <vector>
 
 #include "Camera.h"
+#include "ForwardPipeline.h"
+#include "FrameContext.h"
 #include "Framebuffer.h"
-#include "GeometryPass.h"
 #include "InstanceData.h"
 #include "RenderCommand.h"
 #include "RenderGraph.h"
@@ -25,9 +26,7 @@
 
 namespace ICE {
 
-// IPassDrawer is implemented here (not on Renderer) because it is the pass-facing half of the
-// renderer: what a graph pass may ask it to draw, handed out through PassContext.
-class ForwardRenderer : public Renderer, public IPassDrawer {
+class ForwardRenderer : public Renderer {
    public:
     ForwardRenderer(const std::shared_ptr<RendererAPI> &api, const std::shared_ptr<GraphicsFactory> &factory,
                     const std::shared_ptr<GPURegistry> &gpu_registry);
@@ -38,7 +37,7 @@ class ForwardRenderer : public Renderer, public IPassDrawer {
 
     void prepareFrame(Camera &camera) override;
 
-    std::shared_ptr<Framebuffer> render() override;
+    void render() override;
 
     void endFrame() override;
 
@@ -53,22 +52,36 @@ class ForwardRenderer : public Renderer, public IPassDrawer {
     void addPass(std::unique_ptr<IRenderPass> pass) override;
     void addFeature(std::unique_ptr<RenderFeature> feature) override;
 
-    // --- IPassDrawer (what a graph pass can ask the renderer to draw) ---------------------------
-    void drawScene(Camera& camera, ShaderProgram* override_shader) override;
-    void fullscreen(ShaderProgram* shader) override;
+    void setPipeline(std::unique_ptr<Pipeline> pipeline) override {
+        if (pipeline) {
+            m_pipeline = std::move(pipeline);
+            m_graph_dirty = true;  // rebuild the graph with the new pipeline next frame
+        }
+    }
 
    private:
-    // Tear down and rebuild the frame's graph: import scene_color, add the geometry pass, let every
-    // registered feature contribute, then compile. Only called when m_graph_dirty (see render()).
+    // Tear down and rebuild the frame's graph by handing it to the pipeline (which declares the
+    // passes), then compile. Only called when m_graph_dirty (see render()).
     void rebuildGraph();
 
     // Upload `camera` into the shared camera UBO (what the geometry shaders read).
     void uploadCameraUBO(Camera& camera);
+
+    // Refresh the per-frame conduit handed to passes (see FrameContext). Called each frame before
+    // the graph executes; its address is stable so compiled pass callbacks read fresh data.
+    void updateFrameContext();
     std::shared_ptr<RendererAPI> m_api;
+    std::shared_ptr<GraphicsFactory> m_factory;
     std::shared_ptr<GPURegistry> m_gpu_registry;
     std::vector<RenderCommand> m_render_commands;
 
-    GeometryPass m_geometry_pass;
+    // Per-frame data + services passed to render passes (Phase 1 of the scriptable-pipeline
+    // migration). Populated but not yet consumed by any shipped pass.
+    FrameContext m_frame_context;
+
+    // The pipeline that assembles the frame's graph (Phase 4). Owns the built-in geometry/present
+    // passes; defaults to ForwardPipeline. Replaceable (Phase 6) to define a custom frame.
+    std::unique_ptr<Pipeline> m_pipeline;
     RenderGraph m_graph;
 
     // The graph is compiled once and re-executed each frame; this marks it for rebuild when
@@ -82,19 +95,21 @@ class ForwardRenderer : public Renderer, public IPassDrawer {
     std::shared_ptr<Framebuffer> m_present_target;
     std::shared_ptr<ShaderProgram> m_present_shader;
 
-    // The camera the current frame was prepared with (see prepareFrame). Borrowed for the frame
-    // only: drawScene() restores the camera UBO to it so a pass drawing from another point of view
-    // (a shadow pass) can't leak that view into later passes.
+    // The camera the current frame was prepared with (see prepareFrame), handed to passes through
+    // the frame context.
     Camera* m_frame_camera = nullptr;
+
+    // The current render size (set by resize, from the viewport). The geometry pass creates the
+    // scene-colour target at this size each rebuild.
+    uint32_t m_render_width = 1;
+    uint32_t m_render_height = 1;
 
     // Application-registered features, in registration order. Their passes are added to the graph
     // each time it is rebuilt (see rebuildGraph()).
     std::vector<std::unique_ptr<RenderFeature>> m_features;
 
-    // Owned by the renderer for the present pass: the full-screen quad the final blit draws, and
-    // the most recent render() result it composites from.
+    // The full-screen quad the present/post passes draw, shared through the frame context.
     std::shared_ptr<VertexArray> m_present_quad;
-    std::shared_ptr<Framebuffer> m_output_fb;
 
     std::shared_ptr<UniformBuffer> m_camera_ubo;
     std::shared_ptr<UniformBuffer> m_light_ubo;

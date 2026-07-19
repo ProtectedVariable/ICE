@@ -13,10 +13,13 @@
 #include <LightComponent.h>
 
 #include <memory>
+#include <optional>
+#include <vector>
 
 #include "Camera.h"
 #include "Context.h"
 #include "Framebuffer.h"
+#include "Pipeline.h"
 #include "RenderFeature.h"
 #include "RendererConfig.h"
 
@@ -77,6 +80,18 @@ struct Light {
     LightType type;
 };
 
+// Everything the renderer needs to draw one frame, produced by the RenderSystem and handed over in a
+// single drawFrame() call. The system produces the visible set; the renderer owns the frame's
+// structure (prepare + graph + present).
+struct FrameInputs {
+    Camera *camera = nullptr;                   // the frame's view
+    std::vector<Drawable> drawables;            // the culled, visible geometry
+    std::vector<Light> lights;
+    std::optional<Skybox> skybox;
+    std::shared_ptr<Framebuffer> outputTarget;  // present destination; null = window default framebuffer
+    std::shared_ptr<ShaderProgram> presentShader;
+};
+
 class Renderer {
    public:
     virtual ~Renderer() = default;
@@ -87,10 +102,31 @@ class Renderer {
     virtual void submitLight(const Light &e) = 0;
     virtual void prepareFrame(Camera &camera) = 0;
     // Render the frame end to end through the render graph -- geometry, application passes/features,
-    // and the final present blit are all graph passes. Returns the scene-colour target (the editor
-    // reads it for picking); the on-screen/off-screen composite is done by the graph's present pass.
-    virtual std::shared_ptr<Framebuffer> render() = 0;
+    // and the final present composite are all graph passes. Nothing is returned: what reaches the
+    // screen (or an off-screen target) is decided entirely by the pipeline's present pass.
+    virtual void render() = 0;
     virtual void endFrame() = 0;
+
+    // Draw one frame from a gathered input bundle: the single call the RenderSystem makes. The
+    // default orchestrates the frame through the primitives above (configure present, submit the
+    // visible set, prepare, render, end), so a backend gets it for free; a backend may override to
+    // consume the inputs more directly.
+    virtual void drawFrame(FrameInputs inputs) {
+        setPresentTarget(inputs.outputTarget);
+        setPresentShader(inputs.presentShader);
+        if (inputs.skybox) {
+            submitSkybox(*inputs.skybox);
+        }
+        for (auto &drawable : inputs.drawables) {
+            submitDrawable(std::move(drawable));
+        }
+        for (const auto &light : inputs.lights) {
+            submitLight(light);
+        }
+        prepareFrame(*inputs.camera);
+        render();
+        endFrame();
+    }
 
     // Where and how the frame's present pass composites the scene colour. Target nullptr = the
     // window's default framebuffer; a framebuffer = off-screen (the editor's render-to-texture
@@ -113,5 +149,11 @@ class Renderer {
     // Register a bundle of passes that belong together (shared state, one on/off switch). For a
     // lone pass use addPass(). Same ownership as addPass.
     virtual void addFeature(std::unique_ptr<RenderFeature>) {}
+
+    // Replace the pipeline that assembles the frame's graph. The engine installs a default
+    // (ForwardPipeline); an application swaps in its own to define a custom frame -- deferred
+    // shading, post-process chains, a different pass order -- since no pass is privileged. The graph
+    // is rebuilt with the new pipeline on the next frame. No-op for backends without a graph.
+    virtual void setPipeline(std::unique_ptr<Pipeline>) {}
 };
 }  // namespace ICE

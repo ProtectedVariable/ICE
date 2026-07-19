@@ -4,7 +4,6 @@
 #include <string>
 #include <vector>
 
-#include "PerspectiveCamera.h"
 #include "RenderFeature.h"
 
 using namespace ICE;
@@ -100,104 +99,20 @@ struct Frame {
     RenderGraph graph{std::shared_ptr<GraphicsFactory>(&factory, [](GraphicsFactory*) {})};
     std::shared_ptr<StubFramebuffer> scene_fb = std::make_shared<StubFramebuffer>(FrameBufferFormat{4, 4, 1});
 
-    void build(IRenderPass* pass, IPassDrawer* drawer = nullptr) {
+    void build(IRenderPass* pass) {
         graph.reset();
         auto scene_color = graph.importResource<Framebuffer>("scene_color", scene_fb);
         auto& geometry = graph.addPass("geometry");
         geometry.write("scene_color");
         geometry.setExecuteCallback([](const RenderGraphPass&) {});
         if (pass) {
-            addPassToGraph(graph, *pass, scene_color, nullptr, drawer);
+            addPassToGraph(graph, *pass, scene_color, nullptr);
         }
         graph.setOutput(scene_color);
         graph.compile();
     }
 };
-
-// Stands in for the renderer's half of the draw seam.
-class RecordingDrawer : public IPassDrawer {
-   public:
-    void drawScene(Camera& camera, ShaderProgram* override_shader) override {
-        draw_scene_calls++;
-        last_camera = &camera;
-        last_override = override_shader;
-    }
-    void fullscreen(ShaderProgram* shader) override {
-        fullscreen_calls++;
-        last_fullscreen_shader = shader;
-    }
-
-    int draw_scene_calls = 0;
-    int fullscreen_calls = 0;
-    Camera* last_camera = nullptr;
-    ShaderProgram* last_override = nullptr;
-    ShaderProgram* last_fullscreen_shader = nullptr;
-};
-
-// The acceptance shape: a shadow-style pass whose entire body is one drawScene() call from the
-// light's point of view with a depth shader.
-class ShadowStylePass : public IRenderPass {
-   public:
-    ShadowStylePass(Camera* light_camera, ShaderProgram* depth_shader) : m_light(light_camera), m_depth(depth_shader) {}
-    const char* name() const override { return "shadow"; }
-    void setup(RenderGraphBuilder& builder) override {
-        m_map = builder.create<Framebuffer>({.width = 2048, .height = 2048, .debug_name = "shadow_map"});
-        builder.write(m_map);
-        builder.write(builder.sceneColor());  // stay live
-    }
-    void execute(PassContext& ctx) override { ctx.drawScene(*m_light, m_depth); }
-
-   private:
-    Camera* m_light;
-    ShaderProgram* m_depth;
-    RenderResourceHandle<Framebuffer> m_map;
-};
 }  // namespace
-
-// A shadow-style pass authored purely through PassContext::drawScene(lightCamera, depthShader):
-// no target binding, no submission plumbing in the pass body.
-TEST(RenderGraphPoolingTest, ShadowStylePassDrawsSceneFromItsOwnCamera) {
-    PerspectiveCamera light_camera(90, 1.0f, 0.1f, 100.f);
-    // Only ever stored and compared by the drawer, never dereferenced.
-    auto* depth_shader = reinterpret_cast<ShaderProgram*>(0x1234);
-    ShadowStylePass pass(&light_camera, depth_shader);
-    RecordingDrawer drawer;
-    Frame frame;
-
-    frame.build(&pass, &drawer);
-    frame.graph.execute();
-
-    EXPECT_EQ(drawer.draw_scene_calls, 1);
-    EXPECT_EQ(drawer.last_camera, &light_camera);  // drew from the light, not the frame camera
-    EXPECT_EQ(drawer.last_override, depth_shader);
-    // Its 2048x2048 shadow map was allocated from the descriptor and bound for it.
-    EXPECT_EQ(frame.factory.framebuffers_created, 1);
-}
-
-// fullscreen() forwards to the renderer's present-quad draw -- the post-process primitive.
-TEST(RenderGraphPoolingTest, FullscreenForwardsToTheDrawer) {
-    class PostPass : public IRenderPass {
-       public:
-        explicit PostPass(ShaderProgram* shader) : m_shader(shader) {}
-        const char* name() const override { return "post"; }
-        void setup(RenderGraphBuilder& builder) override { builder.write(builder.sceneColor()); }
-        void execute(PassContext& ctx) override { ctx.fullscreen(m_shader); }
-
-       private:
-        ShaderProgram* m_shader;
-    };
-
-    auto* shader = reinterpret_cast<ShaderProgram*>(0x5678);
-    PostPass pass(shader);
-    RecordingDrawer drawer;
-    Frame frame;
-
-    frame.build(&pass, &drawer);
-    frame.graph.execute();
-
-    EXPECT_EQ(drawer.fullscreen_calls, 1);
-    EXPECT_EQ(drawer.last_fullscreen_shader, shader);
-}
 
 // The headline T5 property: executing many frames off one compile allocates nothing further. This
 // is what the old per-frame reset()/compile() broke the moment a pass called create<T>().

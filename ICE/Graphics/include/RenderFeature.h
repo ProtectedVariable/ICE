@@ -33,23 +33,11 @@
 #include <vector>
 
 #include "Camera.h"
+#include "FrameContext.h"
 #include "GraphicsAPI.h"
 #include "RenderGraph.h"
 
 namespace ICE {
-
-// The drawing the renderer performs on a pass's behalf, so a pass body is just draw calls instead
-// of hand-rolled submission. Implemented by the renderer; passes reach it through PassContext.
-class IPassDrawer {
-   public:
-    virtual ~IPassDrawer() = default;
-
-    // Draw the frame's visible geometry from `camera` into the currently bound target.
-    virtual void drawScene(Camera& camera, ShaderProgram* override_shader) = 0;
-
-    // Draw a full-screen quad with `shader` into the currently bound target.
-    virtual void fullscreen(ShaderProgram* shader) = 0;
-};
 
 // Setup-time API handed to a pass. Every resource a pass touches is named by a typed handle, so it
 // can only refer to resources that were actually declared -- there is no string to mistype and no
@@ -110,8 +98,21 @@ class RenderGraphBuilder {
     // output) of a post-process feature. Imported by the renderer before any feature's setup runs.
     RenderResourceHandle<Framebuffer> sceneColor() const { return m_scene_color; }
 
+    // Declare that this pass composites the frame to the backbuffer -- the window's default
+    // framebuffer, or the editor's render-to-texture target. The backbuffer is not a graph-managed
+    // framebuffer (there is no Framebuffer object for it), so the pass gets no graph-bound target and
+    // binds the real destination itself (see FrameContext::outputTarget). Declaring it makes this
+    // pass the graph's output, so it -- and everything it reads -- is never culled.
+    void presentsToBackbuffer() {
+        m_pass.write(kBackbuffer);
+        m_graph.setOutput(kBackbuffer);
+    }
+
     // The graph being built, for the rare pass that needs more than this builder exposes.
     RenderGraph& graph() { return m_graph; }
+
+    // Reserved resource name for the on-screen/editor destination declared by presentsToBackbuffer().
+    static constexpr const char* kBackbuffer = "backbuffer";
 
    private:
     RenderGraph& m_graph;
@@ -125,11 +126,12 @@ class RenderGraphBuilder {
 // here, and the renderer will draw for it -- so a pass body is draw calls, not setup boilerplate.
 class PassContext {
    public:
-    PassContext(RenderGraph& graph, const std::shared_ptr<RendererAPI>& api, IPassDrawer* drawer, std::shared_ptr<Framebuffer> target)
+    PassContext(RenderGraph& graph, const std::shared_ptr<RendererAPI>& api, std::shared_ptr<Framebuffer> target,
+                const FrameContext* frame = nullptr)
         : m_graph(graph),
           m_api(api),
-          m_drawer(drawer),
-          m_target(std::move(target)) {}
+          m_target(std::move(target)),
+          m_frame(frame) {}
 
     // The physical resource behind a handle. Null while the graph leaves a resource virtual --
     // today that is TextureCube/Buffer, which have no descriptor-based creation yet.
@@ -148,35 +150,19 @@ class PassContext {
     // buffer), clear it yourself first: ctx.api()->clear().
     const std::shared_ptr<Framebuffer>& target() const { return m_target; }
 
-    // Draw the frame's visible geometry from `camera` into this pass's target. `override_shader`
-    // replaces every command's shader and skips material uniforms, which is what a shadow pass
-    // wants:
-    //   ctx.drawScene(light_camera, depth_shader.get());
-    // Passing a different camera does not disturb the frame's main camera for later passes.
-    void drawScene(Camera& camera, ShaderProgram* override_shader = nullptr) {
-        if (m_drawer) {
-            m_drawer->drawScene(camera, override_shader);
-        }
-    }
-
-    // Draw a full-screen quad with `shader` into this pass's target -- the post-process primitive.
-    // Bind the inputs you sample on `shader` first:
-    //   ctx.get(m_scene)->bindAttachment(0);
-    //   shader->loadInt("uTexture", 0);
-    //   ctx.fullscreen(shader.get());
-    void fullscreen(ShaderProgram* shader) {
-        if (m_drawer) {
-            m_drawer->fullscreen(shader);
-        }
-    }
-
     RendererAPI* api() const { return m_api.get(); }
+
+    // The frame's data + services (visible set, camera, shared GPU resources). Valid when the graph
+    // was built by a renderer; null in graph-logic-only tests. As geometry/present become ordinary
+    // passes, this becomes how they reach the visible set instead of calling back into the renderer.
+    const FrameContext& frame() const { return *m_frame; }
+    bool hasFrame() const { return m_frame != nullptr; }
 
    private:
     RenderGraph& m_graph;
     std::shared_ptr<RendererAPI> m_api;
-    IPassDrawer* m_drawer = nullptr;  // null when a graph is built without a renderer (tests)
     std::shared_ptr<Framebuffer> m_target;
+    const FrameContext* m_frame = nullptr;  // per-frame data conduit; see frame()
 };
 
 // One pass contributed to the render graph.
@@ -250,13 +236,13 @@ class SinglePassFeature : public RenderFeature {
 // (re)builds the frame's graph -- which is what regenerates the pass's resource handles for the new
 // compile. The pass must outlive the graph's execution (the renderer owns both).
 inline void addPassToGraph(RenderGraph& graph, IRenderPass& pass, RenderResourceHandle<Framebuffer> scene_color,
-                           const std::shared_ptr<RendererAPI>& api, IPassDrawer* drawer = nullptr) {
+                           const std::shared_ptr<RendererAPI>& api, const FrameContext* frame = nullptr) {
     auto& graph_pass = graph.addPass(pass.name());
     RenderGraphBuilder builder(graph, graph_pass, scene_color);
     pass.setup(builder);
     const auto target = builder.targetHandle();
     IRenderPass* raw = &pass;
-    graph_pass.setExecuteCallback([&graph, raw, api, drawer, target](const RenderGraphPass&) {
+    graph_pass.setExecuteCallback([&graph, raw, api, target, frame](const RenderGraphPass&) {
         std::shared_ptr<Framebuffer> fb;
         if (target.valid()) {
             if (auto* resource = graph.resourceAt(target.index())) {
@@ -272,16 +258,18 @@ inline void addPassToGraph(RenderGraph& graph, IRenderPass& pass, RenderResource
                 api->setViewport(0, 0, static_cast<int>(fb->getFormat().width), static_cast<int>(fb->getFormat().height));
             }
         }
-        PassContext ctx(graph, api, drawer, fb);
+        // `frame` points at the renderer's stable per-frame context; it carries fresh data each
+        // frame even though this callback was captured once at compile time.
+        PassContext ctx(graph, api, fb, frame);
         raw->execute(ctx);
     });
 }
 
 // Add every pass a feature contributes, in declaration order.
 inline void addFeaturePasses(RenderGraph& graph, const RenderFeature& feature, RenderResourceHandle<Framebuffer> scene_color,
-                             const std::shared_ptr<RendererAPI>& api, IPassDrawer* drawer = nullptr) {
+                             const std::shared_ptr<RendererAPI>& api, const FrameContext* frame = nullptr) {
     for (const auto& pass : feature.passes()) {
-        addPassToGraph(graph, *pass, scene_color, api, drawer);
+        addPassToGraph(graph, *pass, scene_color, api, frame);
     }
 }
 }  // namespace ICE

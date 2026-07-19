@@ -12,7 +12,7 @@ class TransformComponent;
 // A Camera whose pose can come from an entity (its CameraComponent + TransformComponent), so the
 // engine's one "camera is a scene-owned object" exception becomes an ordinary component. This is
 // what Scene::camera()/cameraPtr() hand out, so every existing consumer -- the render system's
-// prepareFrame(Camera&), T5's drawScene(Camera&), the editor -- keeps working unchanged.
+// prepareFrame(Camera&), the editor -- keeps working unchanged.
 //
 // Two modes:
 //   * Free (default, no bound entity): behaves exactly like the scene-owned PerspectiveCamera it

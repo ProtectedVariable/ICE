@@ -5,7 +5,11 @@
 #include <string>
 #include <vector>
 
+#include "PerspectiveCamera.h"
+#include "Pipeline.h"
+#include "PresentPass.h"
 #include "RenderFeature.h"
+#include "Renderer.h"
 
 using namespace ICE;
 
@@ -296,4 +300,327 @@ TEST(RenderFeatureTest, UndeclaredHandleThrows) {
     RenderResourceHandle<Framebuffer> undeclared;
     EXPECT_FALSE(undeclared.valid());
     EXPECT_THROW(builder.read(undeclared), std::runtime_error);
+}
+
+namespace {
+// Records what it saw through ctx.frame(), so a test can assert the conduit delivered it.
+class FrameProbePass : public IRenderPass {
+   public:
+    const char* name() const override { return "frame_probe"; }
+    void setup(RenderGraphBuilder& b) override { b.write(b.sceneColor()); }
+    void execute(PassContext& ctx) override {
+        saw_frame = ctx.hasFrame();
+        if (saw_frame) {
+            camera = ctx.frame().camera;
+            commands = ctx.frame().commands;
+        }
+    }
+    bool saw_frame = false;
+    Camera* camera = nullptr;
+    const std::vector<RenderCommand>* commands = nullptr;
+};
+}  // namespace
+
+// Phase 1 of the scriptable-pipeline migration: the FrameContext the renderer injects reaches a pass
+// through PassContext::frame(), carrying this frame's data. (The pointers are sentinels -- only
+// compared, never dereferenced -- so no GL or real camera is needed.)
+TEST(RenderFeatureTest, FrameContextReachesPassThroughContext) {
+    RenderGraph graph(nullptr);
+    auto scene_fb = std::make_shared<StubFramebuffer>();
+    auto scene_color = graph.importResource<Framebuffer>("scene_color", scene_fb);
+
+    std::vector<RenderCommand> commands;
+    FrameContext frame;
+    frame.camera = reinterpret_cast<Camera*>(0xC0FFEE);
+    frame.commands = &commands;
+
+    FrameProbePass probe;
+    addPassToGraph(graph, probe, scene_color, /*api=*/nullptr, &frame);
+    graph.setOutput(scene_color);
+    graph.compile();
+    graph.execute();
+
+    EXPECT_TRUE(probe.saw_frame);
+    EXPECT_EQ(probe.camera, reinterpret_cast<Camera*>(0xC0FFEE));
+    EXPECT_EQ(probe.commands, &commands);
+}
+
+// A graph built without a renderer (the graph-logic tests) has no frame: hasFrame() is false rather
+// than frame() dereferencing null.
+TEST(RenderFeatureTest, NoFrameContextIsSafe) {
+    RenderGraph graph(nullptr);
+    auto scene_fb = std::make_shared<StubFramebuffer>();
+    auto scene_color = graph.importResource<Framebuffer>("scene_color", scene_fb);
+
+    FrameProbePass probe;
+    probe.saw_frame = true;  // ensure execute() actually flips it to false
+    addPassToGraph(graph, probe, scene_color, /*api=*/nullptr);  // no frame threaded
+    graph.setOutput(scene_color);
+    graph.compile();
+    graph.execute();
+
+    EXPECT_FALSE(probe.saw_frame);
+}
+
+// Phase 2: PresentPass declares the right resources in setup() -- it reads the scene colour and
+// writes the backbuffer output. (Structure only; execute() does GL and is not run here.)
+TEST(RenderFeatureTest, PresentPassDeclaresSceneColorAndBackbuffer) {
+    RenderGraph graph(nullptr);
+    auto scene_fb = std::make_shared<StubFramebuffer>();
+    auto scene_color = graph.importResource<Framebuffer>("scene_color", scene_fb);
+
+    auto& node = graph.addPass("present");
+    RenderGraphBuilder builder(graph, node, scene_color);
+    PresentPass present;
+    present.setup(builder);
+
+    const auto& reads = node.getReads();
+    const auto& writes = node.getWrites();
+    EXPECT_NE(std::find(reads.begin(), reads.end(), "scene_color"), reads.end());
+    EXPECT_NE(std::find(writes.begin(), writes.end(), "backbuffer"), writes.end());
+    // It declares no framebuffer *handle* write, so the graph binds it no target -- it binds the
+    // real backbuffer itself in execute().
+    EXPECT_FALSE(builder.targetHandle().valid());
+}
+
+// presentsToBackbuffer() makes a pass the graph's output, so it -- and the scene pass it reads --
+// survive culling and run.
+TEST(RenderFeatureTest, PresentsToBackbufferSurvivesCulling) {
+    struct Presenter : public IRenderPass {
+        explicit Presenter(bool* ran) : m_ran(ran) {}
+        const char* name() const override { return "presenter"; }
+        void setup(RenderGraphBuilder& b) override {
+            b.read(b.sceneColor());
+            b.presentsToBackbuffer();
+        }
+        void execute(PassContext&) override { *m_ran = true; }
+        bool* m_ran;
+    };
+
+    RenderGraph graph(nullptr);
+    auto scene_fb = std::make_shared<StubFramebuffer>();
+    auto scene_color = graph.importResource<Framebuffer>("scene_color", scene_fb);
+
+    bool scene_ran = false;
+    auto& scene = graph.addPass("scene");
+    scene.write("scene_color");
+    scene.setExecuteCallback([&](const RenderGraphPass&) { scene_ran = true; });
+
+    bool present_ran = false;
+    Presenter presenter(&present_ran);
+    addPassToGraph(graph, presenter, scene_color, nullptr);
+
+    graph.compile();
+    graph.execute();
+
+    EXPECT_TRUE(present_ran);  // not culled: presentsToBackbuffer() made it the output
+    EXPECT_TRUE(scene_ran);    // its input producer is kept too
+}
+
+namespace {
+// GL-free recording passes mirroring ForwardPipeline's built-ins, for a Pipeline structure test.
+class RecGeometry : public IRenderPass {
+   public:
+    explicit RecGeometry(std::vector<std::string>* order) : m_order(order) {}
+    const char* name() const override { return "geometry"; }
+    void setup(RenderGraphBuilder& b) override {
+        m_color = b.create<Framebuffer>({.width = 4, .height = 4, .debug_name = "scene_color"});
+        b.write(m_color);
+    }
+    void execute(PassContext&) override { m_order->push_back("geometry"); }
+    RenderResourceHandle<Framebuffer> color() const { return m_color; }
+
+   private:
+    std::vector<std::string>* m_order;
+    RenderResourceHandle<Framebuffer> m_color;
+};
+
+class RecFeaturePass : public IRenderPass {
+   public:
+    explicit RecFeaturePass(std::vector<std::string>* order) : m_order(order) {}
+    const char* name() const override { return "feature"; }
+    void setup(RenderGraphBuilder& b) override {
+        b.read(b.sceneColor());
+        b.write(b.sceneColor());  // write so present is ordered after it
+    }
+    void execute(PassContext&) override { m_order->push_back("feature"); }
+
+   private:
+    std::vector<std::string>* m_order;
+};
+
+class RecFeature : public RenderFeature {
+   public:
+    explicit RecFeature(std::vector<std::string>* order) { addPass<RecFeaturePass>(order); }
+    const char* name() const override { return "rec"; }
+};
+
+class RecPresent : public IRenderPass {
+   public:
+    explicit RecPresent(std::vector<std::string>* order) : m_order(order) {}
+    const char* name() const override { return "present"; }
+    void setup(RenderGraphBuilder& b) override {
+        b.read(b.sceneColor());
+        b.presentsToBackbuffer();
+    }
+    void execute(PassContext&) override { m_order->push_back("present"); }
+
+   private:
+    std::vector<std::string>* m_order;
+};
+
+// A pipeline mirroring ForwardPipeline's assembly (geometry -> features -> present) with the passes
+// above -- proving the Pipeline abstraction assembles and orders a frame with no privileged passes.
+class RecPipeline : public Pipeline {
+   public:
+    explicit RecPipeline(std::vector<std::string>* order) : m_geo(order), m_present(order) {}
+    void build(RenderGraph& graph, const PipelineContext& ctx) override {
+        addPassToGraph(graph, m_geo, {}, ctx.api, ctx.frame);
+        const auto scene_color = m_geo.color();
+        if (ctx.features) {
+            for (const auto& feature : *ctx.features) {
+                addFeaturePasses(graph, *feature, scene_color, ctx.api, ctx.frame);
+            }
+        }
+        addPassToGraph(graph, m_present, scene_color, ctx.api, ctx.frame);
+    }
+
+    RecGeometry m_geo;
+    RecPresent m_present;
+};
+}  // namespace
+
+// Phase 4: a pipeline assembles the whole frame -- geometry creates the scene colour, features run
+// over it, present composites -- with no privileged passes, and the graph orders them by the
+// resources they exchange. (GL-free: a null factory leaves targets virtual; passes just record.)
+TEST(RenderFeatureTest, PipelineAssemblesGeometryFeaturesPresentInOrder) {
+    std::vector<std::string> order;
+    std::vector<std::unique_ptr<RenderFeature>> features;
+    features.push_back(std::make_unique<RecFeature>(&order));
+
+    RecPipeline pipeline(&order);
+    RenderGraph graph(nullptr);
+    PipelineContext ctx;
+    ctx.api = nullptr;
+    ctx.frame = nullptr;
+    ctx.render_width = 4;
+    ctx.render_height = 4;
+    ctx.features = &features;
+
+    pipeline.build(graph, ctx);
+    graph.compile();
+    graph.execute();
+
+    ASSERT_EQ(order.size(), 3u);
+    EXPECT_EQ(order[0], "geometry");  // creates scene_color
+    EXPECT_EQ(order[1], "feature");   // reads+writes it
+    EXPECT_EQ(order[2], "present");   // reads it, is the output
+}
+
+namespace {
+// Records the primitive calls the default Renderer::drawFrame() makes, in order.
+class CallRecordingRenderer : public Renderer {
+   public:
+    std::vector<std::string> calls;
+    int drawables = 0, lights = 0;
+
+    void submitSkybox(const Skybox&) override { calls.push_back("skybox"); }
+    void submitDrawable(Drawable) override {
+        calls.push_back("drawable");
+        drawables++;
+    }
+    void submitLight(const Light&) override {
+        calls.push_back("light");
+        lights++;
+    }
+    void setPresentTarget(const std::shared_ptr<Framebuffer>&) override { calls.push_back("target"); }
+    void setPresentShader(const std::shared_ptr<ShaderProgram>&) override { calls.push_back("shader"); }
+    void prepareFrame(Camera&) override { calls.push_back("prepare"); }
+    void render() override { calls.push_back("render"); }
+    void endFrame() override { calls.push_back("end"); }
+    void resize(uint32_t, uint32_t) override {}
+    void setClearColor(Eigen::Vector4f) override {}
+    void setViewport(int, int, int, int) override {}
+};
+}  // namespace
+
+// Phase 5: the default drawFrame() orchestrates the frame through the primitives -- configure
+// present, submit the visible set, then prepare/render/end -- so the RenderSystem makes one call.
+TEST(RenderFeatureTest, DrawFrameOrchestratesThePrimitives) {
+    PerspectiveCamera camera(60.0, 16.0 / 9.0, 0.01, 100.0);
+    FrameInputs inputs;
+    inputs.camera = &camera;
+    inputs.skybox = Skybox{};
+    inputs.drawables.resize(2);  // two visible drawables
+    inputs.lights.resize(3);
+
+    CallRecordingRenderer renderer;
+    renderer.drawFrame(std::move(inputs));
+
+    EXPECT_EQ(renderer.drawables, 2);
+    EXPECT_EQ(renderer.lights, 3);
+    // present is configured, the visible set submitted, then prepare -> render -> end.
+    const std::vector<std::string> expected = {"target", "shader", "skybox", "drawable", "drawable",
+                                               "light",  "light",  "light",  "prepare",  "render", "end"};
+    EXPECT_EQ(renderer.calls, expected);
+}
+
+namespace {
+// A pipeline-owned overlay pass (not an app feature): reads + writes the scene colour.
+class OverlayPass : public IRenderPass {
+   public:
+    explicit OverlayPass(std::vector<std::string>* order) : m_order(order) {}
+    const char* name() const override { return "overlay"; }
+    void setup(RenderGraphBuilder& b) override {
+        b.read(b.sceneColor());
+        b.write(b.sceneColor());
+    }
+    void execute(PassContext&) override { m_order->push_back("overlay"); }
+
+   private:
+    std::vector<std::string>* m_order;
+};
+
+// A custom pipeline: geometry -> overlay -> present, with the overlay hardcoded in the pipeline (no
+// app features at all). Proves a pipeline defines its own structure and that geometry/present are
+// not privileged -- a Phase 6 replacement is free to restructure the frame.
+class OverlayPipeline : public Pipeline {
+   public:
+    explicit OverlayPipeline(std::vector<std::string>* order) : m_geo(order), m_overlay(order), m_present(order) {}
+    void build(RenderGraph& graph, const PipelineContext& ctx) override {
+        addPassToGraph(graph, m_geo, {}, ctx.api, ctx.frame);
+        const auto scene_color = m_geo.color();
+        addPassToGraph(graph, m_overlay, scene_color, ctx.api, ctx.frame);
+        addPassToGraph(graph, m_present, scene_color, ctx.api, ctx.frame);
+    }
+
+    RecGeometry m_geo;
+    OverlayPass m_overlay;
+    RecPresent m_present;
+};
+}  // namespace
+
+// Phase 6: a custom pipeline restructures the frame -- here inserting a pipeline-owned overlay pass
+// between geometry and present, with no app features. This is what setPipeline() installs; the graph
+// orders the passes by the scene colour they exchange.
+TEST(RenderFeatureTest, CustomPipelineDefinesItsOwnStructure) {
+    std::vector<std::string> order;
+    OverlayPipeline pipeline(&order);
+
+    RenderGraph graph(nullptr);
+    PipelineContext ctx;
+    ctx.api = nullptr;
+    ctx.frame = nullptr;
+    ctx.render_width = 4;
+    ctx.render_height = 4;
+    ctx.features = nullptr;
+
+    pipeline.build(graph, ctx);
+    graph.compile();
+    graph.execute();
+
+    ASSERT_EQ(order.size(), 3u);
+    EXPECT_EQ(order[0], "geometry");
+    EXPECT_EQ(order[1], "overlay");  // the pipeline's own pass, between geometry and present
+    EXPECT_EQ(order[2], "present");
 }
