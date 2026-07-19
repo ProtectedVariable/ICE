@@ -62,11 +62,18 @@ class NativeScript {
     double time() const { return m_time; }
 
     // Spawn another entity into this script's scene and return a handle to its root. Forwards to
-    // Scene::spawn (a model id today; Prefab support lands in T7). A template so a script only
-    // needs Scene complete (include <Scene.h>) when it actually instantiates.
-    template<typename... Args>
+    // Scene::spawn (a model id today; Prefab support lands in T7). A script only needs Scene
+    // complete (include <Scene.h>) when it actually instantiates.
+    //
+    // The SceneT default parameter is deliberate: Scene is only forward-declared here, so
+    // `scene()->spawn(...)` must not be checked until instantiation. Casting through the template
+    // parameter SceneT makes the member access dependent, which defers the completeness check to
+    // the call site under two-phase lookup (GCC/Clang). A plain `template<typename... Args>` left
+    // `scene()->spawn` non-dependent, so it was checked here -- a hard error on a forward-declared
+    // Scene (MSVC accepted it; other compilers did not).
+    template<typename SceneT = Scene, typename... Args>
     EntityHandle instantiate(Args&&... args) {
-        return scene()->spawn(std::forward<Args>(args)...);
+        return static_cast<SceneT*>(scene())->spawn(std::forward<Args>(args)...);
     }
 
     // Mark this entity for destruction. Teardown (onDestroy + component/entity removal) is deferred
