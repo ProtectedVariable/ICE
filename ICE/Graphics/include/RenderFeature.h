@@ -136,7 +136,7 @@ class PassContext {
     template<typename T>
     std::shared_ptr<T> get(RenderResourceHandle<T> handle) const {
         auto* resource = m_graph.resourceAt(handle.index());
-        return resource ? resource->getPhysicalResourceAs<T>() : nullptr;
+        return resource ? resource->template getPhysicalResourceAs<T>() : nullptr;
     }
 
     // This pass's render target (its first declared framebuffer write). Already bound, with the

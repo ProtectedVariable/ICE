@@ -49,8 +49,8 @@ TEST(UIInteractionTest, ComputeBoundsResolvesRelativeToParent) {
 TEST(UIInteractionTest, NegativeCoordinateAnchorsToFarEdge) {
     UIRect r("r", {-0.0f, -0.0f}, {0.25f, 0.25f}, {1, 1, 1, 1});
     // -0.0 is >= 0, so use a clearly-negative anchor instead:
-    UIRect far("far", {-0.1f, -0.2f}, {0.2f, 0.1f}, {1, 1, 1, 1});
-    const UIBound b = far.computeBounds(kViewport);
+    UIRect far_("far", {-0.1f, -0.2f}, {0.2f, 0.1f}, {1, 1, 1, 1});
+    const UIBound b = far_.computeBounds(kViewport);
     // width 160 (0.2*800), anchored so its right edge is 0.1*800=80 in from the right: x = 800-80-160
     EXPECT_FLOAT_EQ(b.width, 160.0f);
     EXPECT_FLOAT_EQ(b.x, 800.0f - 80.0f - 160.0f);
