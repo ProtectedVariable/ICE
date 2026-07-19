@@ -46,7 +46,7 @@ void OpenGLVertexArray::pushVertexBuffer(const std::shared_ptr<VertexBuffer>& bu
     if (size == 16) {  // mat4 = 4 * vec4
         for (int i = 0; i < 4; i++) {
             glEnableVertexAttribArray(position + i);
-            glVertexAttribPointer(position + i, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 16, (void*)(sizeof(float) * 4 * i));
+            glVertexAttribPointer(position + i, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 16, reinterpret_cast<void *>(sizeof(float) * 4 * i));
             glVertexAttribDivisor(position + i, divisor);
         }
         cnt = (position + 4) > cnt ? position + 4 : cnt;
