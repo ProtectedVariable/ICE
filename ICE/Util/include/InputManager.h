@@ -22,6 +22,7 @@ class InputManager {
 
   float getMouseX();
   float getMouseY();
+  float getMouseAngle();
 
   // Cursor movement since the previous update() (frame-to-frame). Zero until the cursor is first
   // seen, so there is no spurious jump on the first frame / after (re)gaining focus.
