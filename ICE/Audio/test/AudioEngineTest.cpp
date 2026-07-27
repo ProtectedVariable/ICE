@@ -139,13 +139,13 @@ TEST(AudioEngineTest, EqualPriorityTieIsBrokenByAudibility) {
     Fixture f(2);
     f.audio->setListener({});  // listener at the origin
     // Same priority; the distant one is quieter at the listener and should lose.
-    auto near = f.audio->playAt(f.mono, {1.0f, 0.0f, 0.0f}, {.priority = 100});
-    auto far = f.audio->playAt(f.mono, {900.0f, 0.0f, 0.0f}, {.priority = 100});
+    auto near_ = f.audio->playAt(f.mono, {1.0f, 0.0f, 0.0f}, {.priority = 100});
+    auto far_ = f.audio->playAt(f.mono, {900.0f, 0.0f, 0.0f}, {.priority = 100});
 
     auto incoming = f.audio->playAt(f.mono, {2.0f, 0.0f, 0.0f}, {.priority = 100});
     ASSERT_TRUE(incoming.valid());
-    EXPECT_TRUE(f.audio->isPlaying(near)) << "the closer, louder voice should survive";
-    EXPECT_FALSE(f.audio->isPlaying(far));
+    EXPECT_TRUE(f.audio->isPlaying(near_)) << "the closer, louder voice should survive";
+    EXPECT_FALSE(f.audio->isPlaying(far_));
 }
 
 // --- Gain, mute, listener -----------------------------------------------------------------------
