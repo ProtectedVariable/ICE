@@ -33,6 +33,15 @@ class NullAudioBackend : public IAudioBackend {
         }
         return m_voices.insert(PlaybackState::Playing);
     }
+    // Streaming behaves exactly like a resident voice here: silent either way, but it keeps the
+    // voice accounting identical so code paths that depend on acquisition failing under load
+    // behave the same on the null backend.
+    VoiceHandle acquireStreamingVoice(const std::shared_ptr<IAudioStream>&, const VoiceDesc&) override {
+        if (m_voices.size() >= m_capacity) {
+            return {};
+        }
+        return m_voices.insert(PlaybackState::Playing);
+    }
     void releaseVoice(VoiceHandle voice) override { m_voices.erase(voice); }
 
     void setVoiceParams(VoiceHandle, const VoiceParams&) override {}

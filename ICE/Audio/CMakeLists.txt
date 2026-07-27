@@ -11,6 +11,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     src/AudioClipLoader.cpp
     src/AudioRegistry.cpp
     src/AudioEngine.cpp
+    src/FileAudioStream.cpp
 )
 
 # Backend-agnostic audio layer. Deliberately does NOT link `graphics`, `scene` or `system`: the
@@ -20,7 +21,8 @@ target_link_libraries(${PROJECT_NAME}
     PUBLIC
     assets      # AudioClip is a CPU-side Asset, and this is where AssetUID/AssetPath live
     math
-    container   # VoicePool is a HandlePool (generational handles, same as the GPU pools)
+    container       # VoicePool is a HandlePool (generational handles, same as the GPU pools)
+    multithreading  # streaming decode runs as detached jobs on the shared JobScheduler
     PRIVATE
     dr_libs     # wav / mp3 / flac decoding -- implementation detail, not in the public headers
     stb_vorbis  # ogg vorbis decoding

@@ -1,8 +1,10 @@
 #pragma once
 
 #include <IAudioBackend.h>
+#include <IAudioStream.h>
 
 #include <algorithm>
+#include <memory>
 #include <vector>
 
 namespace ICE {
@@ -51,6 +53,16 @@ class MockAudioBackend : public IAudioBackend {
         }
         return m_voices.insert(VoiceRecord{buffer, desc, desc.params, PlaybackState::Stopped, false});
     }
+    VoiceHandle acquireStreamingVoice(const std::shared_ptr<IAudioStream>& stream, const VoiceDesc& desc) override {
+        ++streamingAcquireCount;
+        lastStream = stream;
+        if (m_voices.size() >= m_capacity) {
+            ++acquireFailures;
+            return {};
+        }
+        return m_voices.insert(VoiceRecord{AudioBufferHandle{}, desc, desc.params, PlaybackState::Stopped, false});
+    }
+
     void releaseVoice(VoiceHandle voice) override {
         if (m_voices.erase(voice)) {
             ++releaseVoiceCount;
@@ -109,6 +121,8 @@ class MockAudioBackend : public IAudioBackend {
     int acquireFailures = 0;
     int setListenerCount = 0;
     int updateCount = 0;
+    int streamingAcquireCount = 0;
+    std::shared_ptr<IAudioStream> lastStream;
 
    private:
     HandlePool<VoiceRecord, VoiceTag> m_voices;

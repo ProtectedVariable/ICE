@@ -19,6 +19,12 @@ class AudioClip : public Asset {
     AudioClip() = default;
     AudioClip(std::vector<int16_t> samples, uint32_t channels, uint32_t sampleRate);
 
+    // Streaming clip: format and length are known from the file header, but no PCM is resident --
+    // it is decoded incrementally at playback time. This is how multi-minute music avoids holding
+    // tens of megabytes of samples in RAM. `frameCount` may be 0 if the format cannot report a
+    // length cheaply; nothing depends on it being exact.
+    static AudioClip Streaming(uint32_t channels, uint32_t sampleRate, uint64_t frameCount);
+
     AssetType getType() const override { return AssetType::EAudioClip; }
     std::string getTypeName() const override { return "AudioClip"; }
 
@@ -36,13 +42,21 @@ class AudioClip : public Asset {
     // enforced where a clip is used spatially rather than being left to callers to remember.
     bool isMono() const { return m_channels == 1; }
 
-    // A clip with no samples: a failed decode, or a default-constructed placeholder.
-    bool isEmpty() const { return m_samples.empty() || m_channels == 0; }
+    // Decoded on demand rather than held in memory. A streaming clip has no samples() to upload:
+    // playback goes through IAudioStream and a queued-buffer voice instead.
+    bool isStreaming() const { return m_streaming; }
+
+    // A clip with nothing usable: a failed decode, or a default-constructed placeholder. A
+    // streaming clip is NOT empty despite having no samples -- its content lives in its source
+    // file, so emptiness is decided by the format instead.
+    bool isEmpty() const { return m_streaming ? m_channels == 0 : (m_samples.empty() || m_channels == 0); }
 
    private:
-    std::vector<int16_t> m_samples;  // interleaved, channels * frameCount entries
+    std::vector<int16_t> m_samples;  // interleaved, channels * frameCount entries; empty if streaming
     uint32_t m_channels = 0;
     uint32_t m_sample_rate = 0;
+    bool m_streaming = false;
+    uint64_t m_streaming_frames = 0;  // header-reported length; only meaningful when streaming
 };
 
 }  // namespace ICE

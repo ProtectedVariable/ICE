@@ -2,8 +2,12 @@
 
 #include <AudioClip.h>
 #include <HandlePool.h>
+#include <IAudioStream.h>
+#include <JobScheduler.h>
 
 #include <algorithm>
+#include <array>
+#include <atomic>
 #include <vector>
 
 #include "ALCheck.h"
@@ -28,11 +32,50 @@ ALenum formatFor(const AudioClip& clip) {
 
 }  // namespace
 
+// Streaming tuning. Four chunks of ~0.35s gives well over a second of buffered audio -- enough to
+// absorb a stalled frame or a slow decode without the source running dry, while keeping the memory
+// per streaming voice modest (a few hundred KB).
+constexpr std::size_t kStreamChunks = 4;
+constexpr double kStreamChunkSeconds = 0.35;
+
+// Per-chunk handoff between the decode job (producer) and update() (consumer).
+enum class ChunkState : uint8_t { Empty, Filling, Ready };
+
+// Shared state for one streaming voice, held by shared_ptr so an in-flight decode job keeps it
+// alive even if the voice is released mid-decode. That is what makes teardown lock-free: release
+// just sets `cancelled` and drops the backend's reference; the job observes the flag, stops, and
+// the state dies with the last reference. Nothing ever joins a decode job, so nothing can deadlock.
+struct StreamState {
+    std::shared_ptr<IAudioStream> stream;
+
+    struct Chunk {
+        std::vector<int16_t> pcm;                          // sized for kStreamChunkSeconds
+        uint64_t frames = 0;                               // valid frames in pcm
+        std::atomic<ChunkState> state{ChunkState::Empty};  // producer/consumer handoff
+    };
+    std::array<Chunk, kStreamChunks> chunks;
+
+    std::atomic<bool> decoding{false};   // exactly one decode job in flight at a time
+    std::atomic<bool> cancelled{false};  // set by releaseVoice; the job bails out
+    std::atomic<bool> eof{false};        // stream exhausted and not looping
+    bool looping = false;
+
+    uint32_t channels = 0;
+    uint32_t sample_rate = 0;
+    ALenum format = AL_FORMAT_MONO16;
+};
+
 // A voice is a borrowed source id plus the buffer it is playing. The id comes from the fixed set
-// allocated at initialize() and returns to the free list on release.
+// allocated at initialize() and returns to the free list on release. A streaming voice instead
+// owns its own queue of AL buffers, fed from `stream`.
 struct OpenALVoice {
     ALuint source = 0;
     AudioBufferHandle buffer;
+
+    // Streaming only (null for a resident voice).
+    std::shared_ptr<StreamState> stream;
+    std::vector<ALuint> queue_buffers;  // owned by this voice, deleted on release
+    std::vector<ALuint> free_buffers;   // subset of queue_buffers not currently queued on the source
 };
 
 struct OpenALBackend::Impl {
@@ -46,7 +89,53 @@ struct OpenALBackend::Impl {
     // Source ids allocated up front and handed out by acquireVoice.
     std::vector<ALuint> all_sources;
     std::vector<ALuint> free_sources;
+
+    std::shared_ptr<JobScheduler> scheduler;  // optional; decode runs inline without it
+    std::size_t underruns = 0;
 };
+
+namespace {
+// Decode into every Empty chunk we can, in place. Runs on a worker thread (or inline when there is
+// no scheduler) and touches ONLY the stream and its staging chunks -- never OpenAL. That is the
+// invariant that keeps every al* call on the main thread.
+void decodeChunks(const std::shared_ptr<StreamState>& state) {
+    for (auto& chunk : state->chunks) {
+        if (state->cancelled.load(std::memory_order_acquire)) {
+            break;
+        }
+        ChunkState expected = ChunkState::Empty;
+        if (!chunk.state.compare_exchange_strong(expected, ChunkState::Filling, std::memory_order_acq_rel)) {
+            continue;  // already Ready, or being consumed
+        }
+
+        const uint64_t capacity_frames = chunk.pcm.size() / state->channels;
+        uint64_t got = state->stream->read(chunk.pcm.data(), capacity_frames);
+
+        // End of the sound: rewind and keep filling the same chunk so the loop point falls inside
+        // a chunk rather than leaving a silent gap at the queue boundary.
+        if (got < capacity_frames) {
+            if (state->looping) {
+                state->stream->rewind();
+                while (got < capacity_frames) {
+                    const uint64_t more = state->stream->read(chunk.pcm.data() + got * state->channels, capacity_frames - got);
+                    if (more == 0) {
+                        break;  // empty or unreadable stream; avoid spinning forever
+                    }
+                    got += more;
+                }
+            } else if (got == 0) {
+                state->eof.store(true, std::memory_order_release);
+                chunk.state.store(ChunkState::Empty, std::memory_order_release);
+                break;
+            }
+        }
+
+        chunk.frames = got;
+        chunk.state.store(got > 0 ? ChunkState::Ready : ChunkState::Empty, std::memory_order_release);
+    }
+    state->decoding.store(false, std::memory_order_release);
+}
+}  // namespace
 
 OpenALBackend::OpenALBackend() : m_impl(std::make_unique<Impl>()) {}
 
@@ -202,13 +291,147 @@ VoiceHandle OpenALBackend::acquireVoice(AudioBufferHandle buffer, const VoiceDes
     return handle;
 }
 
+VoiceHandle OpenALBackend::acquireStreamingVoice(const std::shared_ptr<IAudioStream>& stream, const VoiceDesc& desc) {
+    if (!isAvailable() || stream == nullptr || !stream->isValid() || m_impl->free_sources.empty()) {
+        return {};
+    }
+    const uint32_t channels = stream->getChannels();
+    const uint32_t rate = stream->getSampleRate();
+    if (channels == 0 || rate == 0) {
+        return {};
+    }
+
+    auto state = std::make_shared<StreamState>();
+    state->stream = stream;
+    state->channels = channels;
+    state->sample_rate = rate;
+    state->format = channels == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16;
+    state->looping = desc.params.looping;
+
+    const auto frames_per_chunk = static_cast<std::size_t>(kStreamChunkSeconds * rate);
+    for (auto& chunk : state->chunks) {
+        chunk.pcm.resize(frames_per_chunk * channels);
+    }
+
+    // Prime synchronously so playback can begin this frame rather than after a decode round-trip.
+    decodeChunks(state);
+
+    const ALuint source = m_impl->free_sources.back();
+    m_impl->free_sources.pop_back();
+
+    OpenALVoice voice;
+    voice.source = source;
+    voice.stream = state;
+    voice.queue_buffers.resize(kStreamChunks);
+    alGetError();
+    alGenBuffers(static_cast<ALsizei>(kStreamChunks), voice.queue_buffers.data());
+    if (ALenum err = alGetError(); err != AL_NO_ERROR) {
+        Logger::Log(Logger::ERROR, "Audio", "alGenBuffers for a streaming voice failed: %s", alErrorString(err));
+        m_impl->free_sources.push_back(source);
+        return {};
+    }
+    // All of this voice's buffers start unqueued and available to fill.
+    voice.free_buffers = voice.queue_buffers;
+
+    // A streaming source must have no static buffer attached, and AL_LOOPING must stay off: on a
+    // queued-buffer source it would loop the individual queued chunk instead of the sound.
+    AL_CHECK(alSourcei(source, AL_BUFFER, 0));
+    AL_CHECK(alSourcei(source, AL_LOOPING, AL_FALSE));
+
+    VoiceHandle handle = m_impl->voices.insert(std::move(voice));
+    setVoiceParams(handle, desc.params);
+    pumpStream(handle);  // queue the primed chunks
+    return handle;
+}
+
+// Move decoded chunks into the source's AL queue and keep the decoder ahead of playback. Main
+// thread only -- every al* call in the streaming path lives here.
+void OpenALBackend::pumpStream(VoiceHandle handle) {
+    OpenALVoice* v = m_impl->voices.get(handle);
+    if (v == nullptr || v->stream == nullptr) {
+        return;
+    }
+    auto& state = v->stream;
+
+    // 1. Reclaim buffers the device has finished with.
+    ALint processed = 0;
+    alGetSourcei(v->source, AL_BUFFERS_PROCESSED, &processed);
+    while (processed-- > 0) {
+        ALuint done = 0;
+        AL_CHECK(alSourceUnqueueBuffers(v->source, 1, &done));
+        v->free_buffers.push_back(done);
+    }
+
+    // 2. Queue every ready chunk into a free buffer.
+    for (auto& chunk : state->chunks) {
+        if (v->free_buffers.empty()) {
+            break;
+        }
+        if (chunk.state.load(std::memory_order_acquire) != ChunkState::Ready) {
+            continue;
+        }
+        const ALuint buffer = v->free_buffers.back();
+        v->free_buffers.pop_back();
+
+        AL_CHECK(alBufferData(buffer, state->format, chunk.pcm.data(),
+                              static_cast<ALsizei>(chunk.frames * state->channels * sizeof(int16_t)),
+                              static_cast<ALsizei>(state->sample_rate)));
+        AL_CHECK(alSourceQueueBuffers(v->source, 1, &buffer));
+        chunk.state.store(ChunkState::Empty, std::memory_order_release);
+    }
+
+    // 3. Keep the decoder ahead. One job at a time per stream, so the stream object is never
+    //    touched concurrently and needs no lock of its own.
+    bool expected = false;
+    if (!state->eof.load(std::memory_order_acquire) && state->decoding.compare_exchange_strong(expected, true)) {
+        auto captured = state;  // shared_ptr: outlives the voice if it is released mid-decode
+        if (m_impl->scheduler) {
+            m_impl->scheduler->submit([captured] { decodeChunks(captured); });
+        } else {
+            decodeChunks(captured);  // no scheduler: correct, but spikes this frame
+        }
+    }
+
+    // 4. Underrun recovery. A source that ran dry stops on its own; restart it once audio is
+    //    queued again. Without this a single late refill would silence the music permanently.
+    ALint queued = 0;
+    ALint state_al = 0;
+    alGetSourcei(v->source, AL_BUFFERS_QUEUED, &queued);
+    alGetSourcei(v->source, AL_SOURCE_STATE, &state_al);
+    if (queued > 0 && state_al == AL_STOPPED) {
+        ++m_impl->underruns;
+        AL_CHECK(alSourcePlay(v->source));
+    }
+}
+
 void OpenALBackend::releaseVoice(VoiceHandle voice) {
     OpenALVoice* v = m_impl->voices.get(voice);
     if (v == nullptr) {
         return;  // stale handle -- exactly what the generation check is for
     }
     AL_CHECK(alSourceStop(v->source));
-    AL_CHECK(alSourcei(v->source, AL_BUFFER, 0));  // detach so the buffer can be deleted later
+
+    if (v->stream != nullptr) {
+        // Tell any in-flight decode job to stop. We do NOT wait for it: the job holds its own
+        // shared_ptr to the stream state, so it can finish harmlessly against state that no longer
+        // belongs to a voice. Nothing joins, so a stop during a refill cannot deadlock.
+        v->stream->cancelled.store(true, std::memory_order_release);
+
+        // Unqueue everything before deleting: OpenAL refuses to delete a queued buffer.
+        ALint processed = 0;
+        alGetSourcei(v->source, AL_BUFFERS_PROCESSED, &processed);
+        while (processed-- > 0) {
+            ALuint done = 0;
+            alSourceUnqueueBuffers(v->source, 1, &done);
+        }
+        AL_CHECK(alSourcei(v->source, AL_BUFFER, 0));  // detaches any still-queued buffers
+        if (!v->queue_buffers.empty()) {
+            AL_CHECK(alDeleteBuffers(static_cast<ALsizei>(v->queue_buffers.size()), v->queue_buffers.data()));
+        }
+    } else {
+        AL_CHECK(alSourcei(v->source, AL_BUFFER, 0));  // detach so the buffer can be deleted later
+    }
+
     m_impl->free_sources.push_back(v->source);
     m_impl->voices.erase(voice);
 }
@@ -222,7 +445,13 @@ void OpenALBackend::setVoiceParams(VoiceHandle voice, const VoiceParams& params)
 
     AL_CHECK(alSourcef(source, AL_GAIN, params.gain));
     AL_CHECK(alSourcef(source, AL_PITCH, params.pitch));
-    AL_CHECK(alSourcei(source, AL_LOOPING, params.looping ? AL_TRUE : AL_FALSE));
+    if (v->stream != nullptr) {
+        // Never set AL_LOOPING on a queued-buffer source: it would loop whichever chunk is
+        // currently queued instead of the sound. Streamed looping is the decoder rewinding.
+        v->stream->looping = params.looping;
+    } else {
+        AL_CHECK(alSourcei(source, AL_LOOPING, params.looping ? AL_TRUE : AL_FALSE));
+    }
 
     if (params.spatial) {
         AL_CHECK(alSourcei(source, AL_SOURCE_RELATIVE, AL_FALSE));
@@ -261,7 +490,24 @@ bool OpenALBackend::isVoiceActive(VoiceHandle voice) const {
     }
     ALint state = 0;
     alGetSourcei(v->source, AL_SOURCE_STATE, &state);
-    return state == AL_PLAYING || state == AL_PAUSED;
+    if (state == AL_PLAYING || state == AL_PAUSED) {
+        return true;
+    }
+
+    // A streaming voice that momentarily ran dry reports AL_STOPPED even though the sound is not
+    // over. Reporting it inactive would make AudioEngine reclaim it and the music would vanish on
+    // the first hitch. It is finished only once the decoder hit EOF *and* the queue has drained.
+    if (v->stream != nullptr && !v->stream->eof.load(std::memory_order_acquire)) {
+        return true;
+    }
+    if (v->stream != nullptr) {
+        ALint queued = 0;
+        alGetSourcei(v->source, AL_BUFFERS_QUEUED, &queued);
+        ALint processed = 0;
+        alGetSourcei(v->source, AL_BUFFERS_PROCESSED, &processed);
+        return queued > processed;  // audio still pending on the device
+    }
+    return false;
 }
 
 std::size_t OpenALBackend::activeVoiceCount() const {
@@ -287,8 +533,29 @@ void OpenALBackend::setListener(const ListenerState& listener) {
 }
 
 void OpenALBackend::update(double /*delta*/) {
-    // Nothing to do in phase 1: mixing runs on OpenAL's own thread and finished-voice reclamation
-    // is driven by AudioEngine polling isVoiceActive. Phase 4's streaming refill hooks in here.
+    // Mixing runs on OpenAL's own thread and finished-voice reclamation is driven by AudioEngine
+    // polling isVoiceActive. What remains here is the streaming refill: all of it main-thread, with
+    // only the decode itself pushed onto the scheduler.
+    if (!isAvailable()) {
+        return;
+    }
+    std::vector<VoiceHandle> streaming;
+    m_impl->voices.forEachHandle([&](VoiceHandle handle, OpenALVoice& voice) {
+        if (voice.stream != nullptr) {
+            streaming.push_back(handle);
+        }
+    });
+    for (VoiceHandle handle : streaming) {
+        pumpStream(handle);
+    }
+}
+
+void OpenALBackend::setScheduler(const std::shared_ptr<JobScheduler>& scheduler) {
+    m_impl->scheduler = scheduler;
+}
+
+std::size_t OpenALBackend::streamUnderrunCount() const {
+    return m_impl->underruns;
 }
 
 }  // namespace ICE

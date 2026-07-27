@@ -29,7 +29,11 @@ VoiceHandle AudioEngine::play(AssetUID clip, const PlayParams& params) {
     desc.params.pitch = params.pitch;
     desc.params.looping = params.loop;
     desc.params.spatial = false;
-    return playVoice(desc);
+    VoiceHandle voice = playVoice(desc);
+    if (voice.valid() && params.fadeInSeconds > 0.0f) {
+        fadeIn(voice, params.volume, params.fadeInSeconds);
+    }
+    return voice;
 }
 
 VoiceHandle AudioEngine::playAt(AssetUID clip, const Eigen::Vector3f& position, const PlayParams& params) {
@@ -42,7 +46,11 @@ VoiceHandle AudioEngine::playAt(AssetUID clip, const Eigen::Vector3f& position, 
     desc.params.looping = params.loop;
     desc.params.spatial = true;
     desc.params.position = position;
-    return playVoice(desc);
+    VoiceHandle voice = playVoice(desc);
+    if (voice.valid() && params.fadeInSeconds > 0.0f) {
+        fadeIn(voice, params.volume, params.fadeInSeconds);
+    }
+    return voice;
 }
 
 VoiceHandle AudioEngine::playVoice(const VoiceDesc& desc) {
@@ -50,9 +58,17 @@ VoiceHandle AudioEngine::playVoice(const VoiceDesc& desc) {
         return {};
     }
 
-    AudioBufferHandle buffer = m_registry->getBuffer(desc.clip);
-    if (!buffer.valid()) {
-        return {};  // unknown, still loading, or failed to decode -- silent, not fatal
+    auto clip_asset = m_registry->getClip(desc.clip);
+    const bool streaming = clip_asset != nullptr && clip_asset->isStreaming();
+
+    // A resident clip needs its buffer uploaded up front; a streaming one is fed incrementally and
+    // has no buffer to upload at all.
+    AudioBufferHandle buffer;
+    if (!streaming) {
+        buffer = m_registry->getBuffer(desc.clip);
+        if (!buffer.valid()) {
+            return {};  // unknown, still loading, or failed to decode -- silent, not fatal
+        }
     }
 
     VoiceDesc effective = desc;
@@ -74,12 +90,22 @@ VoiceHandle AudioEngine::playVoice(const VoiceDesc& desc) {
         }
     }
 
-    VoiceHandle voice = m_backend->acquireVoice(buffer, effective);
+    // Each streaming voice opens its own decoder handle, so the same music clip can legitimately
+    // play twice at once (e.g. mid-crossfade) with independent read positions.
+    auto acquire = [&]() -> VoiceHandle {
+        if (!streaming) {
+            return m_backend->acquireVoice(buffer, effective);
+        }
+        auto stream = m_registry->openStream(desc.clip);
+        return stream == nullptr ? VoiceHandle{} : m_backend->acquireStreamingVoice(stream, effective);
+    };
+
+    VoiceHandle voice = acquire();
     if (!voice.valid()) {
         if (!steal(effective)) {
             return {};  // everything playing is more important than this
         }
-        voice = m_backend->acquireVoice(buffer, effective);
+        voice = acquire();
         if (!voice.valid()) {
             return {};
         }
@@ -92,7 +118,8 @@ VoiceHandle AudioEngine::playVoice(const VoiceDesc& desc) {
     m_backend->setVoiceParams(voice, device_params);
     m_backend->setVoiceState(voice, PlaybackState::Playing);
 
-    m_active.push_back({voice, effective});
+    ActiveVoice active{voice, effective, Fade{}};
+    m_active.push_back(active);
     return voice;
 }
 
@@ -164,6 +191,14 @@ void AudioEngine::setMuted(bool muted) {
     setMasterGain(m_master_gain);  // re-push through the same path
 }
 
+void AudioEngine::setSuspended(bool suspended) {
+    if (m_suspended == suspended) {
+        return;
+    }
+    m_suspended = suspended;
+    setMasterGain(m_master_gain);  // same re-push path; effectiveGain folds in the new state
+}
+
 void AudioEngine::setBusGain(BusId bus, float gain) {
     m_bus_gain[busIndex(bus)] = std::clamp(gain, 0.0f, 1.0f);
     for (const auto& v : m_active) {
@@ -202,11 +237,100 @@ void AudioEngine::setListener(const ListenerState& listener) {
     }
 }
 
+void AudioEngine::fadeTo(VoiceHandle voice, float targetGain, float seconds) {
+    auto it = find(voice);
+    if (it == m_active.end()) {
+        return;
+    }
+    if (seconds <= 0.0f) {
+        // Degenerate ramp: apply immediately rather than dividing by zero in advanceFades.
+        it->desc.params.gain = std::clamp(targetGain, 0.0f, 1.0f);
+        it->fade = Fade{};
+        repushGain(*it);
+        return;
+    }
+    it->fade.active = true;
+    it->fade.from = it->desc.params.gain;
+    it->fade.to = std::clamp(targetGain, 0.0f, 1.0f);
+    it->fade.elapsed = 0.0f;
+    it->fade.duration = seconds;
+    it->fade.stopAtEnd = false;
+}
+
+void AudioEngine::fadeIn(VoiceHandle voice, float targetGain, float seconds) {
+    auto it = find(voice);
+    if (it == m_active.end()) {
+        return;
+    }
+    it->desc.params.gain = 0.0f;  // start silent, then ramp up
+    repushGain(*it);
+    fadeTo(voice, targetGain, seconds);
+}
+
+void AudioEngine::fadeOut(VoiceHandle voice, float seconds) {
+    auto it = find(voice);
+    if (it == m_active.end()) {
+        return;
+    }
+    if (seconds <= 0.0f) {
+        stop(voice);
+        return;
+    }
+    fadeTo(voice, 0.0f, seconds);
+    // fadeTo cleared stopAtEnd; re-find because fadeTo may have reallocated nothing but is safer.
+    auto again = find(voice);
+    if (again != m_active.end()) {
+        again->fade.stopAtEnd = true;
+    }
+}
+
+VoiceHandle AudioEngine::crossfadeTo(VoiceHandle current, AssetUID clip, float seconds, const PlayParams& params) {
+    PlayParams incoming = params;
+    incoming.fadeInSeconds = seconds;
+    VoiceHandle next = play(clip, incoming);
+    // Only retire the outgoing track once the new one actually started; otherwise a failed load
+    // would leave silence where there used to be music.
+    if (next.valid()) {
+        fadeOut(current, seconds);
+    }
+    return next;
+}
+
+bool AudioEngine::isFading(VoiceHandle voice) const {
+    auto it = find(voice);
+    return it != m_active.end() && it->fade.active;
+}
+
+void AudioEngine::advanceFades(double delta) {
+    std::vector<VoiceHandle> finished;
+    for (auto& v : m_active) {
+        if (!v.fade.active) {
+            continue;
+        }
+        v.fade.elapsed += static_cast<float>(delta);
+        const float t = std::clamp(v.fade.elapsed / v.fade.duration, 0.0f, 1.0f);
+        v.desc.params.gain = v.fade.from + (v.fade.to - v.fade.from) * t;
+        repushGain(v);
+
+        if (t >= 1.0f) {
+            v.fade.active = false;
+            if (v.fade.stopAtEnd) {
+                finished.push_back(v.handle);
+            }
+        }
+    }
+    // Stop outside the loop: stop() erases from m_active and would invalidate the iteration.
+    for (VoiceHandle handle : finished) {
+        stop(handle);
+    }
+}
+
 void AudioEngine::update(double delta) {
     if (m_backend == nullptr) {
         return;
     }
     m_backend->update(delta);
+    advanceFades(delta);
 
     // Reclaim one-shots that have run to their end. Looping voices stay active until stopped.
     std::erase_if(m_active, [this](const ActiveVoice& v) {
@@ -269,7 +393,7 @@ float AudioEngine::audibility(const VoiceDesc& desc) const {
 }
 
 float AudioEngine::effectiveGain(const VoiceDesc& desc) const {
-    if (m_muted || m_bus_muted[busIndex(desc.bus)]) {
+    if (m_muted || m_suspended || m_bus_muted[busIndex(desc.bus)]) {
         return 0.0f;
     }
     return desc.params.gain * m_bus_gain[busIndex(desc.bus)] * m_master_gain;

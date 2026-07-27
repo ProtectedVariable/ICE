@@ -7,7 +7,19 @@ AudioClip::AudioClip(std::vector<int16_t> samples, uint32_t channels, uint32_t s
       m_channels(channels),
       m_sample_rate(sampleRate) {}
 
+AudioClip AudioClip::Streaming(uint32_t channels, uint32_t sampleRate, uint64_t frameCount) {
+    AudioClip clip;
+    clip.m_channels = channels;
+    clip.m_sample_rate = sampleRate;
+    clip.m_streaming = true;
+    clip.m_streaming_frames = frameCount;
+    return clip;
+}
+
 uint64_t AudioClip::getFrameCount() const {
+    if (m_streaming) {
+        return m_streaming_frames;  // from the file header; no samples are resident
+    }
     if (m_channels == 0) {
         return 0;
     }

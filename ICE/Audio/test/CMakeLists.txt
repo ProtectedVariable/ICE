@@ -34,3 +34,19 @@ target_link_libraries(AudioEngineTestSuite
         gtest_main
         audio
 )
+
+# Incremental decoding: sequential reads, rewind (the loop point), short reads at EOF, and the
+# loader's resident-vs-streaming threshold. Pure decode, so no audio device is required.
+add_executable(AudioStreamTestSuite
+        AudioStreamTest.cpp
+)
+
+add_test(NAME AudioStreamTestSuite
+        COMMAND AudioStreamTestSuite
+        WORKING_DIRECTORY $<TARGET_FILE_DIR:AudioStreamTestSuite>)
+
+target_link_libraries(AudioStreamTestSuite
+        PRIVATE
+        gtest_main
+        audio
+)

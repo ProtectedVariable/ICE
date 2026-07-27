@@ -34,6 +34,7 @@ class OpenALBackend : public IAudioBackend {
     void releaseBuffer(AudioBufferHandle buffer) override;
 
     VoiceHandle acquireVoice(AudioBufferHandle buffer, const VoiceDesc& desc) override;
+    VoiceHandle acquireStreamingVoice(const std::shared_ptr<IAudioStream>& stream, const VoiceDesc& desc) override;
     void releaseVoice(VoiceHandle voice) override;
 
     void setVoiceParams(VoiceHandle voice, const VoiceParams& params) override;
@@ -45,11 +46,17 @@ class OpenALBackend : public IAudioBackend {
 
     void setListener(const ListenerState& listener) override;
     void update(double delta) override;
+    void setScheduler(const std::shared_ptr<JobScheduler>& scheduler) override;
+    std::size_t streamUnderrunCount() const override;
 
     // Device capabilities, for logging and the editor's audio panel.
     const OpenALDeviceInfo& deviceInfo() const;
 
    private:
+    // Advance one streaming voice: unqueue spent buffers, queue newly decoded chunks, keep the
+    // decoder ahead, and restart the source if it ran dry. Main thread only.
+    void pumpStream(VoiceHandle handle);
+
     struct Impl;
     std::unique_ptr<Impl> m_impl;
 };

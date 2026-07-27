@@ -2,6 +2,8 @@
 
 #include <Logger.h>
 
+#include "IAudioStream.h"
+
 namespace ICE {
 
 AudioRegistry::AudioRegistry(const std::shared_ptr<IAudioBackend>& backend, const std::shared_ptr<AssetBank>& bank)
@@ -49,6 +51,19 @@ std::shared_ptr<AudioClip> AudioRegistry::getClip(AssetUID clip) const {
         return nullptr;
     }
     return m_asset_bank->getAsset<AudioClip>(clip);
+}
+
+std::shared_ptr<IAudioStream> AudioRegistry::openStream(AssetUID clip) const {
+    auto asset = getClip(clip);
+    if (asset == nullptr || !asset->isStreaming()) {
+        return nullptr;
+    }
+    const auto sources = asset->getSources();
+    if (sources.empty()) {
+        Logger::Log(Logger::ERROR, "Audio", "Streaming clip %llu has no source file to read from.", (unsigned long long) clip);
+        return nullptr;
+    }
+    return OpenAudioFileStream(sources.front());
 }
 
 void AudioRegistry::evict(AssetUID clip) {

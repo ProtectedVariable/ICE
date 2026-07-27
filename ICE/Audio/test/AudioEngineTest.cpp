@@ -343,3 +343,160 @@ TEST(AudioBusTest, MasterMuteOverridesAnUnmutedBus) {
     f.audio->setBusGain(BusId::SFX, 1.0f);
     EXPECT_FLOAT_EQ(f.backend->voice(v)->params.gain, 0.0f) << "a bus change must not defeat the master mute";
 }
+
+// --- Fades (phase 4) ----------------------------------------------------------------------------
+
+TEST(AudioFadeTest, FadeToRampsLinearlyAndLands) {
+    Fixture f;
+    auto v = f.audio->play(f.mono, {.volume = 1.0f});
+    f.audio->fadeTo(v, 0.0f, 1.0f);
+    EXPECT_TRUE(f.audio->isFading(v));
+
+    f.audio->update(0.5);
+    EXPECT_NEAR(f.backend->voice(v)->params.gain, 0.5f, 1e-4f) << "halfway through a 1s ramp";
+
+    f.audio->update(0.5);
+    EXPECT_NEAR(f.backend->voice(v)->params.gain, 0.0f, 1e-4f);
+    EXPECT_FALSE(f.audio->isFading(v)) << "the ramp should end once it lands";
+}
+
+TEST(AudioFadeTest, FadeInStartsSilent) {
+    Fixture f;
+    auto v = f.audio->play(f.mono, {.volume = 1.0f, .fadeInSeconds = 1.0f});
+    ASSERT_TRUE(v.valid());
+    EXPECT_NEAR(f.backend->voice(v)->params.gain, 0.0f, 1e-4f) << "a fade-in must not start at full volume";
+    f.audio->update(0.5);
+    EXPECT_NEAR(f.backend->voice(v)->params.gain, 0.5f, 1e-4f);
+}
+
+TEST(AudioFadeTest, FadeOutStopsTheVoiceWhenItLands) {
+    Fixture f;
+    auto v = f.audio->play(f.mono, {.volume = 1.0f});
+    f.audio->fadeOut(v, 1.0f);
+
+    f.audio->update(0.5);
+    EXPECT_EQ(f.audio->getActiveVoiceCount(), 1u) << "still ramping";
+
+    f.audio->update(0.6);
+    EXPECT_EQ(f.audio->getActiveVoiceCount(), 0u) << "the voice should be released once silent";
+    EXPECT_FALSE(f.audio->isPlaying(v));
+}
+
+TEST(AudioFadeTest, ZeroLengthFadeAppliesImmediately) {
+    Fixture f;
+    auto v = f.audio->play(f.mono, {.volume = 1.0f});
+    f.audio->fadeTo(v, 0.25f, 0.0f);  // must not divide by zero
+    EXPECT_NEAR(f.backend->voice(v)->params.gain, 0.25f, 1e-4f);
+    EXPECT_FALSE(f.audio->isFading(v));
+
+    auto w = f.audio->play(f.mono);
+    f.audio->fadeOut(w, 0.0f);
+    EXPECT_FALSE(f.audio->isPlaying(w)) << "a zero-length fade-out is just a stop";
+}
+
+// A fade sets the voice's AUTHORED gain, so bus and master scaling still apply on top -- the two
+// compose rather than one overwriting the other.
+TEST(AudioFadeTest, FadeComposesWithBusAndMasterGain) {
+    Fixture f;
+    auto v = f.audio->play(f.mono, {.volume = 1.0f, .bus = BusId::Music});
+    f.audio->setBusGain(BusId::Music, 0.5f);
+    f.audio->setMasterGain(0.5f);
+
+    f.audio->fadeTo(v, 0.5f, 1.0f);
+    f.audio->update(1.0);
+    // authored 0.5 x bus 0.5 x master 0.5
+    EXPECT_NEAR(f.backend->voice(v)->params.gain, 0.125f, 1e-4f);
+}
+
+TEST(AudioFadeTest, FadingAStaleHandleIsHarmless) {
+    Fixture f;
+    auto v = f.audio->play(f.mono);
+    f.audio->stop(v);
+    f.audio->fadeTo(v, 0.5f, 1.0f);
+    f.audio->fadeOut(v, 1.0f);
+    f.audio->fadeIn(v, 1.0f, 1.0f);
+    EXPECT_FALSE(f.audio->isFading(v));
+}
+
+TEST(AudioFadeTest, CrossfadeStartsTheNewTrackAndRetiresTheOld) {
+    Fixture f;
+    auto first = f.audio->play(f.mono, {.volume = 1.0f, .bus = BusId::Music});
+    auto second = f.audio->crossfadeTo(first, f.mono, 1.0f, {.volume = 1.0f, .bus = BusId::Music});
+    ASSERT_TRUE(second.valid());
+    EXPECT_NE(first, second);
+    EXPECT_EQ(f.audio->getActiveVoiceCount(), 2u) << "both play during the crossfade";
+
+    f.audio->update(0.5);
+    EXPECT_NEAR(f.backend->voice(first)->params.gain, 0.5f, 1e-4f) << "old track fading out";
+    EXPECT_NEAR(f.backend->voice(second)->params.gain, 0.5f, 1e-4f) << "new track fading in";
+
+    f.audio->update(0.6);
+    EXPECT_EQ(f.audio->getActiveVoiceCount(), 1u) << "only the new track survives";
+    EXPECT_TRUE(f.audio->isPlaying(second));
+}
+
+// If the incoming track cannot start, the outgoing one must keep playing rather than leaving
+// silence where there used to be music.
+TEST(AudioFadeTest, CrossfadeToAnUnplayableClipKeepsTheCurrentTrack) {
+    Fixture f;
+    auto current = f.audio->play(f.mono, {.volume = 1.0f});
+    auto next = f.audio->crossfadeTo(current, NO_ASSET_ID, 1.0f);
+    EXPECT_FALSE(next.valid());
+    f.audio->update(2.0);
+    EXPECT_TRUE(f.audio->isPlaying(current)) << "the current track must not have been faded out";
+}
+
+// --- Suspend (focus loss) -----------------------------------------------------------------------
+
+TEST(AudioSuspendTest, SuspendSilencesWithoutTouchingMute) {
+    Fixture f;
+    auto v = f.audio->play(f.mono, {.volume = 0.8f});
+
+    f.audio->setSuspended(true);
+    EXPECT_FLOAT_EQ(f.backend->voice(v)->params.gain, 0.0f);
+    EXPECT_FALSE(f.audio->isMuted()) << "suspension is not the user's mute setting";
+
+    f.audio->setSuspended(false);
+    EXPECT_FLOAT_EQ(f.backend->voice(v)->params.gain, 0.8f);
+}
+
+// The editor mutes deliberately; alt-tabbing away and back must not undo that.
+TEST(AudioSuspendTest, ResumingDoesNotClobberAUserMute) {
+    Fixture f;
+    auto v = f.audio->play(f.mono, {.volume = 0.8f});
+    f.audio->setMuted(true);
+
+    f.audio->setSuspended(true);
+    f.audio->setSuspended(false);
+
+    EXPECT_TRUE(f.audio->isMuted());
+    EXPECT_FLOAT_EQ(f.backend->voice(v)->params.gain, 0.0f) << "still muted after regaining focus";
+}
+
+// --- Streaming routing --------------------------------------------------------------------------
+
+TEST(AudioStreamingTest, AStreamingClipTakesTheStreamingPath) {
+    auto bank = std::make_shared<AssetBank>();
+    // A streaming clip carries format but no samples; playback must not try to upload a buffer.
+    bank->addAsset<AudioClip>("music", std::make_shared<AudioClip>(AudioClip::Streaming(2, 44100, 44100 * 120)));
+    AssetUID id = bank->getUID(AssetPath::WithTypePrefix<AudioClip>("music"));
+
+    auto backend = std::make_shared<MockAudioBackend>(4);
+    backend->initialize({});
+    AudioEngine audio(backend, bank);
+
+    // No source file behind this clip, so the stream cannot open and playback is silent -- but it
+    // must have gone down the streaming branch, never uploading a buffer.
+    audio.play(id);
+    EXPECT_EQ(backend->uploadCount, 0) << "a streaming clip must not be uploaded as a resident buffer";
+}
+
+TEST(AudioClipTest, StreamingClipIsNotEmptyDespiteHavingNoSamples) {
+    AudioClip clip = AudioClip::Streaming(2, 48000, 48000 * 60);
+    EXPECT_TRUE(clip.isStreaming());
+    EXPECT_FALSE(clip.isEmpty()) << "its content lives in the source file, not in samples()";
+    EXPECT_TRUE(clip.samples().empty());
+    EXPECT_EQ(clip.getFrameCount(), 48000u * 60u);
+    EXPECT_DOUBLE_EQ(clip.getDuration(), 60.0);
+    EXPECT_FALSE(clip.isMono());
+}

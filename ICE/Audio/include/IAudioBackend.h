@@ -1,11 +1,14 @@
 #pragma once
 
+#include <memory>
 #include <string>
 
 #include "AudioTypes.h"
 
 namespace ICE {
 class AudioClip;
+class IAudioStream;
+class JobScheduler;
 
 // Engine-level audio seam, mirroring RendererAPI/IPhysicsBackend: the engine drives an
 // IAudioBackend without knowing whether the mixer underneath is OpenAL, a null stub, or a test
@@ -36,6 +39,15 @@ class IAudioBackend {
     // decides whether to steal and retry. Never blocks, never allocates a device object -- the
     // source set is fixed at initialize().
     virtual VoiceHandle acquireVoice(AudioBufferHandle buffer, const VoiceDesc& desc) = 0;
+
+    // Start a voice fed incrementally from `stream` rather than from a resident buffer. Used for
+    // music and other long sounds. Looping is driven by rewinding the stream (desc.params.looping),
+    // because AL_LOOPING on a queued-buffer source would loop one queued chunk, not the sound.
+    //
+    // Backends that cannot stream return a null handle; the caller falls back to silence rather
+    // than to a multi-megabyte resident decode.
+    virtual VoiceHandle acquireStreamingVoice(const std::shared_ptr<IAudioStream>& stream, const VoiceDesc& desc) = 0;
+
     virtual void releaseVoice(VoiceHandle voice) = 0;
 
     virtual void setVoiceParams(VoiceHandle voice, const VoiceParams& params) = 0;
@@ -51,8 +63,18 @@ class IAudioBackend {
     virtual void setListener(const ListenerState& listener) = 0;
 
     // Per-frame bookkeeping. Mixing happens on the backend's own thread; this is main-thread
-    // housekeeping only (reclaiming stopped sources, pumping streams in phase 4).
+    // housekeeping only (reclaiming stopped sources, refilling streaming buffer queues).
     virtual void update(double delta) = 0;
+
+    // Optional scheduler used to decode streaming audio off the main thread. Without one, streams
+    // decode inline in update() -- correct, but a multi-millisecond spike on the frame that
+    // happens to need a refill. Null detaches it.
+    virtual void setScheduler(const std::shared_ptr<JobScheduler>& /*scheduler*/) {}
+
+    // Diagnostics: how many streaming voices have starved (run out of decoded audio while still
+    // playing). Non-zero means decoding is not keeping up -- the number worth watching when tuning
+    // chunk size or count.
+    virtual std::size_t streamUnderrunCount() const { return 0; }
 
     // --- Phase 5 seams --------------------------------------------------------------------------
     // Defaulted to no-ops, following GraphicsFactory::createTexture2D: declaring them now means

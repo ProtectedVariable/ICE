@@ -18,6 +18,8 @@ struct PlayParams {
     bool loop = false;
     BusId bus = BusId::SFX;
     uint8_t priority = 128;
+    // Ramp from silence up to `volume` over this many seconds. 0 starts at full volume.
+    float fadeInSeconds = 0.0f;
 };
 
 // The engine's audio facade and the owner of voice POLICY. The backend reports that it is out of
@@ -52,6 +54,26 @@ class AudioEngine {
     void resume(VoiceHandle voice);
     bool isPlaying(VoiceHandle voice) const;
 
+    // --- Fades ----------------------------------------------------------------------------------
+    // Ramp a live voice's gain over `seconds`. Gains here are the voice's AUTHORED gain (the same
+    // scale as PlayParams::volume); bus and master scaling are applied on top as usual, so a fade
+    // and a mixer change compose instead of fighting.
+    //
+    // Ramps are advanced in update(), so they cost nothing until they are used and are unaffected
+    // by how the backend mixes.
+    void fadeTo(VoiceHandle voice, float targetGain, float seconds);
+    void fadeIn(VoiceHandle voice, float targetGain, float seconds);
+    // Ramp to silence and then STOP the voice, releasing it. This is the one that matters for
+    // music: stopping outright produces an audible click.
+    void fadeOut(VoiceHandle voice, float seconds);
+
+    // Fade `current` out while starting `clip` faded in over the same interval, and return the new
+    // voice. The outgoing voice is released when its ramp completes. Passing an invalid `current`
+    // just starts the new sound, so this works for the first track too.
+    VoiceHandle crossfadeTo(VoiceHandle current, AssetUID clip, float seconds, const PlayParams& params = {});
+
+    bool isFading(VoiceHandle voice) const;
+
     // Update a live voice (position, gain, pitch, ...). No-op for a stale handle.
     void setVoiceParams(VoiceHandle voice, const VoiceParams& params);
     // Null for a stale handle. Points at engine-owned storage; valid until the voice ends.
@@ -62,6 +84,12 @@ class AudioEngine {
     float getMasterGain() const { return m_master_gain; }
     void setMuted(bool muted);
     bool isMuted() const { return m_muted; }
+
+    // Silence everything without touching the user's mute setting -- used for "pause audio while
+    // the window is in the background". Kept separate from setMuted precisely so that un-focusing
+    // and re-focusing cannot clobber a mute the user chose, and vice versa.
+    void setSuspended(bool suspended);
+    bool isSuspended() const { return m_suspended; }
 
     // --- Mixer buses ---------------------------------------------------------------------------
     // A voice's audible gain is (its own gain) x (its bus gain) x (master gain), zeroed if the bus
@@ -91,10 +119,26 @@ class AudioEngine {
     std::size_t getStolenVoiceCount() const { return m_stolen_count; }
 
    private:
+    // A linear gain ramp on a voice's authored gain. `active` false means no ramp is running.
+    struct Fade {
+        bool active = false;
+        float from = 0.0f;
+        float to = 0.0f;
+        float elapsed = 0.0f;
+        float duration = 0.0f;
+        // Release the voice once the ramp lands (fade-out / the outgoing half of a crossfade).
+        bool stopAtEnd = false;
+    };
+
     struct ActiveVoice {
         VoiceHandle handle;
         VoiceDesc desc;
+        Fade fade;
     };
+
+    // Advance every running ramp by `delta` and push the resulting gains. Voices whose fade-out
+    // completed are stopped here.
+    void advanceFades(double delta);
 
     // Free the least valuable playing voice so a new one can start. Returns false when nothing is
     // a worse candidate than the incoming sound, in which case the new sound is simply dropped --
@@ -128,6 +172,7 @@ class AudioEngine {
     ListenerState m_listener;
     float m_master_gain = 1.0f;
     bool m_muted = false;
+    bool m_suspended = false;
     std::array<float, kBusCount> m_bus_gain{};
     std::array<bool, kBusCount> m_bus_muted{};
     std::size_t m_stolen_count = 0;

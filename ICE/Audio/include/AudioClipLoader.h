@@ -18,6 +18,15 @@ class AudioClipLoader : public IAssetLoader<AudioClip> {
     // Returns nullptr on an unreadable file, an unsupported extension, or a decode failure. The
     // bank rejects a null result rather than inserting an unusable asset.
     std::shared_ptr<AudioClip> load(const std::vector<std::filesystem::path>& files) override;
+
+    // Encoded-file size at or above which a clip is loaded as a STREAM rather than decoded into
+    // memory. Compared against the file on disk (knowable without decoding), so it is a proxy for
+    // decoded size rather than an exact budget -- which is fine, since the point is only to keep
+    // music out of resident memory while short effects stay resident and instantly playable.
+    //
+    // Settable so an application can tune it (or a test can force either path).
+    static std::size_t streamingThresholdBytes();
+    static void setStreamingThresholdBytes(std::size_t bytes);
 };
 
 }  // namespace ICE

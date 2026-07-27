@@ -8,6 +8,8 @@
 
 namespace ICE {
 using WindowResizeCallback = std::function<void(int, int)>;
+// Fired when the window gains (true) or loses (false) input focus.
+using WindowFocusCallback = std::function<void(bool)>;
 
 class Window {
    public:
@@ -23,6 +25,9 @@ class Window {
     virtual void setSwapInterval(int interval) = 0;
     virtual void makeContextCurrent() = 0;
     virtual void setResizeCallback(const WindowResizeCallback &callback) = 0;
+    // Optional: backends that cannot report focus simply never invoke the callback, so callers must
+    // treat "never called" as "always focused" rather than depending on an initial event.
+    virtual void setFocusCallback(const WindowFocusCallback & /*callback*/) {}
     virtual std::pair<int, int> getSize() const = 0;
 };
 }  // namespace ICE

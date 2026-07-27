@@ -9,6 +9,7 @@
 #include "IAudioBackend.h"
 
 namespace ICE {
+class IAudioStream;
 
 // Owns the backend-resident audio buffers uploaded from AudioClip assets, keyed by AssetUID. The
 // direct counterpart of GPURegistry: assets stay CPU-only, the device-side object lives here, and
@@ -34,6 +35,12 @@ class AudioRegistry {
     // loading. Callers need this for format questions the buffer handle cannot answer -- above all
     // whether the clip is mono, which decides if it can be spatialized at all.
     std::shared_ptr<AudioClip> getClip(AssetUID clip) const;
+
+    // Open a fresh decoder over a streaming clip's source file. Each call returns an INDEPENDENT
+    // stream with its own read position, so the same music can play twice at once (a crossfade
+    // between a track and itself, for instance). Null unless the clip exists, is streaming, and
+    // its source file can be opened.
+    std::shared_ptr<IAudioStream> openStream(AssetUID clip) const;
 
     // Release the buffer uploaded from `clip`, if any. Invoked via the AssetBank removal listener;
     // safe to call for a UID that was never uploaded.

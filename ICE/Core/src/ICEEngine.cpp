@@ -39,6 +39,13 @@ void ICEEngine::initialize(const std::shared_ptr<GraphicsFactory> &graphics_fact
     m_window = window;
     m_window->setSwapInterval(1);
     m_window->setResizeCallback([this](int w, int h) { onFramebufferResize(w, h); });
+    // Silence audio while the window is in the background. Uses setSuspended rather than
+    // setMuted so that regaining focus cannot undo a mute the user (or the editor) set.
+    m_window->setFocusCallback([this](bool focused) {
+        if (m_audio) {
+            m_audio->setSuspended(!focused);
+        }
+    });
     // One engine-owned input service, wired to this window's handlers. Pumped once per frame in
     // step() (after the systems have read the frame's input).
     m_input = std::make_unique<InputManager>(m_window);
@@ -270,6 +277,8 @@ AudioEngine* ICEEngine::audio() {
             m_audio_backend->initialize(AudioDeviceConfig{});
         }
     }
+    // If a scheduler already exists, streaming decode goes on it rather than inline.
+    m_audio_backend->setScheduler(m_scheduler);
     m_audio = std::make_unique<AudioEngine>(m_audio_backend, project->getAssetBank());
     return m_audio.get();
 }
@@ -292,6 +301,11 @@ void ICEEngine::enableBackgroundAssetLoading() {
     if (project) {
         project->getAssetBank()->setScheduler(m_scheduler);
     }
+    // Streaming audio decodes on the same pool; without it a music refill decodes inline and
+    // spikes whichever frame needs it.
+    if (m_audio_backend) {
+        m_audio_backend->setScheduler(m_scheduler);
+    }
 }
 
 void ICEEngine::setParallelSystems(bool enable) {
@@ -306,6 +320,9 @@ void ICEEngine::setParallelSystems(bool enable) {
     // in-flight loads before dropping the old scheduler). Null returns the bank to inline staging.
     if (project) {
         project->getAssetBank()->setScheduler(m_scheduler);
+    }
+    if (m_audio_backend) {
+        m_audio_backend->setScheduler(m_scheduler);
     }
     // Apply immediately to the active scene's parallel-capable systems; newly activated scenes pick
     // it up in installRuntimeSystems.
