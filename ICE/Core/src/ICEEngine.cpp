@@ -11,6 +11,7 @@
 #include <TransformComponent.h>
 #include <AnimationSystem.h>
 #include <AssetPath.h>
+#include <AudioSystem.h>
 #include <NullAudioBackend.h>
 #include <OpenALAudioFactory.h>
 #include <ScriptSystem.h>
@@ -156,6 +157,11 @@ void ICEEngine::installRuntimeSystems(const std::shared_ptr<Scene> &scene, const
         if (auto as = registry->tryGetSystem<AnimationSystem>()) {
             as->setScheduler(m_scheduler);
         }
+        // Re-activation re-points the ear as well as the eye: the scene's active camera entity may
+        // have changed since this scene was last activated.
+        if (auto aus = registry->tryGetSystem<AudioSystem>()) {
+            aus->setListenerEntity(scene->getActiveCamera());
+        }
         m_active_scene = scene;
         m_active_render_system = existing;
         return;
@@ -176,6 +182,15 @@ void ICEEngine::installRuntimeSystems(const std::shared_ptr<Scene> &scene, const
     registry->addSystem(as);
     registry->addSystem(sgs);
     registry->addSystem(ss);
+
+    // Positional audio. audio() lazily builds the audio service (and its backend) on first use, so
+    // a scene only pays for it if something asks. The listener defaults to the scene's active
+    // camera entity -- hear from where you see, unless an AudioListenerComponent says otherwise.
+    if (auto* audio_engine = audio()) {
+        auto aus = std::make_shared<AudioSystem>(registry, audio_engine);
+        aus->setListenerEntity(scene->getActiveCamera());
+        registry->addSystem(aus);
+    }
     auto [w, h] = m_window->getSize();
     renderer->resize(w, h);
 

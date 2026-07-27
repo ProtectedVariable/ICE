@@ -31,4 +31,11 @@ std::optional<DecodedAudio> DecodeAudioFile(const std::filesystem::path& file);
 // asset browser to filter importable files.
 const std::vector<std::string>& SupportedAudioExtensions();
 
+// Average multi-channel audio down to one channel in place. Needed because OpenAL positions MONO
+// buffers only -- a stereo buffer is played flat at full volume, ignoring the listener entirely.
+// A clip intended for 3D playback therefore has to be mono before it reaches the device, and doing
+// it here (once, at import) beats discovering it as a "3D audio doesn't work" bug later.
+// No-op if the audio is already mono.
+void DownmixToMono(DecodedAudio& audio);
+
 }  // namespace ICE

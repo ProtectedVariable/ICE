@@ -13,6 +13,7 @@ target_link_libraries(${PROJECT_NAME}
     assets
     audio
     audio_api_openal
+    audio_system
     components
     entity
     graphics

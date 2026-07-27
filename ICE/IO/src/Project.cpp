@@ -5,6 +5,7 @@
 #include "Project.h"
 
 #include <AudioClip.h>
+#include <AudioDecoder.h>
 #include <Entity.h>
 #include <JsonParser.h>
 #include <LightComponent.h>
@@ -460,11 +461,32 @@ AssetUID Project::requestModel(const std::string &name, const std::vector<fs::pa
     return m_asset_bank->requestAsset<Model>(name, std::move(stage), std::move(commit));
 }
 
-AssetUID Project::importAudio(const std::string &name, const fs::path &src) {
+AssetUID Project::importAudio(const std::string &name, const fs::path &src, bool for_3d) {
     // Copy the source file into <project>/Assets/Audio (keeping its extension) and register it.
     copyAssetFile("Audio", name, src);
     fs::path dst = m_audio_directory / (name + src.extension().string());
-    m_asset_bank->addAsset<AudioClip>(name, {dst});
+
+    if (!for_3d) {
+        m_asset_bank->addAsset<AudioClip>(name, {dst});
+        return audioClip(name);
+    }
+
+    // 3D import: decode here so the result can be folded to mono before it ever reaches the device.
+    auto decoded = DecodeAudioFile(dst);
+    if (!decoded.has_value()) {
+        Logger::Log(Logger::ERROR, "IO", "Could not decode audio '%s' for 3D import.", dst.string().c_str());
+        return NO_ASSET_ID;
+    }
+    const uint32_t original_channels = decoded->channels;
+    DownmixToMono(*decoded);
+    if (original_channels > 1) {
+        Logger::Log(Logger::INFO, "IO", "Downmixed '%s' from %u channels to mono so it can be spatialized.", name.c_str(),
+                    original_channels);
+    }
+
+    auto clip = std::make_shared<AudioClip>(std::move(decoded->samples), decoded->channels, decoded->sampleRate);
+    clip->setSources({dst});
+    m_asset_bank->addAsset<AudioClip>(name, clip);
     return audioClip(name);
 }
 

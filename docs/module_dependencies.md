@@ -31,17 +31,19 @@ math  storage  util  components  container
                  │        │          │
                  └──────► asset ◄────┘   (CPU-only: Mesh/Material/Texture/AudioClip data)
                           │   │
-      rhi / renderer ◄────┘   └────► audio          (device/voice/mixer abstraction)
-   (graphics, graphics_api;              │
-    GPU types live here)          audio_api_openal  (OpenAL Soft backend)
-                            │           │
-                          scene         │
-                            │           │
-                          system ◄──────┘  (RenderSystem/AnimationSystem/AudioSystem/... )
-                            │
-                           io
-                            │
-                          core
+      rhi / renderer ◄────┘   └────► audio           (device/voice/mixer abstraction)
+   (graphics, graphics_api;                 │
+    GPU types live here)          audio_api_openal   (OpenAL Soft backend)
+            │                               │
+          scene                             │
+            │                               │
+          system   (RenderSystem/...)       │
+            │  │                            │
+            │  └──────► audio_system ◄──────┘   (AudioSystem: the ECS/audio meeting point)
+            │                    │
+           io ◄──────────────────┘
+            │
+          core
 ```
 
 ### `container`
@@ -57,12 +59,25 @@ cycle. Once the `util → graphics` debt is paid, folding `container` back into 
 
 `audio` is the backend-agnostic layer (device, voices, mixer buses, `AudioRegistry`). It links
 `assets`, `math` and `container` and deliberately **does not** link `graphics`, `scene` or
-`system` — the only scene coupling in the audio stack lives in `AudioSystem`, which sits in
-`system` alongside the other concrete systems.
+`system` — the only scene coupling in the audio stack lives in `AudioSystem` (see below).
 
 Note there is intentionally no `audio_api` meta-target mirroring `graphics_api`: that pairing is
 one of the baseline cycles below (`graphics_api ↔ graphics_api_OpenGL`). Backends link `audio` in
 one direction only, and consumers link the backend they want.
+
+### `audio_system`
+
+Holds `AudioSystem`, the ECS half of the audio stack and the single place where audio meets the
+scene. It links `audio` + `system` + `components`.
+
+The obvious home would be `system`, beside `RenderSystem` and `AnimationSystem` — but `system` sits
+*inside* the pre-existing `assets ↔ graphics ↔ scene ↔ system` cycle, so adding `system → audio`
+drags `audio` into that SCC. This is not hypothetical: the guard was run with that edge in place
+and rejected it, reporting `audio->assets` and `system->audio` as new back-edges. Sitting above
+both instead keeps `audio` free of any renderer dependency and adds no cycle.
+
+**Fold `audio_system` into `system` once the `assets ↔ graphics` debt is paid down** — at that
+point the separation stops earning its keep.
 
 ## Baseline cycles and how to break them (staged, each build-validated)
 

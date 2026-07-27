@@ -55,7 +55,12 @@ class Project {
     // Import an audio file into the project: copies `src` into the project's Audio folder and
     // registers it in the asset bank under `name`. The synchronous counterpart of importModel.
     // Returns the new clip's UID (NO_ASSET_ID if the decode failed).
-    AssetUID importAudio(const std::string& name, const fs::path& src);
+    //
+    // Pass for_3d = true for anything meant to be positional. OpenAL spatializes MONO buffers
+    // only -- a stereo clip is played flat at full volume, ignoring the listener -- so a 3D import
+    // is downmixed to mono here, at import, rather than failing mysteriously at playback. Leave it
+    // false for music, UI and narration, which should keep their stereo image.
+    AssetUID importAudio(const std::string& name, const fs::path& src, bool for_3d = false);
 
     // Asynchronous audio import: reserves the UID now (state Loading) and decodes off the main
     // thread, publishing the clip in AssetBank::pump(). AudioClipLoader is a pure loader (it never

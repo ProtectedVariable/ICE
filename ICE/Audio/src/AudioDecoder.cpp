@@ -47,6 +47,28 @@ const std::vector<std::string>& SupportedAudioExtensions() {
     return extensions;
 }
 
+void DownmixToMono(DecodedAudio& audio) {
+    if (audio.channels <= 1 || audio.samples.empty()) {
+        return;
+    }
+    const uint32_t channels = audio.channels;
+    const std::size_t frames = audio.samples.size() / channels;
+
+    std::vector<int16_t> mono(frames);
+    for (std::size_t frame = 0; frame < frames; ++frame) {
+        // Accumulate in int32: summing several int16 channels overflows 16 bits before the divide.
+        int32_t sum = 0;
+        for (uint32_t c = 0; c < channels; ++c) {
+            sum += audio.samples[frame * channels + c];
+        }
+        mono[frame] = static_cast<int16_t>(sum / static_cast<int32_t>(channels));
+    }
+
+    audio.samples = std::move(mono);
+    audio.channels = 1;
+    audio.frameCount = frames;
+}
+
 std::optional<DecodedAudio> DecodeAudioFile(const std::filesystem::path& file) {
     const std::string ext = lowerExtension(file);
     const std::string path = file.string();
