@@ -22,6 +22,8 @@ target_link_libraries(${PROJECT_NAME}
     util
     storage
     math
+    # GPURegistry stores its GPU resources in HandlePools (see ICE/Container).
+    container
     # Async import stages loads on the JobScheduler (header-only Multithreading module).
     multithreading
 )

@@ -17,6 +17,9 @@ target_link_libraries(${PROJECT_NAME}
     math
     entity
     scene
+    # GpuHandle.h builds its typed handles on HandlePool, which lives in the dependency-free
+    # `container` leaf module (see ICE/Container/CMakeLists.txt).
+    container
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC
