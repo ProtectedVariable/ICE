@@ -16,9 +16,14 @@
 				<menuitem id="import_material_menu" label="Material" />
 				<menuitem id="import_texture2d_menu" label="Texture2D" />
 				<menuitem id="import_cubemap_menu" label="Cubemap" />
+				<menuitem id="import_audio_menu" label="Audio (2D / music)" />
+				<menuitem id="import_audio_3d_menu" label="Audio (3D / mono)" />
 			</menu>
 			<menuitem id="save_menu" label="Save" shortcut="Ctrl+S"/>
 			<menuitem id="exit_menu" label="Exit" shortcut="Alt+F4"/>
+		</menu>
+		<menu label="Audio">
+			<menuitem id="audio_mixer_menu" label="Mixer" />
 		</menu>
 	</mainmenubar>
 	<placeholder id="dockspace" />

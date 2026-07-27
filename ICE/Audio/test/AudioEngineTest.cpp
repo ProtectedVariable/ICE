@@ -275,3 +275,71 @@ TEST(AudioClipTest, DefaultConstructedClipIsEmptyAndDivisionSafe) {
     EXPECT_EQ(clip.getFrameCount(), 0u);   // must not divide by zero channels
     EXPECT_DOUBLE_EQ(clip.getDuration(), 0.0);  // must not divide by a zero sample rate
 }
+
+// --- Mixer buses (phase 3) ----------------------------------------------------------------------
+
+TEST(AudioBusTest, BusGainScalesOnlyItsOwnVoices) {
+    Fixture f;
+    auto music = f.audio->play(f.mono, {.volume = 1.0f, .bus = BusId::Music});
+    auto sfx = f.audio->play(f.mono, {.volume = 1.0f, .bus = BusId::SFX});
+
+    f.audio->setBusGain(BusId::Music, 0.25f);
+
+    EXPECT_FLOAT_EQ(f.backend->voice(music)->params.gain, 0.25f);
+    EXPECT_FLOAT_EQ(f.backend->voice(sfx)->params.gain, 1.0f) << "another bus must be untouched";
+}
+
+TEST(AudioBusTest, BusMasterAndVoiceGainsMultiply) {
+    Fixture f;
+    auto v = f.audio->play(f.mono, {.volume = 0.5f, .bus = BusId::UI});
+    f.audio->setBusGain(BusId::UI, 0.5f);
+    f.audio->setMasterGain(0.5f);
+    EXPECT_FLOAT_EQ(f.backend->voice(v)->params.gain, 0.125f);
+}
+
+TEST(AudioBusTest, RepeatedBusChangesDoNotCompound) {
+    Fixture f;
+    auto v = f.audio->play(f.mono, {.volume = 1.0f, .bus = BusId::SFX});
+    for (int i = 0; i < 5; ++i) {
+        f.audio->setBusGain(BusId::SFX, 0.5f);
+    }
+    EXPECT_FLOAT_EQ(f.backend->voice(v)->params.gain, 0.5f) << "per-voice gain is the source of truth";
+}
+
+TEST(AudioBusTest, MutingABusSilencesItAndUnmuteRestores) {
+    Fixture f;
+    auto music = f.audio->play(f.mono, {.volume = 0.8f, .bus = BusId::Music});
+    auto sfx = f.audio->play(f.mono, {.volume = 0.8f, .bus = BusId::SFX});
+
+    f.audio->setBusMuted(BusId::Music, true);
+    EXPECT_FLOAT_EQ(f.backend->voice(music)->params.gain, 0.0f);
+    EXPECT_FLOAT_EQ(f.backend->voice(sfx)->params.gain, 0.8f);
+
+    f.audio->setBusMuted(BusId::Music, false);
+    EXPECT_FLOAT_EQ(f.backend->voice(music)->params.gain, 0.8f);
+}
+
+TEST(AudioBusTest, BusGainAppliesToVoicesStartedAfterTheChange) {
+    Fixture f;
+    f.audio->setBusGain(BusId::Voice, 0.5f);
+    auto v = f.audio->play(f.mono, {.volume = 1.0f, .bus = BusId::Voice});
+    EXPECT_FLOAT_EQ(f.backend->voice(v)->params.gain, 0.5f);
+}
+
+TEST(AudioBusTest, DefaultsAreUnityAndUnmuted) {
+    Fixture f;
+    for (int i = 0; i < static_cast<int>(BusId::Count); ++i) {
+        EXPECT_FLOAT_EQ(f.audio->getBusGain(static_cast<BusId>(i)), 1.0f);
+        EXPECT_FALSE(f.audio->isBusMuted(static_cast<BusId>(i)));
+    }
+}
+
+// Master mute must win regardless of bus state, and vice versa -- neither can un-silence the other.
+TEST(AudioBusTest, MasterMuteOverridesAnUnmutedBus) {
+    Fixture f;
+    auto v = f.audio->play(f.mono, {.volume = 1.0f, .bus = BusId::SFX});
+    f.audio->setMuted(true);
+    EXPECT_FLOAT_EQ(f.backend->voice(v)->params.gain, 0.0f);
+    f.audio->setBusGain(BusId::SFX, 1.0f);
+    EXPECT_FLOAT_EQ(f.backend->voice(v)->params.gain, 0.0f) << "a bus change must not defeat the master mute";
+}

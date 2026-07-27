@@ -419,7 +419,45 @@ void ICEEngine::setProject(const std::shared_ptr<Project> &project) {
     this->project = project;
     this->camera->getPosition() = project->getCameraPosition();
     this->camera->getRotation() = project->getCameraRotation();
+    // A new project brings its own asset bank, so any audio service built against the previous
+    // one is stale. Drop it; audio() rebuilds it (keeping the initialized backend) on next use.
+    m_audio.reset();
     setupScene(camera);
+    applyProjectMixer();
+}
+
+void ICEEngine::applyProjectMixer() {
+    if (!project) {
+        return;
+    }
+    auto* audio_engine = audio();
+    if (audio_engine == nullptr) {
+        return;
+    }
+    // Empty means the project never authored a mix; leave the engine at its defaults.
+    const auto& gains = project->getBusGains();
+    for (std::size_t i = 0; i < gains.size() && i < static_cast<std::size_t>(BusId::Count); ++i) {
+        audio_engine->setBusGain(static_cast<BusId>(i), gains[i]);
+    }
+    const auto& mutes = project->getBusMutes();
+    for (std::size_t i = 0; i < mutes.size() && i < static_cast<std::size_t>(BusId::Count); ++i) {
+        audio_engine->setBusMuted(static_cast<BusId>(i), mutes[i]);
+    }
+}
+
+void ICEEngine::storeProjectMixer() {
+    if (!project || !m_audio) {
+        return;
+    }
+    const auto count = static_cast<std::size_t>(BusId::Count);
+    std::vector<float> gains(count);
+    std::vector<bool> mutes(count);
+    for (std::size_t i = 0; i < count; ++i) {
+        gains[i] = m_audio->getBusGain(static_cast<BusId>(i));
+        mutes[i] = m_audio->isBusMuted(static_cast<BusId>(i));
+    }
+    project->setBusGains(gains);
+    project->setBusMutes(mutes);
 }
 
 EngineConfig &ICEEngine::getConfig() {

@@ -94,6 +94,15 @@ class Project {
     // invokes it so a new scene gets its runtime systems. Runtime-only, never serialized.
     void setSceneActivator(const std::function<void(const std::shared_ptr<Scene>&)>& activator);
 
+    // Authored mixer levels, indexed by BusId, persisted with the project. Held here rather than in
+    // EngineConfig (which is only the recently-opened-projects list) because a mix is part of a
+    // project's content, not an application preference. The engine applies these to its AudioEngine
+    // when the project is adopted, and reads them back before a save.
+    const std::vector<float>& getBusGains() const { return m_bus_gains; }
+    const std::vector<bool>& getBusMutes() const { return m_bus_mutes; }
+    void setBusGains(const std::vector<float>& gains) { m_bus_gains = gains; }
+    void setBusMutes(const std::vector<bool>& mutes) { m_bus_mutes = mutes; }
+
     static json dumpVec3(const Eigen::Vector3f& v);
     static json dumpVec4(const Eigen::Vector4f& v);
 
@@ -136,6 +145,11 @@ class Project {
     fs::path m_cubemaps_directory;
     fs::path m_audio_directory;
     std::string m_name;
+
+    // Per-bus gain/mute, parallel to the BusId enum. Empty means "never authored"; the engine then
+    // leaves its AudioEngine at defaults (unity gain, unmuted).
+    std::vector<float> m_bus_gains;
+    std::vector<bool> m_bus_mutes;
 
     std::vector<std::shared_ptr<Scene>> m_scenes;
     std::shared_ptr<Scene> m_current_scene;

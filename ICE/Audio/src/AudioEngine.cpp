@@ -9,7 +9,10 @@ namespace ICE {
 
 AudioEngine::AudioEngine(const std::shared_ptr<IAudioBackend>& backend, const std::shared_ptr<AssetBank>& bank)
     : m_backend(backend),
-      m_registry(std::make_unique<AudioRegistry>(backend, bank)) {}
+      m_registry(std::make_unique<AudioRegistry>(backend, bank)) {
+    m_bus_gain.fill(1.0f);
+    m_bus_muted.fill(false);
+}
 
 AudioEngine::~AudioEngine() {
     stopAll();
@@ -82,10 +85,10 @@ VoiceHandle AudioEngine::playVoice(const VoiceDesc& desc) {
         }
     }
 
-    // Apply master gain / mute on the way to the device; m_active keeps the voice's own gain so a
-    // later master-gain change can be recomputed from it.
+    // Apply bus/master gain on the way to the device; m_active keeps the voice's own authored gain
+    // so later bus or master changes recompute from it rather than compounding.
     VoiceParams device_params = effective.params;
-    device_params.gain = effectiveGain(effective.params.gain);
+    device_params.gain = effectiveGain(effective);
     m_backend->setVoiceParams(voice, device_params);
     m_backend->setVoiceState(voice, PlaybackState::Playing);
 
@@ -136,9 +139,7 @@ void AudioEngine::setVoiceParams(VoiceHandle voice, const VoiceParams& params) {
         return;
     }
     it->desc.params = params;
-    VoiceParams device_params = params;
-    device_params.gain = effectiveGain(params.gain);
-    m_backend->setVoiceParams(voice, device_params);
+    repushGain(*it);
 }
 
 const VoiceParams* AudioEngine::getVoiceParams(VoiceHandle voice) const {
@@ -151,9 +152,7 @@ void AudioEngine::setMasterGain(float gain) {
     // Re-push every live voice's gain: the stored per-voice gain is the source of truth, so this
     // is idempotent and never compounds.
     for (const auto& v : m_active) {
-        VoiceParams device_params = v.desc.params;
-        device_params.gain = effectiveGain(v.desc.params.gain);
-        m_backend->setVoiceParams(v.handle, device_params);
+        repushGain(v);
     }
 }
 
@@ -163,6 +162,37 @@ void AudioEngine::setMuted(bool muted) {
     }
     m_muted = muted;
     setMasterGain(m_master_gain);  // re-push through the same path
+}
+
+void AudioEngine::setBusGain(BusId bus, float gain) {
+    m_bus_gain[busIndex(bus)] = std::clamp(gain, 0.0f, 1.0f);
+    for (const auto& v : m_active) {
+        if (busIndex(v.desc.bus) == busIndex(bus)) {
+            repushGain(v);
+        }
+    }
+}
+
+float AudioEngine::getBusGain(BusId bus) const {
+    return m_bus_gain[busIndex(bus)];
+}
+
+void AudioEngine::setBusMuted(BusId bus, bool muted) {
+    if (m_bus_muted[busIndex(bus)] == muted) {
+        return;
+    }
+    m_bus_muted[busIndex(bus)] = muted;
+    setBusGain(bus, m_bus_gain[busIndex(bus)]);  // re-push through the same path
+}
+
+bool AudioEngine::isBusMuted(BusId bus) const {
+    return m_bus_muted[busIndex(bus)];
+}
+
+void AudioEngine::repushGain(const ActiveVoice& voice) {
+    VoiceParams device_params = voice.desc.params;
+    device_params.gain = effectiveGain(voice.desc);
+    m_backend->setVoiceParams(voice.handle, device_params);
 }
 
 void AudioEngine::setListener(const ListenerState& listener) {
@@ -238,8 +268,11 @@ float AudioEngine::audibility(const VoiceDesc& desc) const {
     return denom <= 0.0f ? gain : gain * (desc.params.minDistance / denom);
 }
 
-float AudioEngine::effectiveGain(float voiceGain) const {
-    return m_muted ? 0.0f : voiceGain * m_master_gain;
+float AudioEngine::effectiveGain(const VoiceDesc& desc) const {
+    if (m_muted || m_bus_muted[busIndex(desc.bus)]) {
+        return 0.0f;
+    }
+    return desc.params.gain * m_bus_gain[busIndex(desc.bus)] * m_master_gain;
 }
 
 std::vector<AudioEngine::ActiveVoice>::iterator AudioEngine::find(VoiceHandle voice) {

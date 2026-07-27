@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <memory>
 #include <unordered_set>
 #include <vector>
@@ -62,6 +63,19 @@ class AudioEngine {
     void setMuted(bool muted);
     bool isMuted() const { return m_muted; }
 
+    // --- Mixer buses ---------------------------------------------------------------------------
+    // A voice's audible gain is (its own gain) x (its bus gain) x (master gain), zeroed if the bus
+    // or the master is muted. OpenAL has no native submix, so buses are applied as a gain
+    // multiplier on the way to the device rather than as a real graph -- inaudible difference for
+    // level control, and it keeps the backend seam free of mixer concepts.
+    //
+    // Changing a bus re-pushes only the voices routed to it; per-voice gains are the source of
+    // truth, so repeated calls never compound.
+    void setBusGain(BusId bus, float gain);
+    float getBusGain(BusId bus) const;
+    void setBusMuted(BusId bus, bool muted);
+    bool isBusMuted(BusId bus) const;
+
     void setListener(const ListenerState& listener);
     const ListenerState& getListener() const { return m_listener; }
 
@@ -92,8 +106,18 @@ class AudioEngine {
     // this only has to order voices sensibly.
     float audibility(const VoiceDesc& desc) const;
 
-    // Gain actually pushed to the backend: the voice's own gain scaled by master gain and mute.
-    float effectiveGain(float voiceGain) const;
+    // Gain actually pushed to the backend: the voice's own gain scaled by its bus and the master,
+    // with either mute forcing silence.
+    float effectiveGain(const VoiceDesc& desc) const;
+
+    // Re-push the device gain for one live voice from its stored authored gain.
+    void repushGain(const ActiveVoice& voice);
+
+    static constexpr std::size_t kBusCount = static_cast<std::size_t>(BusId::Count);
+    static std::size_t busIndex(BusId bus) {
+        auto i = static_cast<std::size_t>(bus);
+        return i < kBusCount ? i : static_cast<std::size_t>(BusId::SFX);
+    }
 
     std::vector<ActiveVoice>::iterator find(VoiceHandle voice);
     std::vector<ActiveVoice>::const_iterator find(VoiceHandle voice) const;
@@ -104,6 +128,8 @@ class AudioEngine {
     ListenerState m_listener;
     float m_master_gain = 1.0f;
     bool m_muted = false;
+    std::array<float, kBusCount> m_bus_gain{};
+    std::array<bool, kBusCount> m_bus_muted{};
     std::size_t m_stolen_count = 0;
     // Clips already reported as un-spatializable (stereo), so the warning fires once per clip
     // rather than on every play call.

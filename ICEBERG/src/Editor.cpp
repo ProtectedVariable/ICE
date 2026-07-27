@@ -28,7 +28,15 @@ Editor::Editor(const std::shared_ptr<ICE::ICEEngine>& engine, const std::shared_
     ui.registerCallback("import_texture2d_menu", [this] { importAsset<ICE::Texture2D>({{"Images", "*.png;*.jpg;*.jpeg"}}); });
     ui.registerCallback("import_cubemap_menu", [this] { importAsset<ICE::TextureCube>({{"Images", "*.png;*.jpg;*.jpeg"}}); });
     ui.registerCallback("import_model_menu", [this] { importAsset<ICE::Model>({{"Models", "*.glb;*.fbx;*.obj"}}); });
-    ui.registerCallback("save_menu", [this] { m_engine->getProject()->writeToFile(m_engine->getCamera()); });
+    ui.registerCallback("import_audio_menu", [this] { importAudioAsset(false); });
+    ui.registerCallback("import_audio_3d_menu", [this] { importAudioAsset(true); });
+    ui.registerCallback("audio_mixer_menu", [this] { m_audio_mixer.open(); });
+    ui.registerCallback("save_menu", [this] {
+        // Harvest the live mixer levels onto the project first, so a mix tweaked in the Audio
+        // Mixer panel is part of what gets written.
+        m_engine->storeProjectMixer();
+        m_engine->getProject()->writeToFile(m_engine->getCamera());
+    });
     ui.registerCallback("exit_menu", [this] {
         m_engine->getProject()->writeToFile(m_engine->getCamera());
         m_engine->getWindow()->close();
@@ -37,6 +45,19 @@ Editor::Editor(const std::shared_ptr<ICE::ICEEngine>& engine, const std::shared_
 
 bool Editor::update() {
     ui.render();
+    // The audio service is built lazily on first use, so bind it every frame rather than once at
+    // construction (where there may be no project yet).
+    if (auto* audio = m_engine->audio()) {
+        if (!m_audio_initialized) {
+            // This editor has no play mode: a loaded scene is live and its `play on awake` sources
+            // would start the moment a project opens. Start muted so opening a project is quiet;
+            // the Audio > Mixer panel un-mutes. Revisit if a play/stop mode is ever added.
+            audio->setMuted(true);
+            m_audio_initialized = true;
+        }
+        m_audio_mixer.setAudioEngine(audio);
+    }
+    m_audio_mixer.render();
     m_viewport->update();
     m_hierarchy->update();
     m_inspector->update();

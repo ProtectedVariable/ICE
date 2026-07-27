@@ -2,6 +2,7 @@
 
 #include <ICEEngine.h>
 #include <Model.h>
+#include <UI/AudioMixerWidget.h>
 #include <UI/EditorWidget.h>
 #include <UI/MaterialEditDialog.h>
 #include <UI/NewSceneDialog.h>
@@ -24,6 +25,30 @@ class Editor : public Controller {
     bool update() override;
 
    private:
+    // Audio import needs a decision the generic path cannot make: a clip meant for 3D playback has
+    // to be mono, because OpenAL only spatializes mono buffers. Asking here -- via two menu entries
+    // -- puts that choice at the moment of import instead of surfacing it as broken 3D later.
+    // The 3D path is synchronous because the downmix happens during decode.
+    bool importAudioAsset(bool for_3d) {
+        std::filesystem::path file = open_native_dialog({{"Audio", "*.wav;*.mp3;*.flac;*.ogg"}});
+        if (file.empty()) {
+            return false;
+        }
+        std::string import_name = file.stem().string();
+        int i = 0;
+        while (m_engine->getAssetBank()->nameInUse(ICE::AssetPath::WithTypePrefix<ICE::AudioClip>(import_name))) {
+            import_name = file.stem().string() + std::to_string(++i);
+        }
+        if (for_3d) {
+            return m_engine->getProject()->importAudio(import_name, file, true) != NO_ASSET_ID;
+        }
+        m_engine->getProject()->copyAssetFile("Audio", import_name, file);
+        std::vector<std::filesystem::path> sources = {m_engine->getProject()->getBaseDirectory() / "Assets" / "Audio" /
+                                                      (import_name + file.extension().string())};
+        m_engine->getAssetBank()->requestAsset<ICE::AudioClip>(import_name, sources);
+        return true;
+    }
+
     template<typename T>
     bool importAsset(const std::vector<FileFilter> &filters = {}) {
         std::filesystem::path file = open_native_dialog(filters);
@@ -64,6 +89,10 @@ class Editor : public Controller {
     std::unique_ptr<Assets> m_assets;
     ICE::Entity m_selected_entity = 0;
     bool m_entity_transform_changed = false;
+
+    AudioMixerWidget m_audio_mixer;
+    // Latches the one-time "start muted" default (see Editor::update).
+    bool m_audio_initialized = false;
 
     //Popups
     MaterialEditor m_material_popup;

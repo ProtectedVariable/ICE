@@ -6,6 +6,8 @@
 
 #include <AudioClip.h>
 #include <AudioDecoder.h>
+#include <AudioListenerComponent.h>
+#include <AudioSourceComponent.h>
 #include <Entity.h>
 #include <JsonParser.h>
 #include <LightComponent.h>
@@ -34,7 +36,7 @@ namespace {
 // types) goes through the generic "assets" section. Keep these in sync with the built-in prefixes
 // pre-registered in AssetPath.
 bool isBuiltinAssetPrefix(const std::string &prefix) {
-    static const std::unordered_set<std::string> builtins = {"Textures", "CubeMaps", "Meshes", "Models", "Materials", "Shaders"};
+    static const std::unordered_set<std::string> builtins = {"Textures", "CubeMaps", "Meshes", "Models", "Materials", "Shaders", "Audio"};
     return builtins.find(prefix) != builtins.end();
 }
 }  // namespace
@@ -160,6 +162,21 @@ void Project::writeToFile(const std::shared_ptr<Camera> &editorCamera) {
     j["cubeMaps"] = vec;
     vec.clear();
 
+    // Audio clips persist by source path like textures and meshes: the decoded PCM is rebuilt by
+    // AudioClipLoader on load rather than being written into the project file.
+    for (const auto &[asset_id, clip] : m_asset_bank->getAll<AudioClip>()) {
+        vec.push_back(dumpAsset(asset_id, clip));
+    }
+    j["audioClips"] = vec;
+    vec.clear();
+
+    if (!m_bus_gains.empty() || !m_bus_mutes.empty()) {
+        json mixer;
+        mixer["bus_gains"] = m_bus_gains;
+        mixer["bus_mutes"] = m_bus_mutes;
+        j["audioMixer"] = mixer;
+    }
+
     // Generic section for plugin-defined asset kinds (anything whose path prefix is not one of the
     // six built-ins). Keyed by prefix so load can route each entry to the right erased loader. Any
     // entries whose plugin was missing at load are re-emitted verbatim first, so they are preserved.
@@ -183,8 +200,17 @@ void Project::writeToFile(const std::shared_ptr<Camera> &editorCamera) {
     outstream << j.dump(4);
     outstream.close();
 
+    // Ensure the scenes folder exists before writing into it, as the material/shader exports above
+    // already do for theirs. Without this an absent Scenes/ directory made the ofstream fail
+    // silently and every scene was dropped from the save with no error.
+    fs::create_directories(m_scenes_directory);
+
     for (const auto &s : m_scenes) {
         outstream.open(m_scenes_directory / (s->getName() + ".ics"));
+        if (!outstream.is_open()) {
+            Logger::Log(Logger::ERROR, "IO", "Could not write scene file '%s'", s->getName().c_str());
+            continue;
+        }
         j.clear();
 
         j["m_name"] = s->getName();
@@ -245,6 +271,34 @@ void Project::writeToFile(const std::shared_ptr<Camera> &editorCamera) {
                 scjson["skeleton_entity"] = sc.skeleton_entity;
                 entity["skinningComponent"] = scjson;
             }
+            if (s->getRegistry()->entityHasComponent<AudioSourceComponent>(e)) {
+                const AudioSourceComponent &asc = *s->getRegistry()->getComponent<AudioSourceComponent>(e);
+                json ajson;
+                ajson["clip"] = asc.clip;
+                ajson["volume"] = asc.volume;
+                ajson["pitch"] = asc.pitch;
+                ajson["loop"] = asc.loop;
+                ajson["play_on_awake"] = asc.playOnAwake;
+                ajson["spatial"] = asc.spatial;
+                ajson["min_distance"] = asc.minDistance;
+                ajson["max_distance"] = asc.maxDistance;
+                ajson["rolloff"] = asc.rolloff;
+                ajson["priority"] = asc.priority;
+                ajson["bus"] = asc.bus;
+                // Only the authored fields are written. The live voice handle, the Doppler
+                // position cache and the playOnAwake/completion latches are runtime state: saving
+                // them would restore a scene mid-playback pointing at a voice that no longer
+                // exists. `state` is deliberately excluded too -- playOnAwake is the authored way
+                // to start a sound, so a scene always loads quiescent.
+                entity["audioSourceComponent"] = ajson;
+            }
+            if (s->getRegistry()->entityHasComponent<AudioListenerComponent>(e)) {
+                const AudioListenerComponent &alc = *s->getRegistry()->getComponent<AudioListenerComponent>(e);
+                json ljson;
+                ljson["volume"] = alc.volume;
+                ljson["active"] = alc.active;
+                entity["audioListenerComponent"] = ljson;
+            }
             entities.push_back(entity);
         }
         j["entities"] = entities;
@@ -300,6 +354,15 @@ void Project::loadFromFile() {
     loadAssetsOfType<Material>(material);
     loadAssetsOfType<Mesh>(meshes);
     loadAssetsOfType<Model>(models);
+    // Absent in projects written before audio existed; those clips (if any) come back through the
+    // generic "assets" section below, which routes by path prefix and handles them correctly.
+    if (j.contains("audioClips")) {
+        loadAssetsOfType<AudioClip>(j["audioClips"]);
+    }
+    if (j.contains("audioMixer")) {
+        m_bus_gains = j["audioMixer"].value("bus_gains", std::vector<float>{});
+        m_bus_mutes = j["audioMixer"].value("bus_mutes", std::vector<bool>{});
+    }
 
     // Generic section for plugin-defined asset kinds. Route each entry to the right loader via its
     // path prefix (AssetPath::typeForPrefix). If the type is unknown (its plugin isn't loaded) or has
@@ -399,6 +462,34 @@ void Project::loadFromFile() {
                 SkinningComponent sc;
                 sc.skeleton_entity = skj["skeleton_entity"];
                 scene.getRegistry()->addComponent(e, sc);
+            }
+            if (!jentity["audioSourceComponent"].is_null()) {
+                json aj = jentity["audioSourceComponent"];
+                AudioSourceComponent asc;
+                // .value() throughout: a field added after a project was last saved must default
+                // rather than throw, so older scenes keep loading.
+                asc.clip = aj.value("clip", (AssetUID) NO_ASSET_ID);
+                asc.volume = aj.value("volume", 1.0f);
+                asc.pitch = aj.value("pitch", 1.0f);
+                asc.loop = aj.value("loop", false);
+                asc.playOnAwake = aj.value("play_on_awake", false);
+                asc.spatial = aj.value("spatial", true);
+                asc.minDistance = aj.value("min_distance", 1.0f);
+                asc.maxDistance = aj.value("max_distance", 500.0f);
+                asc.rolloff = aj.value("rolloff", 1.0f);
+                asc.priority = aj.value("priority", (uint8_t) 128);
+                asc.bus = aj.value("bus", (uint8_t) 2);
+                // Runtime fields keep their defaults: no voice, no cached position, latches clear.
+                // playOnAwake then starts the sound on the first AudioSystem update, exactly as it
+                // would for a freshly authored source.
+                scene.getRegistry()->addComponent(e, asc);
+            }
+            if (!jentity["audioListenerComponent"].is_null()) {
+                json lj = jentity["audioListenerComponent"];
+                AudioListenerComponent alc;
+                alc.volume = lj.value("volume", 1.0f);
+                alc.active = lj.value("active", true);
+                scene.getRegistry()->addComponent(e, alc);
             }
         }
         for (json jentity : scenejson["entities"]) {

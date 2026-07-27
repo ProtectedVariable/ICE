@@ -98,6 +98,10 @@ class ICEEngine {
     // frame in step(). Null only if there is no project yet.
     AudioEngine* audio();
 
+    // Copy the live mixer levels back onto the project so the next writeToFile persists them.
+    // Call before saving; the editor does this from its save path.
+    void storeProjectMixer();
+
     // Load an out-of-tree plugin: builds a PluginContext for the active scene and lets the plugin
     // register its systems / loaders / components. The engine keeps the plugin alive.
     void loadPlugin(const std::shared_ptr<IPlugin>& plugin);
@@ -184,6 +188,9 @@ class ICEEngine {
     // Attach the UI present-time pass to the active renderer, once per renderer. No-op until both
     // the UI (ui()) and a render system exist.
     void registerUIPass();
+
+    // Push the project's persisted mixer levels onto the audio engine (on project adoption).
+    void applyProjectMixer();
 
     std::shared_ptr<GraphicsFactory> m_graphics_factory;
     std::shared_ptr<Context> ctx;

@@ -31,6 +31,21 @@ add_definitions(-DIMGUI_DEFINE_MATH_OPERATORS)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC ICE DearImXML glfw)
 
+# Configure-time copy (first-time setup). NOTE: file(COPY) runs only at CMake configure, so on its
+# own it leaves these staged copies stale when files are added or edited and only the build is
+# re-run -- which is exactly how a newly added widget XML goes missing at runtime. Same hazard the
+# ICEFIELD Assets copy documents.
 file(COPY ${ICE_ROOT_SOURCE_DIR}/Assets DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/XML DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/EditorAssets DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
+# Re-sync after every build so added/edited XML layouts, shaders and editor assets always reach the
+# executable without a reconfigure. copy_directory refreshes changed files in place.
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+            ${CMAKE_CURRENT_SOURCE_DIR}/XML ${CMAKE_CURRENT_BINARY_DIR}/XML
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+            ${ICE_ROOT_SOURCE_DIR}/Assets ${CMAKE_CURRENT_BINARY_DIR}/Assets
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+            ${CMAKE_CURRENT_SOURCE_DIR}/EditorAssets ${CMAKE_CURRENT_BINARY_DIR}/EditorAssets
+    COMMENT "Syncing editor XML/Assets to the ICEBERG build directory")

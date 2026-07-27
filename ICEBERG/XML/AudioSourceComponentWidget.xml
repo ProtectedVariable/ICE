@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<group>
+	<separatorText label="Audio Source"/>
+	<table name="audio_source_component_layout" columns="3">
+		<setupcolumn label="" width="0.35" flags="ImGuiTableColumnFlags_WidthStretch"/>
+		<setupcolumn label="" width="0.65" flags="ImGuiTableColumnFlags_WidthStretch"/>
+		<setupcolumn label="" width="60" flags="ImGuiTableColumnFlags_WidthFixed"/>
+		<row>
+			<column>
+				<text label="Clip"/>
+			</column>
+			<column>
+				<placeholder id="clip_combo" />
+			</column>
+			<column>
+				<button id="btn_remove" label="Remove"/>
+			</column>
+		</row>
+		<row>
+			<column>
+				<text label="Volume"/>
+			</column>
+			<column>
+				<SliderFloat id="volume_slider" label="##volume" dynamic="float_volume" min="0" max="1"/>
+			</column>
+		</row>
+		<row>
+			<column>
+				<text label="Pitch"/>
+			</column>
+			<column>
+				<SliderFloat id="pitch_slider" label="##pitch" dynamic="float_pitch" min="0.25" max="4"/>
+			</column>
+		</row>
+		<row>
+			<column>
+				<text label="Loop"/>
+			</column>
+			<column>
+				<checkbox label="###loop" id="checkbox_loop" dynamic="bool_loop"/>
+			</column>
+		</row>
+		<row>
+			<column>
+				<text label="Play on awake"/>
+			</column>
+			<column>
+				<checkbox label="###play_on_awake" id="checkbox_awake" dynamic="bool_awake"/>
+			</column>
+		</row>
+		<row>
+			<column>
+				<text label="3D (spatial)"/>
+			</column>
+			<column>
+				<checkbox label="###spatial" id="checkbox_spatial" dynamic="bool_spatial"/>
+			</column>
+		</row>
+		<row>
+			<column>
+				<text label="Min distance"/>
+			</column>
+			<column>
+				<InputFloat label="##min_distance" dynamic="float_min_distance" step="0.5" format="%.2f"/>
+			</column>
+		</row>
+		<row>
+			<column>
+				<text label="Max distance"/>
+			</column>
+			<column>
+				<InputFloat label="##max_distance" dynamic="float_max_distance" step="5.0" format="%.2f"/>
+			</column>
+		</row>
+		<row>
+			<column>
+				<text label="Rolloff"/>
+			</column>
+			<column>
+				<InputFloat label="##rolloff" dynamic="float_rolloff" step="0.1" format="%.2f"/>
+			</column>
+		</row>
+	</table>
+</group>
