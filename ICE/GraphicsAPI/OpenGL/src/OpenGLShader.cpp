@@ -8,16 +8,42 @@
 #include <Logger.h>
 
 #include <fstream>
+#include <regex>
 
 namespace ICE {
+
+namespace {
+#ifdef __APPLE__
+// macOS caps OpenGL at 4.1 / GLSL 410, which has no `layout(binding = N)` qualifier on
+// uniform blocks. Rewrite the version directive and lift the bindings out of the source,
+// so the caller can apply them with glUniformBlockBinding once the program is linked.
+// The shaders stay the single source of truth for which point each block binds to.
+const std::regex k_version_directive(R"(#version\s+420\s+core)");
+const std::regex k_ubo_binding(R"(layout\s*\(\s*std140\s*,\s*binding\s*=\s*(\d+)\s*\)\s*uniform\s+(\w+))");
+
+std::string lowerToGLSL410(const std::string &source, std::unordered_map<std::string, GLuint> &block_bindings) {
+    std::string out = std::regex_replace(source, k_version_directive, "#version 410 core");
+    for (auto it = std::sregex_iterator(out.begin(), out.end(), k_ubo_binding), end = std::sregex_iterator(); it != end; ++it) {
+        block_bindings[(*it)[2].str()] = static_cast<GLuint>(std::stoul((*it)[1].str()));
+    }
+    return std::regex_replace(out, k_ubo_binding, "layout(std140) uniform $2");
+}
+#else
+// Everywhere else the context is >= 4.2 and the shaders are used exactly as authored.
+std::string lowerToGLSL410(const std::string &source, std::unordered_map<std::string, GLuint> &) {
+    return source;
+}
+#endif
+}  // namespace
 
 OpenGLShader::OpenGLShader(const Shader &shader_asset) {
     m_programID = glCreateProgram();
     Logger::Log(Logger::VERBOSE, "Graphics", "Compiling shader...");
 
     std::vector<GLuint> stage_shaders;
+    std::unordered_map<std::string, GLuint> ubo_bindings;
     for (const auto& [stage, source] : shader_asset.getStageSources()) {
-        stage_shaders.push_back(compileAndAttachStage(stage, source.second));
+        stage_shaders.push_back(compileAndAttachStage(stage, lowerToGLSL410(source.second, ubo_bindings)));
     }
 
     glLinkProgram(m_programID);
@@ -31,6 +57,15 @@ OpenGLShader::OpenGLShader(const Shader &shader_asset) {
         std::vector<GLchar> errorLog(maxLength);
         glGetProgramInfoLog(m_programID, maxLength, &maxLength, &errorLog[0]);
         Logger::Log(Logger::FATAL, "Graphics", "Shader linking error: %s", errorLog.data());
+    }
+
+    // Bind each block to the point its stripped `layout(binding = N)` asked for. Empty,
+    // and so a no-op, wherever the qualifier could be left in the source.
+    for (const auto& [name, point] : ubo_bindings) {
+        GLuint index = glGetUniformBlockIndex(m_programID, name.c_str());
+        if (index != GL_INVALID_INDEX) {
+            glUniformBlockBinding(m_programID, index, point);
+        }
     }
 
     // Stage objects are no longer needed once linked into the program. Skip 0, which

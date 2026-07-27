@@ -19,11 +19,14 @@ class ComponentManager;
 
 // Canonical per-frame update order (lower runs first): input/scripts advance state,
 // animation updates local transforms, the scene graph propagates them to world space,
-// then rendering consumes the final transforms.
+// then audio and rendering consume the final transforms.
 enum SystemUpdateOrder : int {
     ScriptSystemOrder = 100,
     AnimationSystemOrder = 200,
     SceneGraphSystemOrder = 300,
+    // Audio runs after the scene graph so listener/source poses are final world transforms, and
+    // before rendering so a frame's audio and visuals are derived from the same state.
+    AudioSystemOrder = 350,
     RenderSystemOrder = 400,
 };
 

@@ -47,6 +47,11 @@ GLFWWindow::GLFWWindow(int width, int height, const std::string& title) : m_widt
         GLFWWindow* self = (GLFWWindow*) glfwGetWindowUserPointer(w);
         self->windowResized(width, height);
     });
+
+    glfwSetWindowFocusCallback(m_handle, [](GLFWwindow* w, int focused) {
+        GLFWWindow* self = (GLFWWindow*) glfwGetWindowUserPointer(w);
+        self->windowFocusChanged(focused == GLFW_TRUE);
+    });
 }
 
 GLFWWindow::~GLFWWindow() {
@@ -105,6 +110,14 @@ void GLFWWindow::windowResized(int w, int h) {
     m_width = w;
     m_height = h;
     m_resize_callback(w, h);
+}
+
+void GLFWWindow::setFocusCallback(const WindowFocusCallback& callback) {
+    m_focus_callback = callback;
+}
+
+void GLFWWindow::windowFocusChanged(bool focused) {
+    m_focus_callback(focused);
 }
 
 }  // namespace ICE

@@ -4,22 +4,20 @@ project(graphics-tests)
 message(STATUS "Building ${PROJECT_NAME} suite")
 include(CTest)
 
-add_executable(HandlePoolTestSuite
-        HandlePoolTest.cpp
+# The generic HandlePool suite moved to ICE/Container/test along with HandlePool.h itself; what
+# remains here is the graphics-specific tagging built on top of it.
+add_executable(GpuHandleTestSuite
+        GpuHandleTest.cpp
 )
 
-# HandlePool.h / GpuHandle.h are header-only and GL-free, so pull in just the include directory
-# rather than linking the whole graphics library (which would drag in OpenGL/GLFW).
-target_include_directories(HandlePoolTestSuite PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/../include)
+add_test(NAME GpuHandleTestSuite
+        COMMAND GpuHandleTestSuite
+        WORKING_DIRECTORY $<TARGET_FILE_DIR:GpuHandleTestSuite>)
 
-add_test(NAME HandlePoolTestSuite
-        COMMAND HandlePoolTestSuite
-        WORKING_DIRECTORY $<TARGET_FILE_DIR:HandlePoolTestSuite>)
-
-target_link_libraries(HandlePoolTestSuite
+target_link_libraries(GpuHandleTestSuite
         PRIVATE
         gtest_main
+        graphics
 )
 
 # RenderGraph.h transitively pulls in the graphics headers, so this suite links the graphics

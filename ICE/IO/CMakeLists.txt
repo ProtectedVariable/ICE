@@ -22,6 +22,7 @@ target_link_libraries(${PROJECT_NAME}
     PUBLIC
     scene
     assets
+    audio       # AudioClipLoader, registered in DefaultLoaders alongside the built-in loaders
     graphics_api
     assimp
     platform

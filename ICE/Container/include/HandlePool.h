@@ -84,6 +84,22 @@ class HandlePool {
 
     size_t size() const { return m_live_count; }
 
+    // Visit every live entry as fn(HandleType, T&), skipping freed slots. Needed whenever a caller
+    // has to find entries by a property of the value rather than by handle -- e.g. locating the
+    // voices currently playing a buffer that is about to be deleted.
+    //
+    // Do not insert or erase from within the callback: the loop bound is the slot count at entry,
+    // and erasing invalidates the iteration's assumptions. Collect handles, then act after.
+    template<typename Fn>
+    void forEachHandle(Fn&& fn) {
+        for (uint32_t idx = 0; idx < static_cast<uint32_t>(m_slots.size()); ++idx) {
+            Slot& s = m_slots[idx];
+            if (s.alive) {
+                fn(HandleType{idx, s.generation}, s.value);
+            }
+        }
+    }
+
    private:
     struct Slot {
         T value{};

@@ -3,19 +3,19 @@
 #include <memory>
 #include <type_traits>
 
-#include "GpuHandle.h"
 #include "HandlePool.h"
 
 using namespace ICE;
 
 namespace {
 struct TestTag {};
+struct OtherTag {};
 }  // namespace
 
-// The typed GPU handles must be distinct types so a MeshHandle can't be used where a TextureHandle
-// is expected.
-static_assert(!std::is_same_v<MeshHandle, TextureHandle>, "GPU handle tags must be distinct");
-static_assert(!std::is_same_v<MeshHandle, ShaderHandle>, "GPU handle tags must be distinct");
+// Tagging is what makes handles to different resource kinds mutually unassignable. The concrete
+// GPU tags (MeshHandle/TextureHandle/ShaderHandle) are asserted in the graphics suite, next to
+// GpuHandle.h itself; here we assert the underlying container property.
+static_assert(!std::is_same_v<Handle<TestTag>, Handle<OtherTag>>, "differently-tagged handles must be distinct types");
 
 TEST(HandlePoolTest, InsertAndGet) {
     HandlePool<int, TestTag> pool;

@@ -3,6 +3,7 @@
 #include <memory>
 
 #include "AssetBank.h"
+#include "AudioClipLoader.h"
 #include "MaterialLoader.h"
 #include "MeshLoader.h"
 #include "ModelLoader.h"
@@ -17,5 +18,8 @@ void registerDefaultLoaders(AssetBank &bank) {
     bank.addLoader<Shader>(std::make_shared<ShaderLoader>());
     bank.addLoader<Material>(std::make_shared<MaterialLoader>());
     bank.addLoader<Mesh>(std::make_shared<MeshLoader>());
+    // The AudioClip loader lives in the `audio` module (its decoders are a private dependency
+    // there); its "Audio" path prefix is pre-registered alongside the other built-ins.
+    bank.addLoader<AudioClip>(std::make_shared<AudioClipLoader>());
 }
 }  // namespace ICE
