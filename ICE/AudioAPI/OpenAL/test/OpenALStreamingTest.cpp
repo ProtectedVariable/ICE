@@ -19,7 +19,7 @@ namespace {
 // race is made deterministic instead of hoped for.
 class FakeStream : public IAudioStream {
    public:
-    FakeStream(uint64_t totalFrames, uint32_t channels = 1, uint32_t rate = 8000)
+    explicit FakeStream(uint64_t totalFrames, uint32_t channels = 1, uint32_t rate = 8000)
         : m_total(totalFrames),
           m_channels(channels),
           m_rate(rate) {}
