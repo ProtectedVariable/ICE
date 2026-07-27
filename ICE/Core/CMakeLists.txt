@@ -11,6 +11,8 @@ target_sources(${PROJECT_NAME} PRIVATE
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
     assets
+    audio
+    audio_api_openal
     components
     entity
     graphics

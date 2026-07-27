@@ -13,7 +13,8 @@ target_sources(${PROJECT_NAME} PRIVATE
         src/Model.cpp
         src/Mesh.cpp
         src/Material.cpp
-        src/GPURegistry.cpp 
+        src/GPURegistry.cpp
+        src/AudioClip.cpp
         src/Texture.cpp)
 
 target_link_libraries(${PROJECT_NAME}

@@ -11,6 +11,8 @@
 #include <TransformComponent.h>
 #include <AnimationSystem.h>
 #include <AssetPath.h>
+#include <NullAudioBackend.h>
+#include <OpenALAudioFactory.h>
 #include <ScriptSystem.h>
 #include <SceneGraphSystem.h>
 #include <Shader.h>
@@ -89,6 +91,14 @@ void ICEEngine::step() {
         {
             ICE_PROFILE_SCOPE("updateSystems");
             m_active_scene->getRegistry()->updateSystems(m_delta_time);
+        }
+
+        // Audio housekeeping runs after the systems so it observes this frame's final state
+        // (positions the scene graph just resolved, voices gameplay just started). Mixing itself
+        // happens on the backend's own thread; this only reclaims finished voices.
+        if (m_audio) {
+            ICE_PROFILE_SCOPE("audio");
+            m_audio->update(m_delta_time);
         }
 
         // Periodically surface the previous frame's timing breakdown (every ~5s at 60fps).
@@ -203,6 +213,50 @@ void ICEEngine::setScriptingBackend(const std::shared_ptr<IScriptingBackend>& ba
     if (m_scripting && m_active_scene) {
         m_scripting->initialize(*m_active_scene->getRegistry());
     }
+}
+
+void ICEEngine::setAudioBackend(const std::shared_ptr<IAudioBackend>& backend) {
+    // Tear the old service down first: AudioEngine holds an AudioRegistry whose buffers belong to
+    // the outgoing backend and must be released while it is still alive.
+    m_audio.reset();
+    if (m_audio_backend) {
+        m_audio_backend->shutdown();
+    }
+
+    m_audio_backend = backend;
+    if (!m_audio_backend) {
+        return;
+    }
+    if (!m_audio_backend->initialize(AudioDeviceConfig{})) {
+        Logger::Log(Logger::WARNING, "Audio", "Audio backend failed to initialize; falling back to the null backend.");
+        m_audio_backend = std::make_shared<NullAudioBackend>();
+        m_audio_backend->initialize(AudioDeviceConfig{});
+    }
+    if (project) {
+        m_audio = std::make_unique<AudioEngine>(m_audio_backend, project->getAssetBank());
+    }
+}
+
+AudioEngine* ICEEngine::audio() {
+    if (m_audio) {
+        return m_audio.get();
+    }
+    // Clips are resolved through the project's asset bank, so there is nothing to attach to yet.
+    if (!project) {
+        return nullptr;
+    }
+    if (!m_audio_backend) {
+        // Default backend, chosen here so nothing in core names a concrete audio API beyond this
+        // one line. A machine with no audio device is normal (CI, a server build), so a failed
+        // open degrades to silence rather than being treated as an error.
+        m_audio_backend = OpenALAudioFactory{}.createBackend();
+        if (!m_audio_backend->initialize(AudioDeviceConfig{})) {
+            m_audio_backend = std::make_shared<NullAudioBackend>();
+            m_audio_backend->initialize(AudioDeviceConfig{});
+        }
+    }
+    m_audio = std::make_unique<AudioEngine>(m_audio_backend, project->getAssetBank());
+    return m_audio.get();
 }
 
 void ICEEngine::loadPlugin(const std::shared_ptr<IPlugin>& plugin) {

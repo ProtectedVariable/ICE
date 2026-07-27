@@ -4,6 +4,7 @@
 
 #include "Project.h"
 
+#include <AudioClip.h>
 #include <Entity.h>
 #include <JsonParser.h>
 #include <LightComponent.h>
@@ -51,6 +52,7 @@ Project::Project(const fs::path &base_directory, const std::string &m_name)
     m_cubemaps_directory = m_base_directory / assets_folder / "Cubemaps";
     m_models_directory = m_base_directory / assets_folder / "Models";
     m_meshes_directory = m_base_directory / assets_folder / "Meshes";
+    m_audio_directory = m_base_directory / assets_folder / "Audio";
     m_scenes_directory = m_base_directory / "Scenes";
 }
 
@@ -458,8 +460,28 @@ AssetUID Project::requestModel(const std::string &name, const std::vector<fs::pa
     return m_asset_bank->requestAsset<Model>(name, std::move(stage), std::move(commit));
 }
 
+AssetUID Project::importAudio(const std::string &name, const fs::path &src) {
+    // Copy the source file into <project>/Assets/Audio (keeping its extension) and register it.
+    copyAssetFile("Audio", name, src);
+    fs::path dst = m_audio_directory / (name + src.extension().string());
+    m_asset_bank->addAsset<AudioClip>(name, {dst});
+    return audioClip(name);
+}
+
+AssetUID Project::requestAudio(const std::string &name, const std::vector<fs::path> &sources) {
+    // AudioClipLoader neither reads nor mutates the bank, so the generic requestAsset overload
+    // covers this entirely: it stages the decode on the scheduler and publishes the result in
+    // pump(). Contrast requestModel, which needs an explicit stage/commit split because the model
+    // loader adds sub-assets.
+    return m_asset_bank->requestAsset<AudioClip>(name, sources);
+}
+
 AssetUID Project::mesh(const std::string &name) const {
     return m_asset_bank->getUID(AssetPath::WithTypePrefix<Mesh>(name));
+}
+
+AssetUID Project::audioClip(const std::string &name) const {
+    return m_asset_bank->getUID(AssetPath::WithTypePrefix<AudioClip>(name));
 }
 
 AssetUID Project::material(const std::string &name) const {

@@ -7,6 +7,7 @@ add_library(${PROJECT_NAME} STATIC)
 
 target_sources(${PROJECT_NAME} PRIVATE
     src/OpenALDevice.cpp
+    src/OpenALBackend.cpp
 )
 
 # Depends on the audio interface layer in one direction only. Note there is deliberately no

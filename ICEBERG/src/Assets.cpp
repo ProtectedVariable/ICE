@@ -1,5 +1,6 @@
 #include "Assets.h"
 
+#include <AudioClip.h>
 #include <ForwardRenderer.h>
 #include <PerspectiveCamera.h>
 
@@ -99,6 +100,8 @@ void Assets::rebuildViewer() {
             category = "TextureCubes";
         } else if (std::dynamic_pointer_cast<ICE::Shader>(entry.asset)) {
             category = "Shaders";
+        } else if (std::dynamic_pointer_cast<ICE::AudioClip>(entry.asset)) {
+            category = "Audio";
         } else {
             category = "Others";
         }

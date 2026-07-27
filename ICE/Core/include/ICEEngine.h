@@ -5,6 +5,8 @@
 #pragma once
 
 #include <AssetBank.h>
+#include <AudioEngine.h>
+#include <AudioFactory.h>
 #include <EngineConfig.h>
 #include <GL/gl3w.h>
 #include <GraphicsAPI.h>
@@ -81,6 +83,20 @@ class ICEEngine {
     // Attach a scripting backend (embedded VM). Initialized with the active scene's registry and
     // updated each frame alongside the native ScriptSystem.
     void setScriptingBackend(const std::shared_ptr<IScriptingBackend>& backend);
+
+    // Replace the audio backend. The engine attaches the OpenAL backend by default on the first
+    // audio() call, so this is only needed to select a different one (or to force the null backend
+    // in a test/headless build). Initialized immediately; any existing audio engine is torn down.
+    void setAudioBackend(const std::shared_ptr<IAudioBackend>& backend);
+
+    // The engine's audio service, created on first call (it needs a project for the asset bank
+    // that clips are resolved against). Play sounds through it:
+    //   engine.audio()->play(project.audioClip("gunshot"));
+    //   engine.audio()->playAt(clipId, {10, 0, 4});
+    // Backed by OpenAL when a device is available and by a silent null backend when one is not, so
+    // this never returns null once a project exists and calling it is always safe. Pumped once per
+    // frame in step(). Null only if there is no project yet.
+    AudioEngine* audio();
 
     // Load an out-of-tree plugin: builds a PluginContext for the active scene and lets the plugin
     // register its systems / loaders / components. The engine keeps the plugin alive.
@@ -201,6 +217,11 @@ class ICEEngine {
     std::shared_ptr<IPhysicsBackend> m_physics;
     std::shared_ptr<IScriptingBackend> m_scripting;
     std::vector<std::shared_ptr<IPlugin>> m_plugins;
+
+    // Engine-owned audio (see audio()); lazily created on first use and pumped in step(). The
+    // backend outlives the AudioEngine built on it, so it is declared first and destroyed last.
+    std::shared_ptr<IAudioBackend> m_audio_backend;
+    std::unique_ptr<AudioEngine> m_audio;
 
     std::chrono::steady_clock::time_point lastFrameTime;
     double m_delta_time = 0.0;

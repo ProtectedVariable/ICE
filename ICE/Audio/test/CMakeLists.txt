@@ -17,3 +17,20 @@ target_link_libraries(AudioDecoderTestSuite
         gtest_main
         audio
 )
+
+# Voice pool, stealing policy, gain/mute, buffer eviction and the silent-backend fallback. Runs
+# entirely on MockAudioBackend/NullAudioBackend, so it needs no audio device -- which is what makes
+# it meaningful on CI.
+add_executable(AudioEngineTestSuite
+        AudioEngineTest.cpp
+)
+
+add_test(NAME AudioEngineTestSuite
+        COMMAND AudioEngineTestSuite
+        WORKING_DIRECTORY $<TARGET_FILE_DIR:AudioEngineTestSuite>)
+
+target_link_libraries(AudioEngineTestSuite
+        PRIVATE
+        gtest_main
+        audio
+)

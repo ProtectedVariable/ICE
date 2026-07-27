@@ -1,5 +1,7 @@
 #pragma once
 
+#include <AudioTypes.h>
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -35,7 +37,11 @@ class OpenALDevice {
     // Open the default device and make its context current. Returns false if no device is
     // available -- the expected case on a headless CI machine, and the engine's cue to fall back
     // to the null backend rather than treating audio as fatal.
-    bool open();
+    //
+    // The config's voice counts are passed as context attributes. This matters: OpenAL Soft's
+    // DEFAULT context allocates 255 mono but only ONE stereo source, which would silently cap all
+    // non-spatialized playback (music + UI together) at a single simultaneous sound.
+    bool open(const AudioDeviceConfig& config = {});
     void close();
 
     bool isOpen() const;

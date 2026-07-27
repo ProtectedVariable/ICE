@@ -8,6 +8,9 @@ add_library(${PROJECT_NAME} STATIC)
 target_sources(${PROJECT_NAME} PRIVATE
     src/audio_decoders_impl.cpp
     src/AudioDecoder.cpp
+    src/AudioClipLoader.cpp
+    src/AudioRegistry.cpp
+    src/AudioEngine.cpp
 )
 
 # Backend-agnostic audio layer. Deliberately does NOT link `graphics`, `scene` or `system`: the

@@ -2,6 +2,7 @@
 
 #include <AL/al.h>
 #include <AL/alc.h>
+#include <AL/alext.h>  // ALC_HRTF_SOFT and the other OpenAL Soft extension tokens
 #include <Logger.h>
 
 // alGetError() is a global, per-context error flag with no call-site association: an unchecked

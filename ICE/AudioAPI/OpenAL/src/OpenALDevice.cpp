@@ -16,7 +16,7 @@ OpenALDevice::~OpenALDevice() {
     close();
 }
 
-bool OpenALDevice::open() {
+bool OpenALDevice::open(const AudioDeviceConfig& config) {
     if (m_impl->device != nullptr) {
         return true;  // idempotent
     }
@@ -27,7 +27,18 @@ bool OpenALDevice::open() {
         return false;
     }
 
-    m_impl->context = alcCreateContext(m_impl->device, nullptr);
+    // Ask for the voice counts we actually need. Without this the driver's defaults apply, which
+    // on OpenAL Soft means a single stereo source -- see the note in OpenALDevice::open's docs.
+    // ALC_HRTF_SOFT comes from ALC_SOFT_HRTF; requesting it on a device without the extension is
+    // harmless (the attribute is ignored).
+    const ALCint attributes[] = {
+        ALC_MONO_SOURCES,   config.monoVoices,
+        ALC_STEREO_SOURCES, config.stereoVoices,
+        ALC_HRTF_SOFT,      config.preferHRTF ? ALC_TRUE : ALC_FALSE,
+        0  // list terminator
+    };
+
+    m_impl->context = alcCreateContext(m_impl->device, attributes);
     if (m_impl->context == nullptr || alcMakeContextCurrent(m_impl->context) == ALC_FALSE) {
         Logger::Log(Logger::ERROR, "Audio", "Opened an OpenAL device but could not create/attach its context.");
         close();
