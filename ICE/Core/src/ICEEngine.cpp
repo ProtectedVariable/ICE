@@ -198,8 +198,11 @@ void ICEEngine::installRuntimeSystems(const std::shared_ptr<Scene> &scene, const
         aus->setListenerEntity(scene->getActiveCamera());
         registry->addSystem(aus);
     }
-    auto [w, h] = m_window->getSize();
-    renderer->resize(w, h);
+    // Pixels, not screen coordinates: render targets are sized in the backbuffer's space, and the
+    // two differ on a scaled display. No resize event has fired yet, so seed it from the window.
+    int fb_width, fb_height;
+    m_window->getFramebufferSize(&fb_width, &fb_height);
+    renderer->resize(fb_width, fb_height);
 
     // The engine tracks the visible scene and its render system so per-frame/resize code never
     // rediscovers them through project->getCurrentScene()->getRegistry()->getSystem<...>().

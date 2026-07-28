@@ -43,9 +43,18 @@ GLFWWindow::GLFWWindow(int width, int height, const std::string& title) : m_widt
 
     glfwSetWindowUserPointer(m_handle, this);
 
+    // Window size is in screen coordinates, the space mouse positions and the UI live in.
     glfwSetWindowSizeCallback(m_handle, [](GLFWwindow* w, int width, int height) {
         GLFWWindow* self = (GLFWWindow*) glfwGetWindowUserPointer(w);
         self->windowResized(width, height);
+    });
+
+    // Framebuffer size is in pixels, which is what render targets and glViewport want. The two
+    // differ on any scaled display (2x on a Retina Mac), so rendering must not be driven from
+    // the window size or it covers a fraction of the backbuffer.
+    glfwSetFramebufferSizeCallback(m_handle, [](GLFWwindow* w, int width, int height) {
+        GLFWWindow* self = (GLFWWindow*) glfwGetWindowUserPointer(w);
+        self->framebufferResized(width, height);
     });
 
     glfwSetWindowFocusCallback(m_handle, [](GLFWwindow* w, int focused) {
@@ -109,6 +118,9 @@ std::pair<int, int> GLFWWindow::getSize() const {
 void GLFWWindow::windowResized(int w, int h) {
     m_width = w;
     m_height = h;
+}
+
+void GLFWWindow::framebufferResized(int w, int h) {
     m_resize_callback(w, h);
 }
 

@@ -30,6 +30,7 @@ class GLFWWindow : public Window {
     std::pair<int, int> getSize() const override;
 
     void windowResized(int w, int h);
+    void framebufferResized(int w, int h);
     void windowFocusChanged(bool focused);
 
    private:
