@@ -35,10 +35,13 @@ StagedModel ModelLoader::stage(const std::vector<std::filesystem::path> &file, A
     }
     Assimp::Importer importer;
 
+    // No aiProcess_OptimizeGraph here: it collapses the node hierarchy into a handful of
+    // "$MergedNode_<n>" nodes, which destroys both the authored names and the tree spawnTree()
+    // instantiates into the scene. The import keeps the file's node graph as-is.
     const aiScene *scene =
         importer.ReadFile(file[0].string(),
-                          aiProcess_OptimizeGraph | aiProcess_FlipUVs | aiProcess_ValidateDataStructure | aiProcess_SortByPType
-                              | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_LimitBoneWeights);
+                          aiProcess_FlipUVs | aiProcess_ValidateDataStructure | aiProcess_SortByPType | aiProcess_GenSmoothNormals
+                              | aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_LimitBoneWeights);
 
     if (scene == nullptr || scene->mRootNode == nullptr) {
         Logger::Log(Logger::ERROR, "IO", "Could not load model '%s': %s", file[0].string().c_str(), importer.GetErrorString());
@@ -93,6 +96,10 @@ std::shared_ptr<Model> ModelLoader::commit(StagedModel &staged, AssetBank &bank)
 int ModelLoader::processNode(const aiNode *ainode, std::vector<Model::Node> &nodes, Model::Skeleton &skeleton,
                              std::unordered_set<std::string> &used_names, const Eigen::Matrix4f &parent_transform) {
     std::string name = ainode->mName.C_Str();
+    if (name.empty()) {
+        // glTF nodes may be unnamed; give them something the hierarchy can display.
+        name = "node_" + std::to_string(nodes.size());
+    }
     if (used_names.contains(name)) {
         // Suffix with an incrementing counter checked against existing names. The old
         // "_<set size>" suffix could still collide with a node that already had that name.

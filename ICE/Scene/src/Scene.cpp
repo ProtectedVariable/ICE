@@ -190,12 +190,17 @@ void Scene::addEntity(Entity e, const std::string &alias, Entity parent) {
 }
 
 void Scene::removeEntity(Entity e) {
-    if (!hasEntity(e)) {
+    if (e == NULL_ENTITY || !hasEntity(e)) {
         return;
     }
-    registry->removeEntity(e);
-    aliases.erase(e);
-    m_graph->removeEntity(e);
+    // Removing an entity removes its whole subtree: a child's transform is expressed relative to
+    // its parent, so orphans reparented onto the grandparent would silently jump in the world.
+    // Collect the ids first -- the nodes are destroyed by removeSubtree below.
+    for (Entity descendant : m_graph->collectSubtree(e)) {
+        registry->removeEntity(descendant);
+        aliases.erase(descendant);
+    }
+    m_graph->removeSubtree(e);
 }
 
 bool Scene::hasEntity(Entity e) const {

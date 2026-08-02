@@ -47,7 +47,9 @@ Hierarchy::Hierarchy(const std::shared_ptr<ICE::ICEEngine> &engine) : m_engine(e
             return;
         }
         scene->removeEntity(e);
-        if (m_selected == e) {
+        // The whole subtree goes with e, so check aliveness rather than identity: the selection
+        // may have been one of the deleted descendants.
+        if (m_selected != ICE::NULL_ENTITY && !scene->hasEntity(m_selected)) {
             setSelectedEntity(ICE::NULL_ENTITY);
         }
         m_need_rebuild_tree = true;

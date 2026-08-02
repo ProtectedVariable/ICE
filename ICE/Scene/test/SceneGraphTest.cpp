@@ -40,4 +40,32 @@ TEST(SceneGraphTest, SceneGraphRemoveEntity)
 	ASSERT_EQ(sg.getRoot()->children[0]->entity, 2);
 }
 
+TEST(SceneGraphTest, SceneGraphCollectSubtree)
+{
+	SceneGraph sg = SceneGraph();
+	sg.addEntity(1);
+	sg.addEntity(2);
+	sg.addEntity(3);
+	sg.setParent(2, 1);
+	sg.setParent(3, 2);
+	auto subtree = sg.collectSubtree(1);
+	ASSERT_EQ(subtree.size(), 3);
+	ASSERT_EQ(subtree[0], 1);
+	ASSERT_TRUE(sg.collectSubtree(42).empty());
+}
+
+TEST(SceneGraphTest, SceneGraphRemoveSubtree)
+{
+	SceneGraph sg = SceneGraph();
+	sg.addEntity(1);
+	sg.addEntity(2);
+	sg.addEntity(3);
+	sg.setParent(2, 1);
+	sg.setParent(3, 2);
+	sg.removeSubtree(1);
+	ASSERT_EQ(sg.getRoot()->children.size(), 0);
+	ASSERT_TRUE(sg.collectSubtree(2).empty());
+	ASSERT_TRUE(sg.collectSubtree(3).empty());
+}
+
 #endif //ICE_SCENEGRAPHTEST_H
