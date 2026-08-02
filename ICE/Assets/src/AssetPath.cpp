@@ -4,6 +4,7 @@
 
 #include "AssetPath.h"
 
+#include <AudioClip.h>
 #include <ICEException.h>
 #include <Material.h>
 #include <Model.h>
@@ -17,14 +18,16 @@ std::unordered_map<std::type_index, std::string> AssetPath::typenames = {{typeid
                                                                          {typeid(Mesh), "Meshes"},
                                                                          {typeid(Model), "Models"},
                                                                          {typeid(Material), "Materials"},
-                                                                         {typeid(Shader), "Shaders"}};
+                                                                         {typeid(Shader), "Shaders"},
+                                                                         {typeid(AudioClip), "Audio"}};
 
 std::unordered_map<std::string, std::type_index> AssetPath::prefixes = {{"Textures", typeid(Texture2D)},
                                                                         {"CubeMaps", typeid(TextureCube)},
                                                                         {"Meshes", typeid(Mesh)},
                                                                         {"Models", typeid(Model)},
                                                                         {"Materials", typeid(Material)},
-                                                                        {"Shaders", typeid(Shader)}};
+                                                                        {"Shaders", typeid(Shader)},
+                                                                        {"Audio", typeid(AudioClip)}};
 
 void AssetPath::registerType(std::type_index type, const std::string &prefix) {
     if (auto type_it = typenames.find(type); type_it != typenames.end()) {

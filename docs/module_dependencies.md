@@ -25,22 +25,59 @@ tightens over time; the check prints which baseline edges are now resolved.
 ## Target DAG (low → high)
 
 ```
-math  storage  util  components
-                 │        │
-                 │      entity
-                 │        │
-                 └──────► asset            (CPU-only: Mesh/Material/Texture data)
-                            │
-                        rhi / renderer      (graphics, graphics_api; GPU types live here)
-                            │
-                          scene             (owns a Registry + scene graph)
-                            │
-                          system            (RenderSystem/AnimationSystem/... over a scene)
-                            │
-                           io
-                            │
-                          core
+math  storage  util  components  container
+                 │        │          │
+                 │      entity       │  (generic containers; links NOTHING)
+                 │        │          │
+                 └──────► asset ◄────┘   (CPU-only: Mesh/Material/Texture/AudioClip data)
+                          │   │
+      rhi / renderer ◄────┘   └────► audio           (device/voice/mixer abstraction)
+   (graphics, graphics_api;                 │
+    GPU types live here)          audio_api_openal   (OpenAL Soft backend)
+            │                               │
+          scene                             │
+            │                               │
+          system   (RenderSystem/...)       │
+            │  │                            │
+            │  └──────► audio_system ◄──────┘   (AudioSystem: the ECS/audio meeting point)
+            │                    │
+           io ◄──────────────────┘
+            │
+          core
 ```
+
+### `container`
+
+Dependency-free leaf holding generic containers (`HandlePool`). It exists because two layers need
+the same generational-handle pool: `graphics` (GPU resource handles) and `audio` (the voice pool).
+`util` would have been the natural home, but it is **not** a leaf — `EngineHelper.h` includes
+`ICEEngine.h`, so `util` reaches all the way to `core` (this is the tracked `util → graphics`
+back-edge below). Putting `HandlePool` there would have forced `graphics → util` and closed a new
+cycle. Once the `util → graphics` debt is paid, folding `container` back into `util` is reasonable.
+
+### `audio` / `audio_api_openal`
+
+`audio` is the backend-agnostic layer (device, voices, mixer buses, `AudioRegistry`). It links
+`assets`, `math` and `container` and deliberately **does not** link `graphics`, `scene` or
+`system` — the only scene coupling in the audio stack lives in `AudioSystem` (see below).
+
+Note there is intentionally no `audio_api` meta-target mirroring `graphics_api`: that pairing is
+one of the baseline cycles below (`graphics_api ↔ graphics_api_OpenGL`). Backends link `audio` in
+one direction only, and consumers link the backend they want.
+
+### `audio_system`
+
+Holds `AudioSystem`, the ECS half of the audio stack and the single place where audio meets the
+scene. It links `audio` + `system` + `components`.
+
+The obvious home would be `system`, beside `RenderSystem` and `AnimationSystem` — but `system` sits
+*inside* the pre-existing `assets ↔ graphics ↔ scene ↔ system` cycle, so adding `system → audio`
+drags `audio` into that SCC. This is not hypothetical: the guard was run with that edge in place
+and rejected it, reporting `audio->assets` and `system->audio` as new back-edges. Sitting above
+both instead keeps `audio` free of any renderer dependency and adds no cycle.
+
+**Fold `audio_system` into `system` once the `assets ↔ graphics` debt is paid down** — at that
+point the separation stops earning its keep.
 
 ## Baseline cycles and how to break them (staged, each build-validated)
 

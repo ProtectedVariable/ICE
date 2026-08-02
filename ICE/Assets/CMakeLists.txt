@@ -13,7 +13,8 @@ target_sources(${PROJECT_NAME} PRIVATE
         src/Model.cpp
         src/Mesh.cpp
         src/Material.cpp
-        src/GPURegistry.cpp 
+        src/GPURegistry.cpp
+        src/AudioClip.cpp
         src/Texture.cpp)
 
 target_link_libraries(${PROJECT_NAME}
@@ -22,6 +23,8 @@ target_link_libraries(${PROJECT_NAME}
     util
     storage
     math
+    # GPURegistry stores its GPU resources in HandlePools (see ICE/Container).
+    container
     # Async import stages loads on the JobScheduler (header-only Multithreading module).
     multithreading
 )

@@ -106,7 +106,11 @@ int main(int argc, char const* argv[]) {
     io.Fonts->Build();
 
     ImGui_ImplGlfw_InitForOpenGL(static_cast<GLFWwindow*>(window->getHandle()), true);
+#ifdef __APPLE__
+    ImGui_ImplOpenGL3_Init("#version 410 core");  // macOS caps OpenGL at 4.1
+#else
     ImGui_ImplOpenGL3_Init("#version 420 core");
+#endif
 
     {
         auto& style{ImGui::GetStyle()};

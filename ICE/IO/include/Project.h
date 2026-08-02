@@ -52,11 +52,28 @@ class Project {
     // path above is unchanged.
     AssetUID requestModel(const std::string& name, const std::vector<fs::path>& sources);
 
+    // Import an audio file into the project: copies `src` into the project's Audio folder and
+    // registers it in the asset bank under `name`. The synchronous counterpart of importModel.
+    // Returns the new clip's UID (NO_ASSET_ID if the decode failed).
+    //
+    // Pass for_3d = true for anything meant to be positional. OpenAL spatializes MONO buffers
+    // only -- a stereo clip is played flat at full volume, ignoring the listener -- so a 3D import
+    // is downmixed to mono here, at import, rather than failing mysteriously at playback. Leave it
+    // false for music, UI and narration, which should keep their stereo image.
+    AssetUID importAudio(const std::string& name, const fs::path& src, bool for_3d = false);
+
+    // Asynchronous audio import: reserves the UID now (state Loading) and decodes off the main
+    // thread, publishing the clip in AssetBank::pump(). AudioClipLoader is a pure loader (it never
+    // touches the bank), so this needs only the generic requestAsset overload. Playing the
+    // returned UID before it is Ready is safe -- it is simply silent until the decode lands.
+    AssetUID requestAudio(const std::string& name, const std::vector<fs::path>& sources);
+
     // Resolve a bank UID by name for a given asset kind, hiding AssetPath::WithTypePrefix from
     // gameplay/tools code. Return NO_ASSET_ID if no such asset is registered.
     AssetUID mesh(const std::string& name) const;
     AssetUID material(const std::string& name) const;
     AssetUID model(const std::string& name) const;
+    AssetUID audioClip(const std::string& name) const;
 
     std::vector<std::shared_ptr<Scene>> getScenes();
     void setScenes(const std::vector<std::shared_ptr<Scene>>& scenes);
@@ -76,6 +93,15 @@ class Project {
     // Installed by the engine when it adopts the project (see ICEEngine::newProject); createScene
     // invokes it so a new scene gets its runtime systems. Runtime-only, never serialized.
     void setSceneActivator(const std::function<void(const std::shared_ptr<Scene>&)>& activator);
+
+    // Authored mixer levels, indexed by BusId, persisted with the project. Held here rather than in
+    // EngineConfig (which is only the recently-opened-projects list) because a mix is part of a
+    // project's content, not an application preference. The engine applies these to its AudioEngine
+    // when the project is adopted, and reads them back before a save.
+    const std::vector<float>& getBusGains() const { return m_bus_gains; }
+    const std::vector<bool>& getBusMutes() const { return m_bus_mutes; }
+    void setBusGains(const std::vector<float>& gains) { m_bus_gains = gains; }
+    void setBusMutes(const std::vector<bool>& mutes) { m_bus_mutes = mutes; }
 
     static json dumpVec3(const Eigen::Vector3f& v);
     static json dumpVec4(const Eigen::Vector4f& v);
@@ -117,7 +143,13 @@ class Project {
     fs::path m_shaders_directory;
     fs::path m_textures_directory;
     fs::path m_cubemaps_directory;
+    fs::path m_audio_directory;
     std::string m_name;
+
+    // Per-bus gain/mute, parallel to the BusId enum. Empty means "never authored"; the engine then
+    // leaves its AudioEngine at defaults (unity gain, unmuted).
+    std::vector<float> m_bus_gains;
+    std::vector<bool> m_bus_mutes;
 
     std::vector<std::shared_ptr<Scene>> m_scenes;
     std::shared_ptr<Scene> m_current_scene;
