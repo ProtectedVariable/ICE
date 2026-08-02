@@ -1,6 +1,12 @@
 #pragma once
 
-#include <Component.h> 
+#include <Asset.h>
+#include <Component.h>
+
+#include <Eigen/Dense>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 namespace ICE {
 struct SkeletonPoseComponent : public Component {

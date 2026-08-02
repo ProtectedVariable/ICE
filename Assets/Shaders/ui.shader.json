@@ -1,0 +1,10 @@
+[
+  {
+    "stage": "vertex",
+    "source": "glsl/ui.vs"
+  },
+  {
+    "stage": "fragment",
+    "source": "glsl/ui.fs"
+  }
+]

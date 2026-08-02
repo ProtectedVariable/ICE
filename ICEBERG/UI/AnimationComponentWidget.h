@@ -27,7 +27,10 @@ class AnimationComponentWidget : public Widget, ImXML::XMLEventHandler {
             if (ImGui::BeginCombo("##animation_combo", m_current_animation.c_str())) {
                 for (const auto& [key, anim] : m_animations) {
                     if (ImGui::Selectable(key.c_str(), key == m_current_animation)) {
-                        m_current_animation = key;
+                        if (key != m_current_animation) {
+                            m_current_animation = key;
+                            m_animation_changed = true;
+                        }
                     }
                 }
                 ImGui::EndCombo();
@@ -38,18 +41,52 @@ class AnimationComponentWidget : public Widget, ImXML::XMLEventHandler {
         }
     }
     void onNodeEnd(ImXML::XMLNode& node) override {}
-    void onEvent(ImXML::XMLNode& node) override {}
+    void onEvent(ImXML::XMLNode& node) override {
+        if (node.arg<std::string>("id") == "btn_remove" && m_on_remove) {
+            m_on_remove();
+        }
+    }
+
+    // The Remove button lives in this child widget, but the removal handler is registered on
+    // the parent InspectorWidget's callback map. This hook bridges the two.
+    void onRemove(const std::function<void()>& f) { m_on_remove = f; }
 
     void render() override {
         if (m_ac) {
             m_xml_renderer.render(m_xml_tree, *this);
-            m_ac->currentAnimation = m_current_animation;
-            m_ac->currentTime = m_time;
+
+            // Blend duration input
+            ImGui::InputFloat("Blend Duration (s)", &m_blend_duration, 0.05f, 0.5f, "%.2f");
+            if (m_blend_duration < 0.0f) m_blend_duration = 0.0f;
+
+            // Show blending status
+            if (m_ac->blending) {
+                ImGui::TextColored(ImVec4(0.3f, 0.8f, 1.0f, 1.0f), "Blending: %.0f%%", m_ac->blendFactor * 100.0);
+            }
+
+            // Apply changes
+            if (m_animation_changed) {
+                m_ac->playAnimation(m_current_animation, m_blend_duration);
+                m_animation_changed = false;
+                m_time = 0.0f;
+                m_ac->currentTime = m_time;
+            } else if (m_playing) {
+                // While playing, the AnimationSystem owns currentTime. Mirror it into the slider
+                // so the playhead tracks playback instead of the widget's stale m_time freezing it.
+                m_time = m_ac->currentTime;
+            } else {
+                // Paused: the slider scrubs the playhead.
+                m_ac->currentTime = m_time;
+            }
             m_ac->speed = m_speed;
             m_ac->playing = m_playing;
             m_ac->loop = m_loop;
         }
     }
+
+    // Per-frame refresh of just the cached pointer (see TransformComponentWidget). Mirrors
+    // the full setter's condition: only active when animations were provided for this entity.
+    void refreshComponent(ICE::AnimationComponent* ac) { m_ac = (ac && !m_animations.empty()) ? ac : nullptr; }
 
     void setAnimationComponent(ICE::AnimationComponent* ac, const std::unordered_map<std::string, ICE::Animation>& animations) {
         if (ac && !animations.empty()) {
@@ -67,17 +104,21 @@ class AnimationComponentWidget : public Widget, ImXML::XMLEventHandler {
 
    private:
     ICE::AnimationComponent* m_ac = nullptr;
+    std::function<void()> m_on_remove;
     std::unordered_map<std::string, ICE::Animation> m_animations;
 
     std::string m_current_animation = "";
+    bool m_animation_changed = false;
 
     float m_max_time = 1.0;
 
     float m_time = 0.0;
     float m_speed = 1.0;
-    bool m_playing;
-    bool m_loop;
+    float m_blend_duration = 0.2f;
+    bool m_playing = false;
+    bool m_loop = false;
 
     ImXML::XMLTree m_xml_tree;
     ImXML::XMLRenderer m_xml_renderer;
 };
+

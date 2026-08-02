@@ -18,6 +18,11 @@ class OpenGLVertexBuffer : public VertexBuffer {
     uint32_t getSize() const override;
     OpenGLVertexBuffer() : OpenGLVertexBuffer(0) {}
     OpenGLVertexBuffer(uint32_t size);
+    ~OpenGLVertexBuffer() override;
+
+    // Owns a GL buffer name; copying would double-delete it.
+    OpenGLVertexBuffer(const OpenGLVertexBuffer &) = delete;
+    OpenGLVertexBuffer &operator=(const OpenGLVertexBuffer &) = delete;
 
    private:
     GLuint id;
@@ -32,6 +37,10 @@ class OpenGLIndexBuffer : public IndexBuffer {
     void putData(const void *data, uint32_t size) override;
 
     OpenGLIndexBuffer();
+    ~OpenGLIndexBuffer() override;
+
+    OpenGLIndexBuffer(const OpenGLIndexBuffer &) = delete;
+    OpenGLIndexBuffer &operator=(const OpenGLIndexBuffer &) = delete;
 
    private:
     GLuint id;
@@ -46,6 +55,9 @@ class OpenGLUniformBuffer : public UniformBuffer {
     void putData(const void *data, uint32_t size, uint32_t offset = 0) override;
     OpenGLUniformBuffer(uint32_t _size, uint32_t _binding);
     ~OpenGLUniformBuffer() override;
+
+    OpenGLUniformBuffer(const OpenGLUniformBuffer &) = delete;
+    OpenGLUniformBuffer &operator=(const OpenGLUniformBuffer &) = delete;
 
    private:
     GLuint id;

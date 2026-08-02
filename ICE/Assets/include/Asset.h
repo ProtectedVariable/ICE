@@ -14,7 +14,7 @@ namespace ICE {
 
 typedef unsigned long long AssetUID;
 
-enum class AssetType { EModel, EMesh, EMaterial, ETex2D, ETexCube, EShader, EOther };
+enum class AssetType { EModel, EMesh, EMaterial, ETex2D, ETexCube, EShader, EAudioClip, EOther };
 
 class Asset : public Resource {
    public:

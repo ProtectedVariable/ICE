@@ -19,12 +19,18 @@ enum class TextureType { Tex2D = 0, CubeMap = 1 };
 
 class Texture : public Asset {
    public:
+    Texture() = default;
     virtual ~Texture() {
-        if (data_ != nullptr) {
-            //stbi_image_free(data_); TODO: Might need need free-ing
-            data_ = nullptr;
+        if (m_owns_data && data_ != nullptr) {
+            stbi_image_free(data_);
         }
+        data_ = nullptr;
     }
+
+    // Owns its pixel buffer when loaded from file; non-copyable to avoid a double-free.
+    Texture(const Texture&) = delete;
+    Texture& operator=(const Texture&) = delete;
+
     const void* data() const { return data_; }
 
     TextureFormat getFormat() const { return m_format; }
@@ -43,6 +49,10 @@ class Texture : public Asset {
     }
 
     void* data_ = nullptr;
+    // True when data_ was allocated by stb (file load) and this object must free it.
+    // Externally-supplied buffers (the void* constructors) default to non-owning until
+    // the loader path is hardened to copy/own them (Phase 1B).
+    bool m_owns_data = false;
     TextureWrap m_wrap = TextureWrap::Repeat;
     TextureFormat m_format = TextureFormat::None;
     int m_width = 0;
@@ -52,7 +62,10 @@ class Texture : public Asset {
 class Texture2D : public Texture {
    public:
     Texture2D(const std::string& path);
-    Texture2D(void* data, int width, int height, TextureFormat fmt);
+    // take_ownership: when true, this texture owns `data` and frees it (with
+    // stbi_image_free, i.e. free) on destruction. Use for stb- or malloc-allocated
+    // buffers the caller hands off; leave false for buffers owned elsewhere.
+    Texture2D(void* data, int width, int height, TextureFormat fmt, bool take_ownership = false);
 
     virtual AssetType getType() const override { return AssetType::ETex2D; }
     virtual std::string getTypeName() const override { return "Texture2D"; }

@@ -8,18 +8,25 @@ add_library(${PROJECT_NAME} STATIC)
 target_sources(${PROJECT_NAME} PRIVATE
         src/AssetBank.cpp
 		src/AssetPath.cpp
+		src/stb_image_impl.cpp
         src/Shader.cpp
         src/Model.cpp
+        src/Mesh.cpp
         src/Material.cpp
-        src/GPURegistry.cpp 
+        src/GPURegistry.cpp
+        src/AudioClip.cpp
         src/Texture.cpp)
 
-target_link_libraries(${PROJECT_NAME} 
-    PUBLIC 
-    graphics 
+target_link_libraries(${PROJECT_NAME}
+    PUBLIC
+    graphics
     util
-    io
     storage
+    math
+    # GPURegistry stores its GPU resources in HandlePools (see ICE/Container).
+    container
+    # Async import stages loads on the JobScheduler (header-only Multithreading module).
+    multithreading
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC

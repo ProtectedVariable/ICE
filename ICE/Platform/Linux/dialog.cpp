@@ -2,8 +2,11 @@
 // Created by Thomas Ibanez on 10.12.20.
 //
 
-#include <string>
 #include <gtk/gtk.h>
+
+#include <string>
+
+#include "dialog.h"
 
 const std::string open_native_dialog(const std::vector<FileFilter> &filters) {
 
@@ -20,16 +23,18 @@ const std::string open_native_dialog(const std::vector<FileFilter> &filters) {
                                          "_Open", GTK_RESPONSE_ACCEPT,
                                          NULL);
 
+    std::string result;
     if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
-        char *filename;
-        filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
-        gtk_widget_destroy(dialog);
-        return std::string(filename);
+        char *filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+        if (filename != NULL) {
+            result = filename;
+            g_free(filename);
+        }
     }
 
     gtk_widget_destroy(dialog);
 
-    return std::string("");
+    return result;
 }
 
 const std::string open_native_folder_dialog() {
@@ -47,14 +52,16 @@ const std::string open_native_folder_dialog() {
                                          "_Open", GTK_RESPONSE_ACCEPT,
                                          NULL);
 
+    std::string result;
     if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
-        char *filename;
-        filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
-        gtk_widget_destroy(dialog);
-        return std::string(filename);
+        char *filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+        if (filename != NULL) {
+            result = filename;
+            g_free(filename);
+        }
     }
 
     gtk_widget_destroy(dialog);
 
-    return std::string("");
+    return result;
 }

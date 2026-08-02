@@ -55,6 +55,43 @@ class SceneGraph {
         idToNode.erase(e);
     }
 
+    // Entities in the subtree rooted at e -- e first, then its descendants (pre-order). Empty when
+    // e is unknown to the graph.
+    std::vector<Entity> collectSubtree(Entity e) const {
+        std::vector<Entity> subtree;
+        auto it = idToNode.find(e);
+        if (it == idToNode.end())
+            return subtree;
+
+        std::vector<std::shared_ptr<SceneNode>> pending{it->second};
+        while (!pending.empty()) {
+            auto node = pending.back();
+            pending.pop_back();
+            subtree.push_back(node->entity);
+            for (const auto& child : node->children) {
+                pending.push_back(child);
+            }
+        }
+        return subtree;
+    }
+
+    // Remove e together with everything below it. Unlike removeEntity, the children are deleted
+    // with their parent instead of being reparented onto the grandparent.
+    void removeSubtree(Entity e) {
+        if (e == 0 || idToNode.find(e) == idToNode.end())
+            return;
+
+        auto sn = idToNode[e];
+        if (auto parentPtr = sn->parent.lock()) {
+            auto& siblings = parentPtr->children;
+            siblings.erase(std::remove(siblings.begin(), siblings.end(), sn), siblings.end());
+        }
+        // Drop every id in the subtree; the detached nodes die with `sn` at the end of the scope.
+        for (Entity descendant : collectSubtree(e)) {
+            idToNode.erase(descendant);
+        }
+    }
+
     void setParent(Entity e, Entity newParentID) {
         if (idToNode.find(e) == idToNode.end() || idToNode.find(newParentID) == idToNode.end())
             return;
@@ -63,6 +100,16 @@ class SceneGraph {
 
         auto sn = idToNode[e];
         auto newParent = idToNode[newParentID];
+
+        // Reject reparenting under one of e's own descendants: it would detach the subtree
+        // from the root and form a strong shared_ptr cycle (children own each other) -> leak.
+        // Walk up from newParent to the root; if we meet e, newParent is a descendant of e.
+        for (auto ancestor = newParent; ancestor != nullptr; ancestor = ancestor->parent.lock()) {
+            if (ancestor->entity == e) {
+                return;
+            }
+        }
+
         auto oldParent = sn->parent.lock();
 
         if (oldParent) {

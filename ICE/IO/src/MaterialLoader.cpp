@@ -5,18 +5,30 @@
 #include "MaterialLoader.h"
 
 #include <JsonParser.h>
+#include <Logger.h>
 #include <nlohmann/json.hpp>
 
 #include <fstream>
 
 using json = nlohmann::json;
-
+#undef ERROR
 namespace ICE {
 std::shared_ptr<Material> MaterialLoader::load(const std::vector<std::filesystem::path> &files) {
+    if (files.empty()) {
+        return nullptr;
+    }
+    std::ifstream infile(files[0]);
+    if (!infile.is_open()) {
+        Logger::Log(Logger::ERROR, "IO", "Could not open material file '%s'", files[0].string().c_str());
+        return nullptr;
+    }
     json j;
-    std::ifstream infile = std::ifstream(files[0]);
-    infile >> j;
-    infile.close();
+    try {
+        infile >> j;
+    } catch (const std::exception &e) {
+        Logger::Log(Logger::ERROR, "IO", "Failed to parse material '%s': %s", files[0].string().c_str(), e.what());
+        return nullptr;
+    }
 
     bool transparent = false;
     if (j.contains("transparent")) {

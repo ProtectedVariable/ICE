@@ -6,6 +6,7 @@
 namespace ICE {
 class ShaderProgram {
    public:
+    virtual ~ShaderProgram() = default;
     virtual void bind() const = 0;
     virtual void unbind() const = 0;
 
@@ -13,10 +14,12 @@ class ShaderProgram {
     virtual void loadInts(const std::string &name, int *array, uint32_t size) = 0;
 
     virtual void loadFloat(const std::string &name, float v) = 0;
-    virtual void loadFloat2(const std::string &name, Eigen::Vector2f vec) = 0;
-    virtual void loadFloat3(const std::string &name, Eigen::Vector3f vec) = 0;
-    virtual void loadFloat4(const std::string &name, Eigen::Vector4f vec) = 0;
+    virtual void loadFloat2(const std::string &name, const Eigen::Vector2f &vec) = 0;
+    virtual void loadFloat3(const std::string &name, const Eigen::Vector3f &vec) = 0;
+    virtual void loadFloat4(const std::string &name, const Eigen::Vector4f &vec) = 0;
 
-    virtual void loadMat4(const std::string &name, Eigen::Matrix4f mat) = 0;
+    virtual void loadMat4(const std::string &name, const Eigen::Matrix4f &mat) = 0;
+    // Upload a contiguous array of matrices in one call (e.g. a bone palette).
+    virtual void loadMat4v(const std::string &name, const Eigen::Matrix4f *data, uint32_t count) = 0;
 };
 }  // namespace ICE

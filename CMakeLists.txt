@@ -1,14 +1,21 @@
 cmake_minimum_required(VERSION 3.19)
 project(ICE_ROOT)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20")
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-include(cmake/fetch_dependencies.cmake)
-enable_testing()
 set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(BUILD_IMXML_EXAMPLE OFF CACHE BOOL "" FORCE)
+
+add_compile_definitions(NOMINMAX)
+
+
+include(cmake/fetch_dependencies.cmake)
+enable_testing()
+
 
 if(APPLE)
 	find_library(COCOA_LIBRARY Cocoa REQUIRED)
@@ -36,3 +43,9 @@ set(GL3W_SRC
 add_subdirectory(ICE)
 add_subdirectory(ICEBERG)
 add_subdirectory(ICEFIELD)
+
+# Architectural guard: fail the test run if a new inter-module dependency cycle is introduced.
+# Enforces the target module DAG (see cmake/module_dependency_check.cmake and
+# docs/module_dependencies.md). Runs standalone -- no build required -- so it can also gate CI early.
+add_test(NAME module_cycle_check
+    COMMAND ${CMAKE_COMMAND} -DICE_DIR=${CMAKE_SOURCE_DIR}/ICE -P ${CMAKE_SOURCE_DIR}/cmake/module_dependency_check.cmake)

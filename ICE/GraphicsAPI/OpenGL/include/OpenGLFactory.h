@@ -42,6 +42,10 @@ class OpenGLFactory : public GraphicsFactory {
 
     std::shared_ptr<GPUTexture> createTexture2D(const Texture2D& texture) const override { return std::make_shared<OpenGLTexture2D>(texture); }
 
+    std::shared_ptr<GPUTexture> createTexture2D(uint32_t width, uint32_t height, TextureFormat format) const override {
+        return std::make_shared<OpenGLTexture2D>(width, height, format);
+    }
+
     std::shared_ptr<GPUTexture> createTextureCube(const TextureCube& texture) const override { return std::make_shared<OpenGLTextureCube>(texture); }
 };
 }  // namespace ICE

@@ -5,10 +5,13 @@
 #include "ModelLoader.h"
 
 #include <AssetBank.h>
-#include <BufferUtils.h>
+#include <Logger.h>
 #include <Material.h>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
+
+#include <cstdlib>
+#include <cstring>
 
 #include <assimp/Importer.hpp>
 #include <cassert>
@@ -16,43 +19,95 @@
 
 namespace ICE {
 std::shared_ptr<Model> ModelLoader::load(const std::vector<std::filesystem::path> &file) {
+    // Resolve the one bank value the parse needs on the calling (main) thread, then stage (pure) and
+    // commit. Splitting these is what lets the async import pipeline run stage() on a worker while
+    // keeping bank mutation on the main thread; the synchronous path here is behavior-identical to
+    // the previous single-pass loader.
+    AssetUID pbr_shader_uid = ref_bank.getUID(AssetPath::WithTypePrefix<Shader>("pbr"));
+    StagedModel staged = stage(file, pbr_shader_uid);
+    return commit(staged, ref_bank);
+}
+
+StagedModel ModelLoader::stage(const std::vector<std::filesystem::path> &file, AssetUID pbr_shader_uid) {
+    StagedModel staged;
+    if (file.empty()) {
+        return staged;  // valid == false
+    }
     Assimp::Importer importer;
 
+    // No aiProcess_OptimizeGraph here: it collapses the node hierarchy into a handful of
+    // "$MergedNode_<n>" nodes, which destroys both the authored names and the tree spawnTree()
+    // instantiates into the scene. The import keeps the file's node graph as-is.
     const aiScene *scene =
         importer.ReadFile(file[0].string(),
-                          aiProcess_OptimizeGraph | aiProcess_FlipUVs | aiProcess_ValidateDataStructure | aiProcess_SortByPType
-                              | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_LimitBoneWeights);
+                          aiProcess_FlipUVs | aiProcess_ValidateDataStructure | aiProcess_SortByPType | aiProcess_GenSmoothNormals
+                              | aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_LimitBoneWeights);
 
-    std::vector<AssetUID> meshes;
-    std::vector<AssetUID> materials;
-    std::vector<Model::Node> nodes;
-    Model::Skeleton skeleton;
-    skeleton.globalInverseTransform = aiMat4ToEigen(scene->mRootNode->mTransformation).inverse();
+    if (scene == nullptr || scene->mRootNode == nullptr) {
+        Logger::Log(Logger::ERROR, "IO", "Could not load model '%s': %s", file[0].string().c_str(), importer.GetErrorString());
+        return staged;  // valid == false -> commit() does nothing
+    }
+
+    staged.sources = file;
+    staged.skeleton.globalInverseTransform = aiMat4ToEigen(scene->mRootNode->mTransformation).inverse();
     for (int m = 0; m < scene->mNumMeshes; m++) {
         auto mesh = scene->mMeshes[m];
         auto material = scene->mMaterials[mesh->mMaterialIndex];
         auto model_name = file[0].filename().stem().string();
-        meshes.push_back(extractMesh(mesh, model_name, scene, skeleton));
-        materials.push_back(extractMaterial(material, model_name, scene));
+        staged.meshes.push_back(stageMesh(mesh, model_name, scene, staged.skeleton));
+        staged.materials.push_back(stageMaterial(material, model_name, scene, pbr_shader_uid));
     }
     std::unordered_set<std::string> used_node_names;
-    processNode(scene->mRootNode, nodes, skeleton, used_node_names, Eigen::Matrix4f::Identity());
-    auto model = std::make_shared<Model>(nodes, meshes, materials);
+    processNode(scene->mRootNode, staged.nodes, staged.skeleton, used_node_names, Eigen::Matrix4f::Identity());
 
     if (scene->HasAnimations()) {
-        auto animations = extractAnimations(scene, skeleton);
-        model->setAnimations(animations);
-        model->setSkeleton(skeleton);
+        staged.animations = extractAnimations(scene, staged.skeleton);
+        staged.hasAnimations = true;
     }
-    model->setSources(file);
+    staged.valid = true;
+    return staged;
+}
+
+std::shared_ptr<Model> ModelLoader::commit(StagedModel &staged, AssetBank &bank) {
+    if (!staged.valid) {
+        return nullptr;
+    }
+    std::vector<AssetUID> meshes;
+    std::vector<AssetUID> materials;
+    meshes.reserve(staged.meshes.size());
+    materials.reserve(staged.materials.size());
+    // Commit mesh[i] then material[i] in scene order so UID assignment (a single bank-wide counter)
+    // is identical to the original single-pass loader -- required for stable re-import and project
+    // files.
+    for (size_t i = 0; i < staged.meshes.size(); i++) {
+        meshes.push_back(commitMesh(staged.meshes[i], bank));
+        materials.push_back(commitMaterial(staged.materials[i], bank));
+    }
+    auto model = std::make_shared<Model>(staged.nodes, meshes, materials);
+
+    if (staged.hasAnimations) {
+        model->setAnimations(staged.animations);
+        model->setSkeleton(staged.skeleton);
+    }
+    model->setSources(staged.sources);
     return model;
 }
 
 int ModelLoader::processNode(const aiNode *ainode, std::vector<Model::Node> &nodes, Model::Skeleton &skeleton,
                              std::unordered_set<std::string> &used_names, const Eigen::Matrix4f &parent_transform) {
     std::string name = ainode->mName.C_Str();
+    if (name.empty()) {
+        // glTF nodes may be unnamed; give them something the hierarchy can display.
+        name = "node_" + std::to_string(nodes.size());
+    }
     if (used_names.contains(name)) {
-        name = name + "_" + std::to_string(used_names.size());
+        // Suffix with an incrementing counter checked against existing names. The old
+        // "_<set size>" suffix could still collide with a node that already had that name.
+        const std::string base = name;
+        int counter = 1;
+        do {
+            name = base + "_" + std::to_string(counter++);
+        } while (used_names.contains(name));
     }
     used_names.insert(name);
 
@@ -78,7 +133,7 @@ int ModelLoader::processNode(const aiNode *ainode, std::vector<Model::Node> &nod
     return insert_pos;
 }
 
-AssetUID ModelLoader::extractMesh(const aiMesh *mesh, const std::string &model_name, const aiScene *scene, Model::Skeleton &skeleton) {
+StagedMesh ModelLoader::stageMesh(const aiMesh *mesh, const std::string &model_name, const aiScene *scene, Model::Skeleton &skeleton) {
     MeshData data;
 
     for (int i = 0; i < mesh->mNumVertices; i++) {
@@ -115,20 +170,25 @@ AssetUID ModelLoader::extractMesh(const aiMesh *mesh, const std::string &model_n
         mesh_->setIBM(boneID, ibm);
     }
 
-    AssetUID mesh_id = 0;
     AssetPath mesh_path = AssetPath::WithTypePrefix<Mesh>(model_name + "/" + mesh->mName.C_Str());
-    if (mesh_id = ref_bank.getUID(mesh_path); mesh_id != 0) {
-        ref_bank.removeAsset(mesh_path);
-        ref_bank.addAssetWithSpecificUID(mesh_path, mesh_, mesh_id);
-    } else {
-        ref_bank.addAsset(mesh_path, mesh_);
-        mesh_id = ref_bank.getUID(mesh_path);
-    }
+    return StagedMesh{mesh_path, mesh_};
+}
 
+AssetUID ModelLoader::commitMesh(StagedMesh &staged, AssetBank &bank) {
+    AssetUID mesh_id = 0;
+    if (mesh_id = bank.getUID(staged.path); mesh_id != 0) {
+        // Re-import: drop the old asset (fires the eviction listener so the GPU upload is released)
+        // and re-add under the same UID so existing references (scenes, components) stay valid.
+        bank.removeAsset(staged.path);
+        bank.addAssetWithSpecificUID(staged.path, staged.mesh, mesh_id);
+    } else {
+        bank.addAsset(staged.path, staged.mesh);
+        mesh_id = bank.getUID(staged.path);
+    }
     return mesh_id;
 }
 
-AssetUID ModelLoader::extractMaterial(const aiMaterial *material, const std::string &model_name, const aiScene *scene) {
+StagedMaterial ModelLoader::stageMaterial(const aiMaterial *material, const std::string &model_name, const aiScene *scene, AssetUID pbr_shader_uid) {
     auto mtl_name = material->GetName();
     if (mtl_name.length == 0) {
         mtl_name = "DefaultMat";
@@ -144,7 +204,7 @@ AssetUID ModelLoader::extractMaterial(const aiMaterial *material, const std::str
     mtl->setUniform("material.ao", 1.0f);
     mtl->setUniform("material.metallic", 0.0f);
     mtl->setUniform("material.roughness", 1.0f);
-    mtl->setShader(ref_bank.getUID(AssetPath::WithTypePrefix<Shader>("pbr")));
+    mtl->setShader(pbr_shader_uid);
     // Base color
     aiColor4D diffuse = aiColor4D(1, 1, 1, 1);
     aiGetMaterialColor(material, AI_MATKEY_COLOR_DIFFUSE, &diffuse);
@@ -158,46 +218,44 @@ AssetUID ModelLoader::extractMaterial(const aiMaterial *material, const std::str
     aiGetMaterialFloat(material, AI_MATKEY_METALLIC_FACTOR, &metallic);
     mtl->setUniform("material.metallic", (float) metallic);
 
-    if (auto ambient_map = extractTexture(material, bank_name + "/ao_map", scene, aiTextureType_LIGHTMAP); ambient_map != 0) {
-        mtl->setUniform("material.hasAoMap", 1);
-        mtl->setUniform("material.aoMap", ambient_map);
-    }
+    // AssetPath has no default constructor, so build the aggregate with the path in place (rather
+    // than default-construct then assign).
+    StagedMaterial staged{AssetPath::WithTypePrefix<Material>(bank_name), mtl, {}};
 
-    if (auto diffuse_tex = extractTexture(material, bank_name + "/diffuse_map", scene, aiTextureType_BASE_COLOR); diffuse_tex != 0) {
-        mtl->setUniform("material.hasBaseColorMap", 1);
-        mtl->setUniform("material.baseColorMap", diffuse_tex);
-    }
+    // Stage each present texture with the uniform slots it feeds. Order matches the original loader
+    // so texture UID assignment at commit is unchanged. The hasXMap/xMap uniforms are set in
+    // commitMaterial once the textures have UIDs.
+    stageTexture(staged, material, bank_name + "/ao_map", scene, aiTextureType_LIGHTMAP, "material.hasAoMap", "material.aoMap");
+    stageTexture(staged, material, bank_name + "/diffuse_map", scene, aiTextureType_BASE_COLOR, "material.hasBaseColorMap", "material.baseColorMap");
+    stageTexture(staged, material, bank_name + "/metallic_map", scene, aiTextureType_METALNESS, "material.hasMetallicMap", "material.metallicMap");
+    stageTexture(staged, material, bank_name + "/roughness_map", scene, aiTextureType_DIFFUSE_ROUGHNESS, "material.hasRoughnessMap",
+                 "material.roughnessMap");
+    stageTexture(staged, material, bank_name + "/normal_map", scene, aiTextureType_NORMALS, "material.hasNormalMap", "material.normalMap");
+    stageTexture(staged, material, bank_name + "/emissive_map", scene, aiTextureType_EMISSIVE, "material.hasEmissiveMap", "material.emissiveMap");
 
-    if (auto metallic_tex = extractTexture(material, bank_name + "/metallic_map", scene, aiTextureType_METALNESS); metallic_tex != 0) {
-        mtl->setUniform("material.hasMetallicMap", 1);
-        mtl->setUniform("material.metallicMap", metallic_tex);
-    }
-
-    if (auto roughness_tex = extractTexture(material, bank_name + "/roughness_map", scene, aiTextureType_DIFFUSE_ROUGHNESS); roughness_tex != 0) {
-        mtl->setUniform("material.hasRoughnessMap", 1);
-        mtl->setUniform("material.roughnessMap", roughness_tex);
-    }
-
-    if (auto normal_tex = extractTexture(material, bank_name + "/normal_map", scene, aiTextureType_NORMALS); normal_tex != 0) {
-        mtl->setUniform("material.hasNormalMap", 1);
-        mtl->setUniform("material.normalMap", normal_tex);
-    }
-
-    if (auto emissive_tex = extractTexture(material, bank_name + "/emissive_map", scene, aiTextureType_EMISSIVE); emissive_tex != 0) {
-        mtl->setUniform("material.hasEmissiveMap", 1);
-        mtl->setUniform("material.emissiveMap", emissive_tex);
-    }
-
-    if (ref_bank.getUID(AssetPath::WithTypePrefix<Material>(bank_name)) != 0) {
-        return ref_bank.getUID(AssetPath::WithTypePrefix<Material>(bank_name));
-    }
-
-    ref_bank.addAsset<Material>(bank_name, mtl);
-    return ref_bank.getUID(AssetPath::WithTypePrefix<Material>(bank_name));
+    return staged;
 }
 
-AssetUID ModelLoader::extractTexture(const aiMaterial *material, const std::string &tex_path, const aiScene *scene, aiTextureType type) {
-    AssetUID tex_id = 0;
+AssetUID ModelLoader::commitMaterial(StagedMaterial &staged, AssetBank &bank) {
+    // Commit the material's textures first (this also replaces them, preserving UIDs, on re-import)
+    // and wire the resulting UIDs into the material uniforms.
+    for (auto &tex : staged.textures) {
+        AssetUID tex_id = commitTexture(tex, bank);
+        staged.material->setUniform(tex.has_uniform, 1);
+        staged.material->setUniform(tex.map_uniform, tex_id);
+    }
+
+    if (bank.getUID(staged.path) != 0) {
+        // Material already present (e.g. shared by several meshes): dedupe by path, as before.
+        return bank.getUID(staged.path);
+    }
+
+    bank.addAsset(staged.path, staged.material);
+    return bank.getUID(staged.path);
+}
+
+void ModelLoader::stageTexture(StagedMaterial &staged_material, const aiMaterial *material, const std::string &tex_path, const aiScene *scene,
+                               aiTextureType type, const std::string &has_uniform, const std::string &map_uniform) {
     aiString texture_file;
     if (material->Get(AI_MATKEY_TEXTURE(type, 0), texture_file) == aiReturn_SUCCESS) {
         if (auto texture = scene->GetEmbeddedTexture(texture_file.C_Str())) {
@@ -205,26 +263,39 @@ AssetUID ModelLoader::extractTexture(const aiMaterial *material, const std::stri
             void *data2 = nullptr;
             int width = texture->mWidth;
             int height = texture->mHeight;
-            int channels = 3;
+            int channels = 4;
             if (height == 0) {
-                //Compressed memory, use stbi to load
+                // Compressed in memory: decode with stbi into an owned RGBA buffer.
                 data2 = stbi_load_from_memory(data, texture->mWidth, &width, &height, &channels, 4);
                 channels = 4;
             } else {
-                data2 = data;
+                // Uncompressed aiTexel (BGRA/RGBA8888) data lives in the aiScene, which is
+                // freed when this Importer is destroyed -- and the GPU upload happens later.
+                // Copy it into an owned buffer so the Texture2D remains valid.
+                size_t byte_size = static_cast<size_t>(width) * static_cast<size_t>(height) * 4;
+                data2 = malloc(byte_size);
+                if (data2 != nullptr) {
+                    memcpy(data2, data, byte_size);
+                }
             }
-            auto texture_ice = std::make_shared<Texture2D>(data2, width, height, getTextureFormat(type, channels));
-            if (tex_id = ref_bank.getUID(AssetPath::WithTypePrefix<Texture2D>(tex_path)); tex_id != 0) {
-                ref_bank.removeAsset(AssetPath::WithTypePrefix<Texture2D>(tex_path));
-                ref_bank.addAssetWithSpecificUID(AssetPath::WithTypePrefix<Texture2D>(tex_path), texture_ice, tex_id);
-            } else {
-                ref_bank.addAsset<Texture2D>(tex_path, texture_ice);
-                tex_id = ref_bank.getUID(AssetPath::WithTypePrefix<Texture2D>(tex_path));
-            }
+            // take_ownership=true: both branches produce a free-compatible (stbi/malloc) buffer.
+            auto texture_ice = std::make_shared<Texture2D>(data2, width, height, getTextureFormat(type, channels), true);
+            staged_material.textures.push_back(StagedTexture{AssetPath::WithTypePrefix<Texture2D>(tex_path), texture_ice, has_uniform, map_uniform});
         } else {
             //regular file, check if it exists and read it
             //TODO :)
         }
+    }
+}
+
+AssetUID ModelLoader::commitTexture(StagedTexture &staged, AssetBank &bank) {
+    AssetUID tex_id = 0;
+    if (tex_id = bank.getUID(staged.path); tex_id != 0) {
+        bank.removeAsset(staged.path);
+        bank.addAssetWithSpecificUID(staged.path, staged.texture, tex_id);
+    } else {
+        bank.addAsset(staged.path, staged.texture);
+        tex_id = bank.getUID(staged.path);
     }
     return tex_id;
 }
@@ -349,7 +420,7 @@ Eigen::Quaternionf ModelLoader::aiQuatToEigen(const aiQuaternion &q) {
     return quat;
 }
 
-constexpr TextureFormat ModelLoader::getTextureFormat(aiTextureType type, int channels) {
+TextureFormat ModelLoader::getTextureFormat(aiTextureType type, int channels) {
     switch (type) {
         case aiTextureType_METALNESS:
         case aiTextureType_AMBIENT_OCCLUSION:

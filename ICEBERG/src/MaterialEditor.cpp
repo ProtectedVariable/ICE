@@ -14,6 +14,10 @@ void MaterialEditor::open(const ICE::AssetPath &path) {
     auto mtl = m_engine->getAssetBank()->getAsset<ICE::Material>(path);
     auto shaders = m_engine->getAssetBank()->getAll<ICE::Shader>();
 
+    // Rebuild the index->shader map from scratch: the "shader_selected" callback indexes into
+    // m_shaders by the combo's position, so leftover ids from a previous open() would shift the
+    // indices and assign the wrong shader.
+    m_shaders.clear();
     int selected_shader = 0;
     std::vector<std::string> shaders_paths;
     int i = 0;

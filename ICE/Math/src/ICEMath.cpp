@@ -158,7 +158,12 @@ std::array<uint8_t *, 6> equirectangularToCubemap(uint8_t *inputPixels, int widt
                 Eigen::Vector3f cube = orientation(i, (2 * (x + 0.5) / faceWidth - 1), (2 * (y + 0.5) / faceHeight - 1));
 
                 auto r = cube.norm();
-                auto lon = fmod(atan2(cube.y(), cube.x()) + rotation, 2 * M_PI);
+                // rotation is in degrees; it was being added straight to a radian longitude.
+                // Also wrap negative longitudes into [0, 2pi) so they don't clamp to column 0.
+                auto lon = fmod(atan2(cube.y(), cube.x()) + DEG_TO_RAD(rotation), 2 * M_PI);
+                if (lon < 0) {
+                    lon += 2 * M_PI;
+                }
                 auto lat = acos(cube.z() / r);
 
                 int fx = width * lon / M_PI / 2 - 0.5;
@@ -174,41 +179,49 @@ std::array<uint8_t *, 6> equirectangularToCubemap(uint8_t *inputPixels, int widt
     return outputPixels;
 }
 
-std::array<Eigen::Vector4f, 6> extractFrustumPlanes(const Eigen::Matrix4f &PV) {
-    std::array<Eigen::Vector4f, 6> planes;
-    // Left
-    planes[0] = {PV(3, 0) + PV(0, 0), PV(3, 1) + PV(0, 1), PV(3, 2) + PV(0, 2), PV(3, 3) + PV(0, 3)};
-    // Right
-    planes[1] = {PV(3, 0) - PV(0, 0), PV(3, 1) - PV(0, 1), PV(3, 2) - PV(0, 2), PV(3, 3) - PV(0, 3)};
-    // Bottom
-    planes[2] = {PV(3, 0) + PV(1, 0), PV(3, 1) + PV(1, 1), PV(3, 2) + PV(1, 2), PV(3, 3) + PV(1, 3)};
-    // Top
-    planes[3] = {PV(3, 0) - PV(1, 0), PV(3, 1) - PV(1, 1), PV(3, 2) - PV(1, 2), PV(3, 3) - PV(1, 3)};
-    // Near
-    planes[4] = {PV(3, 0) + PV(2, 0), PV(3, 1) + PV(2, 1), PV(3, 2) + PV(2, 2), PV(3, 3) + PV(2, 3)};
-    // Far
-    planes[5] = {PV(3, 0) - PV(2, 0), PV(3, 1) - PV(2, 1), PV(3, 2) - PV(2, 2), PV(3, 3) - PV(2, 3)};
-    // Normalize planes
-    for (int i = 0; i < 6; i++) {
-        float length = sqrt(planes[i](0) * planes[i](0) + planes[i](1) * planes[i](1) + planes[i](2) * planes[i](2));
-        planes[i](0) /= length;
-        planes[i](1) /= length;
-        planes[i](2) /= length;
-        planes[i](3) /= length;
-    }
-    return planes;
+Frustum extractFrustumPlanes(const Eigen::Matrix4f &PV) {
+    Frustum frustum;
+    auto extract = [](const Eigen::Vector4f &p) {
+        Plane plane;
+
+        Eigen::Vector3f n = p.head<3>();
+        float length = n.norm();
+
+        plane.normal = n / length;
+        plane.distance = p[3] / length;
+        plane.absNormal = plane.normal.cwiseAbs();
+
+        return plane;
+    };
+
+    frustum.planes[0] = extract(PV.row(3) + PV.row(0));  // Left
+    frustum.planes[1] = extract(PV.row(3) - PV.row(0));  // Right
+    frustum.planes[2] = extract(PV.row(3) + PV.row(1));  // Bottom
+    frustum.planes[3] = extract(PV.row(3) - PV.row(1));  // Top
+    frustum.planes[4] = extract(PV.row(3) + PV.row(2));  // Near
+    frustum.planes[5] = extract(PV.row(3) - PV.row(2));  // Far
+
+    return frustum;
 }
 
-bool isAABBInFrustum(const std::array<Eigen::Vector4f, 6> &frustum, const AABB &aabb) {
-    for (int i = 0; i < 6; i++) {
-        Eigen::Vector3f positive(frustum[i](0) >= 0 ? aabb.getMax().x() : aabb.getMin().x(),
-                                 frustum[i](1) >= 0 ? aabb.getMax().y() : aabb.getMin().y(),
-                                 frustum[i](2) >= 0 ? aabb.getMax().z() : aabb.getMin().z());
+bool isAABBInFrustum(const Frustum &frustum, const AABB &aabb) {
+    return isAABBInFrustum(frustum, aabb.getCenter(), aabb.getExtent());
+}
 
-        if (frustum[i](0) * positive.x() + frustum[i](1) * positive.y() + frustum[i](2) * positive.z() + frustum[i](3) < 0) {
+bool isAABBInFrustum(const Frustum &frustum, const Eigen::Vector3f &center, const Eigen::Vector3f &extents) {
+    for (int i = 0; i < 6; ++i) {
+        const Plane &plane = frustum.planes[i];
+
+        const Eigen::Vector3f &n = plane.absNormal;
+
+        float r = extents.x() * n.x() + extents.y() * n.y() + extents.z() * n.z();
+
+        float s = plane.normal.dot(center) + plane.distance;
+
+        if (s + r < 0.0f)
             return false;
-        }
     }
-    return true;
+
+    return true;  // At least partially inside
 }
 }  // namespace ICE

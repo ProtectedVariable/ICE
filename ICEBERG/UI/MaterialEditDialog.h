@@ -7,6 +7,7 @@
 #include <XMLRenderer.h>
 #include <imgui.h>
 
+#include <format>
 #include <tuple>
 #include <vector>
 

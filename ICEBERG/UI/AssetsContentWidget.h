@@ -42,7 +42,7 @@ class AssetsContentWidget : public Widget {
         if (ImGui::BeginTable("FileBrowserTable", columnCount)) {
             int itemIndex = 0;
 
-            auto renderItem = [&](const std::string& label, const std::string& path, const Thumbnail& tb) {
+            auto renderItem = [&](const std::string& label, const std::string& path, const Thumbnail& tb, bool is_asset) {
                 itemIndex++;
                 ImGui::TableNextColumn();
                 ImGui::PushID(itemIndex);
@@ -65,6 +65,16 @@ class AssetsContentWidget : public Widget {
                         ImGui::EndDragDropSource();
                     }
                 }
+                // Right-click context menu, assets only (folders/".." aren't deletable here).
+                if (is_asset && ImGui::BeginPopupContextItem("##asset_ctx")) {
+                    if (m_current_type == ICE::AssetType::EMaterial && ImGui::MenuItem("Duplicate")) {
+                        callback("material_duplicate", path);
+                    }
+                    if (ImGui::MenuItem("Delete")) {
+                        callback("delete_asset", path);
+                    }
+                    ImGui::EndPopup();
+                }
 
                 if (itemIndex != m_selected_item) {
                     ImGui::PopStyleColor();
@@ -81,13 +91,13 @@ class AssetsContentWidget : public Widget {
             };
 
             if (m_current_view.parent != nullptr) {
-                renderItem("..", "..", {m_folder_texture, false});
+                renderItem("..", "..", {m_folder_texture, false}, false);
             }
             for (const auto& folder : m_current_view.subfolders)
-                renderItem(folder.folder_name, folder.folder_name, {m_folder_texture, false});
+                renderItem(folder.folder_name, folder.folder_name, {m_folder_texture, false}, false);
 
             for (const auto& asset : m_current_view.assets)
-                renderItem(asset.name, asset.asset_path, asset.thumbnail);
+                renderItem(asset.name, asset.asset_path, asset.thumbnail, true);
 
             ImGui::EndTable();
         }

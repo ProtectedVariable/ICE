@@ -8,15 +8,42 @@
 #include <Logger.h>
 
 #include <fstream>
+#include <regex>
 
 namespace ICE {
+
+namespace {
+#ifdef __APPLE__
+// macOS caps OpenGL at 4.1 / GLSL 410, which has no `layout(binding = N)` qualifier on
+// uniform blocks. Rewrite the version directive and lift the bindings out of the source,
+// so the caller can apply them with glUniformBlockBinding once the program is linked.
+// The shaders stay the single source of truth for which point each block binds to.
+const std::regex k_version_directive(R"(#version\s+420\s+core)");
+const std::regex k_ubo_binding(R"(layout\s*\(\s*std140\s*,\s*binding\s*=\s*(\d+)\s*\)\s*uniform\s+(\w+))");
+
+std::string lowerToGLSL410(const std::string &source, std::unordered_map<std::string, GLuint> &block_bindings) {
+    std::string out = std::regex_replace(source, k_version_directive, "#version 410 core");
+    for (auto it = std::sregex_iterator(out.begin(), out.end(), k_ubo_binding), end = std::sregex_iterator(); it != end; ++it) {
+        block_bindings[(*it)[2].str()] = static_cast<GLuint>(std::stoul((*it)[1].str()));
+    }
+    return std::regex_replace(out, k_ubo_binding, "layout(std140) uniform $2");
+}
+#else
+// Everywhere else the context is >= 4.2 and the shaders are used exactly as authored.
+std::string lowerToGLSL410(const std::string &source, std::unordered_map<std::string, GLuint> &) {
+    return source;
+}
+#endif
+}  // namespace
 
 OpenGLShader::OpenGLShader(const Shader &shader_asset) {
     m_programID = glCreateProgram();
     Logger::Log(Logger::VERBOSE, "Graphics", "Compiling shader...");
 
+    std::vector<GLuint> stage_shaders;
+    std::unordered_map<std::string, GLuint> ubo_bindings;
     for (const auto& [stage, source] : shader_asset.getStageSources()) {
-        compileAndAttachStage(stage, source.second);
+        stage_shaders.push_back(compileAndAttachStage(stage, lowerToGLSL410(source.second, ubo_bindings)));
     }
 
     glLinkProgram(m_programID);
@@ -31,6 +58,28 @@ OpenGLShader::OpenGLShader(const Shader &shader_asset) {
         glGetProgramInfoLog(m_programID, maxLength, &maxLength, &errorLog[0]);
         Logger::Log(Logger::FATAL, "Graphics", "Shader linking error: %s", errorLog.data());
     }
+
+    // Bind each block to the point its stripped `layout(binding = N)` asked for. Empty,
+    // and so a no-op, wherever the qualifier could be left in the source.
+    for (const auto& [name, point] : ubo_bindings) {
+        GLuint index = glGetUniformBlockIndex(m_programID, name.c_str());
+        if (index != GL_INVALID_INDEX) {
+            glUniformBlockBinding(m_programID, index, point);
+        }
+    }
+
+    // Stage objects are no longer needed once linked into the program. Skip 0, which
+    // marks a stage that failed to compile (and so was never attached).
+    for (GLuint shader : stage_shaders) {
+        if (shader != 0) {
+            glDetachShader(m_programID, shader);
+            glDeleteShader(shader);
+        }
+    }
+}
+
+OpenGLShader::~OpenGLShader() {
+    glDeleteProgram(m_programID);
 }
 
 void OpenGLShader::bind() const {
@@ -53,28 +102,37 @@ void OpenGLShader::loadFloat(const std::string &name, float v) {
     glUniform1f(getLocation(name), v);
 }
 
-void OpenGLShader::loadFloat2(const std::string &name, Eigen::Vector2f vec) {
+void OpenGLShader::loadFloat2(const std::string &name, const Eigen::Vector2f &vec) {
     glUniform2f(getLocation(name), vec.x(), vec.y());
 }
 
-void OpenGLShader::loadFloat3(const std::string &name, Eigen::Vector3f vec) {
+void OpenGLShader::loadFloat3(const std::string &name, const Eigen::Vector3f &vec) {
     glUniform3f(getLocation(name), vec.x(), vec.y(), vec.z());
 }
 
-void OpenGLShader::loadFloat4(const std::string &name, Eigen::Vector4f vec) {
+void OpenGLShader::loadFloat4(const std::string &name, const Eigen::Vector4f &vec) {
     glUniform4f(getLocation(name), vec.x(), vec.y(), vec.z(), vec.w());
 }
 
-void OpenGLShader::loadMat4(const std::string &name, Eigen::Matrix4f mat) {
+void OpenGLShader::loadMat4(const std::string &name, const Eigen::Matrix4f &mat) {
     glUniformMatrix4fv(getLocation(name), 1, GL_FALSE, mat.data());
 }
 
+void OpenGLShader::loadMat4v(const std::string &name, const Eigen::Matrix4f *data, uint32_t count) {
+    // std::vector<Matrix4f> / a Matrix4f array is contiguous, column-major -- exactly what
+    // glUniformMatrix4fv expects for a mat4[] uniform, so one call uploads the whole array.
+    glUniformMatrix4fv(getLocation(name), count, GL_FALSE, data->data());
+}
+
 GLint OpenGLShader::getLocation(const std::string &name) {
-    if (!m_locations.contains(name)) {
-        GLint location = glGetUniformLocation(m_programID, name.c_str());
-        m_locations[name] = static_cast<unsigned int>(location);
+    // Single hash lookup on the hot path (was contains + operator[] insert + operator[]).
+    auto it = m_locations.find(name);
+    if (it != m_locations.end()) {
+        return static_cast<GLint>(it->second);
     }
-    return m_locations[name];
+    GLint location = glGetUniformLocation(m_programID, name.c_str());
+    m_locations.emplace(name, static_cast<unsigned int>(location));
+    return location;
 }
 
 bool compileShader(GLenum type, const std::string &source, GLint *shader) {
@@ -100,17 +158,22 @@ bool compileShader(GLenum type, const std::string &source, GLint *shader) {
     return compileStatus == GL_TRUE;
 }
 
-void OpenGLShader::compileAndAttachStage(ShaderStage stage, const std::string &source) {
+GLuint OpenGLShader::compileAndAttachStage(ShaderStage stage, const std::string &source) {
     GLint shader;
     Logger::Log(Logger::VERBOSE, "Graphics", "\t + Compiling shader stage...");
     if (!compileShader(stageToGLStage(stage), source, &shader)) {
+        // Don't attach a stage that failed to compile: attaching it only guarantees the
+        // link fails too, producing a broken-but-alive program. Return 0 to signal failure.
         Logger::Log(Logger::FATAL, "Graphics", "Error while compiling shader stage");
+        glDeleteShader(shader);
+        return 0;
     }
     glAttachShader(m_programID, shader);
+    return static_cast<GLuint>(shader);
 }
 
 
-constexpr GLenum OpenGLShader::stageToGLStage(ShaderStage stage) {
+GLenum OpenGLShader::stageToGLStage(ShaderStage stage) {
     switch (stage) {
         case ShaderStage::Vertex:
             return GL_VERTEX_SHADER;
@@ -125,6 +188,8 @@ constexpr GLenum OpenGLShader::stageToGLStage(ShaderStage stage) {
         case ShaderStage::Compute:
             return GL_COMPUTE_SHADER;
     }
+    Logger::Log(Logger::FATAL, "Graphics", "Unknown shader stage %d", static_cast<int>(stage));
+    return GL_VERTEX_SHADER;
 }
 
 }  // namespace ICE

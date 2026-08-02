@@ -7,6 +7,7 @@ add_library(${PROJECT_NAME} STATIC)
 
 target_sources(${PROJECT_NAME} PRIVATE
     src/EngineConfig.cpp
+    src/DefaultLoaders.cpp
     src/Project.cpp
     src/MaterialExporter.cpp
     src/TextureLoader.cpp
@@ -21,6 +22,7 @@ target_link_libraries(${PROJECT_NAME}
     PUBLIC
     scene
     assets
+    audio       # AudioClipLoader, registered in DefaultLoaders alongside the built-in loaders
     graphics_api
     assimp
     platform

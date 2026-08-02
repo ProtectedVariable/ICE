@@ -8,9 +8,14 @@
 
 namespace ICE {
 
+// Number of live GLFWWindow instances. GLFW is initialized on the first window and
+// terminated when the last one is destroyed.
+static int s_window_count = 0;
+
 GLFWWindow::GLFWWindow(int width, int height, const std::string& title) : m_width(width), m_height(height) {
-    if (!glfwInit())
+    if (s_window_count == 0 && !glfwInit())
         throw ICEException("Couldn't init GLFW");
+    s_window_count++;
 // Decide GL+GLSL versions
 #ifdef __APPLE__
     // GL 3.2 + GLSL 150
@@ -27,18 +32,44 @@ GLFWWindow::GLFWWindow(int width, int height, const std::string& title) : m_widt
 #endif
     // Create window with graphics context
     m_handle = glfwCreateWindow(width, height, title.c_str(), NULL, NULL);
-    if (m_handle == NULL)
+    if (m_handle == NULL) {
+        if (--s_window_count == 0)
+            glfwTerminate();
         throw ICEException("Couldn't create window");
+    }
 
     m_mouse_handler = std::make_shared<GLFWMouseHandler>(*this);
     m_keyboard_handler = std::make_shared<GLFWKeyboardHandler>(*this);
 
     glfwSetWindowUserPointer(m_handle, this);
 
+    // Window size is in screen coordinates, the space mouse positions and the UI live in.
     glfwSetWindowSizeCallback(m_handle, [](GLFWwindow* w, int width, int height) {
         GLFWWindow* self = (GLFWWindow*) glfwGetWindowUserPointer(w);
         self->windowResized(width, height);
     });
+
+    // Framebuffer size is in pixels, which is what render targets and glViewport want. The two
+    // differ on any scaled display (2x on a Retina Mac), so rendering must not be driven from
+    // the window size or it covers a fraction of the backbuffer.
+    glfwSetFramebufferSizeCallback(m_handle, [](GLFWwindow* w, int width, int height) {
+        GLFWWindow* self = (GLFWWindow*) glfwGetWindowUserPointer(w);
+        self->framebufferResized(width, height);
+    });
+
+    glfwSetWindowFocusCallback(m_handle, [](GLFWwindow* w, int focused) {
+        GLFWWindow* self = (GLFWWindow*) glfwGetWindowUserPointer(w);
+        self->windowFocusChanged(focused == GLFW_TRUE);
+    });
+}
+
+GLFWWindow::~GLFWWindow() {
+    if (m_handle != nullptr) {
+        glfwDestroyWindow(m_handle);
+    }
+    if (--s_window_count == 0) {
+        glfwTerminate();
+    }
 }
 
 std::pair<std::shared_ptr<MouseHandler>, std::shared_ptr<KeyboardHandler>> GLFWWindow::getInputHandlers() const {
@@ -87,7 +118,18 @@ std::pair<int, int> GLFWWindow::getSize() const {
 void GLFWWindow::windowResized(int w, int h) {
     m_width = w;
     m_height = h;
+}
+
+void GLFWWindow::framebufferResized(int w, int h) {
     m_resize_callback(w, h);
+}
+
+void GLFWWindow::setFocusCallback(const WindowFocusCallback& callback) {
+    m_focus_callback = callback;
+}
+
+void GLFWWindow::windowFocusChanged(bool focused) {
+    m_focus_callback(focused);
 }
 
 }  // namespace ICE

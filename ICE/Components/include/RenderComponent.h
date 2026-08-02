@@ -11,9 +11,10 @@
 
 namespace ICE {
 struct RenderComponent : public Component {
+    RenderComponent() = default;
     RenderComponent(AssetUID mesh_id, AssetUID material_id) : mesh(mesh_id), material(material_id) {}
-    AssetUID mesh;
-    AssetUID material;
+    AssetUID mesh = NO_ASSET_ID;
+    AssetUID material = NO_ASSET_ID;
 };
 }  // namespace ICE
 

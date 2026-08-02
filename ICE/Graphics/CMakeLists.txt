@@ -9,8 +9,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     src/PerspectiveCamera.cpp
     src/OrthographicCamera.cpp
     src/ForwardRenderer.cpp
-    src/Mesh.cpp
-    src/GeometryPass.cpp "include/GPUMesh.h" "include/GPUTexture.h")
+    src/GeometryPass.cpp)
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
@@ -18,6 +17,9 @@ target_link_libraries(${PROJECT_NAME}
     math
     entity
     scene
+    # GpuHandle.h builds its typed handles on HandlePool, which lives in the dependency-free
+    # `container` leaf module (see ICE/Container/CMakeLists.txt).
+    container
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC
@@ -27,4 +29,4 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         ${CMAKE_SOURCE_DIR}/src)
 
 enable_testing()
-#add_subdirectory(test)
+add_subdirectory(test)

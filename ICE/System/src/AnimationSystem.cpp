@@ -1,71 +1,179 @@
 ﻿#include "AnimationSystem.h"
 
 #include <iostream>
+#include <TransformComponent.h>
 
 namespace ICE {
-AnimationSystem::AnimationSystem(const std::shared_ptr<Registry>& reg, const std::shared_ptr<AssetBank>& bank) : m_registry(reg), m_asset_bank(bank) {
+AnimationSystem::AnimationSystem(const std::shared_ptr<Registry>& reg, const std::shared_ptr<AssetBank>& bank) : m_registry(reg.get()), m_asset_bank(bank) {
 }
 
 void AnimationSystem::update(double dt) {
+    // Phase 1 (render thread): resolve each playing entity's model (asset-bank access) and force
+    // its lazy node-name map to build now, so the parallel phase only ever reads it. Entities that
+    // aren't playing or whose model is missing are dropped here.
+    struct AnimJob {
+        Entity entity;
+        std::shared_ptr<Model> model;
+    };
+    std::vector<AnimJob> jobs;
+    jobs.reserve(entities.size());
     for (auto e : entities) {
         auto anim = m_registry->getComponent<AnimationComponent>(e);
-        auto pose = m_registry->getComponent<SkeletonPoseComponent>(e);
-        if (!anim->playing)
-            continue;
-
-        anim->currentTime += dt * anim->speed;
-
-        auto model = m_asset_bank->getAsset<Model>(pose->skeletonModel);
-        if (!model->getAnimations().contains(anim->currentAnimation)) {
+        if (!anim->playing) {
             continue;
         }
-        auto animation = model->getAnimations().at(anim->currentAnimation);
+        auto pose = m_registry->getComponent<SkeletonPoseComponent>(e);
+        auto model = m_asset_bank->getAsset<Model>(pose->skeletonModel);
+        if (!model) {
+            continue;
+        }
+        (void) model->getNodeByName(std::string());  // warm the lazy node-name cache serially
+        jobs.push_back({e, std::move(model)});
+    }
 
-        if (anim->currentTime > animation.duration) {
-            if (anim->loop) {
-                anim->currentTime = std::fmod(anim->currentTime, animation.duration);
-            } else {
-                anim->currentTime = animation.duration;
-                anim->playing = false;
+    // Phase 2: sample and pose each skeleton. Each animated entity owns disjoint bone entities and
+    // touches no asset bank, so the work parallelises cleanly across workers when a scheduler is
+    // set and there are enough entities; otherwise it runs inline.
+    auto process = [&](size_t begin, size_t end) {
+        for (size_t i = begin; i < end; ++i) {
+            updateEntity(jobs[i].entity, jobs[i].model, dt);
+        }
+    };
+    static constexpr size_t kParallelThreshold = 8;  // skeletal update is heavy per entity
+    if (m_scheduler && jobs.size() >= kParallelThreshold) {
+        m_scheduler->parallelRanges(jobs.size(), [&](size_t begin, size_t end) { process(begin, end); });
+    } else {
+        process(0, jobs.size());
+    }
+}
+
+void AnimationSystem::updateEntity(Entity e, const std::shared_ptr<Model>& model, double dt) {
+    auto anim = m_registry->getComponent<AnimationComponent>(e);
+    auto pose = m_registry->getComponent<SkeletonPoseComponent>(e);
+
+    const auto& animations = model->getAnimations();
+    if (!animations.contains(anim->currentAnimation)) {
+        return;
+    }
+    const auto& currentAnim = animations.at(anim->currentAnimation);
+
+    // Advance current animation time. dt is in seconds; animation keyframes are in
+    // ticks, so convert with ticksPerSecond (previously ignored -> wrong playback rate).
+    anim->currentTime += dt * currentAnim.ticksPerSecond * anim->speed;
+
+    if (anim->currentTime > currentAnim.duration) {
+        if (anim->loop) {
+            anim->currentTime = std::fmod(anim->currentTime, currentAnim.duration);
+        } else {
+            anim->currentTime = currentAnim.duration;
+            anim->playing = false;
+        }
+    }
+
+    // Handle blending
+    if (anim->blending) {
+        anim->blendFactor += dt / anim->blendDuration;
+        if (anim->blendFactor >= 1.0) {
+            anim->blendFactor = 1.0;
+            anim->blending = false;
+        }
+
+        // Advance previous animation time as well
+        if (animations.contains(anim->previousAnimation)) {
+            const auto& prevAnim = animations.at(anim->previousAnimation);
+            anim->previousTime += dt * prevAnim.ticksPerSecond * anim->speed;
+            if (anim->previousTime > prevAnim.duration) {
+                anim->previousTime = std::fmod(anim->previousTime, prevAnim.duration);
             }
         }
-        updateSkeleton(model, anim->currentTime, pose, animation);
-        finalizePose();
+
+        // Blended update
+        const Animation* prevAnimPtr = nullptr;
+        if (animations.contains(anim->previousAnimation)) {
+            prevAnimPtr = &animations.at(anim->previousAnimation);
+        }
+
+        float blendT = static_cast<float>(anim->blendFactor);
+
+        for (auto const& [nodeName, nodeEntity] : pose->bone_entity) {
+            BonePose currentPose = sampleBonePose(nodeName, currentAnim, anim->currentTime, model);
+            BonePose prevPose;
+            if (prevAnimPtr) {
+                prevPose = sampleBonePose(nodeName, *prevAnimPtr, anim->previousTime, model);
+            } else {
+                prevPose = currentPose;
+            }
+
+            BonePose finalPose = blendPoses(prevPose, currentPose, blendT);
+
+            auto transform = m_registry->getComponent<TransformComponent>(nodeEntity);
+            transform->setPosition(finalPose.position);
+            transform->setRotation(finalPose.rotation);
+            transform->setScale(finalPose.scale);
+        }
+    } else {
+        // No blending — direct update
+        updateSkeleton(model, anim->currentTime, pose, currentAnim);
     }
+
+    finalizePose(e, model);
+}
+
+BonePose AnimationSystem::sampleBonePose(const std::string& boneName, const Animation& anim, double time, const std::shared_ptr<Model>& model) {
+    BonePose pose;
+    if (anim.tracks.contains(boneName)) {
+        const auto& track = anim.tracks.at(boneName);
+        pose.position = interpolatePosition(time, track);
+        pose.rotation = interpolateRotation(time, track);
+        pose.scale = interpolateScale(time, track);
+    } else {
+        // Fall back to default node transform
+        const auto* node = model->getNodeByName(boneName);
+        if (node) {
+            TransformComponent defaultTransform(node->localTransform);
+            pose.position = defaultTransform.getPosition();
+            pose.rotation = defaultTransform.getRotation();
+            pose.scale = defaultTransform.getScale();
+        }
+    }
+    return pose;
+}
+
+BonePose AnimationSystem::blendPoses(const BonePose& a, const BonePose& b, float factor) {
+    BonePose result;
+    result.position = a.position + factor * (b.position - a.position);
+    result.rotation = a.rotation.slerp(factor, b.rotation);
+    result.rotation.normalize();
+    result.scale = a.scale + factor * (b.scale - a.scale);
+    return result;
 }
 
 void AnimationSystem::updateSkeleton(const std::shared_ptr<Model>& model, double time, SkeletonPoseComponent* pose, const Animation& anim) {
     for (auto const& [nodeName, nodeEntity] : pose->bone_entity) {
-        if (anim.tracks.contains(nodeName)) {
-            auto transform = m_registry->getComponent<TransformComponent>(nodeEntity);
-            const auto& track = anim.tracks.at(nodeName);
+        BonePose bonePose = sampleBonePose(nodeName, anim, time, model);
 
-            auto pos = interpolatePosition(time, track);
-            auto rot = interpolateRotation(time, track);
-            auto scale = interpolateScale(time, track);
-
-            transform->setPosition(pos);
-            transform->setRotation(rot);
-            transform->setScale(scale);
-        }
+        auto transform = m_registry->getComponent<TransformComponent>(nodeEntity);
+        transform->setPosition(bonePose.position);
+        transform->setRotation(bonePose.rotation);
+        transform->setScale(bonePose.scale);
     }
 }
 
-void AnimationSystem::finalizePose() {
-    for (auto e : entities) {
-        auto pose = m_registry->getComponent<SkeletonPoseComponent>(e);
-        auto model = m_asset_bank->getAsset<Model>(pose->skeletonModel);
-        auto& skeleton = model->getSkeleton();
+void AnimationSystem::finalizePose(Entity e, const std::shared_ptr<Model>& model) {
+    // Finalize only the entity being processed. This used to loop over every animated
+    // entity on each call, and it is called once per entity in update(), so the work was
+    // O(N^2) (with a matrix inverse per skeleton) while producing identical results.
+    auto pose = m_registry->getComponent<SkeletonPoseComponent>(e);
+    auto& skeleton = model->getSkeleton();
 
-        auto rootTransform = m_registry->getComponent<TransformComponent>(e);
-        Eigen::Matrix4f modelWorldInv = rootTransform->getWorldMatrix().inverse();
+    auto rootTransform = m_registry->getComponent<TransformComponent>(e);
+    Eigen::Matrix4f modelWorldInv = rootTransform->getWorldMatrix().inverse();
 
-        for (const auto& [name, id] : skeleton.boneMapping) {
-            Entity boneEntity = pose->bone_entity.at(name);
+    for (const auto& [name, id] : skeleton.boneMapping) {
+        Entity boneEntity = pose->bone_entity.at(name);
 
-            Eigen::Matrix4f boneWorld = m_registry->getComponent<TransformComponent>(boneEntity)->getWorldMatrix();
-            pose->bone_transform[id] = modelWorldInv * boneWorld;
-        }
+        Eigen::Matrix4f boneWorld = m_registry->getComponent<TransformComponent>(boneEntity)->getWorldMatrix();
+        pose->bone_transform[id] = modelWorldInv * boneWorld;
     }
 }
 
@@ -122,6 +230,11 @@ Eigen::Vector3f AnimationSystem::interpolateScale(double timeInTicks, const Bone
 }
 
 Eigen::Quaternionf AnimationSystem::interpolateRotation(double time, const BoneAnimation& track) {
+    // Empty track: nothing to interpolate. Without this guard, rotations.size() - 1 wraps
+    // to SIZE_MAX and findKeyIndex reads out of bounds.
+    if (track.rotations.empty()) {
+        return Eigen::Quaternionf::Identity();
+    }
     if (track.rotations.size() == 1) {
         return track.rotations[0].rotation;
     }
@@ -133,6 +246,9 @@ Eigen::Quaternionf AnimationSystem::interpolateRotation(double time, const BoneA
     const auto& nextKey = track.rotations[nextIndex];
 
     double totalTime = nextKey.timeStamp - startKey.timeStamp;
+    if (totalTime == 0.0) {
+        return startKey.rotation;
+    }
     double factor = (time - startKey.timeStamp) / totalTime;
 
     Eigen::Quaternionf finalQuat = startKey.rotation.slerp((float) factor, nextKey.rotation);

@@ -16,8 +16,15 @@ OpenGLTextureCube::OpenGLTextureCube(const TextureCube &texture_asset) {
 
     auto width = texture_asset.getWidth();
     auto faces = equirectangularToCubemap((uint8_t *) texture_asset.data(), width, texture_asset.getHeight());
+    // RGB (3-byte) rows: without alignment 1 the default of 4 shears any face whose width
+    // is not a multiple of 4.
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     for (int i = 0; i < 6; i++) {
-        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width / 4, width / 4, 0, GL_RGB, GL_UNSIGNED_BYTE, faces[i]);
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB8, width / 4, width / 4, 0, GL_RGB, GL_UNSIGNED_BYTE, faces[i]);
+    }
+    // equirectangularToCubemap allocates the six faces with new[]; free them after upload.
+    for (int i = 0; i < 6; i++) {
+        delete[] faces[i];
     }
 
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -28,6 +35,10 @@ OpenGLTextureCube::OpenGLTextureCube(const TextureCube &texture_asset) {
 
 }
 
+
+OpenGLTextureCube::~OpenGLTextureCube() {
+    glDeleteTextures(1, &m_id);
+}
 
 int OpenGLTextureCube::id() const {
     return m_id;

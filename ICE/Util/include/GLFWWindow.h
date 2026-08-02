@@ -10,6 +10,11 @@ namespace ICE {
 class GLFWWindow : public Window {
    public:
     GLFWWindow(int width, int height, const std::string& title);
+    ~GLFWWindow() override;
+
+    // Owns a GLFWwindow handle; non-copyable.
+    GLFWWindow(const GLFWWindow&) = delete;
+    GLFWWindow& operator=(const GLFWWindow&) = delete;
 
     void* getHandle() const override;
     bool shouldClose() override;
@@ -21,9 +26,12 @@ class GLFWWindow : public Window {
     void setSwapInterval(int interval) override;
     void makeContextCurrent() override;
     void setResizeCallback(const WindowResizeCallback& callback) override;
+    void setFocusCallback(const WindowFocusCallback& callback) override;
     std::pair<int, int> getSize() const override;
 
     void windowResized(int w, int h);
+    void framebufferResized(int w, int h);
+    void windowFocusChanged(bool focused);
 
    private:
     GLFWwindow* m_handle;
@@ -32,6 +40,8 @@ class GLFWWindow : public Window {
     std::shared_ptr<MouseHandler> m_mouse_handler;
     std::shared_ptr<KeyboardHandler> m_keyboard_handler;
     WindowResizeCallback m_resize_callback = [](int, int) {
+    };
+    WindowFocusCallback m_focus_callback = [](bool) {
     };
 
 };

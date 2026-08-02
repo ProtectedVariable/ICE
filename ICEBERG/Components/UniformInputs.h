@@ -40,14 +40,15 @@ class UniformInputs {
         m_asset_combo.setValues(path_with_none);
         m_assets_ids = {0};
         m_assets_ids.insert(m_assets_ids.end(), ids.begin(), ids.end());
+        m_asset_combo.onSelectionChanged(
+            [cb = this->m_callback, id_list = this->m_assets_ids](const std::string &, int index) { cb(id_list[index]); });
         if (std::holds_alternative<ICE::AssetUID>(m_value)) {
             auto it = std::find(m_assets_ids.begin(), m_assets_ids.end(), std::get<ICE::AssetUID>(m_value));
             if (it != m_assets_ids.end()) {
                 m_asset_combo.setSelected(std::distance(m_assets_ids.begin(), it));
             }
         }
-        m_asset_combo.onSelectionChanged(
-            [cb = this->m_callback, id_list = this->m_assets_ids](const std::string &, int index) { cb(id_list[index]); });
+        
     }
 
     void setForceVectorNumeric(bool force_vector_numeric) { m_force_vector_numeric = force_vector_numeric; }

@@ -5,14 +5,16 @@
 #pragma once
 
 #include <Eigen/Dense>
+#include <cstdint>
 
 namespace ICE {
 struct FrameBufferFormat {
-    int width, height, samples;
+    uint32_t width, height, samples;
 };
 
 class Framebuffer {
    public:
+    virtual ~Framebuffer() = default;
     virtual void bind() = 0;
     virtual void unbind() = 0;
     virtual void resize(int width, int height) = 0;

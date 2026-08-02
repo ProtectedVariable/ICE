@@ -1,6 +1,10 @@
 #include "Viewport.h"
 
 #include <ICEMath.h>
+#include <RenderComponent.h>
+#include <SkeletonPoseComponent.h>
+#include <SkinningComponent.h>
+#include <TransformComponent.h>
 
 #include <iostream>
 
@@ -13,12 +17,13 @@ Viewport::Viewport(const std::shared_ptr<ICE::ICEEngine> &engine, const std::fun
 
     m_picking_frambuffer = engine->getGraphicsFactory()->createFramebuffer({1, 1, 1});
 
-    ui.registerCallback("w_pressed", [this]() { m_engine->getCamera()->forward(camera_delta); });
-    ui.registerCallback("s_pressed", [this]() { m_engine->getCamera()->backward(camera_delta); });
-    ui.registerCallback("a_pressed", [this]() { m_engine->getCamera()->left(camera_delta); });
-    ui.registerCallback("d_pressed", [this]() { m_engine->getCamera()->right(camera_delta); });
-    ui.registerCallback("ls_pressed", [this]() { m_engine->getCamera()->up(camera_delta); });
-    ui.registerCallback("lc_pressed", [this]() { m_engine->getCamera()->down(camera_delta); });
+    ui.registerCallback("w_pressed", [this](float dt) { m_engine->getCamera()->forward(camera_speed * dt); });
+    ui.registerCallback("s_pressed", [this](float dt) { m_engine->getCamera()->backward(camera_speed * dt); });
+    ui.registerCallback("a_pressed", [this](float dt) { m_engine->getCamera()->left(camera_speed * dt); });
+    ui.registerCallback("d_pressed", [this](float dt) { m_engine->getCamera()->right(camera_speed * dt); });
+    ui.registerCallback("ls_pressed", [this](float dt) { m_engine->getCamera()->up(camera_speed * dt); });
+    ui.registerCallback("lc_pressed", [this](float dt) { m_engine->getCamera()->down(camera_speed * dt); });
+    ui.registerCallback("scroll", [this](float amount) { m_engine->getCamera()->forward(amount * scroll_speed); });
     ui.registerCallback("mouse_dragged", [this](float dx, float dy) {
         if (!ImGuizmo::IsUsingAny()) {
             m_engine->getCamera()->yaw(dx / 6.0);
@@ -44,7 +49,26 @@ Viewport::Viewport(const std::shared_ptr<ICE::ICEEngine> &engine, const std::fun
 
                 auto tc = registry->getComponent<ICE::TransformComponent>(e);
                 auto rc = registry->getComponent<ICE::RenderComponent>(e);
-                shader->loadMat4("model", tc->getWorldMatrix());
+                auto model_mat = tc->getWorldMatrix();
+
+                // Skin the picking geometry exactly like the render pass does, so an
+                // animated model is picked at its current pose instead of its bind pose.
+                if (registry->entityHasComponent<ICE::SkinningComponent>(e)) {
+                    const auto &skinning = m_engine->getGPURegistry()->getMeshSkinningData(rc->mesh);
+                    auto skeleton_entity = registry->getComponent<ICE::SkinningComponent>(e)->skeleton_entity;
+                    auto pose = registry->tryGetComponent<ICE::SkeletonPoseComponent>(skeleton_entity);
+                    auto skel_transform = registry->tryGetComponent<ICE::TransformComponent>(skeleton_entity);
+                    if (pose && skel_transform) {
+                        for (const auto &[id, ibm] : skinning.inverseBindMatrices) {
+                            if (id >= 0 && static_cast<size_t>(id) < pose->bone_transform.size()) {
+                                shader->loadMat4("bonesTransformMatrices[" + std::to_string(id) + "]", pose->bone_transform[id] * ibm);
+                            }
+                        }
+                        model_mat = skel_transform->getWorldMatrix();
+                    }
+                }
+
+                shader->loadMat4("model", model_mat);
                 shader->loadInt("objectID", e);
                 auto mesh = m_engine->getGPURegistry()->getMesh(rc->mesh);
                 if (mesh) {
@@ -76,6 +100,9 @@ Viewport::Viewport(const std::shared_ptr<ICE::ICEEngine> &engine, const std::fun
         if (uid == NO_ASSET_ID)
             return;
         ICE::Entity e = m_engine->getProject()->getCurrentScene()->spawnTree(uid, m_engine->getAssetBank());
+        // The spawn adds a whole node tree to the scene; the Hierarchy caches its view and has no
+        // other way to learn about it.
+        m_entity_spawned = true;
         m_entity_picked_callback(e);
     });
 }
@@ -86,14 +113,20 @@ bool Viewport::update() {
 
     if (m_selected_entity != 0) {
         auto registry = m_engine->getProject()->getCurrentScene()->getRegistry();
-        auto tc = registry->getComponent<ICE::TransformComponent>(m_selected_entity);
+        auto tc = registry->tryGetComponent<ICE::TransformComponent>(m_selected_entity);
+        if (tc == nullptr) {
+            // Selected entity has no transform: nothing to manipulate with the gizmo.
+            return m_done;
+        }
 
         ICE::Entity parentID = m_engine->getProject()->getCurrentScene()->getGraph()->getParentID(m_selected_entity);
         Eigen::Matrix4f parentWorldMatrix = Eigen::Matrix4f::Identity();
 
         if (parentID != 0) {
-            auto ptc = registry->getComponent<ICE::TransformComponent>(parentID);
-            parentWorldMatrix = ptc->getWorldMatrix();
+            auto ptc = registry->tryGetComponent<ICE::TransformComponent>(parentID);
+            if (ptc != nullptr) {
+                parentWorldMatrix = ptc->getWorldMatrix();
+            }
         }
 
         Eigen::Matrix4f currentWorldMatrix = tc->getWorldMatrix().eval();
@@ -130,4 +163,10 @@ bool Viewport::update() {
 
 void Viewport::setSelectedEntity(ICE::Entity e) {
     m_selected_entity = e;
+}
+
+bool Viewport::entitySpawned() {
+    bool spawned = m_entity_spawned;
+    m_entity_spawned = false;
+    return spawned;
 }

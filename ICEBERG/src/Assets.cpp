@@ -1,5 +1,6 @@
 #include "Assets.h"
 
+#include <AudioClip.h>
 #include <ForwardRenderer.h>
 #include <PerspectiveCamera.h>
 
@@ -12,15 +13,22 @@ Assets::Assets(const std::shared_ptr<ICE::ICEEngine>& engine, const std::shared_
       m_material_editor(engine),
       m_shader_editor(engine) {
     rebuildViewer();
-    ui.registerCallback("material_duplicate", [this](std::string name) {
-        auto id = m_engine->getAssetBank()->getUID("Materials/" + name);
-        auto mat_copy = std::make_shared<ICE::Material>(*m_engine->getAssetBank()->getAsset<ICE::Material>(id));
+    ui.registerCallback("material_duplicate", [this](std::string path) {
+        auto bank = m_engine->getAssetBank();
+        auto src = bank->getAsset<ICE::Material>(bank->getUID(path));
+        if (!src) {
+            return;
+        }
+        auto mat_copy = std::make_shared<ICE::Material>(*src);
         mat_copy->setSources({});
-        m_engine->getAssetBank()->addAsset<ICE::Material>(name + " copy", mat_copy);
+        bank->addAsset<ICE::Material>(ICE::AssetPath(path).getName() + " copy", mat_copy);
         rebuildViewer();
     });
-    ui.registerCallback("delete_asset", [this](std::string name) {
-        m_engine->getAssetBank()->removeAsset(name);
+    ui.registerCallback("delete_asset", [this](std::string path) {
+        m_engine->getAssetBank()->removeAsset(ICE::AssetPath(path));
+        // Drop the cached preview/thumbnail renderer so a later asset reusing this path
+        // doesn't show the deleted asset's image.
+        m_renderer.evict(path);
         rebuildViewer();
     });
 
@@ -72,6 +80,9 @@ void Assets::rebuildViewer() {
 
     auto asset_bank = m_engine->getAssetBank();
     for (const auto& entry : asset_bank->getAllEntries()) {
+        if (!entry.asset) {
+            continue;  // async import still loading (or failed): skip until its payload is ready
+        }
         Thumbnail thumbnail;
         auto [ptr, flip] = m_renderer.createThumbnail(entry.asset, entry.path.toString());
         thumbnail.ptr = ptr;
@@ -89,6 +100,8 @@ void Assets::rebuildViewer() {
             category = "TextureCubes";
         } else if (std::dynamic_pointer_cast<ICE::Shader>(entry.asset)) {
             category = "Shaders";
+        } else if (std::dynamic_pointer_cast<ICE::AudioClip>(entry.asset)) {
+            category = "Audio";
         } else {
             category = "Others";
         }
@@ -137,6 +150,15 @@ void Assets::createSubfolderView(AssetView* parent_view, const std::vector<std::
 
 bool Assets::update() {
     m_t += 0.1f;
+
+    // An async import that finished staging becomes Ready after the engine's pump() (which runs in
+    // ICEEngine::step). Rebuild the viewer when the in-flight count drops so newly-loaded assets
+    // (and a model's committed sub-assets) appear. Cheap when nothing is importing.
+    std::size_t inflight = m_engine->getAssetBank()->inFlight();
+    if (inflight < m_last_inflight) {
+        rebuildViewer();
+    }
+    m_last_inflight = inflight;
 
     if (m_current_preview.has_value()) {
         auto asset_ptr = m_engine->getAssetBank()->getAsset(m_engine->getAssetBank()->getUID(m_current_preview.value().asset_path));

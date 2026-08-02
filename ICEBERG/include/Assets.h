@@ -20,7 +20,11 @@ class Assets : public Controller {
 
     void createSubfolderView(AssetView *parent_view, const std::vector<std::string> &path, const Thumbnail &thumbnail, const std::string &full_path);
 
-    const std::vector<std::string> m_asset_categories = {"Models", "Meshes", "Materials", "Textures2D", "TextureCubes", "Shaders", "Others"};
+    // ORDER-SENSITIVE: rebuildViewer() tags each category with static_cast<AssetType>(index), so
+    // this list must stay positionally aligned with the AssetType enum in Asset.h. Adding a kind
+    // in one place without the other silently mislabels every category after it.
+    const std::vector<std::string> m_asset_categories = {"Models",  "Meshes",       "Materials", "Textures2D",
+                                                         "TextureCubes", "Shaders", "Audio",     "Others"};
 
     std::vector<AssetView> m_asset_views;
     int m_current_category_index = 0;
@@ -34,6 +38,10 @@ class Assets : public Controller {
     ShaderEditor m_shader_editor;
 
     std::optional<AssetData> m_current_preview = std::nullopt;
+
+    // Last observed count of in-flight async imports; a decrease means one finished and the viewer
+    // should rebuild (see update()).
+    std::size_t m_last_inflight = 0;
 
     float m_t = 0;
 };

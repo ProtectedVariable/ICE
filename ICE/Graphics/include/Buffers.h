@@ -10,6 +10,7 @@
 namespace ICE {
 class VertexBuffer {
    public:
+    virtual ~VertexBuffer() = default;
     virtual void bind() const = 0;
     virtual void unbind() const = 0;
     virtual void putData(const void* data, uint32_t size) = 0;
@@ -18,6 +19,7 @@ class VertexBuffer {
 
 class IndexBuffer {
    public:
+    virtual ~IndexBuffer() = default;
     virtual void bind() const = 0;
     virtual void unbind() const = 0;
     virtual void putData(const void* data, uint32_t size) = 0;

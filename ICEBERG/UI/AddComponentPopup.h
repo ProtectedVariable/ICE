@@ -1,6 +1,11 @@
 #pragma once
 
+#include <AnimationComponent.h>
+#include <AudioListenerComponent.h>
+#include <AudioSourceComponent.h>
+#include <LightComponent.h>
 #include <Registry.h>
+#include <RenderComponent.h>
 #include <imgui.h>
 
 #include "Components/ComboBox.h"
@@ -24,6 +29,12 @@ class AddComponentPopup : public Dialog {
         if (!registry->entityHasComponent<ICE::AnimationComponent>(entity)) {
             values.push_back("Animation Component");
         }
+        if (!registry->entityHasComponent<ICE::AudioSourceComponent>(entity)) {
+            values.push_back("Audio Source Component");
+        }
+        if (!registry->entityHasComponent<ICE::AudioListenerComponent>(entity)) {
+            values.push_back("Audio Listener Component");
+        }
         m_components_combo.setValues(values);
     }
 
@@ -44,6 +55,12 @@ class AddComponentPopup : public Dialog {
 
                 if (m_components_combo.getSelectedItem() == "Animation Component")
                     m_registry->addComponent(m_entity, ICE::AnimationComponent{"", 0.0, 1.0, true, true});
+
+                if (m_components_combo.getSelectedItem() == "Audio Source Component")
+                    m_registry->addComponent(m_entity, ICE::AudioSourceComponent{});
+
+                if (m_components_combo.getSelectedItem() == "Audio Listener Component")
+                    m_registry->addComponent(m_entity, ICE::AudioListenerComponent{});
                 done(DialogResult::Ok);
             }
             ImGui::SameLine();

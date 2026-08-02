@@ -6,6 +6,8 @@
 #define ICE_ENTITY_H
 
 #include <bitset>
+#include <cstddef>
+#include <cstdint>
 #include <cstdlib>
 #include <queue>
 #include <typeindex>
@@ -13,7 +15,18 @@
 
 namespace ICE {
 using Entity = std::uint32_t;
-using Signature = std::bitset<32>;
+
+// Single source of truth for ECS storage limits. The component-type ceiling and the Signature
+// bit width are both derived from MaxComponentTypes so they can never drift apart -- widen both
+// by changing this one constant. Referenced by ComponentTypeRegistry's bound check in
+// Component.h (replaces the constant that used to be hard-coded in registerComponent).
+struct StoragePolicy {
+    static constexpr std::size_t MaxComponentTypes = 64;
+};
+using Signature = std::bitset<StoragePolicy::MaxComponentTypes>;
+
+// Reserved "no entity" / scene-graph-root sentinel.
+constexpr Entity NULL_ENTITY = 0;
 
 class EntityManager {
    public:
@@ -38,10 +51,20 @@ class EntityManager {
     }
 
     void releaseEntity(Entity e) {
-        signatures[e].reset();
+        // Guard against releasing a non-alive/already-released entity: that used to enqueue
+        // the same id twice (later handed out as two live entities) and underflow the count.
+        // Presence of a signature entry is the aliveness proxy.
+        if (!signatures.contains(e)) {
+            return;
+        }
+        signatures.erase(e);  // erase, not reset: the map was growing monotonically
         releasedEntities.push(e);
-        entityCount--;
+        if (entityCount > 0) {
+            entityCount--;
+        }
     }
+
+    bool isAlive(Entity e) const { return e != NULL_ENTITY && signatures.contains(e); }
 
     void setSignature(Entity e, Signature s) { signatures[e] = s; }
 

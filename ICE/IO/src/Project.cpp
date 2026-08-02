@@ -4,26 +4,48 @@
 
 #include "Project.h"
 
+#include <AudioClip.h>
+#include <AudioDecoder.h>
+#include <AudioListenerComponent.h>
+#include <AudioSourceComponent.h>
 #include <Entity.h>
 #include <JsonParser.h>
 #include <LightComponent.h>
+#include <Model.h>
 #include <OpenGLFactory.h>
 #include <RenderComponent.h>
 #include <Scene.h>
+#include <SkeletonPoseComponent.h>
 #include <TransformComponent.h>
 
 #include <fstream>
 #include <iostream>
+#include <optional>
+#include <typeindex>
+#include <unordered_set>
 
+#include "DefaultLoaders.h"
 #include "MaterialExporter.h"
+#include "ModelLoader.h"
 #include "ShaderExporter.h"
+#include <SkinningComponent.h>
 
 namespace ICE {
+namespace {
+// The six built-in asset kinds are persisted in their own named sections; everything else (plugin
+// types) goes through the generic "assets" section. Keep these in sync with the built-in prefixes
+// pre-registered in AssetPath.
+bool isBuiltinAssetPrefix(const std::string &prefix) {
+    static const std::unordered_set<std::string> builtins = {"Textures", "CubeMaps", "Meshes", "Models", "Materials", "Shaders", "Audio"};
+    return builtins.find(prefix) != builtins.end();
+}
+}  // namespace
 Project::Project(const fs::path &base_directory, const std::string &m_name)
     : m_base_directory(base_directory / m_name),
       m_name(m_name),
       m_asset_bank(std::make_shared<AssetBank>()),
       m_gpu_registry(std::make_shared<GPURegistry>(std::make_shared<OpenGLFactory>(), m_asset_bank)) {
+    registerDefaultLoaders(*m_asset_bank);
     cameraPosition.setZero();
     cameraRotation.setZero();
     constexpr std::string_view assets_folder = "Assets";
@@ -33,6 +55,7 @@ Project::Project(const fs::path &base_directory, const std::string &m_name)
     m_cubemaps_directory = m_base_directory / assets_folder / "Cubemaps";
     m_models_directory = m_base_directory / assets_folder / "Models";
     m_meshes_directory = m_base_directory / assets_folder / "Meshes";
+    m_audio_directory = m_base_directory / assets_folder / "Audio";
     m_scenes_directory = m_base_directory / "Scenes";
 }
 
@@ -49,6 +72,7 @@ bool Project::CreateDirectories() {
     m_asset_bank->addAsset<Shader>("pbr", {m_shaders_directory / "pbr.shader.json"});
     m_asset_bank->addAsset<Shader>("lastpass", {m_shaders_directory / "lastpass.shader.json"});
     m_asset_bank->addAsset<Shader>("__ice__picking_shader", {m_shaders_directory / "picking.shader.json"});
+    m_asset_bank->addAsset<Shader>("ui", {m_shaders_directory / "ui.shader.json"});
 
     m_asset_bank->addAsset<Material>("base_mat", {m_materials_directory / "base_mat.material.json"});
 
@@ -58,7 +82,7 @@ bool Project::CreateDirectories() {
     m_asset_bank->addAsset<Texture2D>("Editor/folder", {m_textures_directory / "Editor" / "folder.png"});
     m_asset_bank->addAsset<Texture2D>("Editor/shader", {m_textures_directory / "Editor" / "shader.png"});
 
-    m_scenes.push_back(std::make_shared<Scene>("MainScene"));
+    addScene(Scene("MainScene"));  // addScene wires the asset bank into the scene
     setCurrentScene(getScenes()[0]);
     return true;
 }
@@ -136,12 +160,57 @@ void Project::writeToFile(const std::shared_ptr<Camera> &editorCamera) {
         vec.push_back(dumpAsset(asset_id, texture));
     }
     j["cubeMaps"] = vec;
+    vec.clear();
+
+    // Audio clips persist by source path like textures and meshes: the decoded PCM is rebuilt by
+    // AudioClipLoader on load rather than being written into the project file.
+    for (const auto &[asset_id, clip] : m_asset_bank->getAll<AudioClip>()) {
+        vec.push_back(dumpAsset(asset_id, clip));
+    }
+    j["audioClips"] = vec;
+    vec.clear();
+
+    if (!m_bus_gains.empty() || !m_bus_mutes.empty()) {
+        json mixer;
+        mixer["bus_gains"] = m_bus_gains;
+        mixer["bus_mutes"] = m_bus_mutes;
+        j["audioMixer"] = mixer;
+    }
+
+    // Generic section for plugin-defined asset kinds (anything whose path prefix is not one of the
+    // six built-ins). Keyed by prefix so load can route each entry to the right erased loader. Any
+    // entries whose plugin was missing at load are re-emitted verbatim first, so they are preserved.
+    std::vector<json> custom_assets = m_unknown_assets;
+    for (const auto &entry : m_asset_bank->getAllEntries()) {
+        if (!entry.asset) {
+            continue;  // reservation still loading / failed load: nothing to persist
+        }
+        const auto components = entry.path.getPath();
+        std::string type_prefix = components.empty() ? "" : components.front();
+        if (type_prefix.empty() || isBuiltinAssetPrefix(type_prefix)) {
+            continue;  // built-ins are saved in their own sections above
+        }
+        AssetUID uid = m_asset_bank->getUID(entry.path);
+        json dumped = dumpAsset(uid, entry.asset);
+        dumped["prefix"] = type_prefix;
+        custom_assets.push_back(dumped);
+    }
+    j["assets"] = custom_assets;
 
     outstream << j.dump(4);
     outstream.close();
 
+    // Ensure the scenes folder exists before writing into it, as the material/shader exports above
+    // already do for theirs. Without this an absent Scenes/ directory made the ofstream fail
+    // silently and every scene was dropped from the save with no error.
+    fs::create_directories(m_scenes_directory);
+
     for (const auto &s : m_scenes) {
         outstream.open(m_scenes_directory / (s->getName() + ".ics"));
+        if (!outstream.is_open()) {
+            Logger::Log(Logger::ERROR, "IO", "Could not write scene file '%s'", s->getName().c_str());
+            continue;
+        }
         j.clear();
 
         j["m_name"] = s->getName();
@@ -190,7 +259,7 @@ void Project::writeToFile(const std::shared_ptr<Camera> &editorCamera) {
                 spjson["skeletonModel"] = sc.skeletonModel;
                 spjson["bone_entity"] = sc.bone_entity;
                 std::vector<json> bone_transforms;
-                for (const auto& tr : sc.bone_transform) {
+                for (const auto &tr : sc.bone_transform) {
                     bone_transforms.push_back(JsonParser::dumpMat4(tr));
                 }
                 spjson["bone_transforms"] = bone_transforms;
@@ -201,6 +270,34 @@ void Project::writeToFile(const std::shared_ptr<Camera> &editorCamera) {
                 json scjson;
                 scjson["skeleton_entity"] = sc.skeleton_entity;
                 entity["skinningComponent"] = scjson;
+            }
+            if (s->getRegistry()->entityHasComponent<AudioSourceComponent>(e)) {
+                const AudioSourceComponent &asc = *s->getRegistry()->getComponent<AudioSourceComponent>(e);
+                json ajson;
+                ajson["clip"] = asc.clip;
+                ajson["volume"] = asc.volume;
+                ajson["pitch"] = asc.pitch;
+                ajson["loop"] = asc.loop;
+                ajson["play_on_awake"] = asc.playOnAwake;
+                ajson["spatial"] = asc.spatial;
+                ajson["min_distance"] = asc.minDistance;
+                ajson["max_distance"] = asc.maxDistance;
+                ajson["rolloff"] = asc.rolloff;
+                ajson["priority"] = asc.priority;
+                ajson["bus"] = asc.bus;
+                // Only the authored fields are written. The live voice handle, the Doppler
+                // position cache and the playOnAwake/completion latches are runtime state: saving
+                // them would restore a scene mid-playback pointing at a voice that no longer
+                // exists. `state` is deliberately excluded too -- playOnAwake is the authored way
+                // to start a sound, so a scene always loads quiescent.
+                entity["audioSourceComponent"] = ajson;
+            }
+            if (s->getRegistry()->entityHasComponent<AudioListenerComponent>(e)) {
+                const AudioListenerComponent &alc = *s->getRegistry()->getComponent<AudioListenerComponent>(e);
+                json ljson;
+                ljson["volume"] = alc.volume;
+                ljson["active"] = alc.active;
+                entity["audioListenerComponent"] = ljson;
             }
             entities.push_back(entity);
         }
@@ -227,8 +324,17 @@ json Project::dumpAsset(AssetUID uid, const std::shared_ptr<Asset> &asset) {
 
 void Project::loadFromFile() {
     std::ifstream infile = std::ifstream(m_base_directory / (m_name + ".ice"));
+    if (!infile.is_open()) {
+        Logger::Log(Logger::ERROR, "IO", "Could not open project file '%s'", (m_base_directory / (m_name + ".ice")).string().c_str());
+        return;
+    }
     json j;
-    infile >> j;
+    try {
+        infile >> j;
+    } catch (const std::exception &e) {
+        Logger::Log(Logger::ERROR, "IO", "Failed to parse project file: %s", e.what());
+        return;
+    }
     infile.close();
 
     std::vector<std::string> sceneNames = j["scenes"];
@@ -248,11 +354,60 @@ void Project::loadFromFile() {
     loadAssetsOfType<Material>(material);
     loadAssetsOfType<Mesh>(meshes);
     loadAssetsOfType<Model>(models);
+    // Absent in projects written before audio existed; those clips (if any) come back through the
+    // generic "assets" section below, which routes by path prefix and handles them correctly.
+    if (j.contains("audioClips")) {
+        loadAssetsOfType<AudioClip>(j["audioClips"]);
+    }
+    if (j.contains("audioMixer")) {
+        m_bus_gains = j["audioMixer"].value("bus_gains", std::vector<float>{});
+        m_bus_mutes = j["audioMixer"].value("bus_mutes", std::vector<bool>{});
+    }
+
+    // Generic section for plugin-defined asset kinds. Route each entry to the right loader via its
+    // path prefix (AssetPath::typeForPrefix). If the type is unknown (its plugin isn't loaded) or has
+    // no loader, warn and keep the raw entry so the next save preserves it instead of dropping it.
+    m_unknown_assets.clear();
+    if (j.contains("assets")) {
+        for (const auto &asset : j["assets"]) {
+            std::string prefix = asset.value("prefix", std::string());
+            std::optional<std::type_index> type;
+            if (!prefix.empty()) {
+                type = AssetPath::typeForPrefix(prefix);
+            }
+            if (!type.has_value()) {
+                Logger::Log(Logger::WARNING, "IO", "No registered asset type for prefix '%s'; preserving entry across save", prefix.c_str());
+                m_unknown_assets.push_back(asset);
+                continue;
+            }
+            AssetUID uid = asset["uid"];
+            std::string bank_path = asset["bank_path"];
+            std::vector<fs::path> sources;
+            for (const auto &entry : asset["sources"]) {
+                sources.push_back(m_base_directory / std::string(entry));
+            }
+            try {
+                m_asset_bank->addAssetWithSpecificUID(type.value(), AssetPath(bank_path), sources, uid);
+            } catch (const std::exception &e) {
+                Logger::Log(Logger::WARNING, "IO", "Could not load custom asset '%s' (%s); preserving entry", bank_path.c_str(), e.what());
+                m_unknown_assets.push_back(asset);
+            }
+        }
+    }
 
     for (const auto &s : sceneNames) {
         infile = std::ifstream(m_scenes_directory / (s + ".ics"));
+        if (!infile.is_open()) {
+            Logger::Log(Logger::ERROR, "IO", "Could not open scene file '%s'", s.c_str());
+            continue;
+        }
         json scenejson;
-        infile >> scenejson;
+        try {
+            infile >> scenejson;
+        } catch (const std::exception &e) {
+            Logger::Log(Logger::ERROR, "IO", "Failed to parse scene '%s': %s", s.c_str(), e.what());
+            continue;
+        }
         infile.close();
 
         Scene scene = Scene(scenejson["m_name"]);
@@ -296,7 +451,7 @@ void Project::loadFromFile() {
                 sc.skeletonModel = sj["skeletonModel"];
                 sc.bone_entity = sj["bone_entity"].get<std::unordered_map<std::string, Entity>>();
                 std::vector<Eigen::Matrix4f> bone_transforms;
-                for (const auto& jt : sj["bone_transforms"]) {
+                for (const auto &jt : sj["bone_transforms"]) {
                     bone_transforms.push_back(JsonParser().readMat4(jt));
                 }
                 sc.bone_transform = bone_transforms;
@@ -307,6 +462,34 @@ void Project::loadFromFile() {
                 SkinningComponent sc;
                 sc.skeleton_entity = skj["skeleton_entity"];
                 scene.getRegistry()->addComponent(e, sc);
+            }
+            if (!jentity["audioSourceComponent"].is_null()) {
+                json aj = jentity["audioSourceComponent"];
+                AudioSourceComponent asc;
+                // .value() throughout: a field added after a project was last saved must default
+                // rather than throw, so older scenes keep loading.
+                asc.clip = aj.value("clip", (AssetUID) NO_ASSET_ID);
+                asc.volume = aj.value("volume", 1.0f);
+                asc.pitch = aj.value("pitch", 1.0f);
+                asc.loop = aj.value("loop", false);
+                asc.playOnAwake = aj.value("play_on_awake", false);
+                asc.spatial = aj.value("spatial", true);
+                asc.minDistance = aj.value("min_distance", 1.0f);
+                asc.maxDistance = aj.value("max_distance", 500.0f);
+                asc.rolloff = aj.value("rolloff", 1.0f);
+                asc.priority = aj.value("priority", (uint8_t) 128);
+                asc.bus = aj.value("bus", (uint8_t) 2);
+                // Runtime fields keep their defaults: no voice, no cached position, latches clear.
+                // playOnAwake then starts the sound on the first AudioSystem update, exactly as it
+                // would for a freshly authored source.
+                scene.getRegistry()->addComponent(e, asc);
+            }
+            if (!jentity["audioListenerComponent"].is_null()) {
+                json lj = jentity["audioListenerComponent"];
+                AudioListenerComponent alc;
+                alc.volume = lj.value("volume", 1.0f);
+                alc.active = lj.value("active", true);
+                scene.getRegistry()->addComponent(e, alc);
             }
         }
         for (json jentity : scenejson["entities"]) {
@@ -326,12 +509,100 @@ void Project::copyAssetFile(const fs::path &folder, const std::string &assetName
 
     auto dst = subfolder / (assetName + src.extension().string());
     std::ifstream srcStream(src, std::ios::binary);
+    if (!srcStream.is_open()) {
+        Logger::Log(Logger::ERROR, "IO", "Could not open source asset '%s'", src.string().c_str());
+        return;
+    }
     std::ofstream dstStream(dst, std::ios::binary);
+    if (!dstStream.is_open()) {
+        Logger::Log(Logger::ERROR, "IO", "Could not open destination '%s' for asset copy", dst.string().c_str());
+        return;
+    }
 
     dstStream << srcStream.rdbuf();
     dstStream.flush();
     srcStream.close();
     dstStream.close();
+}
+
+AssetUID Project::importModel(const std::string &name, const fs::path &src) {
+    // Copy the source file into <project>/Assets/Models (keeping its extension) and register it.
+    copyAssetFile("Models", name, src);
+    fs::path dst = m_models_directory / (name + src.extension().string());
+    m_asset_bank->addAsset<Model>(name, {dst});
+    return model(name);
+}
+
+AssetUID Project::requestModel(const std::string &name, const std::vector<fs::path> &sources) {
+    // Resolve the one bank value the parse needs (the pbr shader UID) on the main thread, then stage
+    // (pure) on a worker and commit (bank mutation) on the main thread in pump(). The ModelLoader is
+    // captured by shared_ptr so it outlives the in-flight request; the commit runs only in pump(),
+    // where the bank is alive.
+    AssetUID pbr_shader_uid = m_asset_bank->getUID(AssetPath::WithTypePrefix<Shader>("pbr"));
+    auto loader = std::make_shared<ModelLoader>(*m_asset_bank);
+    AssetBank *bank = m_asset_bank.get();
+
+    AssetBank::StageFn stage = [loader, sources, pbr_shader_uid]() -> std::shared_ptr<void> {
+        return std::make_shared<StagedModel>(loader->stage(sources, pbr_shader_uid));
+    };
+    AssetBank::CommitFn commit = [loader, bank](const std::shared_ptr<void> &staged) -> std::shared_ptr<Asset> {
+        auto staged_model = std::static_pointer_cast<StagedModel>(staged);
+        return loader->commit(*staged_model, *bank);
+    };
+    return m_asset_bank->requestAsset<Model>(name, std::move(stage), std::move(commit));
+}
+
+AssetUID Project::importAudio(const std::string &name, const fs::path &src, bool for_3d) {
+    // Copy the source file into <project>/Assets/Audio (keeping its extension) and register it.
+    copyAssetFile("Audio", name, src);
+    fs::path dst = m_audio_directory / (name + src.extension().string());
+
+    if (!for_3d) {
+        m_asset_bank->addAsset<AudioClip>(name, {dst});
+        return audioClip(name);
+    }
+
+    // 3D import: decode here so the result can be folded to mono before it ever reaches the device.
+    auto decoded = DecodeAudioFile(dst);
+    if (!decoded.has_value()) {
+        Logger::Log(Logger::ERROR, "IO", "Could not decode audio '%s' for 3D import.", dst.string().c_str());
+        return NO_ASSET_ID;
+    }
+    const uint32_t original_channels = decoded->channels;
+    DownmixToMono(*decoded);
+    if (original_channels > 1) {
+        Logger::Log(Logger::INFO, "IO", "Downmixed '%s' from %u channels to mono so it can be spatialized.", name.c_str(),
+                    original_channels);
+    }
+
+    auto clip = std::make_shared<AudioClip>(std::move(decoded->samples), decoded->channels, decoded->sampleRate);
+    clip->setSources({dst});
+    m_asset_bank->addAsset<AudioClip>(name, clip);
+    return audioClip(name);
+}
+
+AssetUID Project::requestAudio(const std::string &name, const std::vector<fs::path> &sources) {
+    // AudioClipLoader neither reads nor mutates the bank, so the generic requestAsset overload
+    // covers this entirely: it stages the decode on the scheduler and publishes the result in
+    // pump(). Contrast requestModel, which needs an explicit stage/commit split because the model
+    // loader adds sub-assets.
+    return m_asset_bank->requestAsset<AudioClip>(name, sources);
+}
+
+AssetUID Project::mesh(const std::string &name) const {
+    return m_asset_bank->getUID(AssetPath::WithTypePrefix<Mesh>(name));
+}
+
+AssetUID Project::audioClip(const std::string &name) const {
+    return m_asset_bank->getUID(AssetPath::WithTypePrefix<AudioClip>(name));
+}
+
+AssetUID Project::material(const std::string &name) const {
+    return m_asset_bank->getUID(AssetPath::WithTypePrefix<Material>(name));
+}
+
+AssetUID Project::model(const std::string &name) const {
+    return m_asset_bank->getUID(AssetPath::WithTypePrefix<Model>(name));
 }
 
 bool Project::renameAsset(const AssetPath &oldName, const AssetPath &newName) {
@@ -341,9 +612,12 @@ bool Project::renameAsset(const AssetPath &oldName, const AssetPath &newName) {
     if (m_asset_bank->renameAsset(oldName, newName)) {
         auto path = m_base_directory / "Assets";
         for (const auto &file : getFilesInDir(path / oldName.prefix())) {
-            if (file.substr(0, file.find_last_of(".")) == oldName.getName()) {
+            // stem()/extension() handle files with no extension (the old substr(find_last_of("."))
+            // threw std::out_of_range on those).
+            fs::path fp(file);
+            if (fp.stem().string() == oldName.getName()) {
                 if (rename((path / oldName.prefix() / file).string().c_str(),
-                           (path / oldName.prefix() / (newName.getName() + file.substr(file.find_last_of(".")))).string().c_str())
+                           (path / oldName.prefix() / (newName.getName() + fp.extension().string())).string().c_str())
                     == 0) {
                     return true;
                 }
@@ -357,8 +631,9 @@ bool Project::renameAsset(const AssetPath &oldName, const AssetPath &newName) {
 std::vector<std::string> Project::getFilesInDir(const fs::path &folder) {
     std::vector<std::string> files;
     for (const auto &entry : fs::directory_iterator(folder)) {
-        std::string sp = entry.path().string();
-        files.push_back(sp.substr(sp.find_last_of("/") + 1));
+        // Use std::filesystem to extract the filename: splitting on '/' returned the whole
+        // path on Windows, where the separator is '\'.
+        files.push_back(entry.path().filename().string());
     }
     return files;
 }
@@ -369,6 +644,12 @@ std::vector<std::shared_ptr<Scene>> Project::getScenes() {
 
 void Project::setScenes(const std::vector<std::shared_ptr<Scene>> &scenes) {
     m_scenes = scenes;
+    // Keep spawn()/by-name lookups working on scenes set in bulk (e.g. after a load).
+    for (auto &scene : m_scenes) {
+        if (scene) {
+            scene->setAssetBank(m_asset_bank);
+        }
+    }
 }
 
 std::shared_ptr<GPURegistry> Project::getGPURegistry() {
@@ -384,7 +665,11 @@ void Project::setAssetBank(const std::shared_ptr<AssetBank> &asset_bank) {
 }
 
 void Project::addScene(const Scene &scene) {
-    m_scenes.push_back(std::make_shared<Scene>(scene));
+    auto stored = std::make_shared<Scene>(scene);
+    // Wire the project's asset bank into the scene so scene.spawn()/by-name lookups work without
+    // the caller threading the bank through.
+    stored->setAssetBank(m_asset_bank);
+    m_scenes.push_back(stored);
 }
 
 void Project::setCurrentScene(const std::shared_ptr<Scene> &scene) {
@@ -392,6 +677,20 @@ void Project::setCurrentScene(const std::shared_ptr<Scene> &scene) {
 }
 std::shared_ptr<Scene> Project::getCurrentScene() const {
     return m_current_scene;
+}
+
+Scene &Project::createScene(const std::string &name) {
+    addScene(Scene(name));
+    auto scene = m_scenes.back();
+    m_current_scene = scene;
+    if (m_scene_activator) {
+        m_scene_activator(scene);  // engine builds the scene's runtime systems
+    }
+    return *scene;
+}
+
+void Project::setSceneActivator(const std::function<void(const std::shared_ptr<Scene>&)> &activator) {
+    m_scene_activator = activator;
 }
 
 json Project::dumpVec3(const Eigen::Vector3f &v) {

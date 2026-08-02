@@ -6,11 +6,11 @@ message(STATUS "Building ${PROJECT_NAME} module")
 add_library(${PROJECT_NAME} STATIC)
 
 target_sources(${PROJECT_NAME} PRIVATE
-    src/BufferUtils.cpp
 	src/ICEException.cpp
 	src/Logger.cpp
 	src/WindowFactory.cpp
-	src/GLFWWindow.cpp)
+	src/GLFWWindow.cpp
+	src/InputManager.cpp)
 
 target_link_libraries(${PROJECT_NAME}
 	PUBLIC
@@ -23,4 +23,4 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 
 enable_testing()
-#add_subdirectory(test)
+add_subdirectory(test)

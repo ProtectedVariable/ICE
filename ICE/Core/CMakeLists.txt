@@ -11,16 +11,22 @@ target_sources(${PROJECT_NAME} PRIVATE
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
     assets
+    audio
+    audio_api_openal
+    audio_system
     components
     entity
     graphics
     graphics_api
     io
     math
+    physics
     platform
     scene
+    scripting
     storage
     system
+    UI
     util
 )
 

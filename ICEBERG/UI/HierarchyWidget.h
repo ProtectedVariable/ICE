@@ -1,6 +1,7 @@
 #pragma once
 #include <imgui.h>
 
+#include <cstdio>
 #include <memory>
 #include <string>
 #include <vector>
@@ -32,11 +33,23 @@ class HierarchyWidget : public Widget {
 
         renderTree(m_view);
 
+        // Delete key removes the selected entity (never the root scene node, id 0).
+        if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) && selected_id != 0 &&
+            ImGui::IsKeyPressed(ImGuiKey_Delete)) {
+            callback("delete_entity_clicked", selected_id);
+        }
+
+        renderRenamePopup();
+
         ImGui::End();
     }
 
    private:
     void renderTree(const SceneTreeView& tree) {
+        // Scope the ImGui ID by entity id so two entities that share a name don't collide
+        // (which corrupts selection/open state and the context popup). Paired with PopID
+        // below, called unconditionally regardless of whether the node is open.
+        ImGui::PushID(static_cast<int>(tree.id));
         auto flags = tree.children.empty() ? ImGuiTreeNodeFlags_Leaf : 0;
         flags |= tree.id == selected_id ? ImGuiTreeNodeFlags_Selected : 0;
         flags |= ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_OpenOnArrow;
@@ -45,7 +58,9 @@ class HierarchyWidget : public Widget {
             if (tree.type != EntityType::Scene) {
                 auto src_flags = ImGuiDragDropFlags_SourceNoDisableHover;
                 if (ImGui::BeginDragDropSource(src_flags)) {
-                    ImGui::SetDragDropPayload("DND_ENTITY_TREE", &tree.id, sizeof(ICE::Entity*));
+                    // Payload is an ICE::Entity value, not a pointer: sizeof(ICE::Entity*)
+                    // would copy 4 bytes past tree.id.
+                    ImGui::SetDragDropPayload("DND_ENTITY_TREE", &tree.id, sizeof(ICE::Entity));
                     ImGui::Text("%s", name.c_str());
                     ImGui::EndDragDropSource();
                 }
@@ -63,6 +78,21 @@ class HierarchyWidget : public Widget {
                     callback("create_entity_clicked", tree.id);
                     ImGui::CloseCurrentPopup();
                 }
+                // Duplicate/Rename/Delete only apply to real entities, not the root scene node.
+                if (tree.id != 0) {
+                    if (ImGui::Button("Duplicate")) {
+                        callback("duplicate_entity_clicked", tree.id);
+                        ImGui::CloseCurrentPopup();
+                    }
+                    if (ImGui::Button("Rename")) {
+                        beginRename(tree.id, tree.entity_name);
+                        ImGui::CloseCurrentPopup();
+                    }
+                    if (ImGui::Button("Delete")) {
+                        callback("delete_entity_clicked", tree.id);
+                        ImGui::CloseCurrentPopup();
+                    }
+                }
                 ImGui::EndPopup();
             }
             if (ImGui::IsItemClicked(0)) {
@@ -75,9 +105,41 @@ class HierarchyWidget : public Widget {
             }
             ImGui::TreePop();
         }
+        ImGui::PopID();
+    }
+
+    void beginRename(ICE::Entity e, const std::string& current_name) {
+        m_renaming_id = e;
+        std::snprintf(m_rename_buf, sizeof(m_rename_buf), "%s", current_name.c_str());
+        m_open_rename = true;
+        m_focus_rename = true;
+    }
+
+    void renderRenamePopup() {
+        if (m_open_rename) {
+            ImGui::OpenPopup("Rename Entity");
+            m_open_rename = false;
+        }
+        if (ImGui::BeginPopup("Rename Entity")) {
+            if (m_focus_rename) {
+                ImGui::SetKeyboardFocusHere();
+                m_focus_rename = false;
+            }
+            bool commit = ImGui::InputText("##rename_entity", m_rename_buf, sizeof(m_rename_buf), ImGuiInputTextFlags_EnterReturnsTrue);
+            if (commit && m_rename_buf[0] != '\0') {
+                callback("rename_entity", m_renaming_id, std::string(m_rename_buf));
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
+        }
     }
 
    private:
     SceneTreeView m_view;
     ICE::Entity selected_id = 0;
+
+    ICE::Entity m_renaming_id = 0;
+    char m_rename_buf[256] = {0};
+    bool m_open_rename = false;
+    bool m_focus_rename = false;
 };

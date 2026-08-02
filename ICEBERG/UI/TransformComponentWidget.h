@@ -38,6 +38,12 @@ class TransformComponentWidget : public Widget, ImXML::XMLEventHandler {
         }
     }
 
+    // Lightweight per-frame refresh of just the cached pointer. Another entity's
+    // structural change (add/remove component) can reallocate the component storage and
+    // dangle m_tc; the bound lambdas dereference this->m_tc, so refreshing the member
+    // keeps them valid without re-running setValue (which would fight in-progress edits).
+    void refreshComponent(ICE::TransformComponent* tc) { m_tc = tc; }
+
     void setTransformComponent(ICE::TransformComponent* tc) {
         m_tc = tc;
         if (tc) {

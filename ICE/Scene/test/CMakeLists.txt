@@ -7,6 +7,7 @@ include(CTest)
 add_executable(SceneTestSuite
         SceneTest.cpp
         SceneGraphTest.cpp
+        SceneCameraTest.cpp
 )
 
 add_test(NAME SceneTestSuite

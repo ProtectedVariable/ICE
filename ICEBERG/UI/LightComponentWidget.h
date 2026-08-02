@@ -38,6 +38,8 @@ class LightComponentWidget : public Widget, ImXML::XMLEventHandler {
             m_lc->type = ICE::DirectionalLight;
         } else if (node.arg<std::string>("id") == "spot_light") {
             m_lc->type = ICE::SpotLight;
+        } else if (node.arg<std::string>("id") == "btn_remove" && m_on_remove) {
+            m_on_remove();
         }
     }
 
@@ -48,6 +50,13 @@ class LightComponentWidget : public Widget, ImXML::XMLEventHandler {
         }
     }
 
+    // The Remove button lives in this child widget, but the removal handler is registered on
+    // the parent InspectorWidget's callback map. This hook bridges the two.
+    void onRemove(const std::function<void()>& f) { m_on_remove = f; }
+
+    // Per-frame refresh of just the cached pointer (see TransformComponentWidget).
+    void refreshComponent(ICE::LightComponent* lc) { m_lc = lc; }
+
     void setLightComponent(ICE::LightComponent* lc) {
         m_lc = lc;
         if (lc) {
@@ -57,6 +66,7 @@ class LightComponentWidget : public Widget, ImXML::XMLEventHandler {
 
    private:
     ICE::LightComponent* m_lc = nullptr;
+    std::function<void()> m_on_remove;
 
     float m_distance_dropoff;
 

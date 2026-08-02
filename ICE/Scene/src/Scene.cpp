@@ -4,12 +4,25 @@
 
 #include "Scene.h"
 
+#include <Model.h>
 #include <Registry.h>
+#include <RenderComponent.h>
+#include <RenderSystem.h>
+#include <SceneCamera.h>
+#include <SkeletonPoseComponent.h>
+#include <SkinningComponent.h>
+#include <TransformComponent.h>
 
 #include <utility>
 
 namespace ICE {
-Scene::Scene(const std::string &name) : name(name), m_graph(std::make_shared<SceneGraph>()), registry(std::make_shared<Registry>()) {
+Scene::Scene(const std::string &name)
+    : name(name),
+      m_graph(std::make_shared<SceneGraph>()),
+      registry(std::make_shared<Registry>()),
+      // Free SceneCamera by default: identical behaviour to the scene-owned PerspectiveCamera it
+      // replaces, but able to bind to a camera entity via setActiveCamera.
+      m_camera(std::make_shared<SceneCamera>()) {
     aliases.try_emplace(0, "Scene");
 }
 
@@ -30,12 +43,60 @@ bool Scene::setAlias(Entity entity, const std::string &newName) {
     return true;
 }
 
-std::string Scene::getAlias(Entity e) {
-    return aliases[e];
+std::string Scene::getAlias(Entity e) const {
+    // find, not operator[]: the latter inserted an empty alias for unknown entities, which
+    // (combined with the old alias-based hasEntity) made a nonexistent entity "exist".
+    auto it = aliases.find(e);
+    return it == aliases.end() ? std::string() : it->second;
 }
 
 std::shared_ptr<Registry> Scene::getRegistry() const {
     return registry;
+}
+
+CameraHandle Scene::camera() const {
+    return CameraHandle(m_camera.get());
+}
+
+std::shared_ptr<Camera> Scene::cameraPtr() const {
+    return m_camera;
+}
+
+void Scene::setCamera(const std::shared_ptr<Camera> &camera) {
+    m_camera = camera;
+    m_active_camera = NULL_ENTITY;  // an explicit camera object supersedes any active entity
+    // If the scene is already active, re-point its render system at the new camera.
+    if (auto rs = registry->tryGetSystem<RenderSystem>()) {
+        rs->setCamera(camera);
+    }
+}
+
+void Scene::setActiveCamera(Entity camera_entity) {
+    m_active_camera = camera_entity;
+    // Bind the existing SceneCamera in place where possible, so the shared_ptr the render system
+    // already holds keeps pointing at the live view (no re-point needed). If setCamera() had
+    // swapped in a non-SceneCamera, replace it with a bound one.
+    auto scene_camera = std::dynamic_pointer_cast<SceneCamera>(m_camera);
+    if (!scene_camera) {
+        scene_camera = std::make_shared<SceneCamera>();
+        m_camera = scene_camera;
+    }
+    scene_camera->bindEntity(camera_entity == NULL_ENTITY ? nullptr : registry.get(), camera_entity);
+
+    if (auto rs = registry->tryGetSystem<RenderSystem>()) {
+        rs->setCamera(m_camera);
+    }
+}
+
+void Scene::setAssetBank(const std::shared_ptr<AssetBank> &bank) {
+    m_asset_bank = bank;
+}
+
+EntityHandle Scene::spawn(AssetUID model_id) {
+    if (!m_asset_bank) {
+        return EntityHandle();  // no bank wired: nothing to spawn from
+    }
+    return wrap(spawnTree(model_id, m_asset_bank));
 }
 
 Entity Scene::createEntity() {
@@ -43,6 +104,18 @@ Entity Scene::createEntity() {
     m_graph->addEntity(e);
     aliases.insert({e, "entity_" + std::to_string(e)});
     return e;
+}
+
+EntityHandle Scene::create(const std::string &name) {
+    Entity e = createEntity();
+    if (!name.empty()) {
+        setAlias(e, name);
+    }
+    return EntityHandle(e, registry.get());
+}
+
+EntityHandle Scene::wrap(Entity e) const {
+    return EntityHandle(e, registry.get());
 }
 
 Entity Scene::spawnTree(AssetUID model_id, const std::shared_ptr<AssetBank> &bank) {
@@ -117,13 +190,23 @@ void Scene::addEntity(Entity e, const std::string &alias, Entity parent) {
 }
 
 void Scene::removeEntity(Entity e) {
-    registry->removeEntity(e);
-    aliases.erase(e);
-    m_graph->removeEntity(e);
+    if (e == NULL_ENTITY || !hasEntity(e)) {
+        return;
+    }
+    // Removing an entity removes its whole subtree: a child's transform is expressed relative to
+    // its parent, so orphans reparented onto the grandparent would silently jump in the world.
+    // Collect the ids first -- the nodes are destroyed by removeSubtree below.
+    for (Entity descendant : m_graph->collectSubtree(e)) {
+        registry->removeEntity(descendant);
+        aliases.erase(descendant);
+    }
+    m_graph->removeSubtree(e);
 }
 
-bool Scene::hasEntity(Entity e) {
-    return aliases.contains(e);
+bool Scene::hasEntity(Entity e) const {
+    // Aliveness is owned by the registry, not the alias map (an entity can be alive without
+    // an alias, and getAlias no longer fabricates entries).
+    return registry->isAlive(e);
 }
 
 }  // namespace ICE

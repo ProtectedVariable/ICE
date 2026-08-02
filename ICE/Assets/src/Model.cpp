@@ -29,12 +29,33 @@ void Model::traverse(std::vector<AssetUID> &meshes, std::vector<AssetUID> &mater
             transforms.push_back(node_transform);
         }
 
+        // Accumulate this node's local transform into the children's base. This only
+        // affects Model::traverse, which is used solely by the editor thumbnail renderer
+        // (a flat, scene-graph-less render) -- the live scene/animation path uses
+        // spawnTree + the scene graph and must NOT accumulate here.
         for (const auto &child_idx : node.children) {
-            recursive_traversal(child_idx, transform);
+            recursive_traversal(child_idx, transform * node.localTransform);
         }
     };
 
     recursive_traversal(0, base_transform);
+}
+
+void Model::buildNodeNameMap() {
+    if (m_nodeNameMapBuilt) return;
+    for (int i = 0; i < static_cast<int>(m_nodes.size()); ++i) {
+        m_nodeNameMap[m_nodes[i].name] = i;
+    }
+    m_nodeNameMapBuilt = true;
+}
+
+const Model::Node* Model::getNodeByName(const std::string &name) {
+    buildNodeNameMap();
+    auto it = m_nodeNameMap.find(name);
+    if (it != m_nodeNameMap.end()) {
+        return &m_nodes[it->second];
+    }
+    return nullptr;
 }
 
 }  // namespace ICE

@@ -1,13 +1,14 @@
 #include "AssetsRenderer.h"
 
 #include <PerspectiveCamera.h>
+#include <ICEMath.h>
 
 std::pair<void*, bool> AssetsRenderer::createThumbnail(const std::shared_ptr<ICE::Asset>& asset, const std::string& asset_path) {
     return getPreview(asset, asset_path, std::numeric_limits<float>::infinity());
 }
 
 std::pair<void*, bool> AssetsRenderer::getPreview(const std::shared_ptr<ICE::Asset>& asset, const std::string& asset_path, float t) {
-    std::vector<std::shared_ptr<ICE::GPUMesh>> meshes;
+    std::vector<ICE::MeshHandle> meshes;
     std::vector<std::shared_ptr<ICE::Material>> materials;
     std::vector<Eigen::Matrix4f> transforms;
     bool thumbnail = (t == std::numeric_limits<float>::infinity());
@@ -20,25 +21,28 @@ std::pair<void*, bool> AssetsRenderer::getPreview(const std::shared_ptr<ICE::Ass
     Eigen::Matrix4f rotation = ICE::rotationMatrix({0, t, 0});
 
     if (auto m = std::dynamic_pointer_cast<ICE::Texture2D>(asset); m) {
-        return {m_bank->getTexture2D(asset_path)->ptr(), false};
+        // The asset may have been removed since the browser last listed it; getTexture2D
+        // returns null in that case, so don't dereference it.
+        auto tex = m_bank->getTexture2D(asset_path);
+        return {tex ? tex->ptr() : nullptr, false};
     } else if (auto m = std::dynamic_pointer_cast<ICE::TextureCube>(asset); m) {
         return {nullptr, false};  //TODO
     } else if (auto m = std::dynamic_pointer_cast<ICE::Shader>(asset); m) {
         return {m_bank->getTexture2D(ICE::AssetPath::WithTypePrefix<ICE::Texture2D>("Editor/shader"))->ptr(), false};
     } else if (auto m = std::dynamic_pointer_cast<ICE::Mesh>(asset); m) {
-        meshes.push_back(m_bank->getMesh(asset_path));
+        meshes.push_back(m_bank->meshHandle(asset_path));
         materials.push_back(m_bank->getMaterial(ICE::AssetPath::WithTypePrefix<ICE::Material>("base_mat")));
         transforms.push_back(rotation);
     } else if (auto m = std::dynamic_pointer_cast<ICE::Material>(asset); m) {
         materials.push_back(m);
-        meshes.push_back(m_bank->getMesh(ICE::AssetPath::WithTypePrefix<ICE::Mesh>("sphere")));
+        meshes.push_back(m_bank->meshHandle(ICE::AssetPath::WithTypePrefix<ICE::Mesh>("sphere")));
         transforms.push_back(rotation);
     } else if (auto m = std::dynamic_pointer_cast<ICE::Model>(asset); m) {
         std::vector<ICE::AssetUID> meshes_id;
         std::vector<ICE::AssetUID> materials_id;
         m->traverse(meshes_id, materials_id, transforms, rotation);
         for (int i = 0; i < meshes_id.size(); i++) {
-            meshes.push_back(m_bank->getMesh(meshes_id[i]));
+            meshes.push_back(m_bank->meshHandle(meshes_id[i]));
             materials.push_back(m_bank->getMaterial(materials_id[i]));
         }
     } else {
@@ -48,8 +52,7 @@ std::pair<void*, bool> AssetsRenderer::getPreview(const std::shared_ptr<ICE::Ass
 
   
     if (!m_renderers.contains(key)) {
-        m_renderers.try_emplace(key, m_api, m_factory);
-        m_renderers.at(key).resize(256, 256);
+        m_renderers.try_emplace(key, m_api, m_factory, m_bank);
     }
 
     auto camera = std::make_shared<ICE::PerspectiveCamera>(60.0, 1.0, 0.01, 10000.0);
@@ -57,26 +60,27 @@ std::pair<void*, bool> AssetsRenderer::getPreview(const std::shared_ptr<ICE::Ass
     camera->up(1);
     camera->pitch(-30);
 
-    auto& renderer = m_renderers.at(key);
+    auto& preview = m_renderers.at(key);
+    auto& renderer = preview.renderer;
     for (int i = 0; i < meshes.size(); i++) {
-        std::unordered_map<ICE::AssetUID, std::shared_ptr<ICE::GPUTexture>> textures;
-        for (const auto& [k, v] : materials[i]->getAllUniforms()) {
-            if (std::holds_alternative<ICE::AssetUID>(v)) {
-                auto id = std::get<ICE::AssetUID>(v);
-                textures.try_emplace(id, m_bank->getTexture2D(id));
-            }
-        }
-        auto shader = m_bank->getShader(materials[i]->getShader());
-        if (shader)
+        auto shader = m_bank->shaderHandle(materials[i]->getShader());
+        // Skip anything whose GPU resources aren't available (e.g. an asset removed after the
+        // browser listed it) rather than submitting a null mesh/shader to the renderer. The
+        // geometry pass resolves the material's textures at bind time.
+        if (meshes[i].valid() && shader.valid())
             renderer.submitDrawable(
-                ICE::Drawable{.mesh = meshes[i], .material = materials[i], .shader = shader, .textures = textures, .model_matrix = transforms[i]});
+                ICE::Drawable{.mesh = meshes[i], .material = materials[i], .shader = shader, .model_matrix = transforms[i]});
     }
     renderer.submitLight(
         ICE::Light{.position = {-2, 2, 2}, .rotation = {0, 0, 0}, .color = {1, 1, 1}, .distance_dropoff = 0, .type = ICE::LightType::PointLight});
 
+    // Present the frame into our own target (a render-to-texture blit) and read that back: render()
+    // returns nothing now, so we drive an explicit target rather than assuming a resource name.
+    renderer.setPresentTarget(preview.target);
+    renderer.setPresentShader(m_bank->getShader(ICE::AssetPath::WithTypePrefix<ICE::Shader>("lastpass")));
     renderer.prepareFrame(*camera);
-    auto fb = renderer.render();
+    renderer.render();
     renderer.endFrame();
 
-    return {static_cast<char*>(0) + fb->getTexture(), true};
+    return {static_cast<char*>(0) + preview.target->getTexture(), true};
 }

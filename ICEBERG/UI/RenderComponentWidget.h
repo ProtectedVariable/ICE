@@ -24,13 +24,24 @@ class RenderComponentWidget : public Widget, ImXML::XMLEventHandler {
         }
     }
     void onNodeEnd(ImXML::XMLNode& node) override {}
-    void onEvent(ImXML::XMLNode& node) override {}
+    void onEvent(ImXML::XMLNode& node) override {
+        if (node.arg<std::string>("id") == "btn_remove" && m_on_remove) {
+            m_on_remove();
+        }
+    }
 
     void render() override {
         if (m_rc) {
             m_xml_renderer.render(m_xml_tree, *this);
         }
     }
+
+    // The Remove button lives in this child widget, but the removal handler is registered on
+    // the parent InspectorWidget's callback map. This hook bridges the two.
+    void onRemove(const std::function<void()>& f) { m_on_remove = f; }
+
+    // Per-frame refresh of just the cached pointer (see TransformComponentWidget).
+    void refreshComponent(ICE::RenderComponent* rc) { m_rc = rc; }
 
     void setRenderComponent(ICE::RenderComponent* rc, const std::vector<std::string>& meshes_paths, const std::vector<ICE::AssetUID>& meshes_ids,
                             const std::vector<std::string>& materials_paths, const std::vector<ICE::AssetUID>& materials_ids) {
@@ -48,6 +59,7 @@ class RenderComponentWidget : public Widget, ImXML::XMLEventHandler {
 
    private:
     ICE::RenderComponent* m_rc = nullptr;
+    std::function<void()> m_on_remove;
     UniformInputs m_models_combo{"##models_combo", 0};
     UniformInputs m_material_combo{"##materials_combo", 0};
 

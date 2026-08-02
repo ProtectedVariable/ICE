@@ -39,32 +39,41 @@ class ViewportWidget : public Widget {
             ImGui::EndDragDropTarget();
         }
 
-        auto drag = ImGui::GetMouseDragDelta(0);
+        // Camera look is on the RIGHT mouse button so the left button stays free for
+        // selection and gizmo manipulation. Wheel scrolls the camera forward/back.
+        auto drag = ImGui::GetMouseDragDelta(1);
         if (ImGui::IsWindowHovered()) {
-            if (ImGui::IsMouseDragging(0)) {
+            if (ImGui::IsMouseDragging(1)) {
                 callback("mouse_dragged", drag.x, drag.y);
-                ImGui::ResetMouseDragDelta(0);
-            } else if (ImGui::IsMouseClicked(0) && !ImGuizmo::IsOver()) {
+                ImGui::ResetMouseDragDelta(1);
+            }
+            float wheel = ImGui::GetIO().MouseWheel;
+            if (wheel != 0.0f) {
+                callback("scroll", wheel);
+            }
+            if (ImGui::IsMouseClicked(0) && !ImGuizmo::IsOver()) {
                 auto m_pos = ImGui::GetMousePos();
                 callback("mouse_clicked", m_pos.x - pos.x, m_pos.y - pos.y);
             }
         }
 
         if (ImGui::IsWindowFocused()) {
+            // Frame-rate independent movement: the controller multiplies by this dt.
+            float dt = ImGui::GetIO().DeltaTime;
             if (ImGui::IsKeyDown(ImGuiKey_W)) {
-                callback("w_pressed");
+                callback("w_pressed", dt);
             } else if (ImGui::IsKeyDown(ImGuiKey_S)) {
-                callback("s_pressed");
+                callback("s_pressed", dt);
             }
             if (ImGui::IsKeyDown(ImGuiKey_A)) {
-                callback("a_pressed");
+                callback("a_pressed", dt);
             } else if (ImGui::IsKeyDown(ImGuiKey_D)) {
-                callback("d_pressed");
+                callback("d_pressed", dt);
             }
             if (ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
-                callback("ls_pressed");
+                callback("ls_pressed", dt);
             } else if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl)) {
-                callback("lc_pressed");
+                callback("lc_pressed", dt);
             }
         }
         callback("resize", window_width, window_height);
