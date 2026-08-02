@@ -59,6 +59,11 @@ bool Editor::update() {
     }
     m_audio_mixer.render();
     m_viewport->update();
+    // A model dropped into the viewport spawns entities behind the Hierarchy's back: rebuild its
+    // cached tree before it renders, so the new nodes show up on the same frame.
+    if (m_viewport->entitySpawned()) {
+        m_hierarchy->rebuildTree();
+    }
     m_hierarchy->update();
     m_inspector->update();
     m_assets->update();

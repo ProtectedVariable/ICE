@@ -100,6 +100,9 @@ Viewport::Viewport(const std::shared_ptr<ICE::ICEEngine> &engine, const std::fun
         if (uid == NO_ASSET_ID)
             return;
         ICE::Entity e = m_engine->getProject()->getCurrentScene()->spawnTree(uid, m_engine->getAssetBank());
+        // The spawn adds a whole node tree to the scene; the Hierarchy caches its view and has no
+        // other way to learn about it.
+        m_entity_spawned = true;
         m_entity_picked_callback(e);
     });
 }
@@ -160,4 +163,10 @@ bool Viewport::update() {
 
 void Viewport::setSelectedEntity(ICE::Entity e) {
     m_selected_entity = e;
+}
+
+bool Viewport::entitySpawned() {
+    bool spawned = m_entity_spawned;
+    m_entity_spawned = false;
+    return spawned;
 }

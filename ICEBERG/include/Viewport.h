@@ -13,6 +13,10 @@ class Viewport : public Controller {
 
     void setSelectedEntity(ICE::Entity e);
 
+    // True once after a model has been dropped into the viewport (the flag is cleared by the read),
+    // signalling that the scene gained entities and the hierarchy needs rebuilding.
+    bool entitySpawned();
+
    private:
     std::shared_ptr<ICE::ICEEngine> m_engine;
     bool m_done = false;
@@ -23,6 +27,7 @@ class Viewport : public Controller {
     const double scroll_speed = 0.5;
     ImGuizmo::OPERATION m_guizmo_mode = ImGuizmo::TRANSLATE;
     ICE::Entity m_selected_entity = 0;
+    bool m_entity_spawned = false;
     std::function<void()> m_entity_transformed_callback = [] {
     };
     std::function<void(ICE::Entity e)> m_entity_picked_callback = [](ICE::Entity) {
